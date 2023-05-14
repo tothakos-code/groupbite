@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Rendelés agregátor</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js" integrity="sha512-AI5A3zIoeRSEEX9z3Vyir8NqSMC1pY7r5h2cE+9J6FLsoEmSSGLFaqMQw8SWvoONXogkfFrkQiJfLeHLz3+HOg==" crossorigin="anonymous"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+</head>
+<header>
+  <h1>Falusi rendelő</h1>
+  <div class="user-info">
+    <span id="username-display"></span>
+  </div>
+</header>
+<body>
+
+  <div class="popup" id="popup">
+    <div class="popup-inner">
+      <h2>Please enter your username:</h2>
+      <input type="text" id="username-input">
+      <br><br>
+      <button onclick="saveUsername()">Save</button>
+      <button onclick="closePopup()">Close</button>
+    </div>
+  </div>
+
+  <div id="username-display" style="display: none; position: absolute; top: 10px; right: 10px;"></div>
+
+  <div class="container layout">
+      <div class="list-container etlaplist">
+        <h2>Étlap</h2>
+        <ul class="list" id="foodList"></ul>
+      </div>
+      <div class="list-container localbasket">
+        <h2>Kosarad <button id="clearBasketButton">Kosarad kiürétése</button></h2>
+        <span id="localbasket-value"></span>
+        <ul class="list" id="basketList"></ul>
+      </div>
+      <div class="list-container globalbasket">
+        <h2>Közös kosár</h2>
+        <span id="globalbasket-value"></span>
+        <ul class="list" id="globalbasketList"></ul>
+      </div>
+    </div>
+  <script>
+    function saveUsername() {
+      let user = document.getElementById("username-input").value;
+      if (user !== "") {
+        document.cookie = `username=${encodeURIComponent(user)}; expires=${getCookieExpirationDate(14)}`;
+        closePopup();
+        username = user;
+        displayUsername(username);
+      }
+    }
+
+    function displayUsername(username) {
+      let usernameDisplay = document.getElementById("username-display");
+      usernameDisplay.addEventListener('click', () => { openPopup() });
+      usernameDisplay.innerHTML = "Hello, " + username + "!";
+      usernameDisplay.style.display = "block";
+    }
+
+    function closePopup() {
+      if (username !== "" || username === null) {
+        let popup = document.getElementById("popup");
+        popup.style.display = "none";
+      }
+    }
+
+    function openPopup() {
+      let popup = document.getElementById("popup");
+      popup.style.display = "block";
+    }
+
+    function getUsernameFromCookie() {
+      let cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        let cookie = cookies[i].trim();
+        if (cookie.startsWith("username=")) {
+          return decodeURIComponent(cookie.substring("username=".length));
+        }
+      }
+      return null;
+    }
+
+    let username = getUsernameFromCookie();
+    if (username !== null) {
+      displayUsername(username);
+    } else {
+      openPopup();
+    }
+
+
+    function getBasketFromCookies() {
+     const basketString = document.cookie.replace(/(?:(?:^|.*;\s*)basket\s*\=\s*([^;]*).*$)|^.*$/, '$1');
+     return basketString ? JSON.parse(basketString) : null;
+   }
+
+   function setBasketInCookies(basket) {
+     const basketString = JSON.stringify(basket);
+     document.cookie = `basket=${basketString}; path=/; expires=${getCookieExpirationDate(7)}`;
+   }
+
+    function getCookieExpirationDate(days) {
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      return date.toUTCString();
+    }
+
+    function updateBasketList() {
+      const basketList = document.getElementById('basketList');
+      // Clear the current list
+      basketList.innerHTML = '';
+      const basket = getBasketFromCookies();
+      socket.emit("Server Basket Update", { [username]: basket });
+      if (!basket) {
+        return;
+      }
+
+      console.log("Basket item list");
+      console.log(basket);
+      // Loop through the basket items and add them to the list
+      Object.entries(basket).forEach(([itemSizeKey, item]) => {
+      // for (let item of basketItems) {
+        const listItem = document.createElement('li');
+        const deleteButton = document.createElement('button');
+        const quantitySpan = document.createElement('span');
+        deleteButton.innerText = 'Remove';
+        let localBasketValue = 0;
+
+        // Add an event listener to the delete button to remove the item from the basket
+        deleteButton.addEventListener('click', () => {
+          const basketItem = item;
+          if (basketItem.quantity == 1) {
+            // Otherwise, add a new entry to the basket
+            delete basket[itemSizeKey]
+          } else {
+            // If the item already exists in the basket, increment the quantity
+            basketItem.quantity -= 1;
+          }
+          setBasketInCookies(basket);
+
+          updateBasketList();
+        });
+        localBasketValue += Number(item.quantity) * Number(item.price.split(' ')[0])
+        quantitySpan.innerText = `${item.quantity} x `;
+        listItem.innerText = `${item.name} (${item.size}) - ${item.price}`;
+        listItem.insertBefore(quantitySpan, listItem.firstChild);
+        listItem.appendChild(deleteButton);
+        basketList.appendChild(listItem);
+      });
+      const localvalue = document.getElementById("localbasket-value");
+      localvalue.innerText = localBasketValue + " Ft"
+
+    }
+
+    function updateGlobalBasketList(globalBasket) {
+      const globalbasketList = document.getElementById('globalbasketList');
+      // Clear the current list
+      globalbasketList.innerHTML = '';
+      // const basket = getBasketFromCookies();
+
+      if (!globalBasket) {
+        return;
+      }
+
+      console.log("Global Basket item list");
+      console.log(globalBasket);
+      let globalBasketValue = 0;
+      // Loop through the basket items and add them to the list
+      Object.entries(globalBasket).forEach(([person, basket]) => {
+        console.log(person + " in globalBasket");
+        console.log(person + "'s baskets: " + JSON.stringify(basket, null, 4));
+        if (!basket || Object.entries(basket).length === 0) {
+          return;
+        }
+        const personItem = document.createElement('ul');
+        personItem.classList.add("list");
+        const headerItem = document.createElement('li');
+        const usernameItem = document.createElement('span');
+        usernameItem.innerText = person;
+        const userPriceSumItem = document.createElement('span');
+        const basketItem = document.createElement('li');
+
+        const userBasketItem = document.createElement('ul');
+        userBasketItem.classList.add("list");
+        var priceSum = 0;
+        Object.entries(basket).forEach(([id, item]) => {
+          const listItem = document.createElement('li');
+          const quantitySpan = document.createElement('span');
+          const nameSpan = document.createElement('span');
+          priceSum += Number(item.quantity) * Number((item.price).split(' ')[0]);
+          quantitySpan.innerText = `${item.quantity} x `;
+          nameSpan.innerText = `${item.name} (${item.size}) - ${item.price}`;
+          listItem.appendChild(quantitySpan);
+          listItem.appendChild(nameSpan);
+          userBasketItem.appendChild(listItem);
+        });
+        userPriceSumItem.innerText = priceSum + ' Ft';
+
+        globalBasketValue += priceSum;
+        headerItem.insertBefore(usernameItem, personItem.firstChild);
+        headerItem.appendChild(userPriceSumItem);
+        basketItem.appendChild(userBasketItem);
+        personItem.appendChild(headerItem);
+        personItem.appendChild(basketItem);
+        globalbasketList.appendChild(personItem);
+      });
+      const globalvalue = document.getElementById("globalbasket-value");
+      globalvalue.innerText = globalBasketValue + " Ft"
+    }
+
+    function createListItem(item) {
+      const listItem = document.createElement('li');
+      listItem.classList.add('item');
+
+      const nameLabel = document.createElement('span');
+      nameLabel.classList.add('name');
+      nameLabel.innerText = item.label;
+      listItem.appendChild(nameLabel);
+
+      const buttonContainer = document.createElement('div');
+      buttonContainer.classList.add('button-container');
+      listItem.appendChild(buttonContainer);
+
+      // Add a button for each size
+      item.sizes.forEach(size => {
+        const sizeButton = document.createElement('button');
+        sizeButton.classList.add('size');
+        sizeButton.innerText = size.label;
+        buttonContainer.appendChild(sizeButton);
+
+        // Add an event listener to update the basket and save it to cookies
+        sizeButton.addEventListener('click', () => {
+          const basket = getBasketFromCookies() || {};
+          console.log("Add to basket");
+          console.log(basket);
+
+          const itemSizeKey = `${item.id}-${size.size}`;
+          if (basket[itemSizeKey]) {
+            // If the item already exists in the basket, increment the quantity
+            basket[itemSizeKey].quantity += 1;
+          } else {
+            // Otherwise, add a new entry to the basket
+            basket[itemSizeKey] = { id: item.id, name: item.label, size: size.size, price: size.price, quantity: 1 };
+          }
+          setBasketInCookies(basket);
+
+          updateBasketList();
+        });
+      });
+
+      return listItem;
+    }
+
+    const clearBasketButton = document.getElementById('clearBasketButton');
+
+    clearBasketButton.addEventListener('click', () => {
+      // Remove the basket cookie
+      document.cookie = 'basket=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+      updateBasketList();
+    });
+
+    var socket;
+
+    fetch(`http://${window.location.hostname}/api/getetlap`)
+      .then(response => response.json())
+        .then(data => {
+
+          const listData = [
+            { id: 1, name: 'Falusi', sizes: {zona: '800 Ft', egesz: '1450 Ft'} },
+            { id: 2, name: 'Köret', sizes: {zona: '490 Ft', egesz: '590 Ft'} },
+            { id: 3, name: 'Leves', sizes: {zona: '600 Ft', egesz: '700 Ft'} }
+          ];
+
+          const listContainer = document.getElementById('foodList');
+
+          data.forEach(item => {
+            listContainer.appendChild(createListItem(item));
+          });
+          updateBasketList()
+
+        })
+      .catch(error => console.error(error));
+
+
+    $(document).ready(function(){
+      // sending a connect request to the server.
+      socket = io.connect();
+
+      socket.on('connect', function() {
+        console.log('Socket.IO connection established');
+      });
+      socket.on('after connect', function(msg) {
+        console.log('After connect', msg);
+      });
+
+      socket.on('Client Basket Update', function(msg) {
+        console.log('Global basket incomming via websocket: ', msg);
+        updateGlobalBasketList(msg.basket);
+      });
+    });
+  </script>
+
+</body>
+</html>

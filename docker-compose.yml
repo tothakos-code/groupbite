@@ -1,0 +1,54 @@
+version: "3"
+
+services:
+  frontend:
+    image: nginx:alpine
+    container_name: falu_fe
+    hostname: falu_fe
+    depends_on:
+      - backend
+    restart: on-failure
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+      - ./nginx:/etc/nginx/conf.d
+    ports:
+      - 80:80
+    networks:
+      falu_net:
+        ipv4_address: 10.10.13.2
+
+  backend:
+    container_name: falu_be
+    hostname: falu_be
+    build: ./backend/
+    depends_on:
+      - redis
+    restart: on-failure
+    environment:
+      - FLASK_DEBUG=1
+    ports:
+      - 5000:5000
+    volumes:
+      - ./backend:/app
+    networks:
+      falu_net:
+        ipv4_address: 10.10.13.3
+
+  redis:
+    image: redislabs/redismod
+    container_name: redis
+    ports:
+     - '6379:6379'
+    networks:
+      falu_net:
+        ipv4_address: 10.10.13.4
+
+networks:
+  app_network:
+    driver: bridge
+  falu_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.13.0/24
+          gateway: 10.10.13.1

@@ -31,7 +31,7 @@ ul {
     "e l" 1fr
     "e g" 1fr
     / 70% 30%;
-  gap: 8px;
+  gap: 10px;
 }
 .etlaplist { grid-area: e; }
 .localbasket { grid-area: l; }

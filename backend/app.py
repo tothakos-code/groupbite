@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import request
-from redis import Redis
+import psycopg2
 import requests,json,re
 from bs4 import BeautifulSoup
 from flask_socketio import SocketIO
@@ -8,30 +8,60 @@ import logging
 import datetime
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-redis = Redis(host='redis', port=6379)
 socketio = SocketIO(app,logger=True, engineio_logger=True)
+
+app.config['SECRET_KEY'] = 'secret!'
+
 
 napok = ["hetfoi","keddi", "szerdai","csotortoki","penteki","szombati","vasarnapi"]
 fdidpattern = r"\/fdid-[0-9]+\/"
 sidfdpattern = r"\/sidfd-[0-9]+\/"
 
-@app.route('/flush')
-def flush():
-    redis.flushdb()
-    redis.json().set('basket', '$', {})
-    return "DB flushed"
+sql_select = "SELECT basket FROM orders WHERE order_date = CURRENT_DATE"
+sql_insert = "INSERT INTO orders (basket) values (%s) RETURNING basket"
+sql_update = "UPDATE orders SET basket = %s WHERE order_date = CURRENT_DATE RETURNING basket"
+
+
+
+def db_connection():
+    # connect to the PostgreSQL server
+    print('Connecting to the PostgreSQL database...')
+    conn = psycopg2.connect(
+    host="database",
+    database="falusi",
+    user="falusi",
+    password="falusi")
+    return conn
 
 @app.route('/')
 def hello():
-    redis.incr('hits')
-    counter = str(redis.get('hits'),'utf-8')
-    return "Welcome to this webpage!, This webpage has been test viewed "+counter+" time(s)"
+    return "Welcome to this api on a pi!"
 
 @app.route('/transferBasket', methods=['POST'])
 def transfer_basket():
     PHPSESSIONID = request.json['psid']
-    orders = redis.json().get('basket')
+    orders = None
+
+    conn = None
+    try:
+        conn = db_connection()
+        # create a cursor
+        cur = conn.cursor()
+
+        # execute a statement
+        cur.execute(sql_select)
+        orders = cur.fetchone()[0]
+        # close the communication with the PostgreSQL
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+            logging.error(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            logging.error('Database connection closed.')
+
+    if orders is None:
+        return "Error: basket empty or could not get basket from database."
 
     # Create the list of item links
     orderList = []
@@ -113,12 +143,53 @@ def handle_connect(data):
 
 @socketio.on('Server Basket Update')
 def handle_basket_update(data):
-    currentBasket = redis.json().get('basket')
-    user = list(data.keys())[0]
-    currentBasket[user] = data[user]
-    redis.json().set('basket', '$', currentBasket)
-    socketio.emit('Client Basket Update', {'basket': redis.json().get('basket') })
+    conn = None
+    try:
+        conn = db_connection()
+        # create a cursor
+        cur = conn.cursor()
+
+        # Get the user
+        user = list(data.keys())[0]
+
+        # execute a statement
+        cur.execute(sql_select)
+
+        # display the PostgreSQL database server version
+        if cur.rowcount == 0:
+            # insert row
+            # creeate basket and add user
+            currentBasket = {}
+            currentBasket[user] = data[user]
+
+            cur.execute(sql_insert, (json.dumps(currentBasket),))
+            logging.warning("Created today's basket row")
+            conn.commit()
+            socketio.emit('Client Basket Update', {'basket': cur.fetchone()[0] })
+        elif cur.rowcount == 1:
+            # update row
+            # get basket and update user
+            currentBasket = cur.fetchone()[0]
+            currentBasket[user] = data[user]
+
+            logging.warning("Updated today's basket row")
+            cur.execute(sql_update, (json.dumps(currentBasket),))
+            conn.commit()
+            socketio.emit('Client Basket Update', {'basket': cur.fetchone()[0] })
+        elif cur.rowcount > 1:
+            # error this is sould be impossible
+            logging.warning("ERROR: There is more than one order, I dont know what to do! PANIC!")
+
+        # close the communication with the PostgreSQL
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+            logging.error(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            logging.error('Database connection closed.')
+
+
 
 if __name__ == "__main__":
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)
-    redis.json().set('basket', '$', {})

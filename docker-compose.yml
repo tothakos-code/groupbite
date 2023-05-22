@@ -22,7 +22,7 @@ services:
     hostname: falu_be
     build: ./backend/
     depends_on:
-      - redis
+      - database
     restart: on-failure
     environment:
       - FLASK_DEBUG=1
@@ -34,14 +34,18 @@ services:
       falu_net:
         ipv4_address: 10.10.13.3
 
-  redis:
-    image: redislabs/redismod
-    container_name: redis
+  database:
+    container_name: falu_db
+    build: ./db/
     ports:
-     - '6379:6379'
+     - 5432:5432
     networks:
       falu_net:
         ipv4_address: 10.10.13.4
+    env_file:
+      - .env
+    volumes:
+      - ./db/data/:/var/lib/postgresql/data/
 
 networks:
   app_network:

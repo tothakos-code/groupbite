@@ -56,4 +56,3 @@ networks:
     ipam:
       config:
         - subnet: 10.10.13.0/24
-          gateway: 10.10.13.1

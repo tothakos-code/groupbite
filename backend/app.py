@@ -54,18 +54,22 @@ def transfer_basket():
         # close the communication with the PostgreSQL
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-            logging.error(error)
+        logging.error(error)
     finally:
         if conn is not None:
             conn.close()
             logging.error('Database connection closed.')
 
     if orders is None:
+        logging.warning("Error: basket empty or could not get basket from database.")
         return "Error: basket empty or could not get basket from database."
 
     # Create the list of item links
     orderList = []
     for person, basket in orders.items():
+        # ToDo: prevent None
+        if basket == None:
+            continue
         for foodItem in basket.values():
             for quantity in range(0,foodItem['quantity']):
                 orderList.append(foodItem['link'])
@@ -155,7 +159,6 @@ def handle_basket_update(data):
         # execute a statement
         cur.execute(sql_select)
 
-        # display the PostgreSQL database server version
         if cur.rowcount == 0:
             # insert row
             # creeate basket and add user

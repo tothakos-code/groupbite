@@ -37,6 +37,7 @@ services:
   database:
     container_name: falu_db
     build: ./db/
+    restart: on-failure
     ports:
      - 5432:5432
     networks:

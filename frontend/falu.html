@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Rendelés agregátor</title>
-  <link rel="stylesheet" href="./styles.css">
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js" integrity="sha512-AI5A3zIoeRSEEX9z3Vyir8NqSMC1pY7r5h2cE+9J6FLsoEmSSGLFaqMQw8SWvoONXogkfFrkQiJfLeHLz3+HOg==" crossorigin="anonymous"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <header class="row">
   <div class="col-6 text-start">
@@ -31,6 +31,7 @@
   </div>
   <div class="popup" id="psid-popup">
     <div class="popup-inner">
+      <h2>Ez a Rendelő ember feladata</h2>
       <h2>Írd be a falusi oldalon lévő PHPSESSIONID-det:</h2>
       <input type="text" id="psid-input">
       <br><br>
@@ -62,7 +63,7 @@
             <span id="localbasket-value"></span>
           </div>
           <div class="col-6 text-end">
-            <button id="clearBasketButton">Kosarad kiürétése</button>
+            <button id="clearBasketButton" onclick="clearBasket()">Kosarad ürétése</button>
           </div>
         </div>
         <div class="row">
@@ -82,7 +83,7 @@
             <span id="globalbasket-value"></span>
           </div>
           <div class="col-6 text-end">
-            <button id="transferBasketButton">Megrendelés</button>
+            <button id="transferBasketButton" onclick="openPSIDPopup()">Áthelyezés falusiba</button>
           </div>
         </div>
         <div class="row">
@@ -96,8 +97,8 @@
       let user = document.getElementById("username-input").value;
       if (user !== "") {
         document.cookie = `username=${encodeURIComponent(user)}; expires=${getCookieExpirationDate(14)}`;
-        closePopup();
         username = user;
+        closePopup();
         displayUsername(username);
       }
     }
@@ -116,7 +117,7 @@
           .then(response => {
             console.log(response.statusText);
             if (response.statusText == "OK") {
-              alert("Kosár sikeresen átmásolva a falusira. Frissítsd a dalusi oldalát.")
+              alert("Kosár sikeresen átmásolva a falusira. Frissítsd a falusi oldalát.")
             } else {
               alert("Valami hiba történt.")
             }
@@ -133,7 +134,7 @@
     }
 
     function closePopup() {
-      if (username !== "" || username === null) {
+      if (username !== null) {
         let popup = document.getElementById("popup");
         popup.style.display = "none";
       }
@@ -166,14 +167,6 @@
       }
       return null;
     }
-
-    let username = getUsernameFromCookie();
-    if (username !== null) {
-      displayUsername(username);
-    } else {
-      openPopup();
-    }
-
 
     function getBasketFromCookies() {
      const basketString = document.cookie.replace(/(?:(?:^|.*;\s*)basket\s*\=\s*([^;]*).*$)|^.*$/, '$1');
@@ -218,10 +211,10 @@
         deleteButton.addEventListener('click', () => {
           const basketItem = item;
           if (basketItem.quantity == 1) {
-            // Otherwise, add a new entry to the basket
-            delete basket[itemSizeKey]
+            // Otherwise, remove the entry from the basket
+            delete localBasket[itemSizeKey]
           } else {
-            // If the item already exists in the basket, increment the quantity
+            // If the item already exists in the basket, decrement the quantity
             basketItem.quantity -= 1;
           }
           setBasketInCookies(basket);
@@ -250,13 +243,9 @@
         return;
       }
 
-      console.log("Global Basket item list");
-      console.log(globalBasket);
       let globalBasketValue = 0;
       // Loop through the basket items and add them to the list
       Object.entries(globalBasket).forEach(([person, basket]) => {
-        console.log(person + " in globalBasket");
-        console.log(person + "'s baskets: " + JSON.stringify(basket, null, 4));
         if (!basket || Object.entries(basket).length === 0) {
           return;
         }
@@ -266,6 +255,7 @@
         const usernameItem = document.createElement('span');
         usernameItem.innerText = person;
         const userPriceSumItem = document.createElement('span');
+        userPriceSumItem.classList.add("text-end")
         const basketItem = document.createElement('li');
 
         const userBasketItem = document.createElement('ul');
@@ -275,6 +265,7 @@
           const listItem = document.createElement('li');
           const quantitySpan = document.createElement('span');
           const nameSpan = document.createElement('span');
+          nameSpan.classList.add("text-end")
           priceSum += Number(item.quantity) * Number((item.price).split(' ')[0]);
           quantitySpan.innerText = `${item.quantity} x `;
           nameSpan.innerText = `${item.name} (${item.size}) - ${item.price}`;
@@ -319,8 +310,6 @@
         // Add an event listener to update the basket and save it to cookies
         sizeButton.addEventListener('click', () => {
           const basket = getBasketFromCookies() || {};
-          console.log("Add to basket");
-          console.log(basket);
 
           const itemSizeKey = `${item.id}-${size.size}`;
           if (basket[itemSizeKey]) {
@@ -346,19 +335,18 @@
       return listItem;
     }
 
-    const clearBasketButton = document.getElementById('clearBasketButton');
-
-    clearBasketButton.addEventListener('click', () => {
+    function clearBasket() {
       // Remove the basket cookie
       document.cookie = 'basket=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
       updateBasketList();
-    });
+    }
 
-    const transferBasketButton = document.getElementById('transferBasketButton');
-
-    transferBasketButton.addEventListener('click', () => {
-      openPSIDPopup();
-    });
+    let username = getUsernameFromCookie();
+    if (username !== null) {
+      displayUsername(username);
+    } else {
+      openPopup();
+    }
 
     var socket;
 

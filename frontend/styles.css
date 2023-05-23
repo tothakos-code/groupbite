@@ -10,14 +10,14 @@
   flex-grow: 1;
   margin-right: 10px;
 }
+.list li li {
+  width: 100%;
+}
 
 .list li button {
   margin-left: 10px;
 }
 
-ul {
-  padding: 0px;
-}
 
 .layout {
   width: 100%;
@@ -30,7 +30,7 @@ ul {
   grid:
     "e l" 1fr
     "e g" 1fr
-    / 70% 30%;
+    / 65% 35%;
   gap: 10px;
 }
 .etlaplist { grid-area: e; }
@@ -77,4 +77,8 @@ footer {
     height: 100px;
     width: 70%;
     overflow: hidden;
+}
+ul {
+  padding: 0px;
+  width: 100%;
 }

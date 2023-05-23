@@ -37,6 +37,11 @@ def db_connection():
 def hello():
     return "Welcome to this api on a pi!"
 
+@app.route('/clearclientsbasket')
+def clear_clients_basket():
+    socketio.emit('Clear Local Basket')
+    return "OK"
+
 @app.route('/transferBasket', methods=['POST'])
 def transfer_basket():
     PHPSESSIONID = request.json['psid']
@@ -147,52 +152,69 @@ def handle_connect(data):
 
 @socketio.on('Server Basket Update')
 def handle_basket_update(data):
+    user = list(data.keys())[0]
+    currentBasket = get_today_basket()
+    currentBasket[user] = data[user]
+    socketio.emit('Client Basket Update', {'basket': set_today_basket(currentBasket) })
+
+def get_today_basket():
     conn = None
     try:
         conn = db_connection()
-        # create a cursor
+        logging.info('Database connection opened.')
+
         cur = conn.cursor()
-
-        # Get the user
-        user = list(data.keys())[0]
-
-        # execute a statement
         cur.execute(sql_select)
 
         if cur.rowcount == 0:
-            # insert row
-            # creeate basket and add user
-            currentBasket = {}
-            currentBasket[user] = data[user]
-
-            cur.execute(sql_insert, (json.dumps(currentBasket),))
-            logging.warning("Created today's basket row")
-            conn.commit()
-            socketio.emit('Client Basket Update', {'basket': cur.fetchone()[0] })
+            # return empty basket, there is not yet created
+            return {}
         elif cur.rowcount == 1:
-            # update row
-            # get basket and update user
-            currentBasket = cur.fetchone()[0]
-            currentBasket[user] = data[user]
-
-            logging.warning("Updated today's basket row")
-            cur.execute(sql_update, (json.dumps(currentBasket),))
-            conn.commit()
-            socketio.emit('Client Basket Update', {'basket': cur.fetchone()[0] })
+            # return the basket
+            return cur.fetchone()[0]
         elif cur.rowcount > 1:
-            # error this is sould be impossible
-            logging.warning("ERROR: There is more than one order, I dont know what to do! PANIC!")
-
-        # close the communication with the PostgreSQL
+            # this error is impossible
+            raise ValueError("ERROR: There is more than one order, I dont know what to do! PANIC!")
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
             logging.error(error)
     finally:
         if conn is not None:
             conn.close()
-            logging.error('Database connection closed.')
+            logging.info('Database connection closed.')
 
+def set_today_basket(basket):
+    conn = None
+    try:
+        conn = db_connection()
+        logging.info('Database connection opened.')
 
+        cur = conn.cursor()
+        cur.execute(sql_select)
+
+        if cur.rowcount == 0:
+            # insert row
+            cur.execute(sql_insert, (json.dumps(basket),))
+            logging.info("Created today's basket row")
+            conn.commit()
+        elif cur.rowcount == 1:
+            # update row
+            cur.execute(sql_update, (json.dumps(basket),))
+            logging.info("Updated today's basket row")
+            conn.commit()
+        elif cur.rowcount > 1:
+            # this error is impossible
+            raise ValueError("ERROR: There is more than one order, I dont know what to do! PANIC!")
+        resultBasket = cur.fetchone()[0]
+        # close the communication with the PostgreSQL
+        cur.close()
+        return resultBasket
+    except (Exception, psycopg2.DatabaseError) as error:
+            logging.error(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            logging.info('Database connection closed.')
 
 if __name__ == "__main__":
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)

@@ -4,6 +4,7 @@ import psycopg2
 import requests,json,re
 from bs4 import BeautifulSoup
 from flask_socketio import SocketIO
+from collections import Counter
 import logging
 import datetime
 
@@ -89,11 +90,12 @@ def transfer_basket():
         }
 
     # Loop the links and make the requests
-    for link in orderList:
+    logging.info(Counter(orderList))
+    for link,count in Counter(orderList).items():
         sizeid = re.search(sidfdpattern, link).group().replace('/','').split('-')[1]
 
         requests_data={
-            "item_cnt": "1",
+            "item_cnt": count,
             "item_size_ref": sizeid,
             "plusmenu[]": "112",
             "menu_a[]": "0",

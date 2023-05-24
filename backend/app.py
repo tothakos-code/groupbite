@@ -156,7 +156,12 @@ def handle_connect(data):
 def handle_basket_update(data):
     user = list(data.keys())[0]
     currentBasket = get_today_basket()
-    currentBasket[user] = data[user]
+    if data[user]:
+        # basket is not empty, save new basket
+        currentBasket[user] = data[user]
+    elif user in currentBasket:
+        # basket is empty, delete key
+        del currentBasket[user]
     socketio.emit('Client Basket Update', {'basket': set_today_basket(currentBasket) })
 
 def get_today_basket():

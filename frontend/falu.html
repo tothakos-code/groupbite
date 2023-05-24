@@ -232,7 +232,7 @@
         basketList.appendChild(listItem);
       });
 
-      localvalue.innerText = localBasketValue + " Ft"
+      localvalue.innerText = localBasketValue + " Ft + Szállítás díj szétosztva"
 
     }
 
@@ -246,6 +246,10 @@
       }
 
       let globalBasketValue = 0;
+
+      let traransportFee = 400;
+      let transportFeePerPerson = Math.ceil(traransportFee / Object.keys(globalBasket).length);
+
       // Loop through the basket items and add them to the list
       Object.entries(globalBasket).forEach(([person, basket]) => {
         if (!basket || Object.entries(basket).length === 0) {
@@ -268,14 +272,17 @@
           const quantitySpan = document.createElement('span');
           const nameSpan = document.createElement('span');
           nameSpan.classList.add("text-end")
-          priceSum += Number(item.quantity) * Number((item.price).split(' ')[0]);
+          let currentItemPriceSum = Number(item.quantity) * Number((item.price).split(' ')[0]);
+          priceSum += currentItemPriceSum;
+          userPriceSumItem.title = userPriceSumItem.title + currentItemPriceSum + " Ft + ";
           quantitySpan.innerText = `${item.quantity} x `;
           nameSpan.innerText = `${item.name} (${item.size}) - ${item.price}`;
           listItem.appendChild(quantitySpan);
           listItem.appendChild(nameSpan);
           userBasketItem.appendChild(listItem);
         });
-        userPriceSumItem.innerText = priceSum + ' Ft';
+        userPriceSumItem.title = userPriceSumItem.title + transportFeePerPerson + ' Ft(szállítás) = ' + (priceSum + transportFeePerPerson) + ' Ft';
+        userPriceSumItem.innerText = (priceSum + transportFeePerPerson) + ' Ft';
 
         globalBasketValue += priceSum;
         headerItem.insertBefore(usernameItem, personItem.firstChild);
@@ -290,7 +297,7 @@
         }
       });
       const globalvalue = document.getElementById("globalbasket-value");
-      globalvalue.innerText = globalBasketValue + " Ft"
+      globalvalue.innerText = (globalBasketValue + traransportFee) + " Ft"
     }
 
     function createListItem(item) {
@@ -383,7 +390,6 @@
         console.log('Clearing local basket as requested by the server');
         clearBasket()
       });
-
 
       socket.on('Client Basket Update', function(msg) {
         console.log('Global basket incomming via websocket: ', msg);

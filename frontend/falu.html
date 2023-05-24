@@ -12,9 +12,9 @@
   <div class="col-6 text-start">
     <h1>Falusi rendelő</h1>
   </div>
-  <div class="col-6 text-end user-info">
+  <div class="col-6 text-end d-flex justify-content-end user-info">
     <span id="username-display"></span>
-    <svg onclick="openPopup()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16" data-darkreader-inline-fill="" style="--darkreader-inline-fill:currentColor;">
+    <svg onclick="openPopup()" xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="bi bi-pen mt-1" viewBox="0 0 16 16" data-darkreader-inline-fill="" style="--darkreader-inline-fill:currentColor;">
       <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001zm-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708l-1.585-1.585z"></path>
     </svg>
   </div>
@@ -41,58 +41,62 @@
       <button onclick="closePSIDPopup()">Mégse</button>
     </div>
   </div>
-
-  <div class="layout">
-    <div class="list-container etlaplist">
-      <div class="container">
-        <div class="row">
-          <h2>Étlap</h2>
-        </div>
-      </div>
-      <div class="row">
-        <ul class="list" id="foodList"></ul>
-      </div>
-    </div>
-    <div class="list-container localbasket">
-      <div class="container">
-        <div class="row">
-          <div class="col-12">
-            <h2>Kosarad</h2>
+  <div class="">
+    <div class="layout">
+      <div class="list-container etlaplist">
+        <div class="container">
+          <div class="row">
+            <h2>Étlap</h2>
           </div>
         </div>
         <div class="row">
-          <div class="col-6 text-start">
-            <span id="localbasket-value"></span>
+          <ul class="list" id="foodList"></ul>
+        </div>
+      </div>
+      <div class="list-container localbasket">
+        <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <h2>Kosarad</h2>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6 text-start">
+              <span id="localbasket-value"></span>
+            </div>
+            <div class="col-6 text-end">
               <button id="clearBasketButton" onclick="clearBasket()">Kosarad ürítése</button>
+            </div>
           </div>
-          <div class="col-6 text-end">
-            <button id="clearBasketButton" onclick="clearBasket()">Kosarad ürétése</button>
+          <div class="row">
+            <ul class="list" id="basketList"></ul>
           </div>
         </div>
-        <div class="row">
-          <ul class="list" id="basketList"></ul>
+      </div>
+      <div class="list-container globalbasket">
+        <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <h2>Közös kosár</h2>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6 text-start">
+              <span id="globalbasket-value"></span>
+            </div>
+            <div class="col-6 text-end">
+              <button id="transferBasketButton" onclick="openPSIDPopup()">Áthelyezés falusiba</button>
+            </div>
+          </div>
+          <div class="row">
+            <ul class="list" id="globalbasketList"></ul>
+          </div>
         </div>
       </div>
     </div>
-    <div class="list-container globalbasket">
-      <div class="container">
-        <div class="row">
-          <div class="col-12">
-            <h2>Közös kosár</h2>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-6 text-start">
-            <span id="globalbasket-value"></span>
-          </div>
-          <div class="col-6 text-end">
-            <button id="transferBasketButton" onclick="openPSIDPopup()">Áthelyezés falusiba</button>
-          </div>
-        </div>
-        <div class="row">
-          <ul class="list" id="globalbasketList"></ul>
-        </div>
-      </div>
+    <div class="footer d-flex justify-content-between p-1" style="background-color: rgba(0, 0, 0, 0.2);">
+      <span>Készítette: Tóth Ákos</span>
+      <span>Verzió: v0.3</span>
     </div>
   </div>
   <script>
@@ -197,7 +201,6 @@
       basketList.innerHTML = '';
       const localBasket = getBasketFromCookies() || {};
       socket.emit("Server Basket Update", { [username]: localBasket });
-
       if (!localBasket) {
         localvalue.innerText = "0 Ft"
         return;
@@ -222,7 +225,6 @@
             // If the item already exists in the basket, decrement the quantity
             basketItem.quantity -= 1;
           }
-          socket.emit("Server Basket Update", { [username]: localBasket });
           setBasketInCookies(localBasket);
 
           updateBasketList();
@@ -366,6 +368,26 @@
 
     var socket;
 
+    $(document).ready(function(){
+      // sending a connect request to the server.
+      socket = io.connect();
+
+      socket.on('connect', function() {
+        console.log('Socket.IO connection established');
+        updateBasketList();
+      });
+
+      socket.on('Clear Local Basket', function() {
+        console.log('Clearing local basket as requested by the server');
+        clearBasket()
+      });
+
+      socket.on('Client Basket Update', function(msg) {
+        console.log('Global basket incomming via websocket: ', msg);
+        updateGlobalBasketList(msg.basket);
+      });
+    });
+
     fetch(`http://${window.location.hostname}/api/getetlap`)
       .then(response => response.json())
         .then(data => {
@@ -381,24 +403,6 @@
       .catch(error => console.error(error));
 
 
-    $(document).ready(function(){
-      // sending a connect request to the server.
-      socket = io.connect();
-
-      socket.on('connect', function() {
-        console.log('Socket.IO connection established');
-      });
-
-      socket.on('Clear Local Basket', function() {
-        console.log('Clearing local basket as requested by the server');
-        clearBasket()
-      });
-
-      socket.on('Client Basket Update', function(msg) {
-        console.log('Global basket incomming via websocket: ', msg);
-        updateGlobalBasketList(msg.basket);
-      });
-    });
   </script>
 
 </body>

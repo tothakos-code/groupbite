@@ -240,7 +240,6 @@
       const globalbasketList = document.getElementById('globalbasketList');
       // Clear the current list
       globalbasketList.innerHTML = '';
-      // const basket = getBasketFromCookies();
 
       if (!globalBasket) {
         return;
@@ -284,7 +283,11 @@
         basketItem.appendChild(userBasketItem);
         personItem.appendChild(headerItem);
         personItem.appendChild(basketItem);
-        globalbasketList.appendChild(personItem);
+        if (person === username) {
+          globalbasketList.prepend(personItem);
+        } else {
+          globalbasketList.append(personItem);
+        }
       });
       const globalvalue = document.getElementById("globalbasket-value");
       globalvalue.innerText = globalBasketValue + " Ft"

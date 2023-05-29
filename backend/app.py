@@ -116,12 +116,12 @@ def call_transfer_basket():
             "compAll": ""
             }
 
-        # r = requests.post(
-        #     link,
-        #     headers=requests_header,
-        #     data=requests_data,
-        #     cookies={"PHPSESSID":PHPSESSIONID}
-        # )
+        r = requests.post(
+            link,
+            headers=requests_header,
+            data=requests_data,
+            cookies={"PHPSESSID":PHPSESSIONID}
+        )
     return 'OK'
 
 

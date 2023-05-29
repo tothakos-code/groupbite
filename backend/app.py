@@ -19,6 +19,8 @@ fdidpattern = r"\/fdid-[0-9]+\/"
 sidfdpattern = r"\/sidfd-[0-9]+\/"
 
 sql_select = "SELECT basket FROM orders WHERE order_date = CURRENT_DATE"
+sql_get_state = "SELECT order_state FROM orders WHERE order_date = CURRENT_DATE"
+sql_set_state = "UPDATE orders SET order_state = %s WHERE order_date = CURRENT_DATE RETURNING order_state"
 sql_insert = "INSERT INTO orders (basket) values (%s) RETURNING basket"
 sql_update = "UPDATE orders SET basket = %s WHERE order_date = CURRENT_DATE RETURNING basket"
 
@@ -35,16 +37,20 @@ def db_connection():
     return conn
 
 @app.route('/')
-def hello():
+def call_hello():
     return "Welcome to this api on a pi!"
 
 @app.route('/clearclientsbasket')
-def clear_clients_basket():
+def call_clear_clients_basket():
     socketio.emit('Clear Local Basket')
     return "OK"
 
+@app.route('/getorderstate')
+def call_get_order_state():
+    return get_order_state()
+
 @app.route('/transferBasket', methods=['POST'])
-def transfer_basket():
+def call_transfer_basket():
     PHPSESSIONID = request.json['psid']
     orders = None
 
@@ -57,8 +63,14 @@ def transfer_basket():
         # execute a statement
         cur.execute(sql_select)
         orders = cur.fetchone()[0]
+
+        cur.execute(sql_set_state, ('order',))
+        logging.info("Order status changet to 'order'")
+
+        conn.commit()
         # close the communication with the PostgreSQL
         cur.close()
+        socketio.emit("Order state changed", "order")
     except (Exception, psycopg2.DatabaseError) as error:
         logging.error(error)
     finally:
@@ -104,12 +116,12 @@ def transfer_basket():
             "compAll": ""
             }
 
-        r = requests.post(
-            link,
-            headers=requests_header,
-            data=requests_data,
-            cookies={"PHPSESSID":PHPSESSIONID}
-        )
+        # r = requests.post(
+        #     link,
+        #     headers=requests_header,
+        #     data=requests_data,
+        #     cookies={"PHPSESSID":PHPSESSIONID}
+        # )
     return 'OK'
 
 
@@ -152,8 +164,37 @@ def get_etlap():
 def handle_connect(data):
     logging.warning("Socket.IO connection established")
 
+@socketio.on('Request order state')
+def handle_request_order_state():
+    return get_order_state()
+
+@socketio.on('Ordered and Payed')
+def handle_payed():
+    conn = None
+    try:
+        conn = db_connection()
+        logging.info('Database connection opened.')
+
+        cur = conn.cursor()
+        cur.execute(sql_set_state, ('closed',))
+        conn.commit()
+        cur.close()
+        socketio.emit("Order state changed", "closed")
+
+    except (Exception, psycopg2.DatabaseError) as error:
+            logging.error(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            logging.info('Database connection closed.')
+
 @socketio.on('Server Basket Update')
 def handle_basket_update(data):
+    order_state = get_order_state()
+    if order_state == "closed":
+        socketio.emit('Client Basket Update', {'basket': get_today_basket() })
+        socketio.emit("Order state changed", order_state, room=request.sid)
+        return
     user = list(data.keys())[0]
     currentBasket = get_today_basket()
     if data[user]:
@@ -162,7 +203,34 @@ def handle_basket_update(data):
     elif user in currentBasket:
         # basket is empty, delete key
         del currentBasket[user]
+
     socketio.emit('Client Basket Update', {'basket': set_today_basket(currentBasket) })
+
+def get_order_state():
+    conn = None
+    try:
+        conn = db_connection()
+        logging.info('Database connection opened.')
+
+        cur = conn.cursor()
+        cur.execute(sql_get_state)
+
+        if cur.rowcount == 0:
+            # orderer not initialized yet, return the default value
+            return 'collect'
+        elif cur.rowcount == 1:
+            # return the state
+            return cur.fetchone()[0]
+        elif cur.rowcount > 1:
+            # this error is impossible
+            raise ValueError("ERROR: There is more than one order, I dont know what to do! PANIC!")
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+            logging.error(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            logging.info('Database connection closed.')
 
 def get_today_basket():
     conn = None

@@ -14,7 +14,7 @@ socketio = SocketIO(app,logger=True, engineio_logger=True)
 app.config['SECRET_KEY'] = 'secret!'
 
 
-napok = ["hetfoi","keddi", "szerdai","csotortoki","penteki","szombati","vasarnapi"]
+napok = ["hetfoi","keddi", "szerdai","csutortoki","penteki","szombati","vasarnapi"]
 fdidpattern = r"\/fdid-[0-9]+\/"
 sidfdpattern = r"\/sidfd-[0-9]+\/"
 

@@ -189,6 +189,7 @@ function updateGlobalBasketList(globalBasket) {
   }
 
   let globalBasketValue = 0;
+  let boxcount = 0;
 
   let traransportFee = 400;
   let transportFeePerPerson = Math.ceil(traransportFee / Object.keys(globalBasket).length);
@@ -217,6 +218,7 @@ function updateGlobalBasketList(globalBasket) {
       nameSpan.classList.add("text-end")
       let currentItemPriceSum = Number(item.quantity) * Number((item.price).split(' ')[0]);
       priceSum += currentItemPriceSum;
+      boxcount += item.quantity;
       userPriceSumItem.title = userPriceSumItem.title + currentItemPriceSum + " Ft + ";
       quantitySpan.innerText = `${item.quantity} x `;
       nameSpan.innerText = `${item.name} (${item.size}) - ${item.price}`;
@@ -241,6 +243,8 @@ function updateGlobalBasketList(globalBasket) {
   });
   const globalvalue = document.getElementById("globalbasket-value");
   globalvalue.innerText = (globalBasketValue + traransportFee) + " Ft"
+  const boxcountItem = document.getElementById("globalbasket-boxcount");
+  boxcountItem.innerText = boxcount + " db doboz"
 }
 
 function createListItem(item) {

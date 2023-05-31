@@ -378,6 +378,11 @@ function main() {
 
       })
     .catch(error => console.error(error));
+
+  let today = new Date();
+  let todayString = today.toLocaleDateString('hu-HU')
+  let todayName = today.toLocaleDateString('hu-HU', {weekday:'long'})
+  document.getElementById("etlapWithDate").innerText = "Étlap - " + todayString + ' - ' + todayName;
 }
 
 main();

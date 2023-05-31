@@ -150,6 +150,8 @@ function updateBasketList() {
     const deleteButton = document.createElement('button');
     const quantitySpan = document.createElement('span');
     deleteButton.innerText = 'Töröl';
+    deleteButton.classList.add("btn");
+    deleteButton.classList.add("btn-secondary");
 
     // Add an event listener to the delete button to remove the item from the basket
     deleteButton.addEventListener('click', () => {

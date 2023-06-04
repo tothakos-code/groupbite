@@ -1,4 +1,5 @@
-function saveUsername() {
+/* eslint-disable */
+export function saveUsername() {
   let user = document.getElementById("username-input").value;
   if (user !== "") {
     document.cookie = `username=${encodeURIComponent(user)}; expires=${getCookieExpirationDate(365)}`;
@@ -8,7 +9,7 @@ function saveUsername() {
   }
 }
 
-function transferBasketToFalusi() {
+export function transferBasketToFalusi() {
   let psid = document.getElementById("psid-input").value;
   if (psid !== "") {
     closePSIDPopup();
@@ -31,7 +32,7 @@ function transferBasketToFalusi() {
   }
 }
 
-function orderPayed() {
+export function orderPayed() {
   socket.emit("Ordered and Payed");
   closeOrderEndPopup();
 }
@@ -41,7 +42,7 @@ function openOrderEndPopup(){
   popup.style.display = "block";
 }
 
-function closeOrderEndPopup(){
+export function closeOrderEndPopup(){
   let popup = document.getElementById("orderend-popup");
   popup.style.display = "none";
 }
@@ -52,26 +53,30 @@ function displayUsername(username) {
   usernameDisplay.style.display = "block";
 }
 
-function closePopup() {
+export function closePopup() {
   if (username !== null) {
     let popup = document.getElementById("popup");
     popup.style.display = "none";
   }
 }
 
-function openPopup() {
+export function openPopup() {
   let popup = document.getElementById("popup");
   popup.style.display = "block";
 }
 
-function closePSIDPopup() {
+export function closePSIDPopup() {
   if (username !== "" || username === null) {
     let popup = document.getElementById("psid-popup");
     popup.style.display = "none";
   }
 }
 
-function openPSIDPopup() {
+export function openPSIDPopup() {
+  if (orderState === "closed") {
+    alert("Ma már rendeltek!")
+    return
+  }
   let popup = document.getElementById("psid-popup");
   popup.style.display = "block";
 }
@@ -109,7 +114,7 @@ function setBasketInCookies(basket) {
   document.cookie = `basket=${basketString}; path=/; expires=${now.toUTCString()}`;
 }
 
-function clearBasket() {
+export function clearBasket() {
   if ( orderState === 'order') {
     alert("Figyelem! A rendelő elkezdte áthelyezni a falusiba a kosarat és lehet, hogy nem veszi észre, hogy te változtattál a kosaradon. Jelezd neki mielött nem késő!")
   }
@@ -294,7 +299,7 @@ let username = getUsernameFromCookie();
 let socket;
 let orderState;
 
-function darkModeToggle() {
+export function darkModeToggle() {
   let theme = "light";
   if (document.documentElement.getAttribute('data-bs-theme') === "light") {
       theme = "dark";
@@ -313,7 +318,7 @@ function darkModeToggle() {
   localStorage.setItem("theme", theme);
 };
 
-function main() {
+export function main() {
   const currentTheme = localStorage.getItem("theme");
   document.documentElement.setAttribute('data-bs-theme', currentTheme)
   const toggleButton = document.getElementById("darkModeToggleButton");
@@ -379,10 +384,10 @@ function main() {
       })
     .catch(error => console.error(error));
 
-  let today = new Date();
-  let todayString = today.toLocaleDateString('hu-HU')
-  let todayName = today.toLocaleDateString('hu-HU', {weekday:'long'})
-  document.getElementById("etlapWithDate").innerText = "Étlap - " + todayString + ' - ' + todayName;
+  // let today = new Date();
+  // let todayString = today.toLocaleDateString('hu-HU')
+  // let todayName = today.toLocaleDateString('hu-HU', {weekday:'long'})
+  // document.getElementById("etlapWithDate").innerText = "Étlap - " + todayString + ' - ' + todayName;
 }
 
-main();
+// main();

@@ -1,14 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Rendelés Gyűjtő</title>
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js" integrity="sha512-AI5A3zIoeRSEEX9z3Vyir8NqSMC1pY7r5h2cE+9J6FLsoEmSSGLFaqMQw8SWvoONXogkfFrkQiJfLeHLz3+HOg==" crossorigin="anonymous"></script>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
-  <link rel="stylesheet" href="./styles.css">
-</head>
-<body class="p-3 container-fluid">
+<template>
   <div class="popup" id="popup">
     <div class="popup-inner">
       <h2>Kélek írd be hogyan hívnak:</h2>
@@ -60,8 +50,13 @@
   <div class="row">
     <div class="d-flex">
       <div class="list-container etlaplist container col-7 pe-4">
-        <div class="row">
+        <div class="row d-flex">
+          <div class="col">
             <h2 class="ps-0" id="etlapWithDate">Étlap</h2>
+          </div>
+          <div id="vueDateStamp" class="col">
+            <Datestamp />
+          </div>
         </div>
         <div class="list row">
           <ul class="" id="foodList">
@@ -125,6 +120,33 @@
     <span class="col-6 text-start">Készítette: Tóth Ákos</span>
     <span class="col-6 text-end">Verzió: v0.4.1</span>
   </div>
-  <script type="text/javascript" charset="utf-8" src="scripts.js"></script>
-</body>
-</html>
+</template>
+
+
+<script>
+import Datestamp from './components/DateStamp.vue'
+import * as orginalScript from '../public/scripts.js';
+
+window.openPopup = orginalScript.openPopup;
+window.closePopup = orginalScript.closePopup;
+window.saveUsername = orginalScript.saveUsername;
+window.transferBasketToFalusi = orginalScript.transferBasketToFalusi;
+window.closeOrderEndPopup = orginalScript.closeOrderEndPopup;
+window.closePSIDPopup = orginalScript.closePSIDPopup;
+window.openPSIDPopup = orginalScript.openPSIDPopup;
+window.clearBasket = orginalScript.clearBasket;
+window.darkModeToggle = orginalScript.darkModeToggle;
+
+export default {
+  name: 'App',
+  components: {
+    Datestamp
+  },
+  mounted() {
+    orginalScript.main();
+  }
+}
+</script>
+
+<style>
+</style>

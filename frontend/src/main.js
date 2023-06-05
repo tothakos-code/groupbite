@@ -1,4 +1,7 @@
-import { createApp } from 'vue'
-import App from './App.vue'
+import { createApp } from 'vue';
+import App from './App.vue';
+import VueCookies from 'vue3-cookies';
 
-createApp(App).mount('#app')
+let app = createApp(App);
+app.use(VueCookies);
+app.mount('#app');

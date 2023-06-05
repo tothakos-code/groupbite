@@ -1,5 +1,5 @@
 <template>
-  <div class="popup" id="popup">
+  <!-- <div class="popup" id="popup">
     <div class="popup-inner">
       <h2>Kélek írd be hogyan hívnak:</h2>
       <input type="text" id="username-input">
@@ -7,7 +7,8 @@
       <button class="btn btn-secondary" onclick="saveUsername()">Mentés</button>
       <button class="btn btn-secondary" onclick="closePopup()">Mégse</button>
     </div>
-  </div>
+  </div> -->
+
   <div class="popup" id="orderend-popup">
     <div class="popup-inner">
       <h2>Kosár sikeresen átmásolva a falusira. Frissítsd a falusi oldalát.</h2>
@@ -23,8 +24,8 @@
       <h2>Írd be a falusi oldalon lévő PHPSESSIONID-det:</h2>
       <p>Falusi oldalán a cookie-k között kell keresned ezt a változót. Legyél bejelentkezve a falusiba! Az értékét másold ide:</p>
       <input type="text" id="psid-input">
-      <br><br>
       <p>Az áthelyezés eltarthat pár másodpercig, várj a visszajelzésig.</p>
+      <br><br>
       <button class="btn btn-secondary" onclick="transferBasketToFalusi()">Áthelyezés</button>
       <button class="btn btn-secondary" onclick="closePSIDPopup()">Mégse</button>
     </div>
@@ -39,11 +40,8 @@
       <div class="col-6">
         <button class="btn" id="darkModeToggleButton" onclick="darkModeToggle()">Dark Mode</button>
       </div>
-      <div class="col-6 text-end d-flex justify-content-end align-items-center user-info">
-        <span id="username-display"></span>
-        <svg onclick="openPopup()" xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="bi bi-pen mt-1" viewBox="0 0 16 16" data-darkreader-inline-fill="" style="--darkreader-inline-fill:currentColor;">
-          <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001zm-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708l-1.585-1.585z"></path>
-        </svg>
+      <div class="col-6 text-end d-flex justify-content-end align-items-center">
+          <UsernamePopup/>
       </div>
     </div>
   </div>
@@ -125,6 +123,7 @@
 
 <script>
 import Datestamp from './components/DateStamp.vue'
+import UsernamePopup from './components/UsernamePopup.vue'
 import * as orginalScript from '../public/scripts.js';
 
 window.openPopup = orginalScript.openPopup;
@@ -140,8 +139,14 @@ window.darkModeToggle = orginalScript.darkModeToggle;
 export default {
   name: 'App',
   components: {
-    Datestamp
+    Datestamp,
+    UsernamePopup
   },
+  // data() {
+  //   return {
+  //     showUsernamePopup: true
+  //   }
+  // },
   mounted() {
     orginalScript.main();
   }

@@ -1,14 +1,4 @@
 /* eslint-disable */
-export function saveUsername() {
-  let user = document.getElementById("username-input").value;
-  if (user !== "") {
-    document.cookie = `username=${encodeURIComponent(user)}; expires=${getCookieExpirationDate(365)}`;
-    username = user;
-    closePopup();
-    displayUsername(username);
-  }
-}
-
 export function transferBasketToFalusi() {
   let psid = document.getElementById("psid-input").value;
   if (psid !== "") {
@@ -47,23 +37,6 @@ export function closeOrderEndPopup(){
   popup.style.display = "none";
 }
 
-function displayUsername(username) {
-  let usernameDisplay = document.getElementById("username-display");
-  usernameDisplay.innerHTML = "Hello, " + username + "!";
-  usernameDisplay.style.display = "block";
-}
-
-export function closePopup() {
-  if (username !== null) {
-    let popup = document.getElementById("popup");
-    popup.style.display = "none";
-  }
-}
-
-export function openPopup() {
-  let popup = document.getElementById("popup");
-  popup.style.display = "block";
-}
 
 export function closePSIDPopup() {
   if (username !== "" || username === null) {
@@ -331,12 +304,6 @@ export function main() {
     toggleButton.classList.add('btn-light');
     toggleButton.classList.remove('btn-dark');
 
-  }
-
-  if (username !== null) {
-    displayUsername(username);
-  } else {
-    openPopup();
   }
 
   $(document).ready(function(){

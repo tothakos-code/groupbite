@@ -16,9 +16,17 @@ export const socket = io(URL);
 socket.on("connect", () => {
   console.log('VUE Socket.IO connection established VUE');
   state.connected = true;
+  socket.emit('Request order state', function(incomingState) {
+    console.log("VUE Recived ORDER data from return VUE:" + incomingState);
+    state.orderState = incomingState;
+  });
 });
 
 socket.on("disconnect", () => {
   state.connected = false;
 });
 
+socket.on('Order state changed', function(incomingState) {
+  console.log("VUE Order update incoming VUE:" + incomingState);
+  state.orderState = incomingState;
+});

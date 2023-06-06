@@ -1,35 +1,4 @@
 <template>
-  <!-- <div class="popup" id="popup">
-    <div class="popup-inner">
-      <h2>Kélek írd be hogyan hívnak:</h2>
-      <input type="text" id="username-input">
-      <br><br>
-      <button class="btn btn-secondary" onclick="saveUsername()">Mentés</button>
-      <button class="btn btn-secondary" onclick="closePopup()">Mégse</button>
-    </div>
-  </div> -->
-
-  <div class="popup" id="orderend-popup">
-    <div class="popup-inner">
-      <h2>Kosár sikeresen átmásolva a falusira. Frissítsd a falusi oldalát.</h2>
-      <p>Okézd le , ha kifizetted a rendelést</p>
-      <br><br>
-      <button class="btn btn-secondary" onclick="orderPayed()">Fizetve</button>
-      <button class="btn btn-secondary" onclick="closeOrderEndPopup()">Mégse</button>
-    </div>
-  </div>
-  <div class="popup" id="psid-popup">
-    <div class="popup-inner">
-      <h2>Ez a Rendelő ember feladata</h2>
-      <h2>Írd be a falusi oldalon lévő PHPSESSIONID-det:</h2>
-      <p>Falusi oldalán a cookie-k között kell keresned ezt a változót. Legyél bejelentkezve a falusiba! Az értékét másold ide:</p>
-      <input type="text" id="psid-input">
-      <p>Az áthelyezés eltarthat pár másodpercig, várj a visszajelzésig.</p>
-      <br><br>
-      <button class="btn btn-secondary" onclick="transferBasketToFalusi()">Áthelyezés</button>
-      <button class="btn btn-secondary" onclick="closePSIDPopup()">Mégse</button>
-    </div>
-  </div>
   <div class="row d-flex align-items-center">
     <div class="col-7 text-start">
       <div class="align-items-center">
@@ -103,7 +72,7 @@
                 <span id="globalbasket-boxcount"></span>
               </div>
               <div class="col-4 text-end">
-                <button class="btn btn-secondary" id="transferBasketButton" onclick="openPSIDPopup()">Áthelyezés falusiba</button>
+                <TransferPopup/>
               </div>
             </div>
             <div class="row">
@@ -124,6 +93,7 @@
 <script>
 import Datestamp from './components/DateStamp.vue'
 import UsernamePopup from './components/UsernamePopup.vue'
+import TransferPopup from './components/TransferPopup.vue'
 import * as orginalScript from '../public/scripts.js';
 
 window.openPopup = orginalScript.openPopup;
@@ -140,7 +110,8 @@ export default {
   name: 'App',
   components: {
     Datestamp,
-    UsernamePopup
+    UsernamePopup,
+    TransferPopup
   },
   // data() {
   //   return {

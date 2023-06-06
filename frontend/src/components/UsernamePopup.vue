@@ -25,13 +25,11 @@ export default {
     const { cookies } = useCookies();
     return { cookies };
   },
-  emits: ['cancel'],
   mounted() {
     this.username = this.cookies.get('username');
     if (!this.$cookies.isKey('username')) {
       this.show = true;
     }
-    console.log("Mounted with:" + this.username);
   },
   data() {
     return {

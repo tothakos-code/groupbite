@@ -45,7 +45,6 @@ import * as orginalScript from '../public/scripts.js';
 import { socket } from "@/socket";
 import { useCookies } from "vue3-cookies";
 
-window.clearBasket = orginalScript.clearBasket;
 window.darkModeToggle = orginalScript.darkModeToggle;
 
 export default {

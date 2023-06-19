@@ -1,17 +1,4 @@
 /* eslint-disable */
-export function clearBasket() {
-  if ( orderState === 'order') {
-    alert("Figyelem! A rendelő elkezdte áthelyezni a falusiba a kosarat és lehet, hogy nem veszi észre, hogy te változtattál a kosaradon. Jelezd neki mielött nem késő!")
-  }
-  if ( orderState === 'closed') {
-    alert("A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.")
-    return
-  }
-  // Remove the basket cookie
-  document.cookie = 'basket=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
-  // updateBasketList();
-}
-
 export function darkModeToggle() {
   let theme = "light";
   if (document.documentElement.getAttribute('data-bs-theme') === "light") {

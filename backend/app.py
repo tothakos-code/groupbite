@@ -125,14 +125,19 @@ def call_transfer_basket():
     return 'OK'
 
 
-@app.route('/getetlap')
+@app.route('/getmenu')
 def get_etlap():
     # Requesting and parsing th HTML
     r = requests.get('https://falusitekercsgyorsetterem.pgg.hu/falusitekercsgyorsetterem/etlap/')
     soup = BeautifulSoup(r.content, 'html.parser')
 
     # Getting the current day
-    day = datetime.datetime.today().weekday()
+    requestedDay = request.args.get('day')
+    if requestedDay is None or requestedDay == 'undefined':
+        day = datetime.datetime.today().weekday()
+    else:
+        day = int(requestedDay) - 1
+
     logging.warning("Mai nap: " + str(day))
     dayString = napok[day]
 
@@ -163,6 +168,8 @@ def get_etlap():
 @socketio.on('connect')
 def handle_connect(data):
     logging.warning("Socket.IO connection established")
+    socketio.emit('Client Basket Update', {'basket': get_today_basket() })
+
 
 @socketio.on('Request order state')
 def handle_request_order_state():

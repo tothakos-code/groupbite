@@ -40,25 +40,6 @@
           </ul>
         </div>
       </div>
-      <div class="col-5">
-        <div class="list-container localbasket row">
-          <div class="container">
-            <div class="row align-items-center">
-              <div class="col-4">
-                <h2>Kosarad</h2>
-              </div>
-              <div class="col-4 align-items-center">
-                <span id="localbasket-value"></span>
-              </div>
-              <div class="col-4 text-end">
-                <button class="btn btn-secondary" id="clearBasketButton" onclick="clearBasket()">Kosarad ürítése</button>
-              </div>
-            </div>
-            <div class="row">
-              <ul class="list" id="basketList"></ul>
-            </div>
-          </div>
-        </div>
         <div class="list-container globalbasket row">
           <div class="container">
             <div class="row align-items-center">
@@ -80,6 +61,12 @@
             </div>
           </div>
         </div>
+    </div>
+    <div class="col-5">
+      <div class="row p-2">
+        <LocalBasket ref="localbasket" @basketUpdate="this.onBasketUpdate()"/>
+      </div>
+      <div class="row p-2">
       </div>
     </div>
   </div>
@@ -94,6 +81,7 @@
 import Datestamp from './components/DateStamp.vue'
 import UsernamePopup from './components/UsernamePopup.vue'
 import TransferPopup from './components/TransferPopup.vue'
+import LocalBasket from './components/LocalBasket.vue'
 import * as orginalScript from '../public/scripts.js';
 
 window.openPopup = orginalScript.openPopup;
@@ -112,12 +100,17 @@ export default {
     Datestamp,
     UsernamePopup,
     TransferPopup
+    LocalBasket,
+  setup() {
+    const { cookies } = useCookies();
+    return { cookies };
   },
-  // data() {
-  //   return {
-  //     showUsernamePopup: true
-  //   }
-  // },
+  methods: {
+    onBasketUpdate: function() {
+      this.$refs.localbasket.updateBasket();
+      socket.emit("Server Basket Update",{ [this.cookies.get('username')]: this.cookies.get('basket') });
+    }
+  },
   mounted() {
     orginalScript.main();
   }

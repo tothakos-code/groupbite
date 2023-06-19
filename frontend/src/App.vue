@@ -14,31 +14,10 @@
       </div>
     </div>
   </div>
-  <div class="row">
-    <div class="d-flex">
-      <div class="list-container etlaplist container col-7 pe-4">
-        <div class="row d-flex">
-          <div class="col">
-            <h2 class="ps-0" id="etlapWithDate">Étlap</h2>
-          </div>
-          <div id="vueDateStamp" class="col">
-            <Datestamp />
-          </div>
-        </div>
-        <div class="list row">
-          <ul class="" id="foodList">
-            <template id="etlapListItemTemplate">
-              <li class="row item">
-                <span class="name col"></span>
-                <div class="button-container col-4 d-flex justify-content-end">
-                </div>
-              </li>
-            </template>
-            <template id="etlapListItemButtonTemplate">
-                  <button class="btn btn-secondary btn-sm col-sm-6"></button>
-            </template>
-          </ul>
-        </div>
+  <div class="row d-flex">
+    <div class="col-7">
+      <div class="row p-2">
+        <Menu @basketUpdate="this.onBasketUpdate()"/>
       </div>
     </div>
     <div class="col-5">
@@ -58,9 +37,9 @@
 
 
 <script>
-import Datestamp from './components/DateStamp.vue'
 import UsernamePopup from './components/UsernamePopup.vue'
 import TransferPopup from './components/TransferPopup.vue'
+import Menu from './components/Menu.vue'
 import LocalBasket from './components/LocalBasket.vue'
 import GlobalBasket from './components/GlobalBasket.vue'
 import * as orginalScript from '../public/scripts.js';
@@ -80,9 +59,9 @@ window.darkModeToggle = orginalScript.darkModeToggle;
 export default {
   name: 'App',
   components: {
-    Datestamp,
     UsernamePopup,
     TransferPopup
+    Menu,
     LocalBasket,
     GlobalBasket
   },

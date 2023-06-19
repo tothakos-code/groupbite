@@ -36,7 +36,6 @@ export default {
       let sumTitle = ""
       Object.entries(this.personBasket).forEach(([id,item]) => {
         console.log(id);
-        console.log(item);
         sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
         sumTitle+= item.quantity + '*' + item.price + ' + ';
       })

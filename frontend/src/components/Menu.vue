@@ -81,7 +81,6 @@ export default {
       fetch(`http://${window.location.hostname}/api/getmenu?day=${day}`)
         .then(response => response.json())
           .then(data => {
-            console.log(data);
             this.items = data;
           })
         .catch(error => console.error(error));

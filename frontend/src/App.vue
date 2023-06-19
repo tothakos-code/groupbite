@@ -7,7 +7,8 @@
     </div>
     <div class="col-5 d-flex ps-0">
       <div class="col-6">
-        <button class="btn" id="darkModeToggleButton" onclick="darkModeToggle()">Dark Mode</button>
+        <button v-if="this.theme === 'light'" class="btn btn-dark" @click="this.toggleDarkMode()">Dark</button>
+        <button v-else class="btn btn-light" @click="this.toggleDarkMode()">Light</button>
       </div>
       <div class="col-6 text-end d-flex justify-content-end align-items-center">
           <UsernamePopup/>
@@ -41,11 +42,9 @@ import UsernamePopup from './components/UsernamePopup.vue'
 import Menu from './components/Menu.vue'
 import LocalBasket from './components/LocalBasket.vue'
 import GlobalBasket from './components/GlobalBasket.vue'
-import * as orginalScript from '../public/scripts.js';
 import { socket } from "@/socket";
 import { useCookies } from "vue3-cookies";
 
-window.darkModeToggle = orginalScript.darkModeToggle;
 
 export default {
   name: 'App',
@@ -59,14 +58,35 @@ export default {
     const { cookies } = useCookies();
     return { cookies };
   },
+  data() {
+    return {
+      theme: localStorage.getItem("theme") || 'dark'
+    }
+  },
   methods: {
     onBasketUpdate: function() {
       this.$refs.localbasket.updateBasket();
       socket.emit("Server Basket Update",{ [this.cookies.get('username')]: this.cookies.get('basket') });
+    },
+    toggleDarkMode: function() {
+      if (this.theme === 'dark') {
+        this.theme = 'light'
+      } else {
+        this.theme = 'dark'
+      }
+      localStorage.setItem("theme", this.theme);
+      document.documentElement.setAttribute('data-bs-theme', this.theme)
     }
   },
   mounted() {
-    orginalScript.main();
+    const currentTheme = localStorage.getItem("theme");
+    if (!currentTheme) {
+      this.theme = 'light'
+    } else {
+      this.theme = currentTheme
+    }
+    localStorage.setItem("theme", this.theme);
+    document.documentElement.setAttribute('data-bs-theme', this.theme)
   }
 }
 </script>

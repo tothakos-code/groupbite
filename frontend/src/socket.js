@@ -3,7 +3,8 @@ import { io } from "socket.io-client";
 
 export const state = reactive({
   connected: false,
-  orderState: ''
+  orderState: '',
+  globalBasket: {}
 });
 
 // "undefined" means the URL will be computed from the `window.location` object
@@ -29,4 +30,9 @@ socket.on("disconnect", () => {
 socket.on('Order state changed', function(incomingState) {
   console.log("VUE Order update incoming VUE:" + incomingState);
   state.orderState = incomingState;
+});
+
+socket.on('Client Basket Update', function(incomingGlobalBasket) {
+  console.log('VUE Global basket incomming via websocket VUE: ', incomingGlobalBasket);
+  state.globalBasket = incomingGlobalBasket.basket;
 });

@@ -40,33 +40,13 @@
           </ul>
         </div>
       </div>
-        <div class="list-container globalbasket row">
-          <div class="container">
-            <div class="row align-items-center">
-              <div class="col-4">
-                <h2>Közös kosár</h2>
-              </div>
-              <div class="col-2 align-items-center">
-                <span id="globalbasket-value"></span>
-              </div>
-              <div class="col-2 align-items-center">
-                <span id="globalbasket-boxcount"></span>
-              </div>
-              <div class="col-4 text-end">
-                <TransferPopup/>
-              </div>
-            </div>
-            <div class="row">
-              <ul class="list" id="globalbasketList"></ul>
-            </div>
-          </div>
-        </div>
     </div>
     <div class="col-5">
       <div class="row p-2">
         <LocalBasket ref="localbasket" @basketUpdate="this.onBasketUpdate()"/>
       </div>
       <div class="row p-2">
+        <GlobalBasket/>
       </div>
     </div>
   </div>
@@ -82,7 +62,10 @@ import Datestamp from './components/DateStamp.vue'
 import UsernamePopup from './components/UsernamePopup.vue'
 import TransferPopup from './components/TransferPopup.vue'
 import LocalBasket from './components/LocalBasket.vue'
+import GlobalBasket from './components/GlobalBasket.vue'
 import * as orginalScript from '../public/scripts.js';
+import { socket } from "@/socket";
+import { useCookies } from "vue3-cookies";
 
 window.openPopup = orginalScript.openPopup;
 window.closePopup = orginalScript.closePopup;
@@ -101,6 +84,8 @@ export default {
     UsernamePopup,
     TransferPopup
     LocalBasket,
+    GlobalBasket
+  },
   setup() {
     const { cookies } = useCookies();
     return { cookies };

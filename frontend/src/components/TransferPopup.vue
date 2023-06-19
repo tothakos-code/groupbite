@@ -1,5 +1,5 @@
 <template>
-  <button class="btn btn-secondary" id="transferBasketButton" @click="this.openPopup()">Áthelyezés falusiba</button>
+  <button class="btn btn-warning" id="transferBasketButton" @click="this.openPopup()">Áthelyezés falusiba</button>
   <Popup  v-if="showInitial" title="Ez a Rendelő ember feladata" @cancel="showInitial = false" @confirm="this.transferBasketToFalusi()">
     <p>Írd be a falusi oldalon lévő PHPSESSIONID-det:</p>
     <p>Falusi oldalán a cookie-k között kell keresned ezt a változót. Legyél bejelentkezve a falusiba! Az értékét másold ide:</p>

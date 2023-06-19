@@ -38,7 +38,6 @@
 
 <script>
 import UsernamePopup from './components/UsernamePopup.vue'
-import TransferPopup from './components/TransferPopup.vue'
 import Menu from './components/Menu.vue'
 import LocalBasket from './components/LocalBasket.vue'
 import GlobalBasket from './components/GlobalBasket.vue'
@@ -46,13 +45,6 @@ import * as orginalScript from '../public/scripts.js';
 import { socket } from "@/socket";
 import { useCookies } from "vue3-cookies";
 
-window.openPopup = orginalScript.openPopup;
-window.closePopup = orginalScript.closePopup;
-window.saveUsername = orginalScript.saveUsername;
-window.transferBasketToFalusi = orginalScript.transferBasketToFalusi;
-window.closeOrderEndPopup = orginalScript.closeOrderEndPopup;
-window.closePSIDPopup = orginalScript.closePSIDPopup;
-window.openPSIDPopup = orginalScript.openPSIDPopup;
 window.clearBasket = orginalScript.clearBasket;
 window.darkModeToggle = orginalScript.darkModeToggle;
 
@@ -60,7 +52,6 @@ export default {
   name: 'App',
   components: {
     UsernamePopup,
-    TransferPopup
     Menu,
     LocalBasket,
     GlobalBasket

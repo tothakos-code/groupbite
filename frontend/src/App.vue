@@ -7,8 +7,8 @@
     </div>
     <div class="col-5 d-flex ps-0">
       <div class="col-6">
-        <button v-if="this.theme === 'light'" class="btn btn-dark" @click="this.toggleDarkMode()">Dark</button>
-        <button v-else class="btn btn-light" @click="this.toggleDarkMode()">Light</button>
+        <button v-if="this.theme === 'light'" class="btn btn-dark ms-2" @click="this.toggleDarkMode()">Dark</button>
+        <button v-else class="btn btn-light ms-2" @click="this.toggleDarkMode()">Light</button>
       </div>
       <div class="col-6 text-end d-flex justify-content-end align-items-center">
           <UsernamePopup/>

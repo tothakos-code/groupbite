@@ -12,6 +12,13 @@
       Legyél bejelentkezve a falusiba! Az értékét másold ide:</p>
     PHPSESSIONID: <input type="text" v-model.trim="psid">
   </Popup>
+  <teleport to="body">
+    <div v-if="showSpinner" class="overlay d-flex justify-content-center">
+      <div class="spinner-border text-center text-dark" style="width: 4rem; height: 4rem; z-index: 20;" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </teleport>
   <Popup
     :showModal="showFinish"
     title="Rendelés befejezése"
@@ -37,7 +44,7 @@ export default {
     return {
       showInitial: false,
       showSpinner: false,
-      showFinish: false,
+      showFinish: true,
       psid: ""
     }
   },
@@ -55,9 +62,11 @@ export default {
           body: JSON.stringify({ psid: this.psid })
         })
           .then(response => {
+            this.showSpinner = false;
             if (response.statusText == "OK") {
               this.showFinish = true;
             } else {
+
               alert("Valami hiba történt.");
             }
           })
@@ -81,4 +90,14 @@ export default {
 </script>
 
 <style>
+.overlay {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    top: 40%;
+    left: 0px;
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+ }
 </style>

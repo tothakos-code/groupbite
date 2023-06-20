@@ -41,6 +41,7 @@
 <script>
 import { useCookies } from "vue3-cookies";
 import Datestamp from './DateStamp.vue'
+import { state } from "@/socket";
 
 
 export default {
@@ -58,6 +59,10 @@ export default {
   emits: ['basketUpdate'],
   methods: {
     addToBasket: function(fid, label, size, price, link) {
+      if (state.orderState === 'closed') {
+        alert("A rendelés már ellett küldve. Már nem módisíthatsz a kosaradon");
+        return;
+      }
       let basket = this.cookies.get('basket') || {};
       const itemSizeKey = fid + '-' + size;
       if (basket[itemSizeKey]) {

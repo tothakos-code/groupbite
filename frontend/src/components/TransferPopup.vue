@@ -59,7 +59,7 @@ export default {
     return {
       showInitial: false,
       showSpinner: false,
-      showFinish: true,
+      showFinish: false,
       orderDesc: "Tigra kft. Csere edényeket adunk. Mindent külön edénybe szeretnénk. Nagyon szépen köszönjük.",
       psid: ""
     }

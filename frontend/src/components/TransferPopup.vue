@@ -1,12 +1,25 @@
 <template>
   <button class="btn btn-warning" id="transferBasketButton" @click="this.openPopup()">Áthelyezés falusiba</button>
-  <Popup  v-if="showInitial" title="Ez a Rendelő ember feladata" @cancel="showInitial = false" @confirm="this.transferBasketToFalusi()">
+
+  <Popup
+    :showModal="showInitial"
+    title="Ez a Rendelő ember feladata"
+    @cancel="showInitial = false"
+    @confirm="this.transferBasketToFalusi()"
+  >
     <p>Írd be a falusi oldalon lévő PHPSESSIONID-det:</p>
-    <p>Falusi oldalán a cookie-k között kell keresned ezt a változót. Legyél bejelentkezve a falusiba! Az értékét másold ide:</p>
-    <input type="text" v-model.trim="psid">
-    <p>Az áthelyezés eltarthat pár másodpercig, várj a felugró ablakra.</p>
+    <p>Falusi oldalán a cookie-k között kell keresned ezt a változót.
+      Legyél bejelentkezve a falusiba! Az értékét másold ide:</p>
+    PHPSESSIONID: <input type="text" v-model.trim="psid">
   </Popup>
-  <Popup  v-if="showFinish" title="Kosár sikeresen átmásolva a falusira. Frissítsd a falusi oldalát." @cancel="showFinish = false" @confirm="this.orderPayed()">
+  <Popup
+    :showModal="showFinish"
+    title="Rendelés befejezése"
+    @cancel="showFinish = false"
+    @confirm="this.orderPayed()"
+  >
+    <p>Kosár sikeresen átmásolva a falusira. Frissítsd a falusi oldalát.</p>
+    <p>
     <p>Okézd le , ha kifizetted a rendelést</p>
   </Popup>
 </template>

@@ -1,7 +1,7 @@
 <template>
   <div class="card">
       <div class="align-items-center card-header row d-flex">
-        <div class="col-4">
+        <div class="col-3">
           <span class="fs-2">Közös kosár</span>
         </div>
         <div class="col-3 align-items-center">
@@ -16,7 +16,7 @@
             {{ this.personCount }} fő
           </span>
         </div>
-        <div class="col-2 text-end">
+        <div class="col-3">
           <TransferPopup/>
         </div>
       </div>

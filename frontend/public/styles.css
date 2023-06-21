@@ -11,11 +11,3 @@ body {
     flex-direction: column;
     min-height: 100vh;
 }
-footer {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    height: 100px;
-    width: 70%;
-    overflow: hidden;
-}

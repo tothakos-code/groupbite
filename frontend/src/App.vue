@@ -95,6 +95,10 @@ export default {
     }
     localStorage.setItem("theme", this.theme);
     document.documentElement.setAttribute('data-bs-theme', this.theme)
+  computed: {
+    isLoggedIn() {
+      return !(state.user === undefined || state.user.username === undefined);
+    }
   }
 }
 </script>

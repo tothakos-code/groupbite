@@ -18,8 +18,8 @@
             <slot></slot>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" @click="$emit('cancel')">Cancel</button>
-            <button class="btn btn-warning" @click="$emit('confirm')">Confirm</button>
+            <button class="btn btn-secondary" @click="$emit('cancel')">Mégse</button>
+            <button class="btn btn-warning" @click="$emit('confirm')">Folytat</button>
           </div>
         </div>
       </div>

@@ -32,14 +32,14 @@
   </div>
   <div class="footer row mt-auto p-3 bg-body-tertiary">
     <div class="row d-flex justify-content-between text-body-secondary">
-      <span class="col-3 text-center">Made by: Tóth Ákos</span>
+      <span class="col-3 text-center">Készítette: Tóth Ákos</span>
       <span class="col-3 text-center">
-        Source code: <a class="link-secondary" href="https://github.com/tothakos-code/order-accumulator">Github</a>
+        Forrás kód: <a class="link-secondary" href="https://github.com/tothakos-code/order-accumulator">Github</a>
       </span>
       <span class="col-3 text-center">
-        Change log: <a class="link-secondary" href="https://github.com/tothakos-code/order-accumulator/releases/tag/v0.4.1">Notes</a>
+        Változás napló: <a class="link-secondary" href="https://github.com/tothakos-code/order-accumulator/releases/tag/v0.4.1">Jegyzet</a>
       </span>
-      <span class="col-3 text-center">Version: v1.0.0</span>
+      <span class="col-3 text-center">Verzió: v1.0.0</span>
     </div>
   </div>
 </template>

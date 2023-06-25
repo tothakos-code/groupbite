@@ -229,6 +229,26 @@ def set_today_basket(basket):
 
     return result
 
+@socketio.on('User Login')
+def handle_user_login(data):
+    response = login_user(data)
+    logging.error(response)
+    return {
+        "id": response[0],
+        "username": response[1],
+        "subscribed": response[2],
+        "theme": response[3]
+    }
+
+def login_user(user):
+    rowcount = db.get_row_count(sql_user_select, (user['username'],))
+
+    if rowcount == 0:
+        return db.run_sql(sql_user_insert, (user['username'],), fetch='one')
+    if rowcount == 1:
+        return db.run_sql(sql_user_select, (user['username'],), fetch='one')
+    if rowcount > 1:
+        logging.error("ERROR: There is more than one user with same name, I dont know what to do! PANIC!")
 
 if __name__ == "__main__":
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)

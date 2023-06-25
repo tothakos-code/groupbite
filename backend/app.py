@@ -24,7 +24,17 @@ sql_set_state = "UPDATE orders SET order_state = %s WHERE order_date = CURRENT_D
 sql_insert = "INSERT INTO orders (basket) values (%s) RETURNING basket"
 sql_update = "UPDATE orders SET basket = %s WHERE order_date = CURRENT_DATE RETURNING basket"
 
+sql_user_select = "SELECT * FROM users WHERE username = %s"
+sql_user_insert = "INSERT INTO users (username) values (%s) RETURNING *"
+sql_user_sub_update = "UPDATE users SET subscribed = %s WHERE username = %s RETURNING *"
+sql_user_name_update = "UPDATE users SET username = %s WHERE username = %s"
 
+sql_user_subscribed = "SELECT username FROM users WHERE subscribed = 'full'"
+
+sql_get_alluser_ds = "SELECT username,daily_state,subscribed FROM users;"
+sql_user_set_ds = "UPDATE users SET daily_state = %s WHERE username = %s RETURNING *"
+
+sql_user_clear_temp_state = "UPDATE users SET daily_state = 'none'"
 
 
 @app.route('/')

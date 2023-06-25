@@ -229,6 +229,10 @@ def set_today_basket(basket):
 
     return result
 
+def get_subscribed_users():
+    result = db.run_sql(sql_user_subscribed)
+    return [i[0] for i in result]
+
 @socketio.on('User Login')
 def handle_user_login(data):
     response = login_user(data)
@@ -249,6 +253,11 @@ def login_user(user):
         return db.run_sql(sql_user_select, (user['username'],), fetch='one')
     if rowcount > 1:
         logging.error("ERROR: There is more than one user with same name, I dont know what to do! PANIC!")
+
+def set_user(user):
+    logging.info("Updated User" + user['username'])
+    return db.run_sql(sql_user_sub_update, (user['subscribed'], user['username']), fetch='one')
+
 
 if __name__ == "__main__":
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)

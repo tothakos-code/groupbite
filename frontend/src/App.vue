@@ -26,6 +26,14 @@
               </span>
             </button>
           </div>
+          <div v-if="this.subscriptionState == 'full'" class="">
+            <button v-if="this.currentUserState == 'skip'" type="button" class="btn btn-danger" @click="this.waitForMe('none')">Ma nem kérek</button>
+            <button v-else type="button" class="btn btn-outline-warning" @click="this.waitForMe('skip')">Ma nem kérek</button>
+          </div>
+          <div v-if="this.currentUserState != 'skip'" class="">
+            <button v-if="this.currentUserState == 'video'" type="button" class="btn btn-primary mx-2" @click="this.waitForMe('none')">Videóra várok</button>
+            <button v-else type="button" class="btn btn-outline-warning mx-2" @click="this.waitForMe('video')">Videóra várok</button>
+          </div>
         </div>
       <div class="col text-end d-flex justify-content-end align-items-center">
           <UsernamePopup/>
@@ -111,6 +119,10 @@ export default {
       socket.emit("User Update", {"username": state.user.username, "subscribed":"none"}, function(user) {
         state.user = user;
       });
+    },
+    waitForMe: function(waitType) {
+      socket.emit("User Daily State Change",{ 'username': state.user.username, 'new_state':waitType });
+
     }
   },
   mounted() {
@@ -129,6 +141,10 @@ export default {
     },
     isLoggedIn() {
       return !(state.user === undefined || state.user.username === undefined);
+    },
+    currentUserState() {
+      console.log(state.userStates);
+      return state.userStates[state.user.username];
     }
   }
 }

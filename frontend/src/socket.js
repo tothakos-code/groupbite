@@ -6,6 +6,7 @@ export const state = reactive({
   orderState: '',
   globalBasket: {},
   user: {},
+  userStates: {}
 });
 
 // "undefined" means the URL will be computed from the `window.location` object
@@ -36,4 +37,8 @@ socket.on('Order state changed', function(incomingState) {
 socket.on('Client Basket Update', function(incomingGlobalBasket) {
   console.log('VUE Global basket incomming via websocket VUE: ', incomingGlobalBasket);
   state.globalBasket = incomingGlobalBasket.basket;
+});
+
+socket.on('Waiting Update', function(incomingStateList) {
+  state.userStates = incomingStateList;
 });

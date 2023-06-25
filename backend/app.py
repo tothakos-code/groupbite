@@ -151,9 +151,8 @@ def get_etlap():
 
 @socketio.on('connect')
 def handle_connect(data):
-    logging.warning("Socket.IO connection established")
     socketio.emit('Client Basket Update', {'basket': get_today_basket() })
-
+    emit_user_ds_state()
 
 @socketio.on('Request order state')
 def handle_request_order_state():
@@ -243,6 +242,37 @@ def handle_user_login(data):
         "subscribed": response[2],
         "theme": response[3]
     }
+
+@socketio.on('User Update')
+def handle_user_update(data):
+    response = set_user(data)
+    emit_user_ds_state()
+    return {
+        "id": response[0],
+        "username": response[1],
+        "subscribed": response[2],
+        "theme": response[3]
+    }
+
+@socketio.on('User Daily State Change')
+def handle_user_ds_change(data):
+    db.run_sql(sql_user_set_ds, (data['new_state'], data['username']))
+    emit_user_ds_state()
+
+def emit_user_ds_state():
+    user_list = db.run_sql(sql_get_alluser_ds)
+    result = {}
+    for (user,state,sub) in user_list:
+        result_state = 'none'
+        if sub == 'full':
+            result_state = 'sub'
+        if state == 'video':
+            result_state = 'video'
+        if state == 'skip':
+            result_state = 'skip'
+        result[user] = result_state
+
+    socketio.emit('Waiting Update', result)
 
 def login_user(user):
     rowcount = db.get_row_count(sql_user_select, (user['username'],))

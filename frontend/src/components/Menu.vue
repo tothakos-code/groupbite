@@ -59,6 +59,10 @@ export default {
   emits: ['basketUpdate'],
   methods: {
     addToBasket: function(fid, label, size, price, link) {
+      if (state.user.username === undefined) {
+        alert("Jelentkezz be a rendeléshez");
+        return;
+      }
       if (state.orderState === 'closed') {
         alert("A rendelés már ellett küldve. Már nem módisíthatsz a kosaradon");
         return;

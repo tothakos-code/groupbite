@@ -1,12 +1,12 @@
 from flask import Flask
 from flask import request
-import psycopg2
 import requests,json,re
 from bs4 import BeautifulSoup
 from flask_socketio import SocketIO
 from collections import Counter
 import logging
 import datetime
+import db
 
 app = Flask(__name__)
 socketio = SocketIO(app,logger=True, engineio_logger=True)
@@ -26,15 +26,6 @@ sql_update = "UPDATE orders SET basket = %s WHERE order_date = CURRENT_DATE RETU
 
 
 
-def db_connection():
-    # connect to the PostgreSQL server
-    print('Connecting to the PostgreSQL database...')
-    conn = psycopg2.connect(
-    host="database",
-    database="falusi",
-    user="falusi",
-    password="falusi")
-    return conn
 
 @app.route('/')
 def call_hello():
@@ -54,29 +45,12 @@ def call_transfer_basket():
     PHPSESSIONID = request.json['psid']
     orders = None
 
-    conn = None
-    try:
-        conn = db_connection()
-        # create a cursor
-        cur = conn.cursor()
+    orders = db.run_sql(sql_select, fetched='one')
 
-        # execute a statement
-        cur.execute(sql_select)
-        orders = cur.fetchone()[0]
+    db.run_sql(sql_set_state, ('order',))
+    logging.info("Order status changet to 'order'")
 
-        cur.execute(sql_set_state, ('order',))
-        logging.info("Order status changet to 'order'")
-
-        conn.commit()
-        # close the communication with the PostgreSQL
-        cur.close()
-        socketio.emit("Order state changed", "order")
-    except (Exception, psycopg2.DatabaseError) as error:
-        logging.error(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            logging.error('Database connection closed.')
+    socketio.emit("Order state changed", "order")
 
     if orders is None:
         logging.warning("Error: basket empty or could not get basket from database.")
@@ -177,23 +151,8 @@ def handle_request_order_state():
 
 @socketio.on('Ordered and Payed')
 def handle_payed():
-    conn = None
-    try:
-        conn = db_connection()
-        logging.info('Database connection opened.')
-
-        cur = conn.cursor()
-        cur.execute(sql_set_state, ('closed',))
-        conn.commit()
-        cur.close()
-        socketio.emit("Order state changed", "closed")
-
-    except (Exception, psycopg2.DatabaseError) as error:
-            logging.error(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            logging.info('Database connection closed.')
+    db.run_sql(sql_set_state, ('closed',))
+    socketio.emit("Order state changed", "closed")
 
 @socketio.on('Server Basket Update')
 def handle_basket_update(data):
@@ -214,89 +173,52 @@ def handle_basket_update(data):
     socketio.emit('Client Basket Update', {'basket': set_today_basket(currentBasket) })
 
 def get_order_state():
-    conn = None
-    try:
-        conn = db_connection()
-        logging.info('Database connection opened.')
+    rowcount = db.get_row_count(sql_select)
+    result = db.run_sql(sql_get_state, fetch='one')
 
-        cur = conn.cursor()
-        cur.execute(sql_get_state)
+    if rowcount == 0:
+        # orderer not initialized yet, return the default value
+        return 'collect'
+    elif rowcount == 1:
+        # return the state
+        return result
+    elif rowcount > 1:
+        # this error is impossible
+        logging.error("ERROR: There is more than one order, I dont know what to do! PANIC!")
 
-        if cur.rowcount == 0:
-            # orderer not initialized yet, return the default value
-            return 'collect'
-        elif cur.rowcount == 1:
-            # return the state
-            return cur.fetchone()[0]
-        elif cur.rowcount > 1:
-            # this error is impossible
-            raise ValueError("ERROR: There is more than one order, I dont know what to do! PANIC!")
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-            logging.error(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            logging.info('Database connection closed.')
 
 def get_today_basket():
-    conn = None
-    try:
-        conn = db_connection()
-        logging.info('Database connection opened.')
+    rowcount = db.get_row_count(sql_select)
 
-        cur = conn.cursor()
-        cur.execute(sql_select)
-
-        if cur.rowcount == 0:
-            # return empty basket, there is not yet created
-            return {}
-        elif cur.rowcount == 1:
-            # return the basket
-            return cur.fetchone()[0]
-        elif cur.rowcount > 1:
-            # this error is impossible
-            raise ValueError("ERROR: There is more than one order, I dont know what to do! PANIC!")
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-            logging.error(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            logging.info('Database connection closed.')
+    if rowcount == 0:
+        # return empty basket, there is not yet created
+        return {}
+    elif rowcount == 1:
+        # return the basket
+        return db.run_sql(sql_select, fetch='one')[0]
+    elif rowcount > 1:
+        # this error is impossible
+        logging.error("ERROR: There is more than one order, I dont know what to do! PANIC!")
 
 def set_today_basket(basket):
-    conn = None
-    try:
-        conn = db_connection()
-        logging.info('Database connection opened.')
+    rowcount = db.get_row_count(sql_select)
 
-        cur = conn.cursor()
-        cur.execute(sql_select)
+    result = None
 
-        if cur.rowcount == 0:
-            # insert row
-            cur.execute(sql_insert, (json.dumps(basket),))
-            logging.info("Created today's basket row")
-            conn.commit()
-        elif cur.rowcount == 1:
-            # update row
-            cur.execute(sql_update, (json.dumps(basket),))
-            logging.info("Updated today's basket row")
-            conn.commit()
-        elif cur.rowcount > 1:
-            # this error is impossible
-            raise ValueError("ERROR: There is more than one order, I dont know what to do! PANIC!")
-        resultBasket = cur.fetchone()[0]
-        # close the communication with the PostgreSQL
-        cur.close()
-        return resultBasket
-    except (Exception, psycopg2.DatabaseError) as error:
-            logging.error(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            logging.info('Database connection closed.')
+    if rowcount == 0:
+        # insert row
+        result = db.run_sql(sql_insert, (json.dumps(basket),), fetch='one')[0]
+        logging.info("Created today's basket row")
+    elif rowcount == 1:
+        # update row
+        result = db.run_sql(sql_update, (json.dumps(basket),), fetch='one')[0]
+        logging.info("Updated today's basket row")
+    elif rowcount > 1:
+        # this is impossible
+        logging.error("ERROR: There is more than one order, I dont know what to do! PANIC!")
+
+    return result
+
 
 if __name__ == "__main__":
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)

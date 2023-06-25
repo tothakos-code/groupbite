@@ -36,6 +36,11 @@ sql_user_set_ds = "UPDATE users SET daily_state = %s WHERE username = %s RETURNI
 
 sql_user_clear_temp_state = "UPDATE users SET daily_state = 'none'"
 
+@app.route("/cron/clear_users_temp_state")
+def cron_clear_users_temp_state():
+    db.run_sql(sql_user_clear_temp_state)
+    emit_user_ds_state()
+    return "OK", 200
 
 @app.route('/')
 def call_hello():

@@ -21,6 +21,29 @@
         </div>
       </div>
       <div
+        v-for="(value, key) in this.waitingFor"
+        :key="key"
+        class="row mt-1 mb-1">
+        <div class="card">
+          <div v-if="value == 'sub'" class="card-header row d-flex bg-danger-subtle">
+            <div class="col-6">
+              <span>{{ key }}</span>
+            </div>
+            <div class="col-6 text-end">
+              <span>Még nem választott</span>
+            </div>
+          </div>
+          <div v-if="value == 'video'" class="card-header row d-flex bg-warning-subtle">
+            <div class="col-6">
+              <span>{{ key }}</span>
+            </div>
+            <div class="col-6 text-end">
+              <span>Videóra vár</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
         v-for="(basket, personName) in this.globalBasket"
         :key="personName"
         class="row mt-1 mb-1">
@@ -52,6 +75,20 @@ export default {
   computed: {
     globalBasket() {
       return state.globalBasket;
+    },
+    waitingFor() {
+      const userStates = structuredClone(state.userStates);
+      let pickedList = Object.keys(state.globalBasket)
+
+      for (const [key, value] of Object.entries(state.userStates)) {
+        if (value === 'none' || value === 'skip') {
+          delete userStates[key];
+        }
+        if (pickedList.includes(key)) {
+          delete userStates[key];
+        }
+      }
+      return userStates;
     },
     totalSum() {
       if (this.personCount == 0) {

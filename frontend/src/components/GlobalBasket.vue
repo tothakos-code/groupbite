@@ -50,7 +50,8 @@
         <GlobalBasketPerson
           :name="personName"
           :personBasket="basket"
-          :transportFee='this.transportFeePerPerson'>
+          :transportFee='this.transportFeePerPerson'
+          :collapsable="false">
         </GlobalBasketPerson>
       </div>
   </div>

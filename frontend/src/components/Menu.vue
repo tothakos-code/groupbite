@@ -5,7 +5,7 @@
         <h2 class="ps-0">Étlap</h2>
       </div>
       <div class="col-6">
-        <Datestamp @selectedDate="(day) => this.getMenu(day)"/>
+        <Datestamp @selectedDate="(day) => this.getMenu(day)" :limitToCurrentWeek="true"/>
       </div>
     </div>
     <div class="row">
@@ -87,7 +87,14 @@ export default {
       this.$emit('basketUpdate');
     },
     getMenu: function(day) {
-      fetch(`http://${window.location.hostname}/api/getmenu?day=${day}`)
+      let url = ''
+      if (day === undefined) {
+        url = `http://${window.location.hostname}/api/getmenu`
+      } else {
+        url = `http://${window.location.hostname}/api/getmenu?day=${new Date(day).getDay()}`
+      }
+
+      fetch(url)
         .then(response => response.json())
           .then(data => {
             this.items = data;

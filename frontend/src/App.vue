@@ -97,7 +97,7 @@
         Forrás kód: <a class="link-secondary" href="https://github.com/tothakos-code/order-accumulator">Github</a>
       </span>
       <span class="col-3 text-center">
-        Változás napló: <a class="link-secondary" href="https://github.com/tothakos-code/order-accumulator/releases/tag/v0.4.1">Jegyzet</a>
+        Változás napló: <a class="link-secondary" href="https://github.com/tothakos-code/order-accumulator/releases/tag/v1.0.0">Jegyzet</a>
       </span>
       <span class="col-3 text-center">Verzió: v1.0.0</span>
     </div>

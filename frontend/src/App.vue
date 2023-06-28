@@ -78,7 +78,7 @@
     <div class="col-7">
       <div class="row p-2">
         <Menu v-if="this.showMenu" @basketUpdate="this.onBasketUpdate()"/>
-        <Histroy v-if="this.showHistroy" @close="this.toMenu()"/>
+        <History v-if="this.showHistroy" @close="this.toMenu()"/>
       </div>
     </div>
     <div class="col-5">
@@ -108,7 +108,7 @@
 <script>
 import UsernamePopup from './components/UsernamePopup.vue'
 import Menu from './components/Menu.vue'
-import Histroy from './components/Histroy.vue'
+import History from './components/History.vue'
 import LocalBasket from './components/LocalBasket.vue'
 import GlobalBasket from './components/GlobalBasket.vue'
 import { state, socket } from "@/socket";
@@ -120,7 +120,7 @@ export default {
   components: {
     UsernamePopup,
     Menu,
-    Histroy,
+    History,
     LocalBasket,
     GlobalBasket
   },

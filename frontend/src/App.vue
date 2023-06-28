@@ -36,14 +36,15 @@
           </div>
         </div>
       <div class="col text-end d-flex justify-content-end align-items-center">
-          <UsernamePopup/>
+          <UsernamePopup @toHistory="toHistory()"/>
       </div>
     </div>
   </div>
   <div class="row d-flex">
     <div class="col-7">
       <div class="row p-2">
-        <Menu @basketUpdate="this.onBasketUpdate()"/>
+        <Menu v-if="this.showMenu" @basketUpdate="this.onBasketUpdate()"/>
+        <Histroy v-if="this.showHistroy" @close="this.toMenu()"/>
       </div>
     </div>
     <div class="col-5">
@@ -73,6 +74,7 @@
 <script>
 import UsernamePopup from './components/UsernamePopup.vue'
 import Menu from './components/Menu.vue'
+import Histroy from './components/Histroy.vue'
 import LocalBasket from './components/LocalBasket.vue'
 import GlobalBasket from './components/GlobalBasket.vue'
 import { state, socket } from "@/socket";
@@ -84,6 +86,7 @@ export default {
   components: {
     UsernamePopup,
     Menu,
+    Histroy,
     LocalBasket,
     GlobalBasket
   },
@@ -93,10 +96,20 @@ export default {
   },
   data() {
     return {
-      theme: localStorage.getItem("theme") || 'dark'
+      theme: localStorage.getItem("theme") || 'dark',
+      showMenu: true,
+      showHistroy: false
     }
   },
   methods: {
+    toMenu: function() {
+      this.showMenu = true;
+      this.showHistroy = false;
+    },
+    toHistory: function() {
+      this.showHistroy = true;
+      this.showMenu = false;
+    },
     onBasketUpdate: function() {
       this.$refs.localbasket.updateBasket();
       socket.emit("Server Basket Update",{ [this.cookies.get('username')]: this.cookies.get('basket') });

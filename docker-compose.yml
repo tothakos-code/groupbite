@@ -2,20 +2,44 @@ version: "3"
 
 services:
   frontend:
-    image: nginx:alpine
     container_name: falu_fe
     hostname: falu_fe
+    build: ./frontend/
     depends_on:
       - backend
+      - nginx
     restart: on-failure
     volumes:
-      - ./frontend:/usr/share/nginx/html
+      - ./frontend:/app
+    ports:
+      - 8080:8080
+    networks:
+      falu_net:
+        ipv4_address: 10.10.13.2
+
+  nginx:
+    image: nginx:alpine
+    container_name: falu_nginx
+    hostname: falu_nginx
+    restart: on-failure
+    volumes:
       - ./nginx:/etc/nginx/conf.d
     ports:
       - 80:80
     networks:
       falu_net:
-        ipv4_address: 10.10.13.2
+        ipv4_address: 10.10.13.3
+
+  cron:
+    container_name: falu_cron
+    hostname: falu_cron
+    build: ./cron/
+    restart: on-failure
+    depends_on:
+      - backend
+    networks:
+      falu_net:
+        ipv4_address: 10.10.13.6
 
   backend:
     container_name: falu_be
@@ -32,7 +56,7 @@ services:
       - ./backend:/app
     networks:
       falu_net:
-        ipv4_address: 10.10.13.3
+        ipv4_address: 10.10.13.4
 
   database:
     container_name: falu_db
@@ -42,15 +66,13 @@ services:
      - 5432:5432
     networks:
       falu_net:
-        ipv4_address: 10.10.13.4
+        ipv4_address: 10.10.13.5
     env_file:
       - .env
     volumes:
       - ./db/data/:/var/lib/postgresql/data/
 
 networks:
-  app_network:
-    driver: bridge
   falu_net:
     driver: bridge
     ipam:

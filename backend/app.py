@@ -36,6 +36,8 @@ sql_user_set_ds = "UPDATE users SET daily_state = %s WHERE username = %s RETURNI
 
 sql_user_clear_temp_state = "UPDATE users SET daily_state = 'none'"
 
+sql_order_select_by_date = "SELECT basket FROM orders WHERE order_date = %s"
+
 @app.route("/cron/clear_users_temp_state")
 def cron_clear_users_temp_state():
     db.run_sql(sql_user_clear_temp_state)
@@ -240,13 +242,17 @@ def get_subscribed_users():
 @socketio.on('User Login')
 def handle_user_login(data):
     response = login_user(data)
-    logging.error(response)
     return {
         "id": response[0],
         "username": response[1],
         "subscribed": response[2],
         "theme": response[3]
     }
+
+@socketio.on('Order History')
+def handle_order_history(data):
+    date = data['requestedDate']
+    return db.run_sql(sql_order_select_by_date, (date,), fetch='one')
 
 @socketio.on('User Update')
 def handle_user_update(data):

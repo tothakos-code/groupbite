@@ -31,7 +31,7 @@
     </p>
     <div class="d-flex">
       <div class="border bg-light-subtle rounded ps-2">
-        <code>{{ this.orderDesc }}</code>
+        <code class="user-select-all">{{ this.orderDesc }}</code>
       </div>
       <button type="button" name="button" title="Copy to clipboard" class="btn " @click="this.doCopy()">
         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-clipboard2" viewBox="0 0 16 16">

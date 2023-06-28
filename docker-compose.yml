@@ -3,8 +3,8 @@ version: "3"
 services:
   frontend:
     container_name: falu_fe
-    build: ./frontend/
     hostname: falu_fe
+    build: ./frontend/
     depends_on:
       - backend
       - nginx
@@ -29,6 +29,17 @@ services:
     networks:
       falu_net:
         ipv4_address: 10.10.13.3
+
+  cron:
+    container_name: falu_cron
+    hostname: falu_cron
+    build: ./cron/
+    restart: on-failure
+    depends_on:
+      - backend
+    networks:
+      falu_net:
+        ipv4_address: 10.10.13.6
 
   backend:
     container_name: falu_be

@@ -94,7 +94,6 @@ export default {
       // Remove the basket cookie
       this.cookies.set('basket', {}, '16h');
       this.$emit('basketUpdate');
-      this.updateBasket();
     }
   },
   computed: {

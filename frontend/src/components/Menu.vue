@@ -41,7 +41,7 @@
 <script>
 import { useCookies } from "vue3-cookies";
 import Datestamp from './DateStamp.vue'
-import { state } from "@/socket";
+import { state, socket } from "@/socket";
 
 
 export default {
@@ -66,6 +66,9 @@ export default {
       if (state.orderState === 'closed') {
         alert("A rendelés már ellett küldve. Már nem módisíthatsz a kosaradon");
         return;
+      }
+      if (this.currentUserState === 'skip') {
+        socket.emit("User Daily State Change",{ 'username': state.user.username, 'new_state':'none' });
       }
       let basket = this.cookies.get('basket') || {};
       const itemSizeKey = fid + '-' + size;
@@ -105,6 +108,12 @@ export default {
   data() {
     return {
       items: []
+    }
+  },
+  computed: {
+    currentUserState() {
+      console.log(state.userStates);
+      return state.userStates[state.user.username];
     }
   }
 }

@@ -1,4 +1,4 @@
-ALTER TABLE your_table_name ADD CONSTRAINT unique_order_date UNIQUE (order_date);
+ALTER TABLE orders ADD CONSTRAINT unique_order_date UNIQUE (order_date);
 
 CREATE TYPE subscribe_type AS ENUM ('none', 'temp', 'full');
 CREATE TYPE daily_state_type AS ENUM ('none', 'video', 'skip', 'done');

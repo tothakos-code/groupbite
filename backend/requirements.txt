@@ -2,4 +2,5 @@ flask
 bs4
 requests
 flask-socketio
+simple-websocket
 psycopg2

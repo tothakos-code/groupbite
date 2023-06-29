@@ -168,8 +168,16 @@ export default {
       });
     },
     waitForMe: function(waitType) {
+      if (waitType === 'skip') {
+        if ( state.orderState === 'closed') {
+          alert("A rendelés már el lett küldve.")
+          return;
+        }
+        // Remove the basket cookie
+        this.cookies.set('basket', {}, '16h');
+        this.onBasketUpdate();
+      }
       socket.emit("User Daily State Change",{ 'username': state.user.username, 'new_state':waitType });
-
     }
   },
   mounted() {

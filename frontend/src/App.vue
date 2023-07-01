@@ -94,18 +94,19 @@
     <div class="row d-flex justify-content-between text-body-secondary">
       <span class="col-3 text-center">Készítette: Tóth Ákos</span>
       <span class="col-3 text-center">
-        Forrás kód: <a class="link-secondary" href="https://github.com/tothakos-code/order-accumulator">Github</a>
+        Forrás kód: <a class="link-secondary" target="_blank" href="https://github.com/tothakos-code/order-accumulator">Github</a>
       </span>
       <span class="col-3 text-center">
-        Változás napló: <a class="link-secondary" href="https://github.com/tothakos-code/order-accumulator/releases/tag/v1.0.0">Jegyzet</a>
+        Változás napló: <a class="link-secondary" target="_blank" :href="'https://github.com/tothakos-code/order-accumulator/releases/tag/' + showVersion()">Jegyzet</a>
       </span>
-      <span class="col-3 text-center">Verzió: v1.0.0</span>
+      <span class="col-3 text-center">Verzió: {{ showVersion() }}</span>
     </div>
   </div>
 </template>
 
 
 <script>
+import version from "../package.json";
 import UsernamePopup from './components/UsernamePopup.vue'
 import Menu from './components/Menu.vue'
 import History from './components/History.vue'
@@ -136,6 +137,10 @@ export default {
     }
   },
   methods: {
+    showVersion: function() {
+      console.log(version.version);
+      return 'v' + version.version
+    },
     toMenu: function() {
       this.showMenu = true;
       this.showHistroy = false;

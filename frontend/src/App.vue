@@ -94,10 +94,10 @@
     <div class="row d-flex justify-content-between text-body-secondary">
       <span class="col-3 text-center">Készítette: Tóth Ákos</span>
       <span class="col-3 text-center">
-        Forrás kód: <a class="link-secondary" href="https://github.com/tothakos-code/order-accumulator">Github</a>
+        Forrás kód: <a class="link-secondary" target="_blank" href="https://github.com/tothakos-code/order-accumulator">Github</a>
       </span>
       <span class="col-3 text-center">
-        Változás napló: <a class="link-secondary" :href="'https://github.com/tothakos-code/order-accumulator/releases/tag/' + showVersion()">Jegyzet</a>
+        Változás napló: <a class="link-secondary" target="_blank" :href="'https://github.com/tothakos-code/order-accumulator/releases/tag/' + showVersion()">Jegyzet</a>
       </span>
       <span class="col-3 text-center">Verzió: {{ showVersion() }}</span>
     </div>

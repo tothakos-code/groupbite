@@ -66,6 +66,13 @@ export default {
   },
   methods: {
     deleteFromBasket: function(itemSizeKey, basketItem) {
+      if ( state.orderState === 'order') {
+        alert("Figyelem! A rendelő elkezdte áthelyezni a falusiba a kosarat és lehet, hogy nem veszi észre, hogy te változtattál a kosaradon. Jelezd neki mielött nem késő!")
+      }
+      if ( state.orderState === 'closed') {
+        alert("A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.")
+        return;
+      }
       if (basketItem.quantity == 1) {
         // Otherwise, remove the entry from the basket
         delete this.basket[itemSizeKey];

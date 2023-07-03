@@ -62,7 +62,7 @@ def call_transfer_basket():
     PHPSESSIONID = request.json['psid']
     orders = None
 
-    orders = db.run_sql(sql_select, fetch='one')
+    orders = db.run_sql(sql_select, fetch='one')[0]
 
     db.run_sql(sql_set_state, ('order',))
     logging.info("Order status changet to 'order'")

@@ -61,6 +61,9 @@ export default {
       history: {}
     }
   },
+  mounted() {
+    this.getHistroy(new Date());
+  },
   computed: {
     personCount() {
       return Object.keys(this.history).length;

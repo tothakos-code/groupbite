@@ -44,6 +44,11 @@ def cron_clear_users_temp_state():
     emit_user_ds_state()
     return "OK", 200
 
+@app.route("/cron/new_day_refresh")
+def cron_new_day_refresh():
+    socketio.emit('Refresh!')
+    return "OK", 200
+
 @app.route('/')
 def call_hello():
     return "Welcome to this api on a pi!"

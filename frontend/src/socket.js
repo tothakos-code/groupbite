@@ -42,3 +42,8 @@ socket.on('Client Basket Update', function(incomingGlobalBasket) {
 socket.on('Waiting Update', function(incomingStateList) {
   state.userStates = incomingStateList;
 });
+
+socket.on('Refresh!', function() {
+  console.log("Refresh");
+  location.reload();
+});

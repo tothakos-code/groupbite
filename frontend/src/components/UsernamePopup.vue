@@ -1,8 +1,8 @@
 <template>
   <div v-if="isLoggedIn"  class="d-flex">
     <div class="btn-group">
-      <button type="button" class="btn btn-outline-secondary text-secondary-emphasis" disabled>{{ username }}</button>
-      <button type="button" class="btn btn-outline-dark dropdown-toggle dropdown-toggle-split" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" ></button>
+      <button type="button" class="btn pe-none border border-secondary">{{ username }}</button>
+      <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" ></button>
       <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
         <li>
           <button class="dropdown-item" @click="showProfile = true">

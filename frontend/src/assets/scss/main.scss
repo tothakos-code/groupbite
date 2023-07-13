@@ -1,0 +1,16 @@
+
+
+// tigra yellow
+$yellow: #857856;
+
+
+
+[data-bs-theme="dark"] {
+  // Steel blue
+  $yellow: #0081A7;
+}
+
+
+
+
+@import "~bootstrap/scss/bootstrap.scss";

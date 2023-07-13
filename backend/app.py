@@ -44,6 +44,11 @@ def cron_clear_users_temp_state():
     emit_user_ds_state()
     return "OK", 200
 
+@app.route("/cron/new_day_refresh")
+def cron_new_day_refresh():
+    socketio.emit('Refresh!')
+    return "OK", 200
+
 @app.route('/')
 def call_hello():
     return "Welcome to this api on a pi!"
@@ -62,7 +67,7 @@ def call_transfer_basket():
     PHPSESSIONID = request.json['psid']
     orders = None
 
-    orders = db.run_sql(sql_select, fetch='one')
+    orders = db.run_sql(sql_select, fetch='one')[0]
 
     db.run_sql(sql_set_state, ('order',))
     logging.info("Order status changet to 'order'")
@@ -111,7 +116,8 @@ def call_transfer_basket():
             link,
             headers=requests_header,
             data=requests_data,
-            cookies={"PHPSESSID":PHPSESSIONID}
+            cookies={"PHPSESSID":PHPSESSIONID},
+            verify=False
         )
     return 'OK'
 
@@ -119,7 +125,7 @@ def call_transfer_basket():
 @app.route('/getmenu')
 def get_etlap():
     # Requesting and parsing th HTML
-    r = requests.get('https://falusitekercsgyorsetterem.pgg.hu/falusitekercsgyorsetterem/etlap/')
+    r = requests.get('https://falusitekercsgyorsetterem.pgg.hu/falusitekercsgyorsetterem/etlap/', verify=False)
     soup = BeautifulSoup(r.content, 'html.parser')
 
     # Getting the current day
@@ -289,8 +295,10 @@ def login_user(user):
     rowcount = db.get_row_count(sql_user_select, (user['username'],))
 
     if rowcount == 0:
+        # register then login
         return db.run_sql(sql_user_insert, (user['username'],), fetch='one')
     if rowcount == 1:
+        # login
         return db.run_sql(sql_user_select, (user['username'],), fetch='one')
     if rowcount > 1:
         logging.error("ERROR: There is more than one user with same name, I dont know what to do! PANIC!")

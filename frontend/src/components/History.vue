@@ -16,6 +16,25 @@
     </div>
     <div class="row">
       <div class="col">
+          <div class="row d-flex my-1">
+            <div class="col text-center align-center">
+              <span class="btn pe-none border border-secondary-subtle rounded">{{ totalSum }} Ft</span>
+            </div>
+            <div class="col text-center">
+              <span class="btn pe-none border border-secondary-subtle rounded">{{ boxCount }} db doboz</span>
+            </div>
+            <div class="col text-center">
+              <span class="btn pe-none border border-secondary-subtle rounded">
+                {{ this.transportFeePerPerson }} Ft szállítás díj/fő
+              </span>
+            </div>
+            <div class="col text-center">
+              <span class="btn pe-none border border-secondary-subtle rounded">
+                {{ this.personCount }} fő
+              </span>
+            </div>
+
+          </div>
           <div
             v-for="(basket, personName) in history"
             :key="personName"
@@ -49,10 +68,10 @@ export default {
   emits: ['close'],
   methods: {
     getHistroy: function(date) {
-      let formatedDat = date.toLocaleDateString("fr-CA", {year:"numeric", month: "2-digit", day:"2-digit"});
-      socket.emit('Order History', {'requestedDate':formatedDat}, (result) => {
+      // fr-CA time locale is in the same format that the db use
+      let formatedDate = date.toLocaleDateString("fr-CA", {year:"numeric", month: "2-digit", day:"2-digit"});
+      socket.emit('Order History', {'requestedDate':formatedDate}, (result) => {
         this.history = result;
-        console.log(this.history);
       });
     }
   },
@@ -61,8 +80,39 @@ export default {
       history: {}
     }
   },
+  mounted() {
+    this.getHistroy(new Date());
+  },
   computed: {
+    totalSum() {
+      if (this.personCount == 0) {
+        return 0;
+      }
+      let sum=0;
+      Object.values(this.history).forEach((person) => {
+        Object.values(person).forEach((item) => {
+          sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
+        })
+      })
+      sum += Number(this.transportFeePerPerson);
+      return sum;
+    },
+    boxCount() {
+      if (!this.history || this.history === undefined || this.history === null) {
+        return 0;
+      }
+      let sum=0;
+      Object.values(this.history).forEach((person) => {
+        Object.values(person).forEach((item) => {
+          sum+= Number(item.quantity);
+        })
+      })
+      return sum;
+    },
     personCount() {
+      if (!this.history || this.history === undefined || this.history === null) {
+        return 0;
+      }
       return Object.keys(this.history).length;
     },
     transportFeePerPerson() {

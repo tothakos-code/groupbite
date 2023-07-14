@@ -3,4 +3,7 @@ bs4
 requests
 flask-socketio
 simple-websocket
+sqlalchemy
 psycopg2
+psycopg2-binary
+marshmallow

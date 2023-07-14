@@ -7,6 +7,9 @@ from collections import Counter
 import logging
 import datetime
 import db
+from entities.entity import Session, engine, Base
+from entities.menu import Menu, MenuSchema
+from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
 socketio = SocketIO(app,logger=True, engineio_logger=True)
@@ -37,6 +40,40 @@ sql_user_set_ds = "UPDATE users SET daily_state = %s WHERE username = %s RETURNI
 sql_user_clear_temp_state = "UPDATE users SET daily_state = 'none'"
 
 sql_order_select_by_date = "SELECT basket FROM orders WHERE order_date = %s"
+
+@app.route("/test/sqlalchemy")
+def test_clear_users_temp_state():
+    # fetching from the database
+    session = Session()
+    menu_objects = session.query(Menu).all()
+
+    # transforming into JSON-serializable objects
+    schema = MenuSchema(many=True)
+    menus = schema.dump(menu_objects)
+
+    # serializing as JSON
+    session.close()
+    return json.dumps(menus[0]['menu'][0], indent=4)
+
+@app.route("/test/sqlalchemy/get")
+def test_clear_users_temp_state_get():
+     # mount exam object
+    online_menu = get_etlap()
+
+    menu = Menu(online_menu)
+
+    try:
+        # persist exam
+        session = Session()
+        session.add(menu)
+        session.commit()
+    except IntegrityError as e:
+        return "Today Menu already exist", 200
+
+    # return created exam
+    new_menu = MenuSchema().dump(menu)
+    session.close()
+    return json.dumps(new_menu), 201
 
 @app.route("/cron/clear_users_temp_state")
 def cron_clear_users_temp_state():

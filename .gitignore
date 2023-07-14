@@ -1,1 +1,3 @@
 backend/__pycache__
+backend/entities/__pycache__
+db/data/

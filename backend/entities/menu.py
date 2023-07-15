@@ -10,8 +10,9 @@ class Menu(Entity, Base):
     menu_date = Column(DateTime, default=func.current_date())
     menu = Column(ARRAY(JSONB))
 
-    def __init__(self, menu):
+    def __init__(self,menu_date, menu):
         Entity.__init__(self)
+        self.menu_date = menu_date
         self.menu = menu
 
     def update(self, new_menu):

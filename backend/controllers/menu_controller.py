@@ -10,20 +10,22 @@ from sqlalchemy import func, cast
 
 from entities.entity import Session
 
+target_url = 'https://falusitekercsgyorsetterem.pgg.hu/falusitekercsgyorsetterem/etlap/'
+
 napok = ["hetfoi","keddi", "szerdai","csutortoki","penteki","szombati","vasarnapi"]
 fdidpattern = r"\/fdid-[0-9]+\/"
 
 menu_controller = Blueprint('menu_controller', __name__, url_prefix='/menu')
 
-@menu_controller.route('/update')
-def add_or_update_menu():
+@menu_controller.route('/update', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
+@menu_controller.route('/update/<requested_date>')
+def add_or_update_menu(requested_date):
     # get menu from target
-    new_menu = request_new_menu(request.args.get('day'))
+    new_menu = request_new_menu(date(*map(int, requested_date.split('-'))))
 
     # Check if the menu already exists in the database
     session = Session()
-    # TODO: How can i query by menu_date = CURRENT_DATE
-    existing_menu = session.query(Menu).filter(func.date_trunc('day', Menu.menu_date) == date.today()).first()
+    existing_menu = session.query(Menu).filter(func.date_trunc('day', Menu.menu_date) == requested_date).first()
 
     result = 'added'
     if existing_menu:
@@ -33,33 +35,29 @@ def add_or_update_menu():
         result = 'updated'
     else:
         # Create a new menu and add it to the database
-        session.add(Menu(new_menu))
+        session.add(Menu(requested_date,new_menu))
 
     session.commit()
 
     return {'message': f'Menu {result} successfully'}
 
-@menu_controller.route('/get')
-def get_todays_menu():
+@menu_controller.route('/get', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
+@menu_controller.route('/get/<requested_date>')
+def get_todays_menu(requested_date):
     # fetching from the database
     session = Session()
-    todays_menu = session.query(Menu).filter(func.date_trunc('day', Menu.menu_date) == date.today()).first()
-
-    # serializing as JSON
+    requested_menu = session.query(Menu).filter(func.date_trunc('day', Menu.menu_date) == requested_date).first()
     session.close()
-    return json.dumps(todays_menu.menu, indent=4)
+    if requested_menu:
+        return json.dumps(requested_menu.menu, indent=4)
+    return []
 
-def request_new_menu(requestedDay=None):
+def request_new_menu(requestedDay):
     # Requesting and parsing th HTML
-    result = requests.get('https://falusitekercsgyorsetterem.pgg.hu/falusitekercsgyorsetterem/etlap/')
+    result = requests.get(target_url)
     soup = BeautifulSoup(result.content, 'html.parser')
 
-    # Getting the current day
-    if requestedDay is None or requestedDay == 'undefined':
-        day = datetime.datetime.today().weekday()
-    else:
-        day = int(requestedDay) - 1
-
+    day = requestedDay.weekday()
     dayString = napok[day]
 
 

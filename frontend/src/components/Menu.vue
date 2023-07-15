@@ -22,7 +22,9 @@
             </div>
             <div class="col-4">
               <div class="d-flex justify-content-end">
+                <span v-if="item.sold_out" class="btn pe-none btn-outline-danger">Elfogyott</span>
                 <button
+                  v-else
                   v-for="size in item.sizes"
                   :key="item.id-size.size"
                   @click="addToBasket(item.id, item.label, size.size, size.price, size.link)"
@@ -92,15 +94,16 @@ export default {
     getMenu: function(day) {
       let url = ''
       if (day === undefined) {
-        url = `http://${window.location.hostname}/api/getmenu`
+        url = `http://${window.location.hostname}/api/menu/get`
       } else {
-        url = `http://${window.location.hostname}/api/getmenu?day=${new Date(day).getDay()}`
+        url = `http://${window.location.hostname}/api/menu/get/${new Date(day).toISOString().split('T')[0]}`
       }
 
       fetch(url)
         .then(response => response.json())
           .then(data => {
             this.items = data;
+            console.log(this.items);
           })
         .catch(error => console.error(error));
     }
@@ -112,7 +115,6 @@ export default {
   },
   computed: {
     currentUserState() {
-      console.log(state.userStates);
       return state.userStates[state.user.username];
     }
   }

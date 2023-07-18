@@ -8,13 +8,15 @@ import logging
 import datetime
 import db
 from sqlalchemy.exc import IntegrityError
-from controllers.menu_controller import menu_controller
 
 app = Flask(__name__)
-app.register_blueprint(menu_controller)
 socketio = SocketIO(app,logger=True, engineio_logger=True)
-
 app.config['SECRET_KEY'] = 'secret!'
+
+from controllers.menu_controller import menu_controller
+from controllers.user_controller import user_controller, emit_user_ds_state
+app.register_blueprint(menu_controller)
+app.register_blueprint(user_controller)
 
 sidfdpattern = r"\/sidfd-[0-9]+\/"
 
@@ -24,25 +26,9 @@ sql_set_state = "UPDATE orders SET order_state = %s WHERE order_date = CURRENT_D
 sql_insert = "INSERT INTO orders (basket) values (%s) RETURNING basket"
 sql_update = "UPDATE orders SET basket = %s WHERE order_date = CURRENT_DATE RETURNING basket"
 
-sql_user_select = "SELECT * FROM users WHERE username = %s"
-sql_user_insert = "INSERT INTO users (username) values (%s) RETURNING *"
-sql_user_sub_update = "UPDATE users SET subscribed = %s WHERE username = %s RETURNING *"
-sql_user_name_update = "UPDATE users SET username = %s WHERE username = %s"
-
-sql_user_subscribed = "SELECT username FROM users WHERE subscribed = 'full'"
-
-sql_get_alluser_ds = "SELECT username,daily_state,subscribed FROM users;"
-sql_user_set_ds = "UPDATE users SET daily_state = %s WHERE username = %s RETURNING *"
-
-sql_user_clear_temp_state = "UPDATE users SET daily_state = 'none'"
 
 sql_order_select_by_date = "SELECT basket FROM orders WHERE order_date = %s"
 
-@app.route("/cron/clear_users_temp_state")
-def cron_clear_users_temp_state():
-    db.run_sql(sql_user_clear_temp_state)
-    emit_user_ds_state()
-    return "OK", 200
 
 @app.route("/cron/new_day_refresh")
 def cron_new_day_refresh():
@@ -200,72 +186,11 @@ def set_today_basket(basket):
 
     return result
 
-def get_subscribed_users():
-    result = db.run_sql(sql_user_subscribed)
-    return [i[0] for i in result]
-
-@socketio.on('User Login')
-def handle_user_login(data):
-    response = login_user(data)
-    return {
-        "id": response[0],
-        "username": response[1],
-        "subscribed": response[2],
-        "theme": response[3]
-    }
 
 @socketio.on('Order History')
 def handle_order_history(data):
     date = data['requestedDate']
     return db.run_sql(sql_order_select_by_date, (date,), fetch='one')
-
-@socketio.on('User Update')
-def handle_user_update(data):
-    response = set_user(data)
-    emit_user_ds_state()
-    return {
-        "id": response[0],
-        "username": response[1],
-        "subscribed": response[2],
-        "theme": response[3]
-    }
-
-@socketio.on('User Daily State Change')
-def handle_user_ds_change(data):
-    db.run_sql(sql_user_set_ds, (data['new_state'], data['username']))
-    emit_user_ds_state()
-
-def emit_user_ds_state():
-    user_list = db.run_sql(sql_get_alluser_ds)
-    result = {}
-    for (user,state,sub) in user_list:
-        result_state = 'none'
-        if sub == 'full':
-            result_state = 'sub'
-        if state == 'video':
-            result_state = 'video'
-        if state == 'skip':
-            result_state = 'skip'
-        result[user] = result_state
-
-    socketio.emit('Waiting Update', result)
-
-def login_user(user):
-    rowcount = db.get_row_count(sql_user_select, (user['username'],))
-
-    if rowcount == 0:
-        # register then login
-        return db.run_sql(sql_user_insert, (user['username'],), fetch='one')
-    if rowcount == 1:
-        # login
-        return db.run_sql(sql_user_select, (user['username'],), fetch='one')
-    if rowcount > 1:
-        logging.error("ERROR: There is more than one user with same name, I dont know what to do! PANIC!")
-
-def set_user(user):
-    logging.info("Updated User" + user['username'])
-    return db.run_sql(sql_user_sub_update, (user['subscribed'], user['username']), fetch='one')
-
 
 if __name__ == "__main__":
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)

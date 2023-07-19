@@ -1,8 +1,11 @@
 <template>
   <div class="bg-body-secondary row d-flex align-items-center mx-0 px-0 pt-2 pb-2 rounded">
-    <div class="col-7 text-start">
+    <div class="col-7 d-flex text-start">
       <div class="align-items-center">
         <h1>Falusi rendelő</h1>
+      </div>
+      <div class="align-items-center">
+        <OrderState/>
       </div>
     </div>
     <div class="col-5 d-flex ps-0 justify-content-start align-items-center">
@@ -111,6 +114,7 @@ import Menu from './components/Menu.vue'
 import History from './components/History.vue'
 import LocalBasket from './components/LocalBasket.vue'
 import GlobalBasket from './components/GlobalBasket.vue'
+import OrderState from './components/OrderState.vue'
 import { state, socket } from "@/socket";
 import { useCookies } from "vue3-cookies";
 // import { Tooltip } from 'bootstrap';
@@ -121,6 +125,7 @@ export default {
     UsernamePopup,
     Menu,
     History,
+    OrderState,
     LocalBasket,
     GlobalBasket
   },
@@ -206,7 +211,6 @@ export default {
       return !(state.user === undefined || state.user.username === undefined);
     },
     currentUserState() {
-      console.log(state.userStates);
       return state.userStates[state.user.username];
     }
   }

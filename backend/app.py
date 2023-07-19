@@ -14,8 +14,10 @@ socketio = SocketIO(app,logger=True, engineio_logger=True)
 app.config['SECRET_KEY'] = 'secret!'
 
 from controllers.menu_controller import menu_controller
+from controllers.order_controller import order_controller
 from controllers.user_controller import user_controller, emit_user_ds_state
 app.register_blueprint(menu_controller)
+app.register_blueprint(order_controller)
 app.register_blueprint(user_controller)
 
 sidfdpattern = r"\/sidfd-[0-9]+\/"

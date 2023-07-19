@@ -1,7 +1,6 @@
 from flask import Blueprint, request
 from entities.menu import Menu, MenuSchema
 
-from flask import request
 import requests,json,re
 from bs4 import BeautifulSoup
 import logging
@@ -54,13 +53,13 @@ def add_or_update_all_menu():
 
 @menu_controller.route('/get', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
 @menu_controller.route('/get/<requested_date>')
-def get_todays_menu(requested_date):
+def get_requested_menu(requested_date):
     # fetching from the database
     session = Session()
-    requested_menu = session.query(Menu).filter(func.date_trunc('day', Menu.menu_date) == requested_date).first()
+    requested_menu = session.query(Menu).filter(Menu.menu_date == requested_date).first()
     session.close()
     if requested_menu:
-        return json.dumps(requested_menu.menu, indent=4)
+        return json.dumps(requested_menu.menu)
     return []
 
 

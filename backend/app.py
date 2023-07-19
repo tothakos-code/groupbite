@@ -188,11 +188,5 @@ def set_today_basket(basket):
 
     return result
 
-
-@socketio.on('Order History')
-def handle_order_history(data):
-    date = data['requestedDate']
-    return db.run_sql(sql_order_select_by_date, (date,), fetch='one')
-
 if __name__ == "__main__":
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)

@@ -56,7 +56,6 @@
 
 <script>
 import Datestamp from './DateStamp.vue'
-import { socket } from "@/socket";
 import GlobalBasketPerson from './GlobalBasketPerson.vue'
 
 export default {
@@ -68,11 +67,19 @@ export default {
   emits: ['close'],
   methods: {
     getHistroy: function(date) {
-      // fr-CA time locale is in the same format that the db use
-      let formatedDate = date.toLocaleDateString("fr-CA", {year:"numeric", month: "2-digit", day:"2-digit"});
-      socket.emit('Order History', {'requestedDate':formatedDate}, (result) => {
-        this.history = result;
-      });
+      let url = ''
+      if (date === undefined) {
+        url = `http://${window.location.hostname}/api/order/history`
+      } else {
+        url = `http://${window.location.hostname}/api/order/history/${new Date(date).toISOString().split('T')[0]}`
+      }
+
+      fetch(url)
+        .then(response => response.json())
+          .then(data => {
+            this.history = data;
+          })
+        .catch(error => console.error(error));
     }
   },
   data() {
@@ -113,6 +120,7 @@ export default {
       if (!this.history || this.history === undefined || this.history === null) {
         return 0;
       }
+      console.log(Object.keys(this.history).length);
       return Object.keys(this.history).length;
     },
     transportFeePerPerson() {

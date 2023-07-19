@@ -46,10 +46,6 @@ def call_clear_clients_basket():
     socketio.emit('Clear Local Basket')
     return "OK"
 
-@app.route('/getorderstate')
-def call_get_order_state():
-    return get_order_state()
-
 @app.route('/transferBasket', methods=['POST'])
 def call_transfer_basket():
     PHPSESSIONID = request.json['psid']
@@ -113,10 +109,6 @@ def call_transfer_basket():
 def handle_connect(data):
     socketio.emit('Client Basket Update', {'basket': get_today_basket() })
     emit_user_ds_state()
-
-@socketio.on('Request order state')
-def handle_request_order_state():
-    return get_order_state()
 
 @socketio.on('Ordered and Payed')
 def handle_payed():

@@ -19,10 +19,12 @@ export const socket = io(URL);
 socket.on("connect", () => {
   console.log('VUE Socket.IO connection established VUE');
   state.connected = true;
-  socket.emit('Request order state', function(incomingState) {
-    console.log("VUE Recived ORDER data from return VUE:" + incomingState);
-    state.orderState = incomingState;
-  });
+  fetch(`http://${window.location.hostname}/api/order/get-order-state`)
+    .then(response => response.json())
+      .then(data => {
+        state.orderState = data.order_state;
+      })
+    .catch(error => console.error(error));
 });
 
 socket.on("disconnect", () => {

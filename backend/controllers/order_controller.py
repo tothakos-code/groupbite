@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from entities.order import Order, OrderSchema
+from entities.order import Order, OrderSchema, order_state_type
 
 import requests, json, re
 import logging
@@ -19,3 +19,17 @@ def handle_order_history(requested_date):
     if not order_history:
         return {}
     return order_history.serialized['basket']
+
+@order_controller.route('/get-order-state')
+def handle_request_order_state():
+    return json.dumps({"order_state":get_order_state()})
+
+
+def get_order_state():
+    session = Session()
+    order_state = session.query(Order).filter(Order.order_date == date.today().strftime('%Y-%m-%d')).first()
+    session.close()
+    if not order_state:
+        return str(order_state_type.collect)
+
+    return str(order_state.order_state)

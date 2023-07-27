@@ -1,12 +1,12 @@
 <template>
-  <div class="bg-body-secondary row d-flex align-items-center mx-0 px-0 pt-2 pb-2 rounded">
-    <div class="col-7 d-flex text-start">
-      <div class="align-items-center">
-        <h1>Falusi rendelő</h1>
-      </div>
-      <div class="align-items-center">
-        <OrderState/>
-      </div>
+  <div class="bg-body-secondary d-flex row align-items-center mx-0 px-0 pt-2 pb-2 rounded">
+    <div class="col-7 row d-flex">
+        <div class="col d-flex justify-content-start align-items-center">
+          <h1>Falusi rendelő</h1>
+        </div>
+        <div class="col d-flex justify-content-end align-items-center">
+          <OrderState/>
+        </div>
     </div>
     <div class="col-5 d-flex ps-0 justify-content-start align-items-center">
         <div class="">

@@ -70,7 +70,7 @@ export default {
       if (this.psid !== "") {
         this.showInitial = false;
         this.showSpinner = true;
-        fetch(`http://${window.location.hostname}/api/transferBasket`,{
+        fetch(`http://${window.location.hostname}/api/order/transferBasket`,{
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -82,8 +82,8 @@ export default {
             if (response.statusText == "OK") {
               this.showFinish = true;
             } else {
-
-              alert("Valami hiba történt.");
+              this.showSpinner = false;
+              alert("Valami hiba történt. Hiba: " + response);
             }
           })
             .catch(error => console.error(error))

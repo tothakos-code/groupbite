@@ -1,11 +1,7 @@
 from flask import Flask
 from flask import request
-import requests,json,re
-from bs4 import BeautifulSoup
 from flask_socketio import SocketIO
 import logging
-import datetime
-import db
 from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)

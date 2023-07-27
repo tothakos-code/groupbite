@@ -8,6 +8,7 @@ from datetime import date, timedelta, datetime
 from sqlalchemy import func, cast
 from entities.entity import Session
 from __main__ import socketio
+from services.order_service import OrderService
 
 sidfdpattern = r"\/sidfd-[0-9]+\/"
 
@@ -25,8 +26,13 @@ def handle_order_history(requested_date):
 
 
 @order_controller.route('/get-order-state')
-def handle_request_order_state():
+def handle_get_order_state():
     return json.dumps({"order_state":get_order_state()})
+
+@order_controller.route('/get-user-basket', methods=['POST'])
+def handle_get_user_basket():
+    USER = request.json['user']
+    return OrderService.get_user_basket(USER)
 
 
 @socketio.on('Server Basket Update')

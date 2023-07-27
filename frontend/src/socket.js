@@ -5,6 +5,7 @@ export const state = reactive({
   connected: false,
   orderState: '',
   globalBasket: {},
+  localBasket: {},
   user: {},
   userStates: {}
 });

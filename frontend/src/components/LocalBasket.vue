@@ -18,7 +18,7 @@
     </div>
     <div class="row">
       <div class="list-group pe-0">
-        <div v-for="(item, itemSizeKey) in basket" :key="itemSizeKey" class="list-group-item d-flex justify-content-between">
+        <div v-for="(item, itemSizeKey) in localBasket" :key="itemSizeKey" class="list-group-item d-flex justify-content-between">
           <div class="col-2">
             <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{  item.quantity }} x</span>
           </div>
@@ -46,23 +46,38 @@
 </template>
 
 <script>
-import { useCookies } from "vue3-cookies";
 import { state } from "@/socket";
+import { watch } from "vue";
 
 export default {
   name: 'LocalBasket',
-  setup() {
-    const { cookies } = useCookies();
-    return { cookies };
-  },
   emits: ['basketUpdate'],
   data() {
     return {
       basket: {}
     };
   },
+  setup() {
+    watch(() => state.user.username, () => {
+      fetch(`http://${window.location.hostname}/api/order/get-user-basket`,{
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          'user': state.user.username
+        })
+      })
+        .then(response => response.json())
+          .then(data => {
+            state.localBasket = data;
+          })
+        .catch(error => console.error(error));
+    })
+  },
   mounted() {
-    this.updateBasket();
+    this.updateLocalBasket();
   },
   methods: {
     deleteFromBasket: function(itemSizeKey, basketItem) {
@@ -75,20 +90,23 @@ export default {
       }
       if (basketItem.quantity == 1) {
         // Otherwise, remove the entry from the basket
-        delete this.basket[itemSizeKey];
+        delete state.localBasket[itemSizeKey];
       } else {
         // If the item exists in the basket, decrement the quantity
         basketItem.quantity -= 1;
       }
-      this.cookies.set('basket', this.basket, '16h');
       this.$emit('basketUpdate');
     },
-    updateBasket: function() {
-      this.basket = JSON.parse(
-        JSON.stringify(
-          this.cookies.get('basket')
-        )
-      ) || {};
+    updateLocalBasket: function() {
+      if (state.user.username === undefined) {
+        return;
+      }
+      fetch(`http://${window.location.hostname}/api/order/get-user-basket`)
+        .then(response => response.json())
+          .then(data => {
+            state.localBasket = data;
+          })
+        .catch(error => console.error(error));
     },
     clearBasket: function() {
       if ( state.orderState === 'order') {
@@ -99,17 +117,20 @@ export default {
         return;
       }
       // Remove the basket cookie
-      this.cookies.set('basket', {}, '16h');
+      state.localBasket = {}
       this.$emit('basketUpdate');
     }
   },
   computed: {
+    localBasket() {
+      return state.localBasket;
+    },
     isBasketEmpty() {
-      return Object.keys(this.basket).length == 0;
+      return Object.keys(state.localBasket).length == 0;
     },
     sumBasket() {
       let sum = 0;
-      Object.values(this.basket).forEach(item => {
+      Object.values(state.localBasket).forEach(item => {
         sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
       });
       return sum;

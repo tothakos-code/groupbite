@@ -72,7 +72,7 @@ export default {
       if (this.currentUserState === 'skip') {
         socket.emit("User Daily State Change",{ 'username': state.user.username, 'new_state':'none' });
       }
-      let basket = this.cookies.get('basket') || {};
+      let basket = state.localBasket;
       const itemSizeKey = fid + '-' + size;
       if (basket[itemSizeKey]) {
         // If the item already exists in the basket, increment the quantity
@@ -88,7 +88,7 @@ export default {
           quantity: 1
         };
       }
-      this.cookies.set('basket',basket,'16h');
+      state.localBasket = basket
       this.$emit('basketUpdate');
     },
     getMenu: function(day) {

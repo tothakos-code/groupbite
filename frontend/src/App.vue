@@ -154,8 +154,7 @@ export default {
       this.showMenu = false;
     },
     onBasketUpdate: function() {
-      this.$refs.localbasket.updateBasket();
-      socket.emit("Server Basket Update",{ [this.cookies.get('username')]: this.cookies.get('basket') });
+      socket.emit("Server Basket Update",{ [this.cookies.get('username')]: state.localBasket });
     },
     toggleDarkMode: function() {
       if (this.theme === 'dark') {
@@ -183,7 +182,7 @@ export default {
           return;
         }
         // Remove the basket cookie
-        this.cookies.set('basket', {}, '16h');
+        state.localBasket = {};
         this.onBasketUpdate();
       }
       socket.emit("User Daily State Change",{ 'username': state.user.username, 'new_state':waitType });

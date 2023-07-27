@@ -35,7 +35,7 @@ def add_or_update_all_menu():
         new_menu = fetch_a_day(soup, napok[start_date.weekday()])
 
         # selecting current day
-        existing_menu = session.query(Menu).filter(func.date_trunc('day', Menu.menu_date) == start_date.strftime('%Y-%m-%d')).first()
+        existing_menu = session.query(Menu).filter(Menu.menu_date == start_date.strftime('%Y-%m-%d')).first()
 
         if existing_menu:
             # Update the existing menu

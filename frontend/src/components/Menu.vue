@@ -58,7 +58,6 @@ export default {
   mounted() {
     this.getMenu();
   },
-  emits: ['basketUpdate'],
   methods: {
     addToBasket: function(fid, label, size, price, link) {
       if (state.user.username === undefined) {
@@ -89,7 +88,6 @@ export default {
         };
       }
       state.localBasket = basket
-      this.$emit('basketUpdate');
     },
     getMenu: function(day) {
       let url = ''
@@ -103,7 +101,6 @@ export default {
         .then(response => response.json())
           .then(data => {
             this.items = data;
-            console.log(this.items);
           })
         .catch(error => console.error(error));
     }

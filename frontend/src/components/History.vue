@@ -45,7 +45,8 @@
                 :personBasket="basket"
                 :transportFee='this.transportFeePerPerson'
                 :startCollapsed="true"
-                :collapsable="true">
+                :collapsable="true"
+                :copyable="false">
               </GlobalBasketPerson>
             </div>
           </div>

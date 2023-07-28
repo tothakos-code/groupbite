@@ -79,13 +79,13 @@
   <div class="row d-flex">
     <div class="col-7">
       <div class="row p-2">
-        <Menu v-if="this.showMenu" @basketUpdate="this.onBasketUpdate()"/>
+        <Menu v-if="this.showMenu"/>
         <History v-if="this.showHistroy" @close="this.toMenu()"/>
       </div>
     </div>
     <div class="col-5">
       <div class="row p-2">
-        <LocalBasket ref="localbasket" @basketUpdate="this.onBasketUpdate()"/>
+        <LocalBasket ref="localbasket"/>
       </div>
       <div class="row p-2">
         <GlobalBasket/>
@@ -118,6 +118,8 @@ import OrderState from './components/OrderState.vue'
 import { state, socket } from "@/socket";
 import { useCookies } from "vue3-cookies";
 // import { Tooltip } from 'bootstrap';
+import { watch } from "vue";
+
 
 export default {
   name: 'App',
@@ -131,6 +133,9 @@ export default {
   },
   setup() {
     const { cookies } = useCookies();
+    watch(() => state.localBasket, () => {
+      socket.emit("Server Basket Update",{ [cookies.get('username')]: state.localBasket });
+    })
     return { cookies };
   },
   data() {
@@ -142,7 +147,6 @@ export default {
   },
   methods: {
     showVersion: function() {
-      console.log(version.version);
       return 'v' + version.version
     },
     toMenu: function() {
@@ -152,9 +156,6 @@ export default {
     toHistory: function() {
       this.showHistroy = true;
       this.showMenu = false;
-    },
-    onBasketUpdate: function() {
-      socket.emit("Server Basket Update",{ [this.cookies.get('username')]: state.localBasket });
     },
     toggleDarkMode: function() {
       if (this.theme === 'dark') {
@@ -183,7 +184,6 @@ export default {
         }
         // Remove the basket cookie
         state.localBasket = {};
-        this.onBasketUpdate();
       }
       socket.emit("User Daily State Change",{ 'username': state.user.username, 'new_state':waitType });
     }

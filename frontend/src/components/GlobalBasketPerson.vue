@@ -3,6 +3,7 @@
       <div class="card-header row d-flex pe-0">
         <div class="col-6">
           <span>{{ name }}</span>
+          <a v-if="copyable && name !== loggedInUser" class="ms-2 p-1 btn btn-warning" @click="copy">Másol</a>
         </div>
         <div class="col-6 d-flex justify-content-end">
           <span class="me-2" :title="this.basketTotalTitle">{{ this.basketTotal }} Ft</span>
@@ -24,6 +25,8 @@
 </template>
 
 <script>
+import { state } from "@/socket";
+
 export default {
   name: 'PersonComponent',
   props: {
@@ -42,6 +45,10 @@ export default {
       default: false
     },
     'collapsable':{
+      type: Boolean,
+      default: true
+    },
+    'copyable':{
       type: Boolean,
       default: true
     }
@@ -66,6 +73,9 @@ export default {
       this.sum = sum + Number(this.transportFee);
       sumTitle+= this.transportFee + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
       this.sumTitle = sumTitle;
+    },
+    copy: function() {
+      state.localBasket = this.personBasket;
     }
   },
   computed: {
@@ -88,6 +98,9 @@ export default {
       })
       sumTitle+= this.transportFee + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
       return sumTitle;
+    },
+    loggedInUser() {
+      return state.user.username
     }
   }
 }

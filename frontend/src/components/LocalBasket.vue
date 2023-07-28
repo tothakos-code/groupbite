@@ -51,7 +51,6 @@ import { watch } from "vue";
 
 export default {
   name: 'LocalBasket',
-  emits: ['basketUpdate'],
   data() {
     return {
       basket: {}
@@ -95,7 +94,6 @@ export default {
         // If the item exists in the basket, decrement the quantity
         basketItem.quantity -= 1;
       }
-      this.$emit('basketUpdate');
     },
     updateLocalBasket: function() {
       if (state.user.username === undefined) {
@@ -118,7 +116,6 @@ export default {
       }
       // Remove the basket cookie
       state.localBasket = {}
-      this.$emit('basketUpdate');
     }
   },
   computed: {

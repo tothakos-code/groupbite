@@ -122,4 +122,10 @@ export default {
 </script>
 
 <style>
+[data-bs-theme=light] .list-group-item:hover {
+  background-color: lightgray;
+}
+[data-bs-theme=dark] .list-group-item:hover {
+  background-color: #3c3c3c;
+}
 </style>

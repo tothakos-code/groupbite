@@ -9,12 +9,13 @@ from sqlalchemy import func, cast
 from entities.entity import Session
 from __main__ import socketio
 from services.order_service import OrderService
+from services.user_service import UserService
 
 sidfdpattern = r"\/sidfd-[0-9]+\/"
 
 order_controller = Blueprint('order_controller', __name__, url_prefix='/order')
 
-@order_controller.route('/history/', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
+@order_controller.route('/history', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
 @order_controller.route('/history/<requested_date>')
 def handle_order_history(requested_date):
     session = Session()
@@ -22,12 +23,22 @@ def handle_order_history(requested_date):
     session.close()
     if not order_history:
         return {}
-    return order_history.serialized['basket']
+    OrderService.migrate_to_userid_based_order(requested_date)
+    return OrderService.replace_userid_with_username(requested_date)
 
 
 @order_controller.route('/get-order-state')
 def handle_get_order_state():
     return json.dumps({"order_state":get_order_state()})
+
+
+@order_controller.route('/get-all-order-date')
+def handle_get_all_order_date():
+    session = Session()
+    order_dates = session.query(Order.order_date).filter(Order.basket != {}).all()
+    session.close()
+    return [str(order[0]) for order in order_dates]
+
 
 @order_controller.route('/get-user-basket', methods=['POST'])
 def handle_get_user_basket():
@@ -35,23 +46,28 @@ def handle_get_user_basket():
     return OrderService.get_user_basket(USER)
 
 
+@order_controller.route('/migrate-basket', methods=['GET'])
+def handle_basket_migration():
+    return OrderService.migrate_to_userid_based_order(date.today().strftime('%Y-%m-%d'))
+
+
 @socketio.on('Server Basket Update')
 def handle_basket_update(data):
     order_state = get_order_state()
     if order_state == str(order_state_type.closed):
-        socketio.emit('Client Basket Update', {'basket': get_today_basket() })
+        socketio.emit('Client Basket Update', {'basket': get_today_basket_with_usernames() })
         socketio.emit("Order state changed", order_state, room=request.sid)
         return
-    user = list(data.keys())[0]
+    userid = data['userid']
     currentBasket = get_today_basket()
-    if data[user]:
+    if data['basket']:
         # basket is not empty, save new basket
-        currentBasket[user] = data[user]
-    elif user in currentBasket:
+        currentBasket[userid] = data['basket']
+    elif userid in currentBasket:
         # basket is empty, delete key
-        del currentBasket[user]
-
-    socketio.emit('Client Basket Update', {'basket': set_today_basket(currentBasket) })
+        del currentBasket[userid]
+    set_today_basket(currentBasket)
+    socketio.emit('Client Basket Update', {'basket': get_today_basket_with_usernames() })
 
 
 def get_today_basket():
@@ -64,6 +80,10 @@ def get_today_basket():
     return today_basket.basket
 
 
+def get_today_basket_with_usernames():
+    return OrderService.replace_userid_with_username(date.today().strftime('%Y-%m-%d'))
+
+
 def set_today_basket(basket):
     session = Session()
     today_basket = session.query(Order).filter(Order.order_date == date.today().strftime('%Y-%m-%d')).first()
@@ -71,11 +91,11 @@ def set_today_basket(basket):
     if not today_basket:
         # insert
         session.add(Order(date.today().strftime('%Y-%m-%d'), basket))
-        logging.info("Created today's basket row")
+        logging.warning("Created today's basket row")
     else:
         # update
         today_basket.basket = basket
-        logging.info("Updated today's basket row")
+        logging.warning("Updated today's basket row")
 
     session.commit()
 

@@ -9,7 +9,7 @@ socketio = SocketIO(app,logger=True, engineio_logger=True)
 app.config['SECRET_KEY'] = 'secret!'
 
 from controllers.menu_controller import menu_controller
-from controllers.order_controller import order_controller, get_today_basket
+from controllers.order_controller import order_controller, get_today_basket_with_usernames
 from controllers.user_controller import user_controller, emit_user_ds_state
 app.register_blueprint(menu_controller)
 app.register_blueprint(order_controller)
@@ -33,7 +33,7 @@ def call_clear_clients_basket():
 
 @socketio.on('connect')
 def handle_connect(data):
-    socketio.emit('Client Basket Update', {'basket': get_today_basket() })
+    socketio.emit('Client Basket Update', {'basket': get_today_basket_with_usernames() })
     emit_user_ds_state()
 
 

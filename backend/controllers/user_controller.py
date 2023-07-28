@@ -5,6 +5,9 @@ from sqlalchemy import func, cast
 import logging
 from __main__ import socketio
 
+from services.user_service import UserService
+
+
 user_controller = Blueprint('user_controller', __name__, url_prefix='/user')
 
 @socketio.on('User Login')

@@ -71,14 +71,13 @@ export default {
       if (this.currentUserState === 'skip') {
         socket.emit("User Daily State Change",{ 'username': state.user.username, 'new_state':'none' });
       }
-      let basket = state.localBasket;
       const itemSizeKey = fid + '-' + size;
-      if (basket[itemSizeKey]) {
+      if (state.localBasket[itemSizeKey]) {
         // If the item already exists in the basket, increment the quantity
-        basket[itemSizeKey].quantity += 1;
+        state.localBasket[itemSizeKey].quantity += 1;
       } else {
         // Otherwise, add a new entry to the basket
-        basket[itemSizeKey] = {
+        state.localBasket[itemSizeKey] = {
           id: fid,
           name: label,
           size: size,
@@ -87,7 +86,6 @@ export default {
           quantity: 1
         };
       }
-      state.localBasket = basket
     },
     getMenu: function(day) {
       let url = ''

@@ -85,7 +85,7 @@
     </div>
     <div class="col-5">
       <div class="row p-2">
-        <LocalBasket ref="localbasket"/>
+        <LocalBasket/>
       </div>
       <div class="row p-2">
         <GlobalBasket/>
@@ -118,7 +118,6 @@ import OrderState from './components/OrderState.vue'
 import { state, socket } from "@/socket";
 import { useCookies } from "vue3-cookies";
 // import { Tooltip } from 'bootstrap';
-import { watch } from "vue";
 
 
 export default {
@@ -133,9 +132,6 @@ export default {
   },
   setup() {
     const { cookies } = useCookies();
-    watch(() => state.localBasket, () => {
-      socket.emit("Server Basket Update",{ [cookies.get('username')]: state.localBasket });
-    })
     return { cookies };
   },
   data() {

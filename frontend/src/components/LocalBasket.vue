@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import { state } from "@/socket";
+import { socket, state } from "@/socket";
 import { watch } from "vue";
 
 export default {
@@ -74,6 +74,11 @@ export default {
           })
         .catch(error => console.error(error));
     })
+    console.log(state);
+    watch(() => state.localBasket, () => {
+      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": state.localBasket });
+    }, { deep: true })
+
   },
   mounted() {
     this.updateLocalBasket();
@@ -114,7 +119,6 @@ export default {
         alert("A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.")
         return;
       }
-      // Remove the basket cookie
       state.localBasket = {}
     }
   },

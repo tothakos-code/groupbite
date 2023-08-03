@@ -74,11 +74,9 @@ export default {
           })
         .catch(error => console.error(error));
     })
-    console.log(state);
     watch(() => state.localBasket, () => {
       socket.emit("Server Basket Update", { "userid": state.user.id, "basket": state.localBasket });
     }, { deep: true })
-
   },
   mounted() {
     this.updateLocalBasket();
@@ -120,6 +118,7 @@ export default {
         return;
       }
       state.localBasket = {}
+      console.log(state.localBasket);
     }
   },
   computed: {

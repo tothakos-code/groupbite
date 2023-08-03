@@ -11,7 +11,7 @@
         <h2 class="ps-2">Előző rendelések</h2>
       </div>
       <div class="col-6">
-        <Datestamp @selectedDate="(date) => this.getHistroy(date)"/>
+        <Datestamp @selected-date="(date) => this.getHistroy(date)"/>
       </div>
     </div>
     <div class="row">
@@ -74,7 +74,6 @@ export default {
       } else {
         url = `http://${window.location.hostname}/api/order/history/${new Date(date).toISOString().split('T')[0]}`
       }
-
       fetch(url)
         .then(response => response.json())
           .then(data => {
@@ -121,7 +120,6 @@ export default {
       if (!this.history || this.history === undefined || this.history === null) {
         return 0;
       }
-      console.log(Object.keys(this.history).length);
       return Object.keys(this.history).length;
     },
     transportFeePerPerson() {

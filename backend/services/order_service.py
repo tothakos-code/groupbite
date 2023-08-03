@@ -39,7 +39,8 @@ class OrderService:
         session = Session()
         order = session.query(Order).filter(Order.order_date == order_date).first()
         session.close()
-
+        if not order:
+            return {}
         basket = order.basket
         new_basket = {}
         userIDs = basket.keys()

@@ -15,8 +15,8 @@ sidfdpattern = r"\/sidfd-[0-9]+\/"
 
 order_controller = Blueprint('order_controller', __name__, url_prefix='/order')
 
-@order_controller.route('/history', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
 @order_controller.route('/history/<requested_date>')
+@order_controller.route('/history', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
 def handle_order_history(requested_date):
     session = Session()
     order_history = session.query(Order).filter(Order.order_date == requested_date).first()
@@ -85,12 +85,13 @@ def get_today_basket_with_usernames():
 
 
 def set_today_basket(basket):
+    today = date.today().strftime('%Y-%m-%d')
     session = Session()
-    today_basket = session.query(Order).filter(Order.order_date == date.today().strftime('%Y-%m-%d')).first()
+    today_basket = session.query(Order).filter(Order.order_date == today).first()
 
     if not today_basket:
         # insert
-        session.add(Order(date.today().strftime('%Y-%m-%d'), basket))
+        session.add(Order(today, basket))
         logging.warning("Created today's basket row")
     else:
         # update

@@ -58,7 +58,7 @@ def handle_basket_update(data):
         socketio.emit('Client Basket Update', {'basket': get_today_basket_with_usernames() })
         socketio.emit("Order state changed", order_state, room=request.sid)
         return
-    userid = data['userid']
+    userid = str(data['userid'])
     currentBasket = get_today_basket()
     if data['basket']:
         # basket is not empty, save new basket

@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from entities.user import User, UserSchema
+from entities.user import User, UserSchema, subscribe_type
 from entities.entity import Session
 from sqlalchemy import func, cast
 import logging
@@ -25,12 +25,23 @@ def handle_user_login(user):
 
 @socketio.on('User Update')
 def handle_user_update(user):
-    logging.info("Updated User" + user['username'])
+    logging.info("Updated User" + str(user['id']))
 
     session = Session()
-    user_to_update = session.query(User).filter(User.username == user['username']).first()
+    user_to_update = session.query(User).filter(User.id == user['id']).first()
 
-    user_to_update.subscribed = user['subscribed']
+    if 'subscribed' in user:
+        if user['subscribed'] == 'none':
+            user_to_update.subscribed = subscribe_type.none
+        if user['subscribed'] == 'full':
+            user_to_update.subscribed = subscribe_type.full
+
+    if 'username' in user:
+        if UserService.is_username_valid(user['username']):
+            user_to_update.username = user['username']
+        else:
+            session.close()
+            return {"error":"Invalid username"}
 
     session.commit()
 

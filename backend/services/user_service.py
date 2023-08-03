@@ -37,3 +37,25 @@ class UserService:
         if not user:
             return False
         return True
+
+
+    def is_username_valid(username):
+        notvalid_usernames = [
+            "null",
+            "None",
+            None,
+            "undefined",
+            ""
+        ]
+        if username in notvalid_usernames:
+            return False
+
+        notvalid_characters = ["'", '"', "=", ",", ".", "&", "@", "#", "<", ">", "(", ")","[", "]", "{", "}"]
+        for char in notvalid_characters:
+            if char in username:
+                return False
+
+        if UserService.username_exist(username):
+            return False
+
+        return True

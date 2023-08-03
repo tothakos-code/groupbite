@@ -72,7 +72,7 @@
           </div>
         </div>
       <div class="col text-end d-flex justify-content-end align-items-center">
-          <UsernamePopup @toHistory="toHistory()"/>
+          <UserMenu @toHistory="toHistory()"/>
       </div>
     </div>
   </div>
@@ -109,7 +109,7 @@
 
 <script>
 import version from "../package.json";
-import UsernamePopup from './components/UsernamePopup.vue'
+import UserMenu from './components/UserMenu.vue'
 import Menu from './components/Menu.vue'
 import History from './components/History.vue'
 import LocalBasket from './components/LocalBasket.vue'
@@ -123,7 +123,7 @@ import { useCookies } from "vue3-cookies";
 export default {
   name: 'App',
   components: {
-    UsernamePopup,
+    UserMenu,
     Menu,
     History,
     OrderState,

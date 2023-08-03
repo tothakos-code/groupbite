@@ -11,9 +11,19 @@
       <span class="input-group-text">Szabadság tábla név:</span>
       <input type="text" v-model.trim="vt_name" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
     </div>
-    <div class="input-group mb-3">
-      <span class="input-group-radio">Téma:</span>
-      <input type="radio" class="form-control">
+    <span class="input-group-radio">Téma:</span>
+    <div class="d-flex justify-content-around">
+      <input type="radio" class="btn-check" name="options-outlined" id="warning-outlined" autocomplete="off" checked>
+      <label class="btn btn-outline-warning" for="warning-outlined">Alap</label>
+
+      <input type="radio" class="btn-check" name="options-outlined" id="info-outlined" autocomplete="off">
+      <label class="btn btn-outline-info" for="info-outlined">Óceán</label>
+
+      <input type="radio" class="btn-check" name="options-outlined" id="danger-outlined" autocomplete="off">
+      <label class="btn btn-outline-danger" for="danger-outlined">Málna</label>
+
+      <input type="radio" class="btn-check" name="options-outlined" id="warning1-outlined" autocomplete="off">
+      <label class="btn btn-outline-warning" for="warning1-outlined">Tigra</label>
     </div>
   </Popup>
 </template>

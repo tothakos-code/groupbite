@@ -4,6 +4,7 @@ import VueCookies from 'vue3-cookies';
 import VueClipboard from 'vue3-clipboard';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap.js';
+import './assets/scss/main.scss'
 
 let app = createApp(App);
 app.use(VueCookies);

@@ -43,6 +43,9 @@ def handle_user_update(user):
             session.close()
             return {"error":"Invalid username"}
 
+    if 'ui_color' in user:
+        user_to_update.ui_color = user['ui_color']
+
     session.commit()
 
     emit_user_ds_state()
@@ -51,13 +54,19 @@ def handle_user_update(user):
 
 @user_controller.route("/cron/clear_users_temp_state")
 def cron_clear_users_temp_state():
-    db.run_sql(sql_user_clear_temp_state)
     session = Session()
     User.query.update({User.daily_state: 'none'})
     session.commit()
 
     emit_user_ds_state()
     return "OK", 200
+
+@user_controller.route("/get/<id>")
+def handle_get_user_by_id(id):
+    user = UserService.get_user_by_id(id)
+    if not user:
+        return {}
+    return user.serialized
 
 
 @socketio.on('User Daily State Change')

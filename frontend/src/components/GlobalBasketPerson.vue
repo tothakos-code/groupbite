@@ -3,7 +3,7 @@
       <div class="card-header row d-flex pe-0">
         <div class="col-6">
           <span>{{ name }}</span>
-          <a v-if="copyable && name !== loggedInUser" class="ms-2 p-1 btn btn-warning" @click="copy">Másol</a>
+          <a v-if="copyable && name !== loggedInUser" class="ms-2 p-1 btn" :class="['btn-' + this.usercolor ]" @click="copy">Másol</a>
         </div>
         <div class="col-6 d-flex justify-content-end">
           <span class="me-2" :title="this.basketTotalTitle">{{ this.basketTotal }} Ft</span>
@@ -75,6 +75,10 @@ export default {
       this.sumTitle = sumTitle;
     },
     copy: function() {
+      if (state.user.username === undefined) {
+        alert("Jelentkezz be a rendeléshez");
+        return;
+      }
       state.localBasket = this.personBasket;
     }
   },
@@ -101,6 +105,9 @@ export default {
     },
     loggedInUser() {
       return state.user.username
+    },
+    usercolor() {
+      return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }
 }

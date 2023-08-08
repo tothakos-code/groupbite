@@ -6,7 +6,6 @@
       :class="{ show: active, 'd-block': active }"
       tabindex="-1"
       role="dialog"
-      :aria-labelledby="`modal-${id}`"
       :aria-hidden="active"
     >
       <div class="modal-dialog modal-dialog-centered">
@@ -19,7 +18,7 @@
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" @click="$emit('cancel')">Mégse</button>
-            <button class="btn btn-warning" @click="$emit('confirm')">Folytat</button>
+            <button class="btn" :class="['btn-' + this.usercolor ]" @click="$emit('confirm')">Folytat</button>
           </div>
         </div>
       </div>
@@ -30,6 +29,7 @@
 
 <script>
 import { ref, watch} from 'vue';
+import { state } from '@/socket';
 export default {
   name: 'PopupBase',
   props: {
@@ -50,6 +50,11 @@ export default {
 
     return {
       active
+    }
+  },
+  computed: {
+    usercolor() {
+      return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }
 }

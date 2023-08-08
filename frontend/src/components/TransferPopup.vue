@@ -1,5 +1,5 @@
 <template>
-  <button class="btn btn-warning" id="transferBasketButton" @click="this.openPopup()">Áthelyezés falusiba</button>
+  <button class="btn" :class="['btn-' + this.usercolor ]" id="transferBasketButton" @click="this.openPopup()">Áthelyezés falusiba</button>
 
   <Popup
     :showModal="showInitial"
@@ -111,6 +111,11 @@ export default {
            console.log(event)
          }
       });
+    }
+  },
+  computed: {
+    usercolor(){
+      return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }
 }

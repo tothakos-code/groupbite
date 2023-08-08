@@ -28,7 +28,8 @@
                   v-for="size in item.sizes"
                   :key="item.id-size.size"
                   @click="addToBasket(item.id, item.label, size.size, size.price, size.link)"
-                  class="btn btn-warning btn-sm col-sm-6 me-2 ms-2">
+                  class="btn btn-sm col-sm-6 me-2 ms-2"
+                  :class="['btn-' + this.usercolor ]">
                   {{ size.label }}
                 </button>
               </div>
@@ -99,6 +100,7 @@ export default {
         .then(response => response.json())
           .then(data => {
             this.items = data;
+            console.log(this.items);
           })
         .catch(error => console.error(error));
     }
@@ -111,6 +113,9 @@ export default {
   computed: {
     currentUserState() {
       return state.userStates[state.user.username];
+    },
+    usercolor() {
+        return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }
 }

@@ -3,10 +3,10 @@
 @import "~bootstrap/scss/mixins";
 
 $custom-colors: (
-  "gray":      #857856,
+  "falusi":    #ebb410,
   "steelblue": #0081A7,
   "tigragold": #bb9b68,
-  "raspberry": #a32323
+  "raspberry": #ac3253
 );
 
 $theme-colors: map-merge($theme-colors, $custom-colors);

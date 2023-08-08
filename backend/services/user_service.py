@@ -22,6 +22,14 @@ class UserService:
             return None
         return user.username
 
+    def get_user_by_id(id):
+        session = Session()
+        user = session.query(User).filter(User.id == id).first()
+        session.close()
+        if not user:
+            return None
+        return user
+
     def user_exist(id):
         session = Session()
         user = session.query(User).filter(User.id == id).first()

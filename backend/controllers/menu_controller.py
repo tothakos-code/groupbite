@@ -7,6 +7,7 @@ import logging
 from datetime import date, timedelta, datetime
 from sqlalchemy import func, cast
 from entities.entity import Session
+from services.menu_service import MenuService
 
 target_url = 'https://falusitekercsgyorsetterem.pgg.hu/falusitekercsgyorsetterem/etlap/'
 
@@ -53,11 +54,8 @@ def add_or_update_all_menu():
 
 @menu_controller.route('/get', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
 @menu_controller.route('/get/<requested_date>')
-def get_requested_menu(requested_date):
-    # fetching from the database
-    session = Session()
-    requested_menu = session.query(Menu).filter(Menu.menu_date == requested_date).first()
-    session.close()
+def get_requested_menu(requested_date=date.today().strftime('%Y-%m-%d')):
+    requested_menu = MenuService.get_menu_by_date(requested_date)
     if requested_menu:
         return json.dumps(requested_menu.menu)
     return []

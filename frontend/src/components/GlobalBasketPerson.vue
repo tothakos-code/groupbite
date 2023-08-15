@@ -17,7 +17,7 @@
       <div class="row list-group" :class="{ show: !collapsable || !startCollapsed, collapse: startCollapsed}" :id="collapsable ? (name.replace(/[^a-z0-9]/ig, '')) : false">
         <div v-for="item in personBasket" :key="item.id" class="list-group-item  d-flex justify-content-between align-items-center"  >
           <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ item.quantity }} x</span>
-          <span>{{ item.name }}</span>
+          <span>{{ item.label }}</span>
           <span>{{ item.size }} - {{ item.price }}</span>
         </div>
       </div>
@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import { state } from "@/socket";
+import { state, socket } from "@/socket";
 
 export default {
   name: 'PersonComponent',
@@ -79,7 +79,7 @@ export default {
         alert("Jelentkezz be a rendeléshez");
         return;
       }
-      state.localBasket = this.personBasket;
+      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": this.personBasket });
     }
   },
   computed: {

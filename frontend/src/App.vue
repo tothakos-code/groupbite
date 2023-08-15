@@ -163,12 +163,12 @@ export default {
       document.documentElement.setAttribute('data-bs-theme', this.theme)
     },
     subscribe: function() {
-      socket.emit("User Update", {"username": state.user.username, "subscribed":"full"}, function(user) {
+      socket.emit("User Update", {"id": state.user.id, "subscribed":"full"}, function(user) {
         state.user = user;
       });
     },
     unSubscribe: function() {
-      socket.emit("User Update", {"username": state.user.username, "subscribed":"none"}, function(user) {
+      socket.emit("User Update", {"id": state.user.id, "subscribed":"none"}, function(user) {
         state.user = user;
       });
     },

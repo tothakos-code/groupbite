@@ -40,6 +40,13 @@ socket.on('Order state changed', function(incomingState) {
 socket.on('Client Basket Update', function(incomingGlobalBasket) {
   console.log('VUE Global basket incomming via websocket VUE: ', incomingGlobalBasket);
   state.globalBasket = incomingGlobalBasket.basket;
+  if (state.user.username !== undefined) {
+    if (incomingGlobalBasket.basket[state.user.username] !== undefined) {
+      state.localBasket = incomingGlobalBasket.basket[state.user.username];
+    } else {
+      state.localBasket = {}
+    }
+  }
 });
 
 socket.on('Waiting Update', function(incomingStateList) {

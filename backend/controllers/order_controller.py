@@ -10,6 +10,7 @@ from entities.entity import Session
 from __main__ import socketio
 from services.order_service import OrderService
 from services.user_service import UserService
+from services.menu_service import MenuService
 
 sidfdpattern = r"\/sidfd-[0-9]+\/"
 
@@ -62,7 +63,8 @@ def handle_basket_update(data):
     currentBasket = get_today_basket()
     if data['basket']:
         # basket is not empty, save new basket
-        currentBasket[userid] = data['basket']
+        new_basket = OrderService.inject_label_and_price(data['basket'])
+        currentBasket[userid] = new_basket
     elif userid in currentBasket:
         # basket is empty, delete key
         del currentBasket[userid]
@@ -85,13 +87,13 @@ def get_today_basket_with_usernames():
 
 
 def set_today_basket(basket):
-    today = date.today().strftime('%Y-%m-%d')
+    today_date = date.today().strftime('%Y-%m-%d')
     session = Session()
-    today_basket = session.query(Order).filter(Order.order_date == today).first()
+    today_basket = session.query(Order).filter(Order.order_date == today_date).first()
 
     if not today_basket:
         # insert
-        session.add(Order(today, basket))
+        session.add(Order(today_date, basket))
         logging.warning("Created today's basket row")
     else:
         # update
@@ -159,6 +161,8 @@ def call_transfer_basket():
     PHPSESSIONID = request.json['psid']
 
     orders = get_today_basket()
+    links = MenuService.get_all_fdid_with_link()
+
 
     set_order_state(order_state_type.order)
     logging.info("Order status changet to 'order'")
@@ -170,14 +174,15 @@ def call_transfer_basket():
         return "Error: basket empty or could not get basket from database."
 
     # Create the list of item links
-    orderList = []
+    order_list = []
     for person, basket in orders.items():
         # ToDo: prevent None
         if basket == None:
             continue
-        for foodItem in basket.values():
-            for quantity in range(0,foodItem['quantity']):
-                orderList.append(foodItem['link'])
+        for food_item in basket.values():
+            food_item_link = links[food_item['id']]
+            for quantity in range(0,food_item['quantity']):
+                order_list.append(food_item_link)
 
 
     requests_header={
@@ -187,9 +192,9 @@ def call_transfer_basket():
         "Accept": "*/*",
         "Host": "falusitekercsgyorsetterem.pgg.hu"
         }
-
+    logging.warning(Counter(order_list).items())
     # Loop the links and make the requests
-    for link,count in Counter(orderList).items():
+    for link,count in Counter(order_list).items():
         sizeid = re.search(sidfdpattern, link).group().replace('/','').split('-')[1]
 
         requests_data={

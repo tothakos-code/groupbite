@@ -23,7 +23,7 @@
             <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{  item.quantity }} x</span>
           </div>
           <div class="col-8">
-            <span>{{ item.name }} ({{item.size}}) - {{item.price}}</span>
+            <span>{{ item.label }} ({{item.size}}) - {{item.price}}</span>
           </div>
           <div class="col-2 text-end">
             <button @click="this.deleteFromBasket(itemSizeKey, item)" type="button" title="Törlés" class="btn btn-close"></button>
@@ -74,9 +74,9 @@ export default {
           })
         .catch(error => console.error(error));
     })
-    watch(() => state.localBasket, () => {
-      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": state.localBasket });
-    }, { deep: true })
+    // watch(() => state.localBasket, () => {
+    //   socket.emit("Server Basket Update", { "userid": state.user.id, "basket": state.localBasket });
+    // }, { deep: true })
   },
   mounted() {
     this.updateLocalBasket();
@@ -97,6 +97,8 @@ export default {
         // If the item exists in the basket, decrement the quantity
         basketItem.quantity -= 1;
       }
+      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": state.localBasket });
+
     },
     updateLocalBasket: function() {
       if (state.user.username === undefined) {
@@ -117,8 +119,7 @@ export default {
         alert("A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.")
         return;
       }
-      state.localBasket = {}
-      console.log(state.localBasket);
+      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": {} });
     }
   },
   computed: {

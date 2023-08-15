@@ -3,7 +3,9 @@ from datetime import date, timedelta, datetime
 from entities.entity import Session
 
 from services.user_service import UserService
+from services.menu_service import MenuService
 
+import logging
 
 class OrderService:
     """docstring for OrderService."""
@@ -43,7 +45,14 @@ class OrderService:
             return {}
         basket = order.basket
         new_basket = {}
-        userIDs = basket.keys()
-        for userID in userIDs:
-            new_basket[UserService.id_to_username(userID)] = basket[userID]
+        user_ids = basket.keys()
+        for user_id in user_ids:
+            new_basket[UserService.id_to_username(user_id)] = basket[user_id]
         return new_basket
+
+    def inject_label_and_price(basket):
+        current_menu = MenuService.get_menu_as_dict()
+        for basket_item in basket.values():
+            basket_item['price'] = current_menu[basket_item['id']][basket_item['size']]['price']
+            basket_item['label'] = current_menu[basket_item['id']]['label']
+        return basket

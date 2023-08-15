@@ -27,7 +27,7 @@
                   v-else
                   v-for="size in item.sizes"
                   :key="item.id-size.size"
-                  @click="addToBasket(item.id, item.label, size.size, size.price, size.link)"
+                  @click="addToBasket(item.id, size.size)"
                   class="btn btn-sm col-sm-6 me-2 ms-2"
                   :class="['btn-' + this.usercolor ]">
                   {{ size.label }}
@@ -60,7 +60,7 @@ export default {
     this.getMenu();
   },
   methods: {
-    addToBasket: function(fid, label, size, price, link) {
+    addToBasket: function(fid, size) {
       if (state.user.username === undefined) {
         alert("Jelentkezz be a rendeléshez");
         return;
@@ -73,20 +73,20 @@ export default {
         socket.emit("User Daily State Change",{ 'username': state.user.username, 'new_state':'none' });
       }
       const itemSizeKey = fid + '-' + size;
-      if (state.localBasket[itemSizeKey]) {
+      const updated_basket = structuredClone(state.localBasket);
+      if (updated_basket[itemSizeKey]) {
         // If the item already exists in the basket, increment the quantity
-        state.localBasket[itemSizeKey].quantity += 1;
+        updated_basket[itemSizeKey].quantity += 1;
       } else {
         // Otherwise, add a new entry to the basket
-        state.localBasket[itemSizeKey] = {
+        updated_basket[itemSizeKey] = {
           id: fid,
-          name: label,
           size: size,
-          price: price,
-          link: link,
           quantity: 1
         };
       }
+      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": updated_basket });
+
     },
     getMenu: function(day) {
       let url = ''

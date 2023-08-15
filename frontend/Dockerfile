@@ -17,17 +17,19 @@ CMD ["npm", "run", "serve"]
 
 FROM node:lts-alpine as production
 
+ENV NODE_ENV $FALU_ENV
+
 # make the 'app' folder the current working directory
 WORKDIR /app
-
-# install simple http server for serving static content
-RUN npm install http-server
 
 # copy both 'package.json' and 'package-lock.json' (if available)
 COPY package*.json ./
 
 # install project dependencies
 RUN npm install
+
+# install simple http server for serving static content
+RUN npm install http-server
 
 # copy project files and folders to the current working directory (i.e. 'app' folder)
 COPY . .
@@ -37,4 +39,4 @@ RUN npm run build
 
 EXPOSE 8080
 # prod
-CMD [ "http-server", "dist" ]
+CMD [ "./node_modules/.bin/http-server", "dist" ]

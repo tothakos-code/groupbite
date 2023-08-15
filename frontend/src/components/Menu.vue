@@ -26,7 +26,7 @@
                 <button
                   v-else
                   v-for="size in item.sizes"
-                  :key="item.id-size.size"
+                  :key="item.id+'-'+size.size"
                   @click="addToBasket(item.id, size.size)"
                   class="btn btn-sm col-sm-6 me-2 ms-2"
                   :class="['btn-' + this.usercolor ]">

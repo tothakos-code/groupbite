@@ -43,7 +43,6 @@ export default {
     login: function() {
       socket.emit("User Login", {"username": this.username}, function(user) {
         state.user = user;
-        console.log(state.user);
       });
       this.$emit('cancel')
 

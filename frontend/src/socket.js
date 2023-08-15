@@ -18,7 +18,6 @@ export const socket = io(URL);
 
 
 socket.on("connect", () => {
-  console.log('VUE Socket.IO connection established VUE');
   state.connected = true;
   fetch(`http://${window.location.hostname}/api/order/get-order-state`)
     .then(response => response.json())
@@ -33,12 +32,10 @@ socket.on("disconnect", () => {
 });
 
 socket.on('Order state changed', function(incomingState) {
-  console.log("VUE Order update incoming VUE:" + incomingState);
   state.orderState = incomingState;
 });
 
 socket.on('Client Basket Update', function(incomingGlobalBasket) {
-  console.log('VUE Global basket incomming via websocket VUE: ', incomingGlobalBasket);
   state.globalBasket = incomingGlobalBasket.basket;
   if (state.user.username !== undefined) {
     if (incomingGlobalBasket.basket[state.user.username] !== undefined) {

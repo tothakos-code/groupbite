@@ -20,7 +20,7 @@
       <div class="list-group pe-0">
         <div v-for="(item, itemSizeKey) in localBasket" :key="itemSizeKey" class="list-group-item d-flex justify-content-between">
           <div class="col-2">
-            <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{  item.quantity }} x</span>
+            <span class="badge rounded-pill border" :class="['bg-' + this.matchUiColorWithBuiltIn + '-subtle', 'border-' + this.matchUiColorWithBuiltIn + '-subtle','text-' + this.matchUiColorWithBuiltIn + '-emphasis']">{{  item.quantity }} x</span>
           </div>
           <div class="col-8">
             <span>{{ item.label }} ({{item.size}}) - {{item.price}}</span>
@@ -135,6 +135,19 @@ export default {
         sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
       });
       return sum;
+    },
+    matchUiColorWithBuiltIn() {
+      switch (this.usercolor) {
+        case "steelblue":
+          return "info";
+        case "raspberry":
+          return "danger";
+        case "tigragold":
+          return "warning";
+        default:
+          // falusi
+          return "warning"
+      }
     },
     usercolor() {
       return state.user.ui_color ? state.user.ui_color : "falusi";

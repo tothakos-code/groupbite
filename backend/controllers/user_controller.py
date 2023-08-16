@@ -72,7 +72,7 @@ def handle_get_user_by_id(id):
 @socketio.on('User Daily State Change')
 def handle_user_ds_change(user):
     session = Session()
-    user_to_update = session.query(User).filter(User.username == user['username']).first()
+    user_to_update = session.query(User).filter(User.id == user['id']).first()
 
     user_to_update.daily_state = user['new_state']
 

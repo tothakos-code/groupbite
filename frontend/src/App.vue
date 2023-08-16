@@ -184,9 +184,9 @@ export default {
           return;
         }
         // Remove the basket cookie
-        state.localBasket = {};
+        socket.emit("Server Basket Update", { "userid": state.user.id, "basket": {} });
       }
-      socket.emit("User Daily State Change",{ 'username': state.user.username, 'new_state':waitType });
+      socket.emit("User Daily State Change",{ 'id': state.user.id, 'new_state':waitType });
     }
   },
   mounted() {

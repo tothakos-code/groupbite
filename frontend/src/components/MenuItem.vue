@@ -50,7 +50,7 @@ export default {
         return;
       }
       if (this.currentUserState === 'skip') {
-        socket.emit("User Daily State Change",{ 'username': state.user.username, 'new_state':'none' });
+        socket.emit("User Daily State Change",{ 'id': state.user.id, 'new_state':'none' });
       }
       const itemSizeKey = fid + '-' + size;
       const updated_basket = structuredClone(state.localBasket);

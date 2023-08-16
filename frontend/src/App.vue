@@ -76,7 +76,7 @@
       </div>
     </div>
   </div>
-  <div class="row d-flex">
+  <div v-if="this.isDataLoaded" class="row d-flex">
     <div class="col-7">
       <div class="row p-2">
         <Menu v-if="this.showMenu" key="0"/>
@@ -90,6 +90,11 @@
       <div class="row p-2">
         <GlobalBasket/>
       </div>
+    </div>
+  </div>
+  <div v-else class="row col d-flex justify-content-center align-items-center">
+    <div class="spinner-border" style="width: 3rem; height: 3rem;">
+
     </div>
   </div>
   <div class="footer row mt-auto p-3 bg-body-tertiary">
@@ -199,6 +204,14 @@ export default {
     // });
   },
   computed: {
+    isDataLoaded(){
+      return state.user !== undefined && state.user.ui_color
+      // if ((this.$cookies.isKey('username') && state.user !== undefined) || !this.$cookies.isKey('username')) {
+      //   return true
+      // } else {
+      //   return false
+      // }
+    },
     subscriptionState() {
       return state.user.subscribed;
     },

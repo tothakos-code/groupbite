@@ -79,7 +79,7 @@
   <div class="row d-flex">
     <div class="col-7">
       <div class="row p-2">
-        <Menu v-if="this.showMenu"/>
+        <Menu v-if="this.showMenu" key="0"/>
         <History v-if="this.showHistroy" @close="this.toMenu()"/>
       </div>
     </div>

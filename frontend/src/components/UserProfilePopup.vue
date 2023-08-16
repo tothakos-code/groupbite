@@ -1,18 +1,18 @@
 <template>
-  <Popup  :showModal="show" title="Profil beállítások" @cancel="this.onCancel()" @confirm="this.updateUser()">
+  <Popup :showModal="show" title="Profil beállítások" @cancel="this.onCancel()" @confirm="this.updateUser()">
     <p>A nevednek a könnyebb beazonosítás miatt egyedinek kell lennie. Használj egy becenevet amiről mindneki tudja, hogy te vagy az.</p>
     <p>A nevedet itt tudod megváltoztatni:</p>
     <div class="input-group mb-3">
       <span class="input-group-text">Név</span>
       <input type="text" v-model.trim="username" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
     </div>
-    <p>A szabadság táblázatban így szerepel a neved:</p>
+    <!-- <p>A szabadság táblázatban így szerepel a neved:</p>
     <div class="input-group mb-3">
       <span class="input-group-text">Szabadság tábla név:</span>
       <input type="text" v-model.trim="vt_name" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
-    </div>
-    <span class="input-group-radio">Téma:</span>
-    <div class="d-flex justify-content-around">
+    </div> -->
+    <span class="input-group-radio">Felület szine:</span>
+    <div class="d-flex justify-content-around m-2">
       <input type="radio" class="btn-check" name="options-outlined" id="falusi-outlined" value="falusi" autocomplete="off" @change="this.onColorChange()" v-model="ui_color">
       <label class="btn btn-outline-falusi" for="falusi-outlined">Alap</label>
 
@@ -56,6 +56,7 @@ export default {
   },
   mounted() {
     this.username = this.loggedInUsername;
+    this.ui_color = state.user.ui_color;
   },
   methods: {
     updateUser: function() {

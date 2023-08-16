@@ -28,6 +28,11 @@ export default {
     const { cookies } = useCookies();
     return { cookies };
   },
+  data() {
+    return {
+      username: ""
+    }
+  },
   mounted() {
     if (this.$cookies.isKey('username')) {
       this.username = this.cookies.get('username');

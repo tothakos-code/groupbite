@@ -32,7 +32,7 @@
   <div v-else class="">
     <button @click="showLogin = true" class="btn btn-dark">Bejelentkezés</button>
   </div>
-  <UserProfilePopup :show="showProfile" @cancel="showProfile = false"/>
+  <UserProfilePopup v-if="this.isLoggedIn" :show="showProfile" @cancel="showProfile = false"/>
   <UserLoginPopup :show="showLogin" @cancel="showLogin = false"/>
 </template>
 

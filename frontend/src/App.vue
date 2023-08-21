@@ -205,12 +205,7 @@ export default {
   },
   computed: {
     isDataLoaded(){
-      return state.user !== undefined && state.user.ui_color
-      // if ((this.$cookies.isKey('username') && state.user !== undefined) || !this.$cookies.isKey('username')) {
-      //   return true
-      // } else {
-      //   return false
-      // }
+      return (state.user !== undefined && state.user.ui_color) || !this.$cookies.isKey('username')
     },
     subscriptionState() {
       return state.user.subscribed;

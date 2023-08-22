@@ -3,3 +3,4 @@ backend/entities/__pycache__
 backend/controllers/__pycache__
 backend/services/__pycache__
 db/data/
+.env

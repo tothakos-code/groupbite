@@ -1,5 +1,5 @@
 <template>
-    <div class="card">
+    <div class="card" :class="this.name === this.loggedInUser ? 'border border-2 border-'+ this.matchUiColorWithBuiltIn + (this.usertheme === 'dark' ? '-subtle' : '') : ''">
       <div class="card-header row d-flex pe-0">
         <div class="col-6">
           <span>{{ name }}</span>
@@ -137,6 +137,9 @@ export default {
     },
     usercolor() {
       return state.user.ui_color ? state.user.ui_color : "falusi";
+    },
+    usertheme() {
+      return state.user.ui_theme ? state.user.ui_theme : "light";
     }
   }
 }

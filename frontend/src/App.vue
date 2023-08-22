@@ -181,6 +181,9 @@ export default {
         this.theme = 'dark'
       }
       localStorage.setItem("theme", this.theme);
+      socket.emit("User Update", {"id": state.user.id, "ui_theme":this.theme}, function(user) {
+        state.user = user;
+      });
       document.documentElement.setAttribute('data-bs-theme', this.theme)
     },
     subscribe: function() {

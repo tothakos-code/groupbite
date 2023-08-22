@@ -46,6 +46,9 @@ def handle_user_update(user):
     if 'ui_color' in user:
         user_to_update.ui_color = user['ui_color']
 
+    if 'ui_theme' in user:
+        user_to_update.ui_theme = user['ui_theme']
+
     session.commit()
 
     emit_user_ds_state()

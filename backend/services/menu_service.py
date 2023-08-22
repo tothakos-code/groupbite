@@ -44,6 +44,7 @@ class MenuService:
             for menu_item in menu.menu:
                 result[menu_item['id']] = {
                     'label': menu_item['label'],
+                    'date': menu.menu_date.strftime('%Y-%m-%d')
                 }
                 for menu_item_size in menu_item['sizes']:
                     result[menu_item['id']][menu_item_size['size']] = {

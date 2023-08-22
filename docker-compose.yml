@@ -30,7 +30,7 @@ services:
     env_file:
       - .env
     ports:
-      - ${FALU_APP_PORT}:80
+      - ${FALU_APP_PORT}:${FALU_APP_PORT}
     networks:
       falu_net:
         ipv4_address: 10.10.13.3

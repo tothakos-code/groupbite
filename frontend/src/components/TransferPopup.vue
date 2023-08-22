@@ -1,5 +1,5 @@
 <template>
-  <button class="btn" :class="['btn-' + this.usercolor ]" id="transferBasketButton" @click="this.openPopup()">Áthelyezés falusiba</button>
+  <button class="btn" :class="['btn-' + this.userColor ]" id="transferBasketButton" @click="this.openPopup()">Áthelyezés falusiba</button>
 
   <Popup
     :showModal="showInitial"
@@ -114,7 +114,7 @@ export default {
     }
   },
   computed: {
-    usercolor(){
+    userColor(){
       return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }

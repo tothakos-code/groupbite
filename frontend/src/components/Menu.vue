@@ -66,7 +66,7 @@ export default {
     }
   },
   computed: {
-    usercolor() {
+    userColor() {
         return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }

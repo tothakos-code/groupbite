@@ -103,7 +103,7 @@ export default {
     loggedInUsername() {
       return state.user.username;
     },
-    usercolor(){
+    userColor(){
       return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }

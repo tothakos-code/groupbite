@@ -15,7 +15,7 @@
         :key="item.id+'-'+size.size"
         @click="addToBasket(item.id, size.size)"
         class="btn btn-sm col-sm-6 me-2 ms-2"
-        :class="['btn-' + this.usercolor ]">
+        :class="['btn-' + this.userColor ]">
         {{ size.label }}
       </button>
     </div>
@@ -73,7 +73,7 @@ export default {
     currentUserState() {
       return state.userStates[state.user.username];
     },
-    usercolor() {
+    userColor() {
         return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }

@@ -129,7 +129,7 @@ export default {
       return state.user.username
     },
     matchUiColorWithBuiltIn() {
-      switch (this.usercolor) {
+      switch (this.userColor) {
         case "steelblue":
           return "info";
         case "raspberry":
@@ -141,7 +141,7 @@ export default {
           return "warning"
       }
     },
-    usercolor() {
+    userColor() {
       return state.user.ui_color ? state.user.ui_color : "falusi";
     },
     usertheme() {

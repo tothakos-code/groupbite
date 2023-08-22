@@ -51,7 +51,7 @@ class OrderService:
         return new_basket
 
     def inject_label_and_price(basket):
-        current_menu = MenuService.get_menu_as_dict()
+        current_menu = MenuService.get_weeklymenu_as_dict()
         for basket_item in basket.values():
             basket_item['price'] = current_menu[basket_item['id']][basket_item['size']]['price']
             basket_item['label'] = current_menu[basket_item['id']]['label']

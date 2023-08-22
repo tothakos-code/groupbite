@@ -24,22 +24,30 @@ class MenuService:
             result[menu_item['id']]=menu_item['link']
         return result
 
-    def get_menu_as_dict():
+    def get_weeklymenu_as_dict():
+
+        # start of the week:
+        today = date.today()
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=6)
+
+
         # fetching from the database
         session = Session()
-        menu = session.query(Menu).filter(Menu.menu_date == date.today().strftime('%Y-%m-%d')).first()
+        menus = session.query(Menu).filter(Menu.menu_date.between(start_date,end_date))
         session.close()
         result = {}
-        if not menu:
+        if not menus:
             return result
 
-        for menu_item in menu.menu:
-            result[menu_item['id']] = {
-                'label': menu_item['label']
-            }
-            for menu_item_size in menu_item['sizes']:
-                result[menu_item['id']][menu_item_size['size']] = {
-                    'price': menu_item_size['price'],
-                    'link': menu_item_size['link']
+        for menu in menus:
+            for menu_item in menu.menu:
+                result[menu_item['id']] = {
+                    'label': menu_item['label'],
                 }
+                for menu_item_size in menu_item['sizes']:
+                    result[menu_item['id']][menu_item_size['size']] = {
+                        'price': menu_item_size['price'],
+                        'link': menu_item_size['link']
+                    }
         return result

@@ -1,8 +1,11 @@
 <template>
   <div class="bg-body-secondary d-flex row align-items-center mx-0 px-0 pt-2 pb-2 rounded">
     <div class="col-7 row d-flex">
-        <div class="col d-flex justify-content-start align-items-center">
-          <h1>Falusi rendelő</h1>
+        <div class="col row d-flex justify-content-start align-items-center">
+            <h1>Falusi rendelő</h1>
+        </div>
+        <div class="col d-flex justify-content-center align-items-center">
+          <span class="col text-danger fs-5">{{ this.banner() }}</span>
         </div>
         <div class="col d-flex justify-content-end align-items-center">
           <OrderState/>
@@ -116,7 +119,6 @@
 
 
 <script>
-import version from "../package.json";
 import UserMenu from './components/UserMenu.vue'
 import Menu from './components/Menu.vue'
 import History from './components/History.vue'
@@ -151,7 +153,10 @@ export default {
   },
   methods: {
     showVersion: function() {
-      return 'v' + version.version
+      return 'v' + process.env.VUE_APP_VERSION;
+    },
+    banner: function() {
+      return process.env.VUE_APP_FALU_BANNER;
     },
     toMenu: function() {
       this.showMenu = true;

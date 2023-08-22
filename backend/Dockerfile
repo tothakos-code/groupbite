@@ -8,5 +8,7 @@ RUN pip install -r requirements.txt
 
 COPY . /app
 
+ENV FLASK_DEBUG 1
+
 ENTRYPOINT [ "python" ]
 CMD ["app.py" ]

@@ -102,7 +102,7 @@ export default {
           sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
         })
       })
-      sum += Number(this.transportFeePerPerson);
+      sum += Number(this.transportFeePerPerson* this.personCount);
       return sum;
     },
     boxCount() {

@@ -5,7 +5,7 @@ import logging
 from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
-socketio = SocketIO(app,logger=True, engineio_logger=True)
+socketio = SocketIO(app,logger=True, engineio_logger=True, cors_allowed_origins="*")
 app.config['SECRET_KEY'] = 'secret!'
 
 from controllers.menu_controller import menu_controller

@@ -4,8 +4,8 @@ map $http_upgrade $connection_upgrade {
 }
 
 server {
-    listen       80;
-    listen  [::]:80;
+    listen       ${FALU_APP_PORT};
+    listen  [::]:${FALU_APP_PORT};
     server_name  localhost;
 
     #access_log  /var/log/nginx/host.access.log  main;

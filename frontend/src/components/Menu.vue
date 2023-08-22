@@ -47,9 +47,9 @@ export default {
     getMenu: function(day) {
       let url = ''
       if (day === undefined) {
-        url = `http://${window.location.hostname}/api/menu/get`
+        url = `http://${window.location.host}/api/menu/get`
       } else {
-        url = `http://${window.location.hostname}/api/menu/get/${new Date(day).toISOString().split('T')[0]}`
+        url = `http://${window.location.host}/api/menu/get/${new Date(day).toISOString().split('T')[0]}`
       }
 
       fetch(url)

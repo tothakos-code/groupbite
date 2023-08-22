@@ -70,7 +70,7 @@ export default {
       if (this.psid !== "") {
         this.showInitial = false;
         this.showSpinner = true;
-        fetch(`http://${window.location.hostname}/api/order/transferBasket`,{
+        fetch(`http://${window.location.host}/api/order/transferBasket`,{
           method: "POST",
           headers: {
             "Content-Type": "application/json",

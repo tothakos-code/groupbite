@@ -81,7 +81,7 @@ export default {
       });
     },
     onCancel: function() {
-      fetch(`http://${window.location.hostname}/api/user/get/${state.user.id}`,{
+      fetch(`http://${window.location.host}/api/user/get/${state.user.id}`,{
         method: "get",
         headers: {
           "Content-Type": "application/json",

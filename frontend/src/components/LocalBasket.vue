@@ -58,7 +58,7 @@ export default {
   },
   setup() {
     watch(() => state.user.username, () => {
-      fetch(`http://${window.location.hostname}/api/order/get-user-basket`,{
+      fetch(`http://${window.location.host}/api/order/get-user-basket`,{
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -104,7 +104,7 @@ export default {
       if (state.user.username === undefined) {
         return;
       }
-      fetch(`http://${window.location.hostname}/api/order/get-user-basket`,{
+      fetch(`http://${window.location.host}/api/order/get-user-basket`,{
         method: "POST",
         headers: {
           "Content-Type": "application/json"

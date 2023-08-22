@@ -71,9 +71,9 @@ export default {
     getHistroy: function(date) {
       let url = ''
       if (date === undefined) {
-        url = `http://${window.location.hostname}/api/order/history`
+        url = `http://${window.location.host}/api/order/history`
       } else {
-        url = `http://${window.location.hostname}/api/order/history/${new Date(date).toISOString().split('T')[0]}`
+        url = `http://${window.location.host}/api/order/history/${new Date(date).toISOString().split('T')[0]}`
       }
       fetch(url)
         .then(response => response.json())

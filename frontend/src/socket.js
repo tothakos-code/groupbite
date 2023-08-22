@@ -19,7 +19,7 @@ export const socket = io(URL);
 
 socket.on("connect", () => {
   state.connected = true;
-  fetch(`http://${window.location.hostname}/api/order/get-order-state`)
+  fetch(`http://${window.location.host}/api/order/get-order-state`)
     .then(response => response.json())
       .then(data => {
         state.orderState = data.order_state;

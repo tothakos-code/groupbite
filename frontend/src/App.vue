@@ -14,7 +14,7 @@
           <button v-else class="btn btn-light ms-2" @click="this.toggleDarkMode()">Light</button>
         </div>
         <div v-if="isLoggedIn" class="d-flex justify-content-start">
-          <div class="" title="Ha feliratkozol megjelenik a neved minden nap a közös kosárban. Így a többiek látják, hogy még nem választottál és biztos nem maradsz le a rendelésről.">
+          <div class="" title="Ha feliratkozol megjelenik a neved minden nap a közös kosárban. Így a többiek látják, hogy még nem választottál és biztos nem maradsz le a rendelésről. Akkor érdemes feliratkozni, ha nagyon sokszor rendelsz a falusiból.">
             <button v-if="this.subscriptionState != 'full'" type="button" class="btn mx-2 position-relative" :class="['btn-' + this.usercolor ]" @click="this.subscribe()">
               Feliratkozás
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-repeat" viewBox="0 0 16 16">
@@ -37,7 +37,7 @@
               </span>
             </button>
           </div>
-          <a v-if="this.subscriptionState == 'full'" title="Ha feliratkoztál viszont ma hoztál magadnak ebédet/máshol eszel akkor tudod jelezni, hogy ne várjanak rád. Így kikerül a neved a közös kosárból egy nap erejéig de másnap ugyan úgy megjelensz amíg újra nem jelzed.">
+          <a v-if="this.subscriptionState == 'full'" title="Ha feliratkoztál viszont ma hoztál magadnak ebédet vagy máshol eszel akkor ezzel tudod jelezni, hogy ne várjanak rád. Így kikerül a neved a közös kosárból egy nap erejéig de másnap ugyan úgy megjelensz amíg újra nem jelzed ezt.">
             <button v-if="this.currentUserState == 'skip'" type="button" class="btn focus-ring focus-ring-danger" :class="['btn-' + this.usercolor ]" @click="this.waitForMe('none')">
               Ma nem kérek
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart-check" viewBox="0 0 16 16">
@@ -53,7 +53,7 @@
               </svg>
             </button>
           </a>
-          <div v-if="this.currentUserState != 'skip'" title="Ha az étel címe nem győzött meg és szeretnél róla videót is látni ezzel a gombal jelezheted. Ekkor bekerül a neved a közös kosára és biztos, hogy nem maradsz le az rendelésről. ">
+          <div v-if="this.currentUserState != 'skip'" title="Ha az étel címe nem győzött meg és szeretnéd megvárni a mai videót akkor ezzel jelezheted. Ekkor bekerül a neved a közös kosárba és biztos, hogy nem maradsz le a rendelésről. ">
             <button v-if="this.currentUserState == 'video'" type="button" class="btn btn-primary mx-2" @click="this.waitForMe('none')">
               Videóra várok
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video3" viewBox="0 0 16 16">
@@ -99,14 +99,17 @@
   </div>
   <div class="footer row mt-auto p-3 bg-body-tertiary">
     <div class="row d-flex justify-content-between text-body-secondary">
-      <span class="col-3 text-center">Készítette: Tóth Ákos</span>
-      <span class="col-3 text-center">
-        Forrás kód: <a class="link-secondary" target="_blank" href="https://github.com/tothakos-code/order-accumulator">Github</a>
+      <span class="col text-center">Készítette: Tóth Ákos</span>
+      <span class="col text-center">
+        <a class="link-secondary" target="_blank" href="https://github.com/tothakos-code/order-accumulator">Forráskód</a>
       </span>
-      <span class="col-3 text-center">
-        Változás napló: <a class="link-secondary" target="_blank" :href="'https://github.com/tothakos-code/order-accumulator/releases/tag/' + showVersion()">Jegyzet</a>
+      <span class="col text-center">
+        <a class="link-secondary" target="_blank" href="#">Felhasználói kézikönyv</a>
       </span>
-      <span class="col-3 text-center">Verzió: {{ showVersion() }}</span>
+      <span class="col text-center">
+        <a class="link-secondary" target="_blank" :href="'https://github.com/tothakos-code/order-accumulator/releases/tag/' + showVersion()">Változásnapló</a>
+      </span>
+      <span class="col text-center">Verzió: {{ showVersion() }}</span>
     </div>
   </div>
 </template>

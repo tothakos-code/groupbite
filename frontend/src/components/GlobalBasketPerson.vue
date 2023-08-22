@@ -33,7 +33,7 @@
               'text-' + this.matchUiColorWithBuiltIn + '-emphasis']">
             {{ item.quantity }} x
           </span>
-          <span>{{ item.label }}{{ item.date !== (new Date()).toISOString().split('T')[0] ? '(' + new Date(item.date).toLocaleDateString('hu-HU', {weekday:'long'}) + 'i menü)' : '' }}</span>
+          <span>{{ item.label }}{{ item.date !== (new Date()).toISOString().split('T')[0] ? '(' + new Date(item.date).toLocaleDateString('hu-HU', {weekday:'long'}) + 'i menüből)' : '' }}</span>
           <span>{{ item.size }} - {{ item.price }}</span>
         </div>
       </div>

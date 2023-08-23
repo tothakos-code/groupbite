@@ -17,7 +17,9 @@ def handle_user_login(user):
 
     if not user_to_login:
         # register
-        user_to_login = session.add(User(user['username']))
+        new_user = User(user['username'])
+        session.add(new_user)
+        user_to_login = new_user
 
     # login after all
     session.commit()
@@ -58,7 +60,7 @@ def handle_user_update(user):
 @user_controller.route("/cron/clear_users_temp_state")
 def cron_clear_users_temp_state():
     session = Session()
-    User.query.update({User.daily_state: 'none'})
+    User.query.update({User.daily_state: subscribe_type.none})
     session.commit()
 
     emit_user_ds_state()

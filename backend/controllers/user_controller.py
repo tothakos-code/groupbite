@@ -53,9 +53,10 @@ def handle_user_update(user):
         user_to_update.ui_theme = user['ui_theme']
 
     session.commit()
-
+    json_to_return = user_to_update.serialized
+    session.close()
     emit_user_ds_state()
-    return user_to_update.serialized
+    return json_to_return
 
 
 @user_controller.route("/cron/clear_users_temp_state")
@@ -63,7 +64,7 @@ def cron_clear_users_temp_state():
     session = Session()
     session.query(User).update({User.daily_state: str(subscribe_type.none)})
     session.commit()
-
+    session.close()
     emit_user_ds_state()
     return "OK", 200
 
@@ -83,13 +84,14 @@ def handle_user_ds_change(user):
     user_to_update.daily_state = user['new_state']
 
     session.commit()
-
+    session.close()
     emit_user_ds_state()
     return user_to_update.serialized
 
 def emit_user_ds_state():
     session = Session()
     user_list = session.query(User).all()
+    session.close()
     result = {}
     # TODO: switct to enum reference
     for user in user_list:

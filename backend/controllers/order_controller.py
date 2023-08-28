@@ -101,7 +101,7 @@ def set_today_basket(basket):
         logging.warning("Updated today's basket row")
 
     session.commit()
-
+    session.close()
     return get_today_basket()
 
 
@@ -111,6 +111,7 @@ def handle_payed():
     order_state = session.query(Order).filter(Order.order_date == date.today().strftime('%Y-%m-%d')).first()
     order_state.order_state = order_state_type.closed
     session.commit()
+    session.close()
     socketio.emit("Order state changed", str(order_state_type.closed))
 
 
@@ -153,6 +154,7 @@ def set_order_state(new_state):
 
     today_order.order_state = new_state
     session.commit()
+    session.close()
     return str(today_order.order_state)
 
 

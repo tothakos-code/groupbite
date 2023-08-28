@@ -35,6 +35,7 @@ class OrderService:
             migrated_basket[UserService.username_to_id(person)] = basket[person]
         order.basket = migrated_basket
         session.commit()
+        session.close()
         return True
 
     def replace_userid_with_username(order_date):

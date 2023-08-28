@@ -56,14 +56,14 @@ class UserService:
             ""
         ]
         if username in notvalid_usernames:
-            return False
+            return False, "Ez nem lehet a neved: " + username
 
         notvalid_characters = ["'", '"', "=", ",", ".", "&", "@", "#", "<", ">", "(", ")","[", "]", "{", "}"]
         for char in notvalid_characters:
             if char in username:
-                return False
+                return False, "Tiltott karakter a felhasználónévben: " + char
 
         if UserService.username_exist(username):
-            return False
+            return False, "Ez a felhasználónév már foglalt"
 
-        return True
+        return True, ""

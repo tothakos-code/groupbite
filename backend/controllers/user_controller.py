@@ -39,11 +39,12 @@ def handle_user_update(user):
             user_to_update.subscribed = subscribe_type.full
 
     if 'username' in user:
-        if UserService.is_username_valid(user['username']):
+        is_username_valid, error = UserService.is_username_valid(user['username'])
+        if is_username_valid:
             user_to_update.username = user['username']
         else:
             session.close()
-            return {"error":"Invalid username"}
+            return {"error": error}
 
     if 'ui_color' in user:
         user_to_update.ui_color = user['ui_color']

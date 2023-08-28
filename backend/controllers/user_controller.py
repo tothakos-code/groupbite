@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from entities.user import User, UserSchema, subscribe_type
 from entities.entity import Session
-from sqlalchemy import func, cast
+from sqlalchemy import func, cast, update
 import logging
 from __main__ import socketio
 
@@ -61,7 +61,7 @@ def handle_user_update(user):
 @user_controller.route("/cron/clear_users_temp_state")
 def cron_clear_users_temp_state():
     session = Session()
-    User.query.update({User.daily_state: subscribe_type.none})
+    session.query(User).update({User.daily_state: str(subscribe_type.none)})
     session.commit()
 
     emit_user_ds_state()

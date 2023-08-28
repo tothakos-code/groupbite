@@ -53,8 +53,9 @@ class OrderService:
     def inject_label_and_price(basket):
         current_menu = MenuService.get_weeklymenu_as_dict()
         for basket_item in basket.values():
-            logging.warning(basket_item)
-            logging.warning(current_menu)
+            # skip notexistent menu items
+            if not MenuService.is_menu_item_exist(basket_item):
+                continue
             basket_item['price'] = current_menu[basket_item['id']][basket_item['size']]['price']
             basket_item['label'] = current_menu[basket_item['id']]['label']
             basket_item['date'] = current_menu[basket_item['id']]['date']

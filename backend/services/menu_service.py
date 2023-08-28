@@ -24,6 +24,17 @@ class MenuService:
             result[menu_item['id']]=menu_item['link']
         return result
 
+    def is_menu_item_exist(basket_item):
+        current_menu = MenuService.get_weeklymenu_as_dict()
+        # menu item exist
+        if not current_menu[basket_item['id']]:
+            return False
+        # the size exist
+        if not current_menu[basket_item['id']][basket_item['size']]:
+            return False
+        return True
+
+
     def get_weeklymenu_as_dict():
 
         # start of the week:

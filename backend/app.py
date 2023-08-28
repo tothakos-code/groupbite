@@ -19,7 +19,7 @@ app.register_blueprint(user_controller)
 @app.route("/cron/new_day_refresh")
 def cron_new_day_refresh():
     socketio.emit('Refresh!')
-    return "OK", 200
+    return "Refreshed", 200
 
 @app.route('/')
 def call_hello():

@@ -154,8 +154,9 @@ def set_order_state(new_state):
 
     today_order.order_state = new_state
     session.commit()
+    result_state = str(today_order.order_state)
     session.close()
-    return str(today_order.order_state)
+    return result_state
 
 
 @order_controller.route('/transferBasket', methods=['POST'])

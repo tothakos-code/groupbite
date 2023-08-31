@@ -84,9 +84,10 @@ def handle_user_ds_change(user):
     user_to_update.daily_state = user['new_state']
 
     session.commit()
+    user_result = user_to_update.serialized
     session.close()
     emit_user_ds_state()
-    return user_to_update.serialized
+    return user_result
 
 def emit_user_ds_state():
     session = Session()

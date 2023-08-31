@@ -21,7 +21,8 @@ class MenuService:
             return result
 
         for menu_item in menu.menu:
-            result[menu_item['id']]=menu_item['link']
+            for sizes in menu_item['sizes']:
+                result[menu_item['id'] + "-" + sizes['size']] = sizes['link']
         return result
 
     def is_menu_item_exist(basket_item):

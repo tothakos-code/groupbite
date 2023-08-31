@@ -183,7 +183,7 @@ def call_transfer_basket():
         if basket == None:
             continue
         for food_item in basket.values():
-            food_item_link = links[food_item['id']]
+            food_item_link = links[food_item['id'] + "-" + food_item['size']]
             for quantity in range(0,food_item['quantity']):
                 order_list.append(food_item_link)
 

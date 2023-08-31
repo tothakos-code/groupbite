@@ -49,7 +49,7 @@ def handle_get_user_basket():
 
 @order_controller.route('/migrate-basket', methods=['GET'])
 def handle_basket_migration():
-    return OrderService.migrate_to_userid_based_order(date.today().strftime('%Y-%m-%d'))
+    return str(OrderService.migrate_to_userid_based_order(date.today().strftime('%Y-%m-%d')))
 
 
 @socketio.on('Server Basket Update')

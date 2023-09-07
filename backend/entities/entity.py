@@ -14,6 +14,6 @@ Base = declarative_base()
 
 
 class Entity():
-    id = Column(Integer, Sequence('menu_id_seq'), primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True)
     def __init__(self):
         pass

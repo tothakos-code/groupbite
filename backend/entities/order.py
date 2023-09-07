@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Enum, DateTime, JSON, func
+from sqlalchemy import Column, Enum, DateTime, JSON, func, Sequence, Integer
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 import enum, json
 from .entity import Entity, Base
@@ -16,6 +16,7 @@ class order_state_type(enum.Enum):
 class Order(Entity, Base):
     __tablename__ = 'orders'
 
+    id = Column(Integer, Sequence('orders_id_seq'), primary_key=True, autoincrement=True)
     order_date = Column(DateTime, default=func.current_date())
     order_state = Column(Enum(order_state_type), default=order_state_type.collect)
     basket = Column(JSONB)

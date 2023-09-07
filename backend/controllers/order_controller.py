@@ -44,7 +44,8 @@ def handle_get_all_order_date():
 @order_controller.route('/get-user-basket', methods=['POST'])
 def handle_get_user_basket():
     USER = request.json['user']
-    return OrderService.get_user_basket(USER)
+    DATE = request.json['date']
+    return OrderService.get_user_basket(USER,DATE)
 
 
 @order_controller.route('/migrate-basket', methods=['GET'])

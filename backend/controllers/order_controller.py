@@ -57,7 +57,7 @@ def handle_basket_migration():
 def handle_basket_update(data):
     order_state = get_order_state()
     if order_state == str(order_state_type.closed):
-        socketio.emit('Client Basket Update', {'basket': get_today_basket_with_usernames() })
+        socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(date.today().strftime('%Y-%m-%d')) })
         socketio.emit("Order state changed", order_state, room=request.sid)
         return
     userid = str(data['userid'])
@@ -70,7 +70,7 @@ def handle_basket_update(data):
         # basket is empty, delete key
         del currentBasket[userid]
     set_today_basket(currentBasket)
-    socketio.emit('Client Basket Update', {'basket': get_today_basket_with_usernames() })
+    socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(date.today().strftime('%Y-%m-%d')) })
 
 
 def get_today_basket():
@@ -81,10 +81,6 @@ def get_today_basket():
     if not today_basket:
         return {}
     return today_basket.basket
-
-
-def get_today_basket_with_usernames():
-    return OrderService.replace_userid_with_username(date.today().strftime('%Y-%m-%d'))
 
 
 def set_today_basket(basket):

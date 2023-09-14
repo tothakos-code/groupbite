@@ -3,14 +3,17 @@ from flask import request
 from flask_socketio import SocketIO
 import logging
 from sqlalchemy.exc import IntegrityError
+from datetime import date
 
 app = Flask(__name__)
 socketio = SocketIO(app,logger=True, engineio_logger=True, cors_allowed_origins="*")
 app.config['SECRET_KEY'] = 'secret!'
 
 from controllers.menu_controller import menu_controller
-from controllers.order_controller import order_controller, get_today_basket_with_usernames
+from controllers.order_controller import order_controller
 from controllers.user_controller import user_controller, emit_user_ds_state
+from services.order_service import OrderService
+
 app.register_blueprint(menu_controller)
 app.register_blueprint(order_controller)
 app.register_blueprint(user_controller)
@@ -19,7 +22,7 @@ app.register_blueprint(user_controller)
 @app.route("/cron/new_day_refresh")
 def cron_new_day_refresh():
     socketio.emit('Refresh!')
-    return "OK", 200
+    return "Refreshed", 200
 
 @app.route('/')
 def call_hello():
@@ -32,8 +35,8 @@ def call_clear_clients_basket():
 
 
 @socketio.on('connect')
-def handle_connect(data):
-    socketio.emit('Client Basket Update', {'basket': get_today_basket_with_usernames() })
+def handle_connect():
+    socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(date.today().strftime('%Y-%m-%d')) })
     emit_user_ds_state()
 
 

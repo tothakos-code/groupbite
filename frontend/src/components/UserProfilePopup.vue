@@ -76,7 +76,7 @@ export default {
           state.user = user;
           this.$emit('cancel');
         } else {
-          alert("Helytelen felhasználónév!")
+          alert(user.error)
         }
       });
     },

@@ -49,6 +49,7 @@ def add_or_update_all_menu():
         start_date += delta
     #
     session.commit()
+    session.close()
     return "Menu updated succesfully", 201
 
 

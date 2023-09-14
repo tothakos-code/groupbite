@@ -44,19 +44,20 @@ def handle_get_all_order_date():
 @order_controller.route('/get-user-basket', methods=['POST'])
 def handle_get_user_basket():
     USER = request.json['user']
-    return OrderService.get_user_basket(USER)
+    DATE = request.json['date']
+    return OrderService.get_user_basket(USER,DATE)
 
 
 @order_controller.route('/migrate-basket', methods=['GET'])
 def handle_basket_migration():
-    return OrderService.migrate_to_userid_based_order(date.today().strftime('%Y-%m-%d'))
+    return str(OrderService.migrate_to_userid_based_order(date.today().strftime('%Y-%m-%d')))
 
 
 @socketio.on('Server Basket Update')
 def handle_basket_update(data):
     order_state = get_order_state()
     if order_state == str(order_state_type.closed):
-        socketio.emit('Client Basket Update', {'basket': get_today_basket_with_usernames() })
+        socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(date.today().strftime('%Y-%m-%d')) })
         socketio.emit("Order state changed", order_state, room=request.sid)
         return
     userid = str(data['userid'])
@@ -69,7 +70,7 @@ def handle_basket_update(data):
         # basket is empty, delete key
         del currentBasket[userid]
     set_today_basket(currentBasket)
-    socketio.emit('Client Basket Update', {'basket': get_today_basket_with_usernames() })
+    socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(date.today().strftime('%Y-%m-%d')) })
 
 
 def get_today_basket():
@@ -80,10 +81,6 @@ def get_today_basket():
     if not today_basket:
         return {}
     return today_basket.basket
-
-
-def get_today_basket_with_usernames():
-    return OrderService.replace_userid_with_username(date.today().strftime('%Y-%m-%d'))
 
 
 def set_today_basket(basket):
@@ -101,7 +98,7 @@ def set_today_basket(basket):
         logging.warning("Updated today's basket row")
 
     session.commit()
-
+    session.close()
     return get_today_basket()
 
 
@@ -111,6 +108,7 @@ def handle_payed():
     order_state = session.query(Order).filter(Order.order_date == date.today().strftime('%Y-%m-%d')).first()
     order_state.order_state = order_state_type.closed
     session.commit()
+    session.close()
     socketio.emit("Order state changed", str(order_state_type.closed))
 
 
@@ -153,7 +151,9 @@ def set_order_state(new_state):
 
     today_order.order_state = new_state
     session.commit()
-    return str(today_order.order_state)
+    result_state = str(today_order.order_state)
+    session.close()
+    return result_state
 
 
 @order_controller.route('/transferBasket', methods=['POST'])
@@ -180,7 +180,7 @@ def call_transfer_basket():
         if basket == None:
             continue
         for food_item in basket.values():
-            food_item_link = links[food_item['id']]
+            food_item_link = links[food_item['id'] + "-" + food_item['size']]
             for quantity in range(0,food_item['quantity']):
                 order_list.append(food_item_link)
 
@@ -207,10 +207,10 @@ def call_transfer_basket():
             "compAll": ""
             }
 
-        # r = requests.post(
-        #     link,
-        #     headers=requests_header,
-        #     data=requests_data,
-        #     cookies={"PHPSESSID":PHPSESSIONID}
-        # )
+        r = requests.post(
+            link,
+            headers=requests_header,
+            data=requests_data,
+            cookies={"PHPSESSID":PHPSESSIONID}
+        )
     return 'OK'

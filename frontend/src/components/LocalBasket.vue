@@ -23,7 +23,7 @@
             <span class="badge rounded-pill border" :class="['bg-' + this.matchUiColorWithBuiltIn + '-subtle', 'border-' + this.matchUiColorWithBuiltIn + '-subtle','text-' + this.matchUiColorWithBuiltIn + '-emphasis']">{{  item.quantity }} x</span>
           </div>
           <div class="col-8">
-            <span>{{ item.label }} ({{item.size}}) - {{item.price}}</span>
+            <span>{{ item.name }} ({{item.size}}) - {{item.price}}</span>
           </div>
           <div class="col-2 text-end">
             <button @click="this.deleteFromBasket(itemSizeKey, item)" type="button" title="Törlés" class="btn btn-close"></button>
@@ -65,7 +65,8 @@ export default {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          'user': state.user.username
+          'user': state.user.username,
+          'date': new Date().toISOString().split('T')[0]
         })
       })
         .then(response => response.json())
@@ -74,9 +75,6 @@ export default {
           })
         .catch(error => console.error(error));
     })
-    // watch(() => state.localBasket, () => {
-    //   socket.emit("Server Basket Update", { "userid": state.user.id, "basket": state.localBasket });
-    // }, { deep: true })
   },
   mounted() {
     this.updateLocalBasket();
@@ -109,7 +107,7 @@ export default {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({"user": state.user.username})
+        body: JSON.stringify({"user": state.user.username,'date': new Date().toISOString().split('T')[0]})
       })
         .then(response => response.json())
           .then(data => {

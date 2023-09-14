@@ -25,7 +25,7 @@
       </div>
     </div>
     <div class="col-2 my-auto">
-      <button v-if="this.currentDate.getDate() !== this.currentDateSelected.getDate()" type="button" name="button" @click="this.jumpToPresentDay()" class="btn" :class="['btn-' + this.userColor ]">
+      <button v-if="new Date().getDate() !== this.currentDateSelected.getDate()" type="button" name="button" @click="this.jumpToPresentDay()" class="btn" :class="['btn-' + this.userColor ]">
         <span>Ma</span>
       </button>
     </div>
@@ -41,7 +41,6 @@ export default {
   data() {
     let date = new Date();
     return {
-      currentDate: date,
       currentDateSelected: date
     }
   },
@@ -80,7 +79,7 @@ export default {
       this.$emit('selectedDate', this.currentDateSelected);
     },
     jumpToPresentDay: function() {
-      this.currentDateSelected = this.currentDate
+      this.currentDateSelected = new Date();
       this.$emit('selectedDate', this.currentDateSelected);
     }
   }

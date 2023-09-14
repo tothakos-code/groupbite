@@ -21,8 +21,20 @@ class MenuService:
             return result
 
         for menu_item in menu.menu:
-            result[menu_item['id']]=menu_item['link']
+            for sizes in menu_item['sizes']:
+                result[menu_item['id'] + "-" + sizes['size']] = sizes['link']
         return result
+
+    def is_menu_item_exist(basket_item):
+        current_menu = MenuService.get_weeklymenu_as_dict()
+        # menu item exist
+        if not current_menu[basket_item['id']]:
+            return False
+        # the size exist
+        if not current_menu[basket_item['id']][basket_item['size']]:
+            return False
+        return True
+
 
     def get_weeklymenu_as_dict():
 
@@ -43,7 +55,7 @@ class MenuService:
         for menu in menus:
             for menu_item in menu.menu:
                 result[menu_item['id']] = {
-                    'label': menu_item['label'],
+                    'name': menu_item['label'],
                     'date': menu.menu_date.strftime('%Y-%m-%d')
                 }
                 for menu_item_size in menu_item['sizes']:

@@ -11,11 +11,12 @@ server {
     #access_log  /var/log/nginx/host.access.log  main;
 
     location /api/ {
-        proxy_pass http://falu_be:5000/;
+        add_header Cache-Control 'no-store';
+        proxy_pass http://backend:5000/;
     }
 
     location /socket.io/ {
-        proxy_pass http://falu_be:5000/socket.io/;
+        proxy_pass http://backend:5000/socket.io/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
@@ -23,7 +24,7 @@ server {
     }
 
     location / {
-        proxy_pass http://falu_fe:8080/;
+        proxy_pass http://frontend:8080/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;

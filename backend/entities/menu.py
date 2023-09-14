@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, JSON, func
+from sqlalchemy import Column, String, Integer, DateTime, JSON, func, Sequence
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 
 from .entity import Entity, Base
@@ -7,6 +7,8 @@ from marshmallow import Schema, fields
 class Menu(Entity, Base):
     __tablename__ = 'menu'
 
+
+    id = Column(Integer, Sequence('menu_id_seq'), primary_key=True, autoincrement=True)
     menu_date = Column(DateTime, default=func.current_date())
     menu = Column(ARRAY(JSONB))
 

@@ -1,11 +1,12 @@
 from flask import Blueprint, request
 from entities.user import User, UserSchema, subscribe_type
 from entities.entity import Session
-from sqlalchemy import func, cast
+from sqlalchemy import func, cast, update
 import logging
 from __main__ import socketio
 
 from services.user_service import UserService
+from services.order_service import OrderService
 
 
 user_controller = Blueprint('user_controller', __name__, url_prefix='/user')
@@ -17,7 +18,9 @@ def handle_user_login(user):
 
     if not user_to_login:
         # register
-        user_to_login = session.add(User(user['username']))
+        new_user = User(user['username'])
+        session.add(new_user)
+        user_to_login = new_user
 
     # login after all
     session.commit()
@@ -37,11 +40,13 @@ def handle_user_update(user):
             user_to_update.subscribed = subscribe_type.full
 
     if 'username' in user:
-        if UserService.is_username_valid(user['username']):
+        is_username_valid, error = UserService.is_username_valid(user['username'])
+        if is_username_valid:
             user_to_update.username = user['username']
+
         else:
             session.close()
-            return {"error":"Invalid username"}
+            return {"error": error}
 
     if 'ui_color' in user:
         user_to_update.ui_color = user['ui_color']
@@ -50,17 +55,20 @@ def handle_user_update(user):
         user_to_update.ui_theme = user['ui_theme']
 
     session.commit()
-
+    json_to_return = user_to_update.serialized
+    session.close()
+    if 'username' in user:
+        socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(date.today().strftime('%Y-%m-%d')) })
     emit_user_ds_state()
-    return user_to_update.serialized
+    return json_to_return
 
 
 @user_controller.route("/cron/clear_users_temp_state")
 def cron_clear_users_temp_state():
     session = Session()
-    User.query.update({User.daily_state: 'none'})
+    session.query(User).update({User.daily_state: str(subscribe_type.none)})
     session.commit()
-
+    session.close()
     emit_user_ds_state()
     return "OK", 200
 
@@ -80,13 +88,15 @@ def handle_user_ds_change(user):
     user_to_update.daily_state = user['new_state']
 
     session.commit()
-
+    user_result = user_to_update.serialized
+    session.close()
     emit_user_ds_state()
-    return user_to_update.serialized
+    return user_result
 
 def emit_user_ds_state():
     session = Session()
     user_list = session.query(User).all()
+    session.close()
     result = {}
     # TODO: switct to enum reference
     for user in user_list:

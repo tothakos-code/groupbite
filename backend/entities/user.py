@@ -26,7 +26,7 @@ class User(Entity, Base):
 
     username = Column(Text, unique=True)
     subscribed = Column(Enum(subscribe_type), default=subscribe_type.none)
-    daily_state = Column(Enum(daily_state_type), default=subscribe_type.none)
+    daily_state = Column(Enum(daily_state_type), default=daily_state_type.none)
     ui_theme = Column(Text)
     ui_color = Column(Text)
 

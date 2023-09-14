@@ -1,5 +1,5 @@
 <template>
-  <button class="btn btn-warning" id="transferBasketButton" @click="this.openPopup()">Áthelyezés falusiba</button>
+  <button class="btn" :class="['btn-' + this.userColor ]" id="transferBasketButton" @click="this.openPopup()">Áthelyezés falusiba</button>
 
   <Popup
     :showModal="showInitial"
@@ -70,7 +70,7 @@ export default {
       if (this.psid !== "") {
         this.showInitial = false;
         this.showSpinner = true;
-        fetch(`http://${window.location.hostname}/api/transferBasket`,{
+        fetch(`http://${window.location.host}/api/order/transferBasket`,{
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -82,8 +82,8 @@ export default {
             if (response.statusText == "OK") {
               this.showFinish = true;
             } else {
-
-              alert("Valami hiba történt.");
+              this.showSpinner = false;
+              alert("Valami hiba történt. Hiba: " + response);
             }
           })
             .catch(error => console.error(error))
@@ -111,6 +111,11 @@ export default {
            console.log(event)
          }
       });
+    }
+  },
+  computed: {
+    userColor(){
+      return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }
 }

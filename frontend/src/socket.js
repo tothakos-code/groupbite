@@ -5,6 +5,7 @@ export const state = reactive({
   connected: false,
   orderState: '',
   globalBasket: {},
+  localBasket: {},
   user: {},
   userStates: {}
 });
@@ -17,12 +18,13 @@ export const socket = io(URL);
 
 
 socket.on("connect", () => {
-  console.log('VUE Socket.IO connection established VUE');
   state.connected = true;
-  socket.emit('Request order state', function(incomingState) {
-    console.log("VUE Recived ORDER data from return VUE:" + incomingState);
-    state.orderState = incomingState;
-  });
+  fetch(`http://${window.location.host}/api/order/get-order-state`)
+    .then(response => response.json())
+      .then(data => {
+        state.orderState = data.order_state;
+      })
+    .catch(error => console.error(error));
 });
 
 socket.on("disconnect", () => {
@@ -30,13 +32,18 @@ socket.on("disconnect", () => {
 });
 
 socket.on('Order state changed', function(incomingState) {
-  console.log("VUE Order update incoming VUE:" + incomingState);
   state.orderState = incomingState;
 });
 
 socket.on('Client Basket Update', function(incomingGlobalBasket) {
-  console.log('VUE Global basket incomming via websocket VUE: ', incomingGlobalBasket);
   state.globalBasket = incomingGlobalBasket.basket;
+  if (state.user.username !== undefined) {
+    if (incomingGlobalBasket.basket[state.user.username] !== undefined) {
+      state.localBasket = incomingGlobalBasket.basket[state.user.username];
+    } else {
+      state.localBasket = {}
+    }
+  }
 });
 
 socket.on('Waiting Update', function(incomingStateList) {

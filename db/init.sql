@@ -9,9 +9,17 @@ CREATE TABLE if not exists orders (
   basket jsonb
 );
 
+CREATE TABLE if not exists menu (
+  id SERIAL PRIMARY KEY,
+  menu_date DATE UNIQUE DEFAULT CURRENT_DATE,
+  menu jsonb[]
+);
+
 CREATE TABLE if not exists users (
   id SERIAL PRIMARY KEY,
   username text UNIQUE NOT NULL,
   subscribed subscribe_type NOT NULL DEFAULT 'none',
-  daily_state daily_state_type NOT NULL DEFAULT 'none'
+  daily_state daily_state_type NOT NULL DEFAULT 'none',
+  ui_theme text NOT NULL DEFAULT 'light',
+  ui_color text NOT NULL DEFAULT 'falusi'
 );

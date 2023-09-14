@@ -58,6 +58,6 @@ class OrderService:
             if not MenuService.is_menu_item_exist(basket_item):
                 continue
             basket_item['price'] = current_menu[basket_item['id']][basket_item['size']]['price']
-            basket_item['label'] = current_menu[basket_item['id']]['label']
+            basket_item['name'] = current_menu[basket_item['id']]['name']
             basket_item['date'] = current_menu[basket_item['id']]['date']
         return basket

@@ -23,7 +23,7 @@
             <span class="badge rounded-pill border" :class="['bg-' + this.matchUiColorWithBuiltIn + '-subtle', 'border-' + this.matchUiColorWithBuiltIn + '-subtle','text-' + this.matchUiColorWithBuiltIn + '-emphasis']">{{  item.quantity }} x</span>
           </div>
           <div class="col-8">
-            <span>{{ item.label }} ({{item.size}}) - {{item.price}}</span>
+            <span>{{ item.name }} ({{item.size}}) - {{item.price}}</span>
           </div>
           <div class="col-2 text-end">
             <button @click="this.deleteFromBasket(itemSizeKey, item)" type="button" title="Törlés" class="btn btn-close"></button>

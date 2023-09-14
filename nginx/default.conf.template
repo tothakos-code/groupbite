@@ -11,6 +11,7 @@ server {
     #access_log  /var/log/nginx/host.access.log  main;
 
     location /api/ {
+        add_header Cache-Control 'no-store';
         proxy_pass http://backend:5000/;
     }
 

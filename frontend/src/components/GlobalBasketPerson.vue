@@ -32,15 +32,18 @@
         :id="collapsable ? (name.replace(/[^a-z0-9]/ig, '')) : false">
         <div v-for="item in personBasket" :key="item.id" class="list-group-item  d-flex justify-content-between align-items-center"  >
           <span
-            class="badge rounded-pill border"
+            class="badge rounded-pill border me-2 col-1"
             :class="[
               'bg-' + this.matchUiColorWithBuiltIn + '-subtle',
               'border-' + this.matchUiColorWithBuiltIn + '-subtle',
               'text-' + this.matchUiColorWithBuiltIn + '-emphasis']">
             {{ item.quantity }} x
           </span>
-          <span>{{ item.name }}</span>
-          <span>{{ item.size }} - {{ item.price }}</span>
+          <span class="col-7">{{ item.name }}</span>
+          <div class="col-3 row mx-0">
+            <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-start text-nowrap px-0">{{ item.size.split(' ')[0] }}</span>
+            <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-end text-nowrap pe-0">{{ item.price }}</span>
+          </div>
         </div>
       </div>
     </div>

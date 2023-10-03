@@ -1,16 +1,20 @@
 <template>
   <div class="card">
     <div class="card-header row d-flex">
-      <div class="col-6 d-flex justify-content-start ps-0">
-        <a href="#" class="btn btn-link link-underline link-underline-opacity-0 border rounded pt-2" :class="['link-' + this.userColor ]" @click="this.$emit('close')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-caret-left" viewBox="0 0 16 16">
-          <path d="M10 12.796V3.204L4.519 8 10 12.796zm-.659.753-5.48-4.796a1 1 0 0 1 0-1.506l5.48-4.796A1 1 0 0 1 11 3.204v9.592a1 1 0 0 1-1.659.753z"/>
-        </svg>
-        Vissza
-        </a>
-        <h2 class="ps-2">Előző rendelések</h2>
+      <div class="col-3 col-md-6 col-lg-8 row px-0">
+        <div class="col-12 col-lg-4 my-auto">
+          <a href="#" class="btn btn-link link-underline link-underline-opacity-0 border rounded pt-2" :class="['link-' + this.userColor ]" @click="this.$emit('close')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-caret-left" viewBox="0 0 16 16">
+              <path d="M10 12.796V3.204L4.519 8 10 12.796zm-.659.753-5.48-4.796a1 1 0 0 1 0-1.506l5.48-4.796A1 1 0 0 1 11 3.204v9.592a1 1 0 0 1-1.659.753z"/>
+            </svg>
+            Vissza
+          </a>
+        </div>
+        <div class="col-0 d-none col-lg-8 d-lg-inline my-auto truncate ms-0">
+          <h2 class="">Előző rendelések</h2>
+        </div>
       </div>
-      <div class="col-6">
+      <div class="col-9 col-md-6 col-lg-4 d-flex flex-fill px-0">
         <Datestamp @selected-date="(date) => this.getHistroy(date)"/>
       </div>
     </div>

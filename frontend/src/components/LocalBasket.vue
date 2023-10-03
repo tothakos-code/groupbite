@@ -147,6 +147,10 @@ export default {
       Object.values(state.localBasket).forEach(item => {
         sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
       });
+      let pearsonCount = Object.keys(state.globalBasket).length;
+      if (pearsonCount != 0) {
+        sum += Math.ceil(400/pearsonCount);
+      }
       return sum;
     },
     matchUiColorWithBuiltIn() {

@@ -138,9 +138,8 @@ export default {
 @media only screen and (max-width: 768px){
   .my-sticky-container {
         position: sticky;
-        /* top: 100px; */
         top: 10px;
-        z-index: 1; /* Ensure the fixed-top element stays on top */
+        z-index: 1;
   }
  }
 

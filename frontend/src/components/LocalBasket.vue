@@ -20,64 +20,55 @@
     </div>
     <div class="row">
       <div class="list-group pe-0">
-        <div v-if="this.isLoggedIn" class="d-flex card-header m-1 mt-0 border border-2 border-top-0 rounded-bottom rounded-top-0">
-          <div class="col my-auto d-flex justify-content-start">
+        <div v-if="this.isLoggedIn" class="row px-0 d-flex card-header m-1 mt-0 border border-2 border-top-0 rounded-bottom rounded-top-0">
+          <div class="col-12 my-auto d-flex mb-2 justify-content-around">
             <div class="d-inline">
               <div v-if="!isBasketEmpty">
-                <span>Sikerült választanod</span>
+                <span class="me-1">Sikerült választanod</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-basket3 mb-1" viewBox="0 0 16 16">
                   <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 6h1.717L5.07 1.243a.5.5 0 0 1 .686-.172zM3.394 15l-1.48-6h-.97l1.525 6.426a.75.75 0 0 0 .729.574h9.606a.75.75 0 0 0 .73-.574L15.056 9h-.972l-1.479 6h-9.21z"/>
                 </svg>
               </div>
               <div v-else-if="this.isLoggedIn && this.currentUserState == 'skip'">
-                <span>Jelezted, hogy ma nem kérsz</span>
+                <span class="me-1">Ma nem kérsz</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-basket3 mb-1" viewBox="0 0 16 16">
                   <path d="M6.5 7a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4z"/>
                   <path d="M.5 1a.5.5 0 0 0 0 1h1.11l.401 1.607 1.498 7.985A.5.5 0 0 0 4 12h1a2 2 0 1 0 0 4 2 2 0 0 0 0-4h7a2 2 0 1 0 0 4 2 2 0 0 0 0-4h1a.5.5 0 0 0 .491-.408l1.5-8A.5.5 0 0 0 14.5 3H2.89l-.405-1.621A.5.5 0 0 0 2 1H.5zm3.915 10L3.102 4h10.796l-1.313 7h-8.17zM6 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
                 </svg>
               </div>
               <div v-else-if="this.isLoggedIn && this.currentUserState == 'video'">
-                <span>Videóra vársz</span>
+                <span class="me-1">Videóra vársz</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-basket3 ms-1" viewBox="0 0 16 16">
                   <path d="M6.79 5.093A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814l-3.5-2.5z"/>
                   <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm15 0a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
                 </svg>
               </div>
               <div v-else-if="this.isLoggedIn && this.subscriptionState == 'full'">
-                <span>Ma még nem választottál</span>
+                <span class="me-1">Még nem választottál</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-basket3 mb-1" viewBox="0 0 16 16">
                   <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 6h1.717L5.07 1.243a.5.5 0 0 1 .686-.172zM3.394 15l-1.48-6h-.97l1.525 6.426a.75.75 0 0 0 .729.574h9.606a.75.75 0 0 0 .73-.574L15.056 9h-.972l-1.479 6h-9.21z"/>
                 </svg>
               </div>
               <div v-else>
-                <span>Üres a kosarad</span>
+                <span class="me-1">Üres a kosarad</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-basket3 mb-1" viewBox="0 0 16 16">
                   <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 6h1.717L5.07 1.243a.5.5 0 0 1 .686-.172zM3.394 15l-1.48-6h-.97l1.525 6.426a.75.75 0 0 0 .729.574h9.606a.75.75 0 0 0 .73-.574L15.056 9h-.972l-1.479 6h-9.21z"/>
                 </svg>
               </div>
             </div>
           </div>
-          <div class="col d-flex justify-content-end">
-            <div v-if="this.isLoggedIn && this.currentUserState != 'skip'" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-trigger="hover" title="Ha az étel címe nem győzött meg és szeretnéd megvárni a mai videót akkor ezzel jelezheted. Ekkor bekerül a neved a közös kosárba és biztos, hogy nem maradsz le a rendelésről. ">
+          <div class="col-12 d-flex justify-content-evenly">
+            <div v-if="this.isLoggedIn" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-trigger="hover" title="Ha az étel címe nem győzött meg és szeretnéd megvárni a mai videót akkor ezzel jelezheted. Ekkor bekerül a neved a közös kosárba és biztos, hogy nem maradsz le a rendelésről. ">
               <button
               type="button"
               class="btn me-2 text-nowrap"
-              :class="['btn-' + this.userColor ]"
-              @click="this.waitForMe(this.currentUserState == 'video' ? 'none' : 'video')"
-              >
-                <div v-if="this.currentUserState == 'video'" class="">
-                  <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Mégse várok</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video3" viewBox="0 0 16 16">
+              :class="['btn-outline-' + this.userColor, this.currentUserState === 'video' ? 'active' : '']"
+              @click="this.waitForMe(this.currentUserState == 'video' ? 'none' : 'video')">
+                <div>
+                  <span class="d-none d-sm-inline d-md-none d-xl-inline me-2">Videóra várok</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person-video3" viewBox="0 0 16 16">
                     <path d="M6.79 5.093A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814l-3.5-2.5z"/>
                     <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm15 0a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
-                  </svg>
-                </div>
-                <div v-else class="">
-                  <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Videóra várok</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video3" viewBox="0 0 16 16">
-                    <path d="M6.79 5.093A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814l-3.5-2.5z"/>
-                    <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm15 0a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
-                    <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
                   </svg>
                 </div>
               </button>
@@ -86,18 +77,11 @@
               <button
               type="button"
               class="btn me-2 text-nowrap"
-              :class="['btn-' + this.userColor ]"
+              :class="['btn-outline-' + this.userColor, this.currentUserState === 'skip' ? 'active' : '']"
               @click="this.waitForMe(this.currentUserState == 'skip' ? 'none' : 'skip')">
-                <div v-if="this.currentUserState == 'skip'">
-                  <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Mégis kérek</span>
-                  <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart-check" viewBox="0 0 16 16">
-                    <path d="M11.354 6.354a.5.5 0 0 0-.708-.708L8 8.293 6.854 7.146a.5.5 0 1 0-.708.708l1.5 1.5a.5.5 0 0 0 .708 0l3-3z"/>
-                    <path d="M.5 1a.5.5 0 0 0 0 1h1.11l.401 1.607 1.498 7.985A.5.5 0 0 0 4 12h1a2 2 0 1 0 0 4 2 2 0 0 0 0-4h7a2 2 0 1 0 0 4 2 2 0 0 0 0-4h1a.5.5 0 0 0 .491-.408l1.5-8A.5.5 0 0 0 14.5 3H2.89l-.405-1.621A.5.5 0 0 0 2 1H.5zm3.915 10L3.102 4h10.796l-1.313 7h-8.17zM6 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-                  </svg>
-                </div>
-                <div v-else>
+                <div>
                   <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Nem kérek</span>
-                  <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart-dash" viewBox="0 0 16 16">
+                  <svg  xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cart-dash" viewBox="0 0 16 16">
                     <path d="M6.5 7a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4z"/>
                     <path d="M.5 1a.5.5 0 0 0 0 1h1.11l.401 1.607 1.498 7.985A.5.5 0 0 0 4 12h1a2 2 0 1 0 0 4 2 2 0 0 0 0-4h7a2 2 0 1 0 0 4 2 2 0 0 0 0-4h1a.5.5 0 0 0 .491-.408l1.5-8A.5.5 0 0 0 14.5 3H2.89l-.405-1.621A.5.5 0 0 0 2 1H.5zm3.915 10L3.102 4h10.796l-1.313 7h-8.17zM6 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
                   </svg>
@@ -105,11 +89,11 @@
               </button>
             </div>
             <div data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-trigger="hover" title="Töröl mindent a kosaradból">
-              <button class="btn text-nowrap" :class="['btn-' + this.userColor ]" @click="this.clearBasket()">
-                <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Kosár törlése</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-basket3" viewBox="0 0 16 16">
-                  <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 6h1.717L5.07 1.243a.5.5 0 0 1 .686-.172zM3.394 15l-1.48-6h-.97l1.525 6.426a.75.75 0 0 0 .729.574h9.606a.75.75 0 0 0 .73-.574L15.056 9h-.972l-1.479 6h-9.21z"/>
-                  <path d="M 6.854 9.646 a 0.5 0.5 0 1 0 -0.708 0.708 L 7.293 11.5 L 6.146 12.646 a 0.5 0.5 0 1 0 0.708 0.708 L 8 12.207 l 1.146 1.147 a 0.5 0.5 0 0 0 0.708 -0.708 L 8.707 11.5 l 1.147 -1.146 a 0.5 0.5 0 0 0 -0.708 -0.708 L 8 10.793 L 6.854 9.646 z"/>
+              <button class="btn text-nowrap" :class="['btn-outline-' + this.userColor ]" @click="this.clearBasket()">
+                <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Törlés</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash text-bold" viewBox="0 0 16 16">
+                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                  <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
                 </svg>
               </button>
             </div>

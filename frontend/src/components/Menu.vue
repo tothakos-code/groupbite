@@ -15,7 +15,7 @@
     </div>
     <div class="row col list-group">
       <div class="col">
-        <div class="list-group">
+        <div class="list-group my-1">
           <MenuItem
             v-for="item in items"
             :key="item.id"

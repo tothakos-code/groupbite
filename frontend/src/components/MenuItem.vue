@@ -1,23 +1,23 @@
 <template>
-<div
-  class="row d-flex">
-  <div class="col-8">
+<div class="list-group-item row d-flex ">
+  <div class="col-12 col-lg-8 p-0">
     <span>
       {{ item.label }}
     </span>
   </div>
-  <div class="col-4">
+  <div class="col-12 col-lg-4 p-0 flex-wrap">
     <div class="d-flex justify-content-end">
-      <span v-if="item.sold_out" class="btn pe-none btn-outline-danger">Elfogyott</span>
-      <button
-        v-else
-        v-for="size in item.sizes"
-        :key="item.id+'-'+size.size"
-        @click="addToBasket(item.id, size.size)"
-        class="btn btn-sm col-sm-6 me-2 ms-2"
-        :class="['btn-' + this.userColor ]">
-        {{ size.label }}
-      </button>
+        <span v-if="item.sold_out" class="btn pe-none btn-outline-danger btn-sm">Elfogyott</span>
+        <button
+          v-else
+          v-for="size in item.sizes"
+          :key="item.id+'-'+size.size"
+          @click="addToBasket(item.id, size.size)"
+          class="btn btn-sm col-6 col-sm-6 ms-2"
+          :class="['btn-' + this.userColor ]">
+          <span class="text-nowrap me-1">{{ size.size }}</span>
+          <span class="text-nowrap">{{ size.price }}</span>
+        </button>
     </div>
   </div>
 </div>
@@ -81,4 +81,7 @@ export default {
 </script>
 
 <style>
+.responsive-div {
+  flex: 0 0 200px; /* Adjust the width as needed */
+}
 </style>

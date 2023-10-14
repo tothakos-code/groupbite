@@ -13,16 +13,24 @@ class MenuService:
 
     def get_all_fdid_with_link():
         # fetching from the database
+        # start of the week:
+        today = date.today()
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=6)
+
+
+        # fetching from the database
         session = Session()
-        menu = session.query(Menu).filter(Menu.menu_date == date.today().strftime('%Y-%m-%d')).first()
+        menus = session.query(Menu).filter(Menu.menu_date.between(start_date,end_date))
         session.close()
         result = {}
-        if not menu:
+        if not menus:
             return result
 
-        for menu_item in menu.menu:
-            for sizes in menu_item['sizes']:
-                result[menu_item['id'] + "-" + sizes['size']] = sizes['link']
+        for menu in menus:
+            for menu_item in menu.menu:
+                for sizes in menu_item['sizes']:
+                    result[menu_item['id'] + "-" + sizes['size']] = sizes['link']
         return result
 
     def is_menu_item_exist(basket_item):

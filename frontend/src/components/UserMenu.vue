@@ -1,9 +1,23 @@
 <template>
   <div v-if="isLoggedIn"  class="d-flex">
-    <div class="btn-group">
-      <button type="button" class="btn pe-none border border-secondary">{{ username }}</button>
-      <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" ></button>
+    <div class="btn-group ">
+      <button type="button" class="d-none d-md-inline btn pe-none border border-secondary">{{ username }}</button>
+      <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split rounded-sm hide-sm-arrow" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+        <span class="d-inline d-md-none">☰</span>
+      </button>
       <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+        <li class="d-inline d-md-none">
+          <button class="dropdown-item disabled" aria-disabled="true">
+            <span>
+              {{ username }}
+            </span>
+          </button>
+        </li>
+        <li class="d-inline d-md-none"><hr class="dropdown-divider"></li>
+        <li class="d-inline d-md-none">
+            <UserControllPanel/>
+        </li>
+        <li class="d-inline d-md-none"><hr class="dropdown-divider"></li>
         <li>
           <button class="dropdown-item" @click="showProfile = true">
             <span>
@@ -40,11 +54,13 @@
 import { state } from "@/socket.js"
 import UserProfilePopup from './UserProfilePopup.vue';
 import UserLoginPopup from './UserLoginPopup.vue';
+import UserControllPanel from './UserControllPanel.vue'
 
 export default {
   name: 'UserMenu',
   components: {
     UserLoginPopup,
+    UserControllPanel,
     UserProfilePopup
   },
   emits: ['toHistory'],
@@ -66,4 +82,12 @@ export default {
 </script>
 
 <style>
+@media (max-width: 768px) {
+     .rounded-sm {
+       border-radius: 0.375rem !important;
+     }
+     .hide-sm-arrow::after {
+      display: none !important;
+    }
+   }
 </style>

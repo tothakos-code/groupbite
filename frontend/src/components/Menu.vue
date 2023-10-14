@@ -1,21 +1,25 @@
 <template>
   <div class="card">
-    <div class="card-header row d-flex">
-      <div class="col-6">
-        <h2 class="ps-0">Étlap</h2>
+    <div class="card-header row d-flex px-2">
+      <div class="col-3 col-md-6 col-lg-8 row px-0">
+        <div class="col-12 col-lg-4 my-auto">
+          <h2 class="">Étlap</h2>
+        </div>
+        <div class="col-0 d-none col-lg-8 d-lg-inline my-auto truncate">
+          <TransferPopup/>
+        </div>
       </div>
-      <div class="col-6">
+      <div class="col-9 col-md-6 col-lg-4 d-flex flex-fill px-0">
         <Datestamp @selectedDate="(day) => this.getMenu(day)" :limitToCurrentWeek="true"/>
       </div>
     </div>
-    <div class="row">
+    <div class="row col list-group">
       <div class="col">
-        <div class="list-group">
+        <div class="list-group my-1">
           <MenuItem
             v-for="item in items"
             :key="item.id"
-            :item="item"
-            class="list-group-item">
+            :item="item">
           </MenuItem>
         </div>
       </div>
@@ -28,11 +32,14 @@ import { useCookies } from "vue3-cookies";
 import Datestamp from './DateStamp.vue'
 import MenuItem from './MenuItem.vue'
 import { state } from "@/socket";
+import TransferPopup from './TransferPopup.vue'
+
 
 
 export default {
   name: 'FalusiMenu',
   components: {
+    TransferPopup,
     Datestamp,
     MenuItem
   },

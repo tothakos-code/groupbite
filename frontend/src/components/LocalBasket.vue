@@ -165,7 +165,7 @@ export default {
           alert("A rendelés már el lett küldve.")
           return;
         }
-        socket.emit("Server Basket Update", { "userid": state.user.id, "basket": {} });
+        socket.emit("Server Basket Update", { "userid": state.user.id, "basket": {}, "order_date": state.selectedDate.toISOString().split('T')[0] });
       }
       socket.emit("User Daily State Change",{ 'id': state.user.id, 'new_state':waitType });
     },
@@ -184,7 +184,7 @@ export default {
         // If the item exists in the basket, decrement the quantity
         basketItem.quantity -= 1;
       }
-      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": state.localBasket });
+      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": state.localBasket, "order_date": state.selectedDate.toISOString().split('T')[0] });
 
     },
     updateLocalBasket: function() {
@@ -196,7 +196,7 @@ export default {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({"user": state.user.username,'date': new Date().toISOString().split('T')[0]})
+        body: JSON.stringify({"user": state.user.username,'date': state.selectedDate.toISOString().split('T')[0]})
       })
         .then(response => response.json())
           .then(data => {
@@ -212,7 +212,7 @@ export default {
         alert("A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.")
         return;
       }
-      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": {} });
+      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": {}, "order_date": state.selectedDate.toISOString().split('T')[0] });
     }
   },
   computed: {

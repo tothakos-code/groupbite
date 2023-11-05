@@ -22,7 +22,7 @@
 
 from flask import Flask
 from flask import request
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room
 import logging
 from sqlalchemy.exc import IntegrityError
 from datetime import date
@@ -58,7 +58,9 @@ def call_clear_clients_basket():
 
 @socketio.on('connect')
 def handle_connect():
-    socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(date.today().strftime('%Y-%m-%d')) })
+    today = date.today().strftime('%Y-%m-%d')
+    socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(today) }, to=request.sid)
+    join_room(today)
     emit_user_ds_state()
 
 

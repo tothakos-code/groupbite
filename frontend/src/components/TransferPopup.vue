@@ -92,7 +92,7 @@ export default {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ psid: this.psid })
+          body: JSON.stringify({ psid: this.psid, order_date: state.selectedDate })
         })
           .then(response => {
             this.showSpinner = false;

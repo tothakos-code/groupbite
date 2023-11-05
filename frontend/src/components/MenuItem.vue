@@ -67,7 +67,7 @@ export default {
           quantity: 1
         };
       }
-      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": updated_basket });
+      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": updated_basket, "order_date": state.selectedDate.toISOString().split('T')[0] });
 
     }
   },

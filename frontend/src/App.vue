@@ -75,7 +75,7 @@ import OrderState from './components/OrderState.vue'
 import UserControllPanel from './components/UserControllPanel.vue'
 import { state } from "@/socket";
 import { useCookies } from "vue3-cookies";
-// import { Tooltip } from 'bootstrap';
+import { provide, ref } from 'vue';
 
 
 export default {
@@ -91,6 +91,28 @@ export default {
   },
   setup() {
     const { cookies } = useCookies();
+
+    const theme = ref(localStorage.getItem("theme"))
+    const userColor = ref(state.user.ui_color)
+
+    function toggleDarkMode() {
+      if (theme.value === 'dark') {
+        theme.value = 'light'
+      } else {
+        theme.value = 'dark'
+      }
+      localStorage.setItem("theme", theme.value);
+      socket.emit("User Update", {"id": state.user.id, "ui_theme":this.theme}, function(user) {
+        state.user = user;
+      });
+      document.documentElement.setAttribute('data-bs-theme', theme.value)
+    }
+
+    provide('theme', {
+      theme,
+      toggleDarkMode,
+      userColor
+    })
     return { cookies };
   },
   data() {

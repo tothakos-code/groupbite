@@ -102,9 +102,6 @@ export default {
   computed: {
     loggedInUsername() {
       return state.user.username;
-    },
-    userColor(){
-      return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }
 }

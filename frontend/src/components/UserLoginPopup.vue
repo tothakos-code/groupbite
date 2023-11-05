@@ -13,7 +13,7 @@
 <script>
 import Popup from './Popup.vue';
 import { useCookies } from "vue3-cookies";
-import { state, socket } from "@/socket";
+import { useAuth } from "@/auth.js";
 
 export default {
   name: 'UserLoginPopup',
@@ -26,7 +26,11 @@ export default {
   emits: ['cancel', 'confirm'],
   setup() {
     const { cookies } = useCookies();
-    return { cookies };
+    const auth = useAuth();
+    return {
+      cookies,
+      auth
+    }
   },
   data() {
     return {
@@ -36,7 +40,7 @@ export default {
   mounted() {
     if (this.$cookies.isKey('username')) {
       this.username = this.cookies.get('username');
-      this.login();
+      this.auth.login(this.username)
     }
 
   },
@@ -46,9 +50,7 @@ export default {
       this.login();
     },
     login: function() {
-      socket.emit("User Login", {"username": this.username}, function(user) {
-        state.user = user;
-      });
+      this.auth.login(this.username)
       this.$emit('cancel')
 
     }

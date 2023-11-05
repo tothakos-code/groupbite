@@ -3,7 +3,7 @@
     <div class="card-header row d-flex">
       <div class="col-3 col-md-6 col-lg-8 row px-0">
         <div class="col-12 col-lg-4 my-auto">
-          <a href="#" class="btn btn-link link-underline link-underline-opacity-0 border rounded pt-2" :class="['link-' + this.userColor ]" @click="this.$emit('close')">
+          <a href="#" class="btn btn-link link-underline link-underline-opacity-0 border rounded pt-2" :class="['link-' + auth.userColor.value ]" @click="this.$emit('close')">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-caret-left" viewBox="0 0 16 16">
               <path d="M10 12.796V3.204L4.519 8 10 12.796zm-.659.753-5.48-4.796a1 1 0 0 1 0-1.506l5.48-4.796A1 1 0 0 1 11 3.204v9.592a1 1 0 0 1-1.659.753z"/>
             </svg>
@@ -62,7 +62,7 @@
 <script>
 import Datestamp from './DateStamp.vue'
 import GlobalBasketPerson from './GlobalBasketPerson.vue'
-import { state } from '@/socket';
+import { useAuth } from '@/auth';
 
 export default {
   name: 'FalusiHistroy',
@@ -90,6 +90,12 @@ export default {
   data() {
     return {
       history: {}
+    }
+  },
+  setup() {
+    const auth = useAuth();
+    return {
+      auth
     }
   },
   mounted() {
@@ -133,9 +139,6 @@ export default {
         return 0;
       }
       return Math.ceil(400 / this.personCount);
-    },
-    userColor() {
-      return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }
 }

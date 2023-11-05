@@ -28,10 +28,10 @@
 </template>
 
 <script>
-import { useCookies } from "vue3-cookies";
 import Datestamp from './DateStamp.vue'
 import MenuItem from './MenuItem.vue'
 import { state } from "@/socket";
+import { useAuth } from "@/auth";
 import TransferPopup from './TransferPopup.vue'
 
 
@@ -44,8 +44,10 @@ export default {
     MenuItem
   },
   setup() {
-    const { cookies } = useCookies();
-    return { cookies };
+    const auth = useAuth();
+    return {
+      auth
+    }
   },
   mounted() {
     this.getMenu();
@@ -73,8 +75,6 @@ export default {
     }
   },
   computed: {
-    userColor() {
-        return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }
 }

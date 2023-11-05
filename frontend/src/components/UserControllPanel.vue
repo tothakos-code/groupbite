@@ -10,11 +10,11 @@
         </svg>
       </button>
     </div>
-    <div v-if="isLoggedIn" class="col">
+    <div v-if="auth.isLoggedIn" class="col">
       <button
       type="button"
       class="btn ms-2 position-relative"
-      :class="['btn-' + this.userColor ]"
+      :class="['btn-' + auth.userColor.value ]"
       @click="this.subscribeToggle()"
       title="Ha feliratkozol megjelenik a neved minden nap a közös kosárban. Így a többiek látják, hogy még nem választottál és biztos nem maradsz le a rendelésről. Akkor érdemes feliratkozni, ha nagyon sokszor rendelsz a falusiból.">
         <div v-if="this.subscriptionState != 'full'" class="text-nowrap">
@@ -44,22 +44,18 @@
 </template>
 
 <script>
-import { state, socket } from "@/socket.js"
+import { state, socket } from "@/socket.js";
+import { useAuth } from "@/auth.js";
 
 export default {
   name: 'UserControllPanel',
-  components: {
-  },
-  data() {
+  setup() {
+    const auth = useAuth();
     return {
       theme: localStorage.getItem("theme") || 'dark',
+      auth,
     }
   },
-  // mounted() {
-  //   // new Tooltip(document.body, {
-  //   //   selector: "[data-bs-toggle='tooltip']",
-  //   // });
-  // },
   methods: {
     toggleDarkMode: function() {
       if (this.theme === 'dark') {
@@ -86,14 +82,8 @@ export default {
     }
   },
   computed: {
-    isLoggedIn() {
-      return state.user.id !== undefined;
-    },
     currentUserState() {
       return state.userStates[state.user.username];
-    },
-    userColor() {
-      return state.user.ui_color ? state.user.ui_color : "falusi";
     },
     subscriptionState() {
       return state.user.subscribed;

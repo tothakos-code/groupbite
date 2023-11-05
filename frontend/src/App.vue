@@ -69,12 +69,15 @@
   </notifications>
   <div class="footer row mt-auto p-3 bg-body-tertiary">
     <div class="row d-flex justify-content-between text-body-secondary">
-      <span class="col text-center">Készítette: Tóth Ákos</span>
+      <span class="col text-center">
+        Készítette:
+        <a class="link-secondary" target="_blank" href="https://www.buymeacoffee.com/tothakos">Tóth Ákos</a>
+      </span>
       <span class="col text-center">
         <a class="link-secondary" target="_blank" href="https://github.com/tothakos-code/order-accumulator">Forráskód</a>
       </span>
       <span class="col text-center">
-        <a class="link-secondary" target="_blank" href="#">Felhasználói kézikönyv</a>
+        <a class="link-secondary" target="_blank" href="https://docs.google.com/document/d/1x9Wvp5DPZun5OCcNV1B2limlL940EAX6gm03St_Hw-c/edit?usp=sharing">Felhasználói kézikönyv</a>
       </span>
       <span class="col text-center">
         <a class="link-secondary" target="_blank" :href="'https://github.com/tothakos-code/order-accumulator/releases/tag/' + showVersion()">Változásnapló</a>

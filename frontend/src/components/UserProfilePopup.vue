@@ -32,6 +32,7 @@
 import Popup from './Popup.vue';
 import { useCookies } from "vue3-cookies";
 import { state, socket } from "@/socket";
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
   name: 'UserProfilePopup',
@@ -76,7 +77,10 @@ export default {
           state.user = user;
           this.$emit('cancel');
         } else {
-          alert(user.error)
+          notify({
+            type: "warn",
+            text: user.error,
+          });
         }
       });
     },
@@ -102,9 +106,6 @@ export default {
   computed: {
     loggedInUsername() {
       return state.user.username;
-    },
-    userColor(){
-      return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }
 }

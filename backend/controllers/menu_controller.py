@@ -61,6 +61,28 @@ def get_requested_menu(requested_date=date.today().strftime('%Y-%m-%d')):
         return json.dumps(requested_menu.menu)
     return []
 
+@menu_controller.route('/get_week', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
+@menu_controller.route('/get_week/<requested_date>')
+def get_week_requested_menu(requested_date=date.today().strftime('%Y-%m-%d')):
+    # start of the week:
+    today = date.today()
+    start_date = today - timedelta(days=today.weekday())
+
+    end_date = start_date + timedelta(days=6)
+
+    delta = timedelta(days=1)
+
+    result = {}
+    while (start_date <= end_date):
+        requested_menu = MenuService.get_menu_by_date(start_date.strftime('%Y-%m-%d'))
+        if requested_menu:
+            result[start_date.weekday()] = json.dumps(requested_menu.menu)
+        else:
+            result[start_date.weekday()] = {}
+        # stepping to the next day
+        start_date += delta
+    return result
+
 
 def fetch_a_day(soup_obj, dayString):
     menu = []

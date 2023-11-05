@@ -26,6 +26,13 @@
     <div v-if="this.isDataLoaded" class="row d-flex">
       <div class="col-md-7 col-sm-12">
         <div class="row p-2">
+          <div
+            v-if="showGlobalMessage"
+            class="col col-md-3 d-flex flex-fill justify-content-start align-items-center bg-warning bg-opacity-10 border border-warning rounded mb-2"
+          >
+              Figyelem! A Dátum választó működése megváltozott. Mostmár a rendelés dátumát állítja, mellyel a hét többi napjára is leadhatod rendelésed előre. Ha másik nap menüjéből szeretnél választani használ alatta a menü választót.
+              <i class="border border-warning rounded p-1" @click="dismissGlobalMessage()">bezár</i>
+          </div>
           <Menu v-if="this.showMenu" key="0"/>
           <GlobalBasket class="mt-2 d-md-none"/>
           <History v-if="this.showHistroy" @close="this.toMenu()"/>
@@ -47,14 +54,37 @@
       </div>
     </div>
   </div>
+  <notifications position="top center" classes="my-custom-class">
+    <template #body="props">
+      <div class="my-notification">
+        <div
+          class="toast d-flex align-items-center"
+          :class="{
+            'bg-warning':props.item.type === 'warn',
+            'bg-danger':props.item.type === 'error',
+            'bg-info-subtle':props.item.type === 'info',
+          }"
+        >
+          <p class="title toast-body">
+            {{ props.item.title }}
+          </p>
+          <div v-html="props.item.text"/>
+          <button type="button" class="btn-close me-2 m-auto" @click="props.close" aria-label="Close"></button>
+        </div>
+      </div>
+    </template>
+  </notifications>
   <div class="footer row mt-auto p-3 bg-body-tertiary">
     <div class="row d-flex justify-content-between text-body-secondary">
-      <span class="col text-center">Készítette: Tóth Ákos</span>
+      <span class="col text-center">
+        Készítette:
+        <a class="link-secondary" target="_blank" href="https://www.buymeacoffee.com/tothakos">Tóth Ákos</a>
+      </span>
       <span class="col text-center">
         <a class="link-secondary" target="_blank" href="https://github.com/tothakos-code/order-accumulator">Forráskód</a>
       </span>
       <span class="col text-center">
-        <a class="link-secondary" target="_blank" href="#">Felhasználói kézikönyv</a>
+        <a class="link-secondary" target="_blank" href="https://docs.google.com/document/d/1x9Wvp5DPZun5OCcNV1B2limlL940EAX6gm03St_Hw-c/edit?usp=sharing">Felhasználói kézikönyv</a>
       </span>
       <span class="col text-center">
         <a class="link-secondary" target="_blank" :href="'https://github.com/tothakos-code/order-accumulator/releases/tag/' + showVersion()">Változásnapló</a>
@@ -73,9 +103,13 @@ import LocalBasket from './components/LocalBasket.vue'
 import GlobalBasket from './components/GlobalBasket.vue'
 import OrderState from './components/OrderState.vue'
 import UserControllPanel from './components/UserControllPanel.vue'
-import { state } from "@/socket";
+import { state, socket } from "@/socket";
+// import { useAuth } from "@/auth";
 import { useCookies } from "vue3-cookies";
-// import { Tooltip } from 'bootstrap';
+import { provide, ref } from 'vue';
+import { notify } from "@kyvg/vue3-notification";
+
+
 
 
 export default {
@@ -91,11 +125,34 @@ export default {
   },
   setup() {
     const { cookies } = useCookies();
+
+    const theme = ref(localStorage.getItem("theme"))
+    const userColor = ref(state.user.ui_color)
+
+    function toggleDarkMode() {
+      if (theme.value === 'dark') {
+        theme.value = 'light'
+      } else {
+        theme.value = 'dark'
+      }
+      localStorage.setItem("theme", theme.value);
+      socket.emit("User Update", {"id": state.user.id, "ui_theme":this.theme}, function(user) {
+        state.user = user;
+      });
+      document.documentElement.setAttribute('data-bs-theme', theme.value)
+    }
+
+    provide('theme', {
+      theme,
+      toggleDarkMode,
+      userColor
+    })
     return { cookies };
   },
   data() {
     return {
       showMenu: true,
+      showGlobalMessage: false,
       showHistroy: false
     }
   },
@@ -113,9 +170,26 @@ export default {
     toHistory: function() {
       this.showHistroy = true;
       this.showMenu = false;
-    }
+    },
+    dismissGlobalMessage() {
+      // Hide the message
+      this.showGlobalMessage = false;
+
+      notify({
+        type: "info",
+        text: "Az üzenet nemfog többet megjelenni."
+      });
+
+      // Save in local storage that the user has dismissed the message
+      localStorage.setItem("gm-date-func-change", "true");
+    },
   },
   mounted() {
+    const userDismissed = localStorage.getItem("gm-date-func-change");
+    if (!userDismissed) {
+      this.showGlobalMessage = true;
+    }
+
     const currentTheme = localStorage.getItem("theme");
     if (!currentTheme) {
       this.theme = 'light'

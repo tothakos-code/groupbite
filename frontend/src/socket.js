@@ -6,6 +6,7 @@ export const state = reactive({
   orderState: '',
   globalBasket: {},
   localBasket: {},
+  selectedDate: new Date(),
   user: {},
   userStates: {}
 });

@@ -18,7 +18,7 @@
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" @click="$emit('cancel')">Mégse</button>
-            <button class="btn" :class="['btn-' + this.userColor ]" @click="$emit('confirm')">Folytat</button>
+            <button class="btn" :class="['btn-' + auth.userColor.value ]" @click="$emit('confirm')">Folytat</button>
           </div>
         </div>
       </div>
@@ -28,16 +28,19 @@
 </template>
 
 <script>
-import { ref, watch} from 'vue';
-import { state } from '@/socket';
+import { ref, watch } from 'vue';
+import { useAuth } from '@/auth';
+
 export default {
-  name: 'PopupBase',
+  name: 'BasePopup',
   props: {
     title: String,
     showModal: Boolean
   },
   emits: ['cancel', 'confirm'],
   setup(props) {
+    const auth = useAuth();
+
     const active = ref(props.showModal);
 
     watch(() => props.showModal, (newValue, oldValue) => {
@@ -49,12 +52,8 @@ export default {
     },{immediate:true, deep: true});
 
     return {
-      active
-    }
-  },
-  computed: {
-    userColor() {
-      return state.user.ui_color ? state.user.ui_color : "falusi";
+      active,
+      auth
     }
   }
 }

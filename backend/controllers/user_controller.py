@@ -4,9 +4,10 @@ from entities.entity import Session
 from sqlalchemy import func, cast, update
 import logging
 from __main__ import socketio
-
+from flask_socketio import rooms
 from services.user_service import UserService
 from services.order_service import OrderService
+from datetime import datetime
 
 
 user_controller = Blueprint('user_controller', __name__, url_prefix='/user')
@@ -58,7 +59,13 @@ def handle_user_update(user):
     json_to_return = user_to_update.serialized
     session.close()
     if 'username' in user:
-        socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(date.today().strftime('%Y-%m-%d')) })
+        # Updating the username in every basket(room) a user is in
+        for room in rooms():
+            try:
+                socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(datetime.strptime(room, "%Y-%m-%d"))}, to=room)
+            except ValueError:
+                pass
+
     emit_user_ds_state()
     return json_to_return
 

@@ -1,9 +1,9 @@
 <template>
-    <div class="card" :class="this.name === this.loggedInUser ? 'border border-2 border-'+ this.matchUiColorWithBuiltIn + (this.usertheme === 'dark' ? '-subtle' : '') : ''">
+    <div class="card" :class="this.name === this.loggedInUser ? 'border border-2 border-'+ auth.matchUiColorWithBuiltIn.value + (this.usertheme === 'dark' ? '-subtle' : '') : ''">
       <div class="card-header row d-flex pe-0">
         <div class="col-6">
           <span>{{ name }}</span>
-          <a v-if="copyable && name !== loggedInUser" class="ms-2 p-1 btn btn-sm" :class="['btn-' + this.userColor ]" @click="copy">
+          <a v-if="copyable && name !== loggedInUser" class="ms-2 p-1 btn btn-sm" :class="['btn-' + auth.userColor ]" @click="copy">
             Másol
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard2" viewBox="0 0 16 16">
               <path d="M3.5 2a.5.5 0 0 0-.5.5v12a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-12a.5.5 0 0 0-.5-.5H12a.5.5 0 0 1 0-1h.5A1.5 1.5 0 0 1 14 2.5v12a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-12A1.5 1.5 0 0 1 3.5 1H4a.5.5 0 0 1 0 1h-.5Z"/>
@@ -34,9 +34,9 @@
           <span
             class="badge rounded-pill border me-2 col-1"
             :class="[
-              'bg-' + this.matchUiColorWithBuiltIn + '-subtle',
-              'border-' + this.matchUiColorWithBuiltIn + '-subtle',
-              'text-' + this.matchUiColorWithBuiltIn + '-emphasis']">
+              'bg-' + auth.matchUiColorWithBuiltIn.value + '-subtle',
+              'border-' + auth.matchUiColorWithBuiltIn.value + '-subtle',
+              'text-' + auth.matchUiColorWithBuiltIn.value + '-emphasis']">
             {{ item.quantity }} x
           </span>
           <span class="col-7">{{ item.name }}</span>
@@ -51,6 +51,8 @@
 
 <script>
 import { state, socket } from "@/socket";
+import { useAuth } from "@/auth";
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
   name: 'PersonComponent',
@@ -86,6 +88,12 @@ export default {
   mounted() {
     this.calculateSum()
   },
+  setup() {
+    const auth = useAuth();
+    return {
+      auth
+    };
+  },
   methods: {
     calculateSum: function() {
       let sum=0;
@@ -100,11 +108,14 @@ export default {
       this.sumTitle = sumTitle;
     },
     copy: function() {
-      if (state.user.username === undefined) {
-        alert("Jelentkezz be a rendeléshez");
+      if (!this.auth.isLoggedIn.value) {
+        notify({
+          type: "warn",
+          text: "Jelentkezz be a rendeléshez!",
+        });
         return;
       }
-      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": this.personBasket });
+      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": this.personBasket, "order_date": state.selectedDate.toISOString().split('T')[0] });
     }
   },
   computed: {
@@ -130,22 +141,6 @@ export default {
     },
     loggedInUser() {
       return state.user.username
-    },
-    matchUiColorWithBuiltIn() {
-      switch (this.userColor) {
-        case "steelblue":
-          return "info";
-        case "raspberry":
-          return "danger";
-        case "tigragold":
-          return "warning";
-        default:
-          // falusi
-          return "warning"
-      }
-    },
-    userColor() {
-      return state.user.ui_color ? state.user.ui_color : "falusi";
     },
     usertheme() {
       return state.user.ui_theme ? state.user.ui_theme : "light";

@@ -14,7 +14,8 @@
           :key="item.id+'-'+size.size"
           @click="addToBasket(item.id, size.size)"
           class="btn btn-sm col-6 col-sm-6 ms-2"
-          :class="['btn-' + this.userColor ]">
+          :class="['btn-' + auth.userColor.value ]"
+        >
           <span class="text-nowrap me-1">{{ size.size }}</span>
           <span class="text-nowrap">{{ size.price }}</span>
         </button>
@@ -24,9 +25,9 @@
 </template>
 
 <script>
-import { useCookies } from "vue3-cookies";
 import { state, socket } from "@/socket";
-
+import { useAuth } from "@/auth";
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
   name: 'FalusiMenu',
@@ -36,17 +37,25 @@ export default {
     },
   },
   setup() {
-    const { cookies } = useCookies();
-    return { cookies };
+    const auth = useAuth();
+    return {
+      auth
+    }
   },
   methods: {
     addToBasket: function(fid, size) {
-      if (state.user.username === undefined) {
-        alert("Jelentkezz be a rendeléshez");
+      if (!this.auth.isLoggedIn.value) {
+        notify({
+          type: "warn",
+          text: "Jelentkezz be a rendeléshez!",
+        });
         return;
       }
       if (state.orderState === 'closed') {
-        alert("A rendelés már ellett küldve. Már nem módisíthatsz a kosaradon");
+        notify({
+          type: "warn",
+          text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
+        });
         return;
       }
       if (this.currentUserState === 'skip') {
@@ -65,16 +74,13 @@ export default {
           quantity: 1
         };
       }
-      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": updated_basket });
+      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": updated_basket, "order_date": state.selectedDate.toISOString().split('T')[0] });
 
     }
   },
   computed: {
     currentUserState() {
       return state.userStates[state.user.username];
-    },
-    userColor() {
-        return state.user.ui_color ? state.user.ui_color : "falusi";
     }
   }
 }

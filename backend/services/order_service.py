@@ -45,11 +45,11 @@ class OrderService:
         if not order:
             return {}
         basket = order.basket
-        new_basket = {}
+        basket_with_names = {}
         user_ids = basket.keys()
         for user_id in user_ids:
-            new_basket[UserService.id_to_username(user_id)] = basket[user_id]
-        return new_basket
+            basket_with_names[UserService.id_to_username(user_id)] = basket[user_id]
+        return basket_with_names
 
     def inject_label_and_price(basket):
         current_menu = MenuService.get_weeklymenu_as_dict()
@@ -61,3 +61,68 @@ class OrderService:
             basket_item['name'] = current_menu[basket_item['id']]['name']
             basket_item['date'] = current_menu[basket_item['id']]['date']
         return basket
+
+
+    def get_basket(date=date.today().strftime('%Y-%m-%d')):
+        session = Session()
+        db_basket = session.query(Order).filter(Order.order_date == date).first()
+        session.close()
+
+        if not db_basket:
+            return {}
+        return db_basket.basket
+
+
+    def set_basket(new_basket, date=date.today().strftime('%Y-%m-%d')):
+        session = Session()
+        db_basket = session.query(Order).filter(Order.order_date == date).first()
+
+        if not db_basket:
+            # insert
+            session.add(Order(date, new_basket))
+            logging.warning("Created today's basket row")
+        else:
+            # update
+            db_basket.basket = new_basket
+            logging.warning("Updated today's basket row")
+
+        session.commit()
+        session.close()
+
+
+    def get_order_state(order_date=date.today().strftime('%Y-%m-%d')):
+        """Returns to current order state value"""
+        session = Session()
+        order_state = session.query(Order).filter(Order.order_date == order_date).first()
+        session.close()
+        if not order_state:
+            return str(order_state_type.collect)
+
+        return str(order_state.order_state)
+
+
+    def set_order_state(new_state, order_date=date.today().strftime('%Y-%m-%d')):
+        """Setter for today's order state"""
+        session = Session()
+        order = session.query(Order).filter(Order.order_date == order_date).first()
+        if not order:
+            session.close()
+            return str(order_state_type.collect)
+
+        order.order_state = new_state
+        session.commit()
+        result_state = str(order.order_state)
+        session.close()
+        return result_state
+
+    def get_user_basket_between(user_id, date_from=date.today().strftime('%Y-%m-%d'), date_to=date.today().strftime('%Y-%m-%d')):
+        session = Session()
+        orders = session.query(Order).filter(Order.order_date.between(date_from, date_to)).all()
+        session.close()
+        result = {}
+        for order in orders:
+            if not order or not str(user_id) in order.basket:
+                continue
+            result[str(order.order_date)] = order.basket[str(user_id)]
+
+        return result

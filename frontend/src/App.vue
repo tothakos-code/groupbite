@@ -26,6 +26,13 @@
     <div v-if="this.isDataLoaded" class="row d-flex">
       <div class="col-md-7 col-sm-12">
         <div class="row p-2">
+          <div
+            v-if="showGlobalMessage"
+            class="col col-md-3 d-flex flex-fill justify-content-start align-items-center bg-warning bg-opacity-10 border border-warning rounded mb-2"
+          >
+              Figyelem! A Dátum választó működése megváltozott. Mostmár a rendelés dátumát állítja, mellyel a hét többi napjára is leadhatod rendelésed előre. Ha másik nap menüjéből szeretnél választani használ alatta a menü választót.
+              <i class="border border-warning rounded p-1" @click="dismissGlobalMessage()">bezár</i>
+          </div>
           <Menu v-if="this.showMenu" key="0"/>
           <GlobalBasket class="mt-2 d-md-none"/>
           <History v-if="this.showHistroy" @close="this.toMenu()"/>
@@ -96,9 +103,13 @@ import LocalBasket from './components/LocalBasket.vue'
 import GlobalBasket from './components/GlobalBasket.vue'
 import OrderState from './components/OrderState.vue'
 import UserControllPanel from './components/UserControllPanel.vue'
-import { state } from "@/socket";
+import { state, socket } from "@/socket";
+// import { useAuth } from "@/auth";
 import { useCookies } from "vue3-cookies";
 import { provide, ref } from 'vue';
+import { notify } from "@kyvg/vue3-notification";
+
+
 
 
 export default {
@@ -141,6 +152,7 @@ export default {
   data() {
     return {
       showMenu: true,
+      showGlobalMessage: false,
       showHistroy: false
     }
   },
@@ -158,9 +170,26 @@ export default {
     toHistory: function() {
       this.showHistroy = true;
       this.showMenu = false;
-    }
+    },
+    dismissGlobalMessage() {
+      // Hide the message
+      this.showGlobalMessage = false;
+
+      notify({
+        type: "info",
+        text: "Az üzenet nemfog többet megjelenni."
+      });
+
+      // Save in local storage that the user has dismissed the message
+      localStorage.setItem("gm-date-func-change", "true");
+    },
   },
   mounted() {
+    const userDismissed = localStorage.getItem("gm-date-func-change");
+    if (!userDismissed) {
+      this.showGlobalMessage = true;
+    }
+
     const currentTheme = localStorage.getItem("theme");
     if (!currentTheme) {
       this.theme = 'light'

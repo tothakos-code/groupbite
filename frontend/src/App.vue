@@ -47,6 +47,26 @@
       </div>
     </div>
   </div>
+  <notifications position="top center" classes="my-custom-class">
+    <template #body="props">
+      <div class="my-notification">
+        <div
+          class="toast d-flex align-items-center"
+          :class="{
+            'bg-warning':props.item.type === 'warn',
+            'bg-danger':props.item.type === 'error',
+            'bg-info-subtle':props.item.type === 'info',
+          }"
+        >
+          <p class="title toast-body">
+            {{ props.item.title }}
+          </p>
+          <div v-html="props.item.text"/>
+          <button type="button" class="btn-close me-2 m-auto" @click="props.close" aria-label="Close"></button>
+        </div>
+      </div>
+    </template>
+  </notifications>
   <div class="footer row mt-auto p-3 bg-body-tertiary">
     <div class="row d-flex justify-content-between text-body-secondary">
       <span class="col text-center">Készítette: Tóth Ákos</span>

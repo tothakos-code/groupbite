@@ -121,6 +121,7 @@
 import { socket, state } from "@/socket";
 import { useAuth } from "@/auth";
 import { watch } from "vue";
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
   name: 'LocalBasket',
@@ -162,7 +163,10 @@ export default {
     waitForMe: function(waitType) {
       if (waitType === 'skip') {
         if ( state.orderState === 'closed') {
-          alert("A rendelés már el lett küldve.")
+          notify({
+            type: "warn",
+            text: "A rendelés már el lett küldve.",
+          });
           return;
         }
         socket.emit("Server Basket Update", { "userid": state.user.id, "basket": {}, "order_date": state.selectedDate.toISOString().split('T')[0] });
@@ -170,11 +174,11 @@ export default {
       socket.emit("User Daily State Change",{ 'id': state.user.id, 'new_state':waitType });
     },
     deleteFromBasket: function(itemSizeKey, basketItem) {
-      if ( state.orderState === 'order') {
-        alert("Figyelem! A rendelő elkezdte áthelyezni a falusiba a kosarat és lehet, hogy nem veszi észre, hogy te változtattál a kosaradon. Jelezd neki mielött nem késő!")
-      }
       if ( state.orderState === 'closed') {
-        alert("A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.")
+        notify({
+          type: "warn",
+          text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
+        });
         return;
       }
       if (basketItem.quantity == 1) {
@@ -205,11 +209,11 @@ export default {
         .catch(error => console.error(error));
     },
     clearBasket: function() {
-      if ( state.orderState === 'order') {
-        alert("Figyelem! A rendelő elkezdte áthelyezni a falusiba a kosarat és lehet, hogy nem veszi észre, hogy te változtattál a kosaradon. Jelezd neki mielött nem késő!")
-      }
       if ( state.orderState === 'closed') {
-        alert("A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.")
+        notify({
+          type: "warn",
+          text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
+        });
         return;
       }
       socket.emit("Server Basket Update", { "userid": state.user.id, "basket": {}, "order_date": state.selectedDate.toISOString().split('T')[0] });

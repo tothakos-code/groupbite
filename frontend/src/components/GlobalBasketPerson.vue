@@ -52,6 +52,7 @@
 <script>
 import { state, socket } from "@/socket";
 import { useAuth } from "@/auth";
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
   name: 'PersonComponent',
@@ -107,8 +108,11 @@ export default {
       this.sumTitle = sumTitle;
     },
     copy: function() {
-        alert("Jelentkezz be a rendeléshez");
       if (!this.auth.isLoggedIn.value) {
+        notify({
+          type: "warn",
+          text: "Jelentkezz be a rendeléshez!",
+        });
         return;
       }
       socket.emit("Server Basket Update", { "userid": state.user.id, "basket": this.personBasket, "order_date": state.selectedDate.toISOString().split('T')[0] });

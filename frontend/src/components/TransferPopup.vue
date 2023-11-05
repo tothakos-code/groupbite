@@ -60,6 +60,7 @@ import Popup from './Popup.vue';
 import { state, socket } from "@/socket";
 import { useAuth } from "@/auth";
 import { copyText } from 'vue3-clipboard';
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
   name: 'TransferPopup',
@@ -100,7 +101,10 @@ export default {
               this.showFinish = true;
             } else {
               this.showSpinner = false;
-              alert("Valami hiba történt. Hiba: " + response);
+              notify({
+                type: "error",
+                text: "Valami hiba történt. Hiba: " + response,
+              });
             }
           })
             .catch(error => console.error(error))
@@ -108,7 +112,10 @@ export default {
     },
     openPopup: function() {
       if (state.orderState === 'closed') {
-        alert("Ma már rendeltek!")
+        notify({
+          type: "warn",
+          text: "A rendelést ma már elküldték",
+        });
         return
       } else {
         this.showInitial = true;
@@ -121,10 +128,16 @@ export default {
     doCopy: function() {
       copyText(this.orderDesc, undefined, (error, event) =>{
         if (error) {
-           alert('Can not copy')
+           notify({
+             type: "warn",
+             text: "Nem sikerült a másolás",
+           });
            console.log(error)
          } else {
-           alert('Copied')
+           notify({
+             type: "info",
+             text: "Másolva",
+           });
            console.log(event)
          }
       });

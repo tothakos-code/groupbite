@@ -15,11 +15,14 @@
         </div>
       </div>
       <div class="col-9 col-md-6 col-lg-4 d-flex flex-fill px-0">
-        <Datestamp @selected-date="(date) => this.getHistroy(date)"/>
+
       </div>
     </div>
     <div class="row">
       <div class="col">
+          <div class="">
+            <HistoryDateStamp @selected-date="(date) => this.getHistroy(date)" dateRange="6"/>
+          </div>
           <div class="row d-flex my-1">
             <div class="col text-center align-center">
               <span class="btn pe-none border border-secondary-subtle rounded">{{ totalSum }} Ft</span>
@@ -60,14 +63,14 @@
 </template>
 
 <script>
-import Datestamp from './DateStamp.vue'
+import HistoryDateStamp from './HistoryDateStamp.vue'
 import GlobalBasketPerson from './GlobalBasketPerson.vue'
 import { useAuth } from '@/auth';
 
 export default {
   name: 'FalusiHistroy',
   components: {
-    Datestamp,
+    HistoryDateStamp,
     GlobalBasketPerson
   },
   emits: ['close'],

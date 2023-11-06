@@ -1,11 +1,23 @@
 <template>
-  <Popup  :showModal="show" title="Név választás" @cancel="$emit('cancel')" @confirm="this.saveUsername()">
+  <Popup
+    :show-modal="show"
+    title="Név választás"
+    @cancel="$emit('cancel')"
+    @confirm="saveUsername()"
+  >
     <p>Egy név ami alapján beazonosíthatnak téged.</p>
     <p>Nincs külön regisztráció. A név megadásával már létre is jön a fiókod.</p>
     <p>A fiókodba belépni későb a neved megadásával tudsz.</p>
     <div class="input-group mb-3">
       <span class="input-group-text">Név</span>
-      <input type="text" v-model.trim="username" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+      <input
+        v-model.trim="username"
+        type="text"
+        class="form-control"
+        placeholder="Username"
+        aria-label="Username"
+        aria-describedby="basic-addon1"
+      >
     </div>
   </Popup>
 </template>

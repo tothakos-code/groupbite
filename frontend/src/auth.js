@@ -37,11 +37,3 @@ export function useAuth() {
     login
   }
 }
-export function userColorF(){
-  const userColor = computed(() => {
-    return state.user.ui_color ? state.user.ui_color : "falusi";
-  });
-  return {
-    userColor
-  };
-}

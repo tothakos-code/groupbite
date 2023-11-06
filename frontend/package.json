@@ -1,6 +1,6 @@
 {
   "name": "order-accumulator",
-  "version": "1.2.0",
+  "version": "1.2.1-SNAPSHOT",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -24,7 +24,7 @@
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
     "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^8.0.3",
+    "eslint-plugin-vue": "^8.7.1",
     "sass": "^1.63.6",
     "sass-loader": "^13.3.2"
   },

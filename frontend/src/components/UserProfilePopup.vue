@@ -1,10 +1,22 @@
 <template>
-  <Popup :showModal="show" title="Profil beállítások" @cancel="this.onCancel()" @confirm="this.updateUser()">
+  <Popup
+    :show-modal="show"
+    title="Profil beállítások"
+    @cancel="onCancel()"
+    @confirm="updateUser()"
+  >
     <p>A nevednek a könnyebb beazonosítás miatt egyedinek kell lennie. Használj egy becenevet amiről mindneki tudja, hogy te vagy az.</p>
     <p>A nevedet itt tudod megváltoztatni:</p>
     <div class="input-group mb-3">
       <span class="input-group-text">Név</span>
-      <input type="text" v-model.trim="username" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+      <input
+        v-model.trim="username"
+        type="text"
+        class="form-control"
+        placeholder="Username"
+        aria-label="Username"
+        aria-describedby="basic-addon1"
+      >
     </div>
     <!-- <p>A szabadság táblázatban így szerepel a neved:</p>
     <div class="input-group mb-3">
@@ -13,17 +25,65 @@
     </div> -->
     <span class="input-group-radio">Felület szine:</span>
     <div class="d-flex justify-content-around m-2">
-      <input type="radio" class="btn-check" name="options-outlined" id="falusi-outlined" value="falusi" autocomplete="off" @change="this.onColorChange()" v-model="ui_color">
-      <label class="btn btn-outline-falusi" for="falusi-outlined">Alap</label>
+      <input
+        id="falusi-outlined"
+        v-model="ui_color"
+        type="radio"
+        class="btn-check"
+        name="options-outlined"
+        value="falusi"
+        autocomplete="off"
+        @change="onColorChange()"
+      >
+      <label
+        class="btn btn-outline-falusi"
+        for="falusi-outlined"
+      >Alap</label>
 
-      <input type="radio" class="btn-check" name="options-outlined" id="info-outlined" value="steelblue" autocomplete="off" @change="this.onColorChange()" v-model="ui_color">
-      <label class="btn btn-outline-steelblue" for="info-outlined">Acélkék</label>
+      <input
+        id="info-outlined"
+        v-model="ui_color"
+        type="radio"
+        class="btn-check"
+        name="options-outlined"
+        value="steelblue"
+        autocomplete="off"
+        @change="onColorChange()"
+      >
+      <label
+        class="btn btn-outline-steelblue"
+        for="info-outlined"
+      >Acélkék</label>
 
-      <input type="radio" class="btn-check" name="options-outlined" id="danger-outlined" value="raspberry" autocomplete="off" @change="this.onColorChange()" v-model="ui_color">
-      <label class="btn btn-outline-raspberry" for="danger-outlined">Málna</label>
+      <input
+        id="danger-outlined"
+        v-model="ui_color"
+        type="radio"
+        class="btn-check"
+        name="options-outlined"
+        value="raspberry"
+        autocomplete="off"
+        @change="onColorChange()"
+      >
+      <label
+        class="btn btn-outline-raspberry"
+        for="danger-outlined"
+      >Málna</label>
 
-      <input type="radio" class="btn-check" name="options-outlined" id="warning1-outlined" value="tigragold" autocomplete="off" @change="this.onColorChange()" v-model="ui_color">
-      <label class="btn btn-outline-tigragold" for="warning1-outlined">Tigra</label>
+      <input
+        id="warning1-outlined"
+        v-model="ui_color"
+        type="radio"
+        class="btn-check"
+        name="options-outlined"
+        value="tigragold"
+        autocomplete="off"
+        @change="onColorChange()"
+      >
+      <label
+        class="btn btn-outline-tigragold"
+        for="warning1-outlined"
+      >Tigra</label>
     </div>
   </Popup>
 </template>
@@ -53,6 +113,11 @@ export default {
       vt_name: "",
       theme: "",
       ui_color: ""
+    }
+  },
+  computed: {
+    loggedInUsername() {
+      return state.user.username;
     }
   },
   mounted() {
@@ -101,11 +166,6 @@ export default {
     },
     onColorChange: function() {
       state.user.ui_color = this.ui_color
-    }
-  },
-  computed: {
-    loggedInUsername() {
-      return state.user.username;
     }
   }
 }

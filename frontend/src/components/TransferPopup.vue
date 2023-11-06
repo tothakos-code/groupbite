@@ -122,7 +122,7 @@ export default {
       }
     },
     orderPayed: function() {
-      socket.emit("Ordered and Payed");
+      socket.emit("Ordered and Payed", { date: state.selecedDate });
       this.showFinish = false;
     },
     doCopy: function() {

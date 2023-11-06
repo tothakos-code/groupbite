@@ -63,6 +63,8 @@
             'bg-warning':props.item.type === 'warn',
             'bg-danger':props.item.type === 'error',
             'bg-info-subtle':props.item.type === 'info',
+            'bg-warning-subtle':props.item.type === 'warn' && this.theme === 'dark',
+            'bg-danger-subtle':props.item.type === 'error' && this.theme === 'dark',
           }"
         >
           <p class="title toast-body">
@@ -147,7 +149,10 @@ export default {
       toggleDarkMode,
       userColor
     })
-    return { cookies };
+    return {
+      cookies,
+      theme
+    };
   },
   data() {
     return {

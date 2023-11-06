@@ -14,16 +14,30 @@
             <h2>{{ title }}</h2>
           </div>
           <div class="modal-body">
-            <slot></slot>
+            <slot />
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" @click="$emit('cancel')">Mégse</button>
-            <button class="btn" :class="['btn-' + auth.userColor.value ]" @click="$emit('confirm')">Folytat</button>
+            <button
+              class="btn btn-secondary"
+              @click="$emit('cancel')"
+            >
+              Mégse
+            </button>
+            <button
+              class="btn"
+              :class="['btn-' + auth.userColor.value ]"
+              @click="$emit('confirm')"
+            >
+              Folytat
+            </button>
           </div>
         </div>
       </div>
     </div>
-    <div class="fade" :class="{ show: active, 'modal-backdrop show': active }"></div>
+    <div
+      class="fade"
+      :class="{ show: active, 'modal-backdrop show': active }"
+    />
   </teleport>
 </template>
 
@@ -34,7 +48,7 @@ import { useAuth } from '@/auth';
 export default {
   name: 'BasePopup',
   props: {
-    title: String,
+    title: String(""),
     showModal: Boolean
   },
   emits: ['cancel', 'confirm'],

@@ -2,12 +2,13 @@
   <span
     class="badge p-2 fs-6 bg-secondary align-items-center"
     :class="{
-      'bg-success': this.status === 'collect',
-      'bg-warning': this.status === 'order',
-      'bg-danger': this.status === 'closed'}"
-    :title="this.statusTitle"
-    disabled>
-    {{ this.statusLabel }}
+      'bg-success': status === 'collect',
+      'bg-warning': status === 'order',
+      'bg-danger': status === 'closed'}"
+    :title="statusTitle"
+    disabled
+  >
+    {{ statusLabel }}
   </span>
 </template>
 

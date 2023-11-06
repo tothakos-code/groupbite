@@ -34,7 +34,7 @@
       </button>
     </div>
     <div
-      v-if="auth.isLoggedIn"
+      v-if="auth.isLoggedIn.value"
       class="col"
     >
       <button

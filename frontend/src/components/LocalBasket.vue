@@ -120,6 +120,7 @@
 <script>
 import { socket, state } from "@/socket";
 import { useAuth } from "@/auth";
+import { transportFeePerPerson } from "@/basket";
 import { watch } from "vue";
 import { notify } from "@kyvg/vue3-notification";
 
@@ -152,7 +153,8 @@ export default {
 
     const auth = useAuth();
     return {
-      auth
+      auth,
+      transportFeePerPerson
     }
 
   },
@@ -233,7 +235,7 @@ export default {
       });
       let pearsonCount = Object.keys(state.globalBasket).length;
       if (pearsonCount != 0) {
-        sum += Math.ceil(400/pearsonCount);
+        sum += Math.ceil(this.transportFeePerPerson/pearsonCount);
       }
       return sum;
     },

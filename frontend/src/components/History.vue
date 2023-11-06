@@ -21,23 +21,30 @@
     <div class="row">
       <div class="col">
           <div class="">
-            <HistoryDateStamp @selected-date="(date) => this.getHistroy(date)" dateRange="6"/>
+            <HistoryDateStamp
+              @selected-date="(date) => this.getHistroy(date)"
+              dateRange="6"
+            />
           </div>
           <div class="row d-flex my-1">
             <div class="col text-center align-center">
-              <span class="btn pe-none border border-secondary-subtle rounded">{{ totalSum }} Ft</span>
-            </div>
-            <div class="col text-center">
-              <span class="btn pe-none border border-secondary-subtle rounded">{{ boxCount }} db doboz</span>
-            </div>
-            <div class="col text-center">
               <span class="btn pe-none border border-secondary-subtle rounded">
-                {{ this.transportFeePerPerson }} Ft szállítás díj/fő
+                {{ basketSum }} Ft
               </span>
             </div>
             <div class="col text-center">
               <span class="btn pe-none border border-secondary-subtle rounded">
-                {{ this.personCount }} fő
+                {{ boxCount }} db doboz
+              </span>
+            </div>
+            <div class="col text-center">
+              <span class="btn pe-none border border-secondary-subtle rounded">
+                {{ transportFeePerPerson }} Ft szállítás díj/fő
+              </span>
+            </div>
+            <div class="col text-center">
+              <span class="btn pe-none border border-secondary-subtle rounded">
+                {{ personCount }} fő
               </span>
             </div>
 
@@ -50,7 +57,6 @@
               <GlobalBasketPerson
                 :name="personName"
                 :personBasket="basket"
-                :transportFee='this.transportFeePerPerson'
                 :startCollapsed="true"
                 :collapsable="true"
                 :copyable="false">
@@ -66,6 +72,7 @@
 import HistoryDateStamp from './HistoryDateStamp.vue'
 import GlobalBasketPerson from './GlobalBasketPerson.vue'
 import { useAuth } from '@/auth';
+import { transportFeePerPerson, personCount, basketSum, boxCount } from '@/basket';
 
 export default {
   name: 'FalusiHistroy',
@@ -98,51 +105,15 @@ export default {
   setup() {
     const auth = useAuth();
     return {
-      auth
+      auth,
+      transportFeePerPerson,
+      personCount,
+      basketSum,
+      boxCount
     }
   },
   mounted() {
     this.getHistroy(new Date());
-  },
-  computed: {
-    totalSum() {
-      if (this.personCount == 0) {
-        return 0;
-      }
-      let sum=0;
-      Object.values(this.history).forEach((person) => {
-        Object.values(person).forEach((item) => {
-          sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
-        })
-      })
-      // transport fee, this sould be an constatnt or saved in the db if it changes
-      sum += 400;
-      return sum;
-    },
-    boxCount() {
-      if (!this.history || this.history === undefined || this.history === null) {
-        return 0;
-      }
-      let sum=0;
-      Object.values(this.history).forEach((person) => {
-        Object.values(person).forEach((item) => {
-          sum+= Number(item.quantity);
-        })
-      })
-      return sum;
-    },
-    personCount() {
-      if (!this.history || this.history === undefined || this.history === null) {
-        return 0;
-      }
-      return Object.keys(this.history).length;
-    },
-    transportFeePerPerson() {
-      if (this.personCount == 0) {
-        return 0;
-      }
-      return Math.ceil(400 / this.personCount);
-    }
   }
 }
 </script>

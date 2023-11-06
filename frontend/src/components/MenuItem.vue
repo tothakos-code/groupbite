@@ -87,7 +87,4 @@ export default {
 </script>
 
 <style>
-.responsive-div {
-  flex: 0 0 200px; /* Adjust the width as needed */
-}
 </style>

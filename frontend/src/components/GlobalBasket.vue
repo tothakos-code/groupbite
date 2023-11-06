@@ -14,7 +14,7 @@
             <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
             <path d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2H3z"/>
           </svg>
-          <span>{{ totalSum }} Ft</span>
+          <span>{{ basketSum }} Ft</span>
         </div>
         <div class="col-3 align-items-center p-0 text-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-people mb-1 me-1" viewBox="0 0 16 16">
@@ -61,7 +61,6 @@
         <GlobalBasketPerson
           :name="personName"
           :personBasket="basket"
-          :transportFee='this.transportFeePerPerson'
           :collapsable="false">
         </GlobalBasketPerson>
       </div>
@@ -70,6 +69,7 @@
 
 <script>
 import { state } from "@/socket";
+import { basketSum, personCount } from "@/basket";
 import GlobalBasketPerson from './GlobalBasketPerson.vue'
 
 export default {
@@ -81,6 +81,12 @@ export default {
     return {
       transportFee: 400
     };
+  },
+  setup() {
+    return {
+      basketSum,
+      personCount
+    }
   },
   computed: {
     globalBasket() {
@@ -99,47 +105,7 @@ export default {
         }
       }
       return userStates;
-    },
-    totalSum() {
-      if (this.personCount == 0) {
-        return 0;
-      }
-      let sum=0;
-      Object.values(this.globalBasket).forEach((person) => {
-        Object.values(person).forEach((item) => {
-          sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
-        })
-      })
-      sum += Number(this.transportFee);
-      return sum;
-    },
-    boxCount() {
-      let sum=0;
-      Object.values(this.globalBasket).forEach((person) => {
-        Object.values(person).forEach((item) => {
-          sum+= Number(item.quantity);
-        })
-      })
-      return sum;
-    },
-    personCount() {
-      return Object.keys(state.globalBasket).length;
-    },
-    transportFeePerPerson() {
-      if (this.personCount == 0) {
-        return 0;
-      }
-      return Math.ceil(this.transportFee/ this.personCount);
     }
-  },
-  methods: {
-    // calculateSum: function(personBasket) {
-    //   let sum=0;
-    //   Object.entries(basket).forEach(([id, item]) => {
-    //     sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
-    //   },
-    //   return sum + transportFee;
-    // }
   }
 }
 </script>

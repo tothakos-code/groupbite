@@ -52,6 +52,7 @@
 <script>
 import { state, socket } from "@/socket";
 import { useAuth } from "@/auth";
+import { transportFeePerPerson } from "@/basket";
 import { notify } from "@kyvg/vue3-notification";
 
 export default {
@@ -62,10 +63,6 @@ export default {
     },
     'personBasket':{
       type: Object
-    },
-    'transportFee':{
-      type: Number,
-      default: 400
     },
     'startCollapsed':{
       type: Boolean,
@@ -85,28 +82,14 @@ export default {
       sum: 0
     };
   },
-  mounted() {
-    this.calculateSum()
-  },
   setup() {
     const auth = useAuth();
     return {
-      auth
+      auth,
+      transportFeePerPerson
     };
   },
   methods: {
-    calculateSum: function() {
-      let sum=0;
-      let sumTitle = ""
-      Object.entries(this.personBasket).forEach(([id,item]) => {
-        console.log(id);
-        sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
-        sumTitle+= item.quantity + '*' + item.price + ' + ';
-      })
-      this.sum = sum + Number(this.transportFee);
-      sumTitle+= this.transportFee + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
-      this.sumTitle = sumTitle;
-    },
     copy: function() {
       if (!this.auth.isLoggedIn.value) {
         notify({
@@ -116,19 +99,19 @@ export default {
         return;
       }
       socket.emit("Server Basket Update", { "userid": state.user.id, "basket": this.personBasket, "order_date": state.selectedDate.toISOString().split('T')[0] });
+      notify({
+        type: "info",
+        text: "Másolva",
+      });
     }
   },
   computed: {
     basketTotal() {
       let sum=0;
-      // let sumTitle = ""
       Object.values(this.personBasket).forEach((item) => {
         sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
-        // sumTitle+= item.quantity + '*' + item.price + ' + ';
       })
-      sum += Number(this.transportFee);
-      // sumTitle+= this.transportFee + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
-      // this.sumTitle = sumTitle;
+      sum += Number(this.transportFeePerPerson);
       return sum;
     },
     basketTotalTitle() {
@@ -136,7 +119,7 @@ export default {
       Object.values(this.personBasket).forEach((item) => {
         sumTitle+= item.quantity + '*' + item.price + ' + ';
       })
-      sumTitle+= this.transportFee + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
+      sumTitle+= this.transportFeePerPerson + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
       return sumTitle;
     },
     loggedInUser() {
@@ -150,11 +133,4 @@ export default {
 </script>
 
 <style>
-.globalList div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px;
-  border: 1px solid #ccc;
-}
 </style>

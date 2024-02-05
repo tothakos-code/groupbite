@@ -5,3 +5,4 @@ app/services/__pycache__
 db/data/
 .env
 env/
+plugins/*

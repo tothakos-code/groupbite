@@ -1,24 +1,24 @@
 from flask import Blueprint, request
-from entities.order import Order, OrderSchema, order_state_type
+from flask_socketio import join_room, leave_room
 from collections import Counter
-
 import requests, json, re
 import logging
 from datetime import date, timedelta, datetime
 from sqlalchemy import func, cast
-from entities.entity import Session
-from __main__ import socketio
-from flask_socketio import join_room, leave_room
-from services.order_service import OrderService
-from services.user_service import UserService
-from services.menu_service import MenuService
+
+from app.controllers import order_blueprint
+from app.socketio_singleton import SocketioSingleton
+from app.entities.order import Order, OrderState
+from app.entities import Session
+from app.services.order_service import OrderService
+from app.services.user_service import UserService
+from app.services.menu_service import MenuService
 
 sidfdpattern = r"\/sidfd-[0-9]+\/"
+socketio = SocketioSingleton.get_instance()
 
-order_controller = Blueprint('order_controller', __name__, url_prefix='/order')
-
-@order_controller.route('/history/<requested_date>')
-@order_controller.route('/history', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
+@order_blueprint.route('/history/<requested_date>')
+@order_blueprint.route('/history', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
 def handle_order_history(requested_date):
     session = Session()
     order_history = session.query(Order).filter(Order.order_date == requested_date).first()
@@ -29,12 +29,12 @@ def handle_order_history(requested_date):
     return OrderService.replace_userid_with_username(requested_date)
 
 
-@order_controller.route('/get-order-state')
+@order_blueprint.route('/get-order-state')
 def handle_get_order_state():
     return json.dumps({"order_state":OrderService.get_order_state()})
 
 
-@order_controller.route('/get-all-order-date')
+@order_blueprint.route('/get-all-order-date')
 def handle_get_all_order_date():
     session = Session()
     order_dates = session.query(Order.order_date).filter(Order.basket != {}).all()
@@ -42,13 +42,13 @@ def handle_get_all_order_date():
     return [str(order[0]) for order in order_dates]
 
 
-@order_controller.route('/get-user-basket', methods=['POST'])
+@order_blueprint.route('/get-user-basket', methods=['POST'])
 def handle_get_user_basket():
     USER = request.json['user']
     DATE = request.json['date']
     return OrderService.get_user_basket(USER,DATE)
 
-@order_controller.route('/get-user-basket-between', methods=['POST'])
+@order_blueprint.route('/get-user-basket-between', methods=['POST'])
 def handle_get_user_basket_between():
     USER = request.json['user']
     DATE_FROM = request.json['date_from']
@@ -56,7 +56,7 @@ def handle_get_user_basket_between():
     return OrderService.get_user_basket_between(UserService.username_to_id(USER), DATE_FROM, DATE_TO)
 
 
-@order_controller.route('/migrate-basket', methods=['GET'])
+@order_blueprint.route('/migrate-basket', methods=['GET'])
 def handle_basket_migration():
     return str(OrderService.migrate_to_userid_based_order(date.today().strftime('%Y-%m-%d')))
 
@@ -80,7 +80,7 @@ def handle_basket_update(data):
 
     # Check if update is possible
     order_state = OrderService.get_order_state(basket_date)
-    if order_state == str(order_state_type.closed):
+    if order_state == str(OrderState.CLOSED):
         socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(basket_date) }, to=basket_date)
         socketio.emit("Order state changed", order_state, room=request.sid)
         return
@@ -103,13 +103,13 @@ def handle_payed(data):
     order_date = str(data['date'])
     session = Session()
     order_state = session.query(Order).filter(Order.order_date == order_date).first()
-    order_state.order_state = order_state_type.closed
+    order_state.order_state = OrderState.CLOSED
     session.commit()
     session.close()
-    socketio.emit("Order state changed", str(order_state_type.closed))
+    socketio.emit("Order state changed", str(OrderState.CLOSED))
 
 
-@order_controller.route('/transferBasket', methods=['POST'])
+@order_blueprint.route('/transferBasket', methods=['POST'])
 def call_transfer_basket():
     PHPSESSIONID = request.json['psid']
     ORDER_DATE = request.json['order_date']
@@ -118,7 +118,7 @@ def call_transfer_basket():
     links = MenuService.get_all_fdid_with_link()
 
 
-    OrderService.set_order_state(order_state_type.order, ORDER_DATE)
+    OrderService.set_order_state(OrderState.ORDER, ORDER_DATE)
     logging.info("Order status changet to 'order'")
     socketio.emit("Order state changed", "order")
 

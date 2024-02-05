@@ -1,22 +1,26 @@
-from flask import Blueprint, request
-from entities.menu import Menu, MenuSchema
-
-import requests,json,re
 from bs4 import BeautifulSoup
-import logging
+from flask import Blueprint, request
 from datetime import date, timedelta, datetime
 from sqlalchemy import func, cast
-from entities.entity import Session
-from services.menu_service import MenuService
+import requests,json,re
+import logging
+
+from app.controllers import menu_blueprint
+from app.entities.menu import Menu
+from app.entities import Session
+from app.services.menu_service import MenuService
+from app.services.vendor_service import VendorService
+from app.vendor_factory import VendorFactory
+from app.base_vendor import BaseVendor
 
 target_url = 'https://falusitekercsgyorsetterem.pgg.hu/falusitekercsgyorsetterem/etlap/'
 
 napok = ["hetfoi","keddi", "szerdai","csutortoki","penteki","szombati","vasarnapi"]
 fdidpattern = r"\/fdid-[0-9]+\/"
 
-menu_controller = Blueprint('menu_controller', __name__, url_prefix='/menu')
 
-@menu_controller.route('/update-all')
+
+@menu_blueprint.route('/update-all')
 def add_or_update_all_menu():
     # Requesting and parsing the HTML
     result = requests.get(target_url)
@@ -32,7 +36,7 @@ def add_or_update_all_menu():
 
     session = Session()
     while (start_date <= end_date):
-        logging.warning(start_date)
+        logging.warning("Updating menu " + start_date)
         new_menu = fetch_a_day(soup, napok[start_date.weekday()])
 
         # selecting current day
@@ -52,17 +56,29 @@ def add_or_update_all_menu():
     session.close()
     return "Menu updated succesfully", 201
 
+@menu_blueprint.route('/update/<vendor_id>')
+def update_menu(vendor_id):
+    vendor = VendorFactory.get_one_vendor_object(int(vendor_id))
+    if vendor:
+        logging.warning(vendor)
+        vendor.scan()
+        return "Vendor scan ran for " + str(vendor.id) + " id", 201
 
-@menu_controller.route('/get', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
-@menu_controller.route('/get/<requested_date>')
+    else:
+        return "No vendor with that id", 404
+
+
+@menu_blueprint.route('/get', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
+@menu_blueprint.route('/get/<requested_date>')
 def get_requested_menu(requested_date=date.today().strftime('%Y-%m-%d')):
     requested_menu = MenuService.get_menu_by_date(requested_date)
     if requested_menu:
         return json.dumps(requested_menu.menu)
     return []
 
-@menu_controller.route('/get_week', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
-@menu_controller.route('/get_week/<requested_date>')
+
+@menu_blueprint.route('/get_week', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
+@menu_blueprint.route('/get_week/<requested_date>')
 def get_week_requested_menu(requested_date=date.today().strftime('%Y-%m-%d')):
     # start of the week:
     today = date.today()

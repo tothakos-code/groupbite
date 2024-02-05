@@ -1,16 +1,18 @@
 from flask import Blueprint, request
-from entities.user import User, UserSchema, subscribe_type
-from entities.entity import Session
-from sqlalchemy import func, cast, update
-import logging
-from __main__ import socketio
 from flask_socketio import rooms
-from services.user_service import UserService
-from services.order_service import OrderService
+from sqlalchemy import func, cast, update
 from datetime import datetime
+import logging
 
+from app.controllers import user_blueprint
+from app.socketio_singleton import SocketioSingleton
+from app.entities import Session
+from app.entities.subscribed import SubscriptionType
+from app.entities.user import User
+from app.services.user_service import UserService
+from app.services.order_service import OrderService
 
-user_controller = Blueprint('user_controller', __name__, url_prefix='/user')
+socketio = SocketioSingleton.get_instance()
 
 @socketio.on('User Login')
 def handle_user_login(user):
@@ -35,10 +37,10 @@ def handle_user_update(user):
     user_to_update = session.query(User).filter(User.id == user['id']).first()
 
     if 'subscribed' in user:
-        if user['subscribed'] == 'none':
-            user_to_update.subscribed = subscribe_type.none
+        # if user['subscribed'] == 'none':
+        #     user_to_update.subscribed = SubscriptionType.none
         if user['subscribed'] == 'full':
-            user_to_update.subscribed = subscribe_type.full
+            user_to_update.subscribed = SubscriptionType.SUB
 
     if 'username' in user:
         is_username_valid, error = UserService.is_username_valid(user['username'])
@@ -70,16 +72,16 @@ def handle_user_update(user):
     return json_to_return
 
 
-@user_controller.route("/cron/clear_users_temp_state")
+@user_blueprint.route("/cron/clear_users_temp_state")
 def cron_clear_users_temp_state():
-    session = Session()
-    session.query(User).update({User.daily_state: str(subscribe_type.none)})
-    session.commit()
-    session.close()
+    # session = Session()
+    # # session.query(User).update({User.daily_state: str(SubscriptionType.none)})
+    # session.commit()
+    # session.close()
     emit_user_ds_state()
     return "OK", 200
 
-@user_controller.route("/get/<id>")
+@user_blueprint.route("/get/<id>")
 def handle_get_user_by_id(id):
     user = UserService.get_user_by_id(id)
     if not user:

@@ -59,7 +59,7 @@ services:
     build: ./db/
     restart: on-failure
     ports:
-     - ${FALU_DB_PORT}:5432
+     - ${POSTGRES_PORT}:5432
     networks:
       falu_net:
     env_file:

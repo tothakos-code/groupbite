@@ -18,6 +18,9 @@ def create_app(debug=False):
 
     application = Flask(__name__)
     application.config['SECRET_KEY'] = 'secret!'
+
+    import app.create_tables
+
     from app.socketio_singleton import SocketioSingleton
     socketio = SocketioSingleton.get_instance()
     socketio.init_app(

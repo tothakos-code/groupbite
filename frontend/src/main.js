@@ -26,7 +26,7 @@ import VueClipboard from 'vue3-clipboard';
 import Notifications from '@kyvg/vue3-notification';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap.js';
-import './assets/scss/main.scss'
+import './assets/scss/main.scss';
 
 let app = createApp(App);
 

@@ -1,6 +1,8 @@
 from flask import Flask
 import logging
 
+from app.services.vendor_service import VendorService
+from app.vendor_factory import VendorFactory
 
 from app.controllers import main_blueprint
 from app.controllers import menu_blueprint
@@ -21,6 +23,8 @@ def create_app(debug=False):
 
     import app.create_tables
 
+    loader.load_plugins(["plugins.falusi","plugins.makkos"])
+
     from app.socketio_singleton import SocketioSingleton
     socketio = SocketioSingleton.get_instance()
     socketio.init_app(
@@ -29,6 +33,9 @@ def create_app(debug=False):
         port=5000,
         debug=True,
         allow_unsafe_werkzeug=True)
+
+    import app.controllers.main_controller
+    application.register_blueprint(main_blueprint)
     import app.controllers.menu_controller
     application.register_blueprint(menu_blueprint)
     import app.controllers.order_controller

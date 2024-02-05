@@ -18,6 +18,14 @@ def create_app(debug=False):
 
     application = Flask(__name__)
     application.config['SECRET_KEY'] = 'secret!'
+    from app.socketio_singleton import SocketioSingleton
+    socketio = SocketioSingleton.get_instance()
+    socketio.init_app(
+        application,
+        host='0.0.0.0',
+        port=5000,
+        debug=True,
+        allow_unsafe_werkzeug=True)
     import app.controllers.menu_controller
     application.register_blueprint(menu_blueprint)
     import app.controllers.order_controller

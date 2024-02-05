@@ -7,7 +7,7 @@ services:
       context: ./frontend/
       target: "${FALU_ENV}"
     depends_on:
-      - backend
+      - database
       - nginx
     restart: on-failure
     volumes:

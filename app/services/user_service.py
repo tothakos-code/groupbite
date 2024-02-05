@@ -1,6 +1,7 @@
-from entities.user import User, UserSchema, subscribe_type, daily_state_type
 from datetime import date, timedelta, datetime
-from entities.entity import Session
+from app.entities import Session
+from app.entities.user import User
+from app.entities.subscribed import SubscriptionType
 
 class UserService:
     """docstring for UserService."""

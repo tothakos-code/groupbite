@@ -1,12 +1,11 @@
-from entities.menu import Menu, MenuSchema
 from datetime import date, timedelta, datetime
-from entities.entity import Session
+from app.entities import session
+from app.entities.menu import Menu
 
 class MenuService:
     """docstring for UserService."""
     def get_menu_by_date(requested_date=date.today().strftime('%Y-%m-%d')):
         # fetching from the database
-        session = Session()
         requested_menu = session.query(Menu).filter(Menu.menu_date == requested_date).first()
         session.close()
         return requested_menu
@@ -20,7 +19,6 @@ class MenuService:
 
 
         # fetching from the database
-        session = Session()
         menus = session.query(Menu).filter(Menu.menu_date.between(start_date,end_date))
         session.close()
         result = {}
@@ -53,7 +51,6 @@ class MenuService:
 
 
         # fetching from the database
-        session = Session()
         menus = session.query(Menu).filter(Menu.menu_date.between(start_date,end_date))
         session.close()
         result = {}

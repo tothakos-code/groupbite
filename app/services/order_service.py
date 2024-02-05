@@ -1,11 +1,11 @@
-from entities.order import Order, OrderSchema, order_state_type
 from datetime import date, timedelta, datetime
-from entities.entity import Session
-
-from services.user_service import UserService
-from services.menu_service import MenuService
-
 import logging
+
+from app.entities import Session
+from app.entities.order import Order, OrderState
+from app.services.user_service import UserService
+from app.services.menu_service import MenuService
+
 
 class OrderService:
     """docstring for OrderService."""
@@ -39,9 +39,7 @@ class OrderService:
         return True
 
     def replace_userid_with_username(order_date):
-        session = Session()
-        order = session.query(Order).filter(Order.order_date == order_date).first()
-        session.close()
+        order = Order.find_open_order_by_date_for_a_vendor("de06edb7-24db-4869-b476-0ca14d4f1cb6", order_date)
         if not order:
             return {}
         basket = order.basket
@@ -96,7 +94,7 @@ class OrderService:
         order_state = session.query(Order).filter(Order.order_date == order_date).first()
         session.close()
         if not order_state:
-            return str(order_state_type.collect)
+            return str(OrderState.COLLECT)
 
         return str(order_state.order_state)
 
@@ -107,7 +105,7 @@ class OrderService:
         order = session.query(Order).filter(Order.order_date == order_date).first()
         if not order:
             session.close()
-            return str(order_state_type.collect)
+            return str(OrderState.COLLECT)
 
         order.order_state = new_state
         session.commit()

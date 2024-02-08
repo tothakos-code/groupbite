@@ -3,18 +3,18 @@
     <div class="p-0 m-0 align-items-start">
       <ul class="list-group">
         <a
-          v-for="(vendor_obj, vendor_name) in vendors"
-          :key="vendor_name"
+          v-for="vendor in vendors"
+          :key="vendor.name"
           class="list-group-item border rounded rounded-circle p-auto mt-2 mx-auto"
           style="width: 3rem; height: 3rem;"
-          :style="'background-color: ' + backgroundColor(vendor_obj.name, 30, 80) + ';'"
-          :onmouseover="'this.style.backgroundColor=\'' + backgroundColor(vendor_obj.name, 30, 70)+'\''"
-          :onmouseout="'this.style.backgroundColor=\'' + backgroundColor(vendor_obj.name, 30, 80)+'\''"
-          :title="vendor_obj.name"
-          @click="switchVendor(vendor_obj.name)"
+          :style="'background-color: ' + backgroundColor(vendor.name, 30, 80) + ';'"
+          :onmouseover="'this.style.backgroundColor=\'' + backgroundColor(vendor.name, 30, 70)+'\''"
+          :onmouseout="'this.style.backgroundColor=\'' + backgroundColor(vendor.name, 30, 80)+'\''"
+          :title="vendor.name"
+          @click="switchVendor(vendor.name)"
         >
           <span class="text fs-4 text-center text-truncate m-auto">
-            {{ firstChar(vendor_obj.name) }}
+            {{ firstChar(vendor.name) }}
           </span>
         </a>
       </ul>
@@ -36,18 +36,17 @@ export default {
   },
   methods: {
     fetch_vendors: function() {
-      fetch(`http://${window.location.host}/api/get_vendors`,{
+      fetch(`http://${window.location.host}/get_vendors`,{
         method: "GET",
       })
         .then(response => response.json())
           .then(data => {
             this.vendors = data;
-            for (const [key, value] of Object.entries(this.vendors)) {
-              value.configuration = JSON.parse(value.configuration);
-              value.component = import("@/../../plugins/falusi/frontend/App.vue")
-              console.log(key, value);
-            }
+            this.vendors.forEach((item) => {
+              item.component = import("@/../../plugins/"+item.name+"/frontend/App.vue")
 
+            });
+            console.log(this.vendors);
           })
         .catch(error => console.error('Error fecthing vendors:',error));
     },

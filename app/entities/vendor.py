@@ -1,5 +1,5 @@
 from enum import Enum as pyenum
-from . import Base
+from . import Base, session
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -23,13 +23,16 @@ class Vendor(Base):
 
     orders: Mapped[List["Order"]] = relationship(back_populates="vendor")
 
-    def __repr__():
+    def __repr__(self):
         return f"Vendor<id={self.id},name={self.name},type={str(self.type)}>"
+
+    def find_all():
+        return session.query(Vendor).all()
 
     @property
     def serialized(self):
         return {
-            'id': self.id,
+            'id': str(self.id),
             'name': self.name,
             'type': str(self.type)
         }

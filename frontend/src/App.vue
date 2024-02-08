@@ -27,7 +27,7 @@
           </div>
         </div>
       </div>
-      <div
+      <!-- <div
         v-if="isDataLoaded"
         class="row d-flex"
       >
@@ -62,8 +62,8 @@
             <GlobalBasket />
           </div>
         </div>
-      </div>
-
+      </div> -->
+      <!--
       <div
         v-else
         class="row col d-flex justify-content-center align-items-center"
@@ -72,7 +72,7 @@
           class="spinner-border"
           style="width: 3rem; height: 3rem;"
         />
-      </div>
+      </div> -->
     </div>
     <notifications
       position="top center"
@@ -146,11 +146,11 @@
 
 <script>
 import UserMenu from './components/UserMenu.vue'
-import Menu from './components/Menu.vue'
+// import Menu from './components/Menu.vue'
 import Sidebar from './components/Sidebar.vue'
-import History from './components/History.vue'
-import LocalBasket from './components/LocalBasket.vue'
-import GlobalBasket from './components/GlobalBasket.vue'
+// import History from './components/History.vue'
+// import LocalBasket from './components/LocalBasket.vue'
+// import GlobalBasket from './components/GlobalBasket.vue'
 import OrderState from './components/OrderState.vue'
 import UserControllPanel from './components/UserControllPanel.vue'
 import { state, socket } from "@/socket";
@@ -167,12 +167,12 @@ export default {
   components: {
     UserMenu,
     UserControllPanel,
-    Menu,
+    // Menu,
     Sidebar,
-    History,
+    // History,
     OrderState,
-    LocalBasket,
-    GlobalBasket
+    // LocalBasket,
+    // GlobalBasket
   },
   setup() {
     const { cookies } = useCookies();

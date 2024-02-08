@@ -11,5 +11,10 @@ module.exports = defineConfig({
       return args;
     });
   },
+  configureWebpack: {
+    devServer: {
+      historyApiFallback: true
+    }
+  },
   transpileDependencies: true
 });

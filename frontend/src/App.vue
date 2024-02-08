@@ -150,8 +150,7 @@
 import UserMenu from './components/UserMenu.vue'
 // import Menu from './components/Menu.vue'
 import Sidebar from './components/Sidebar.vue'
-import HomeComponent from './components/HomeComponent.vue'
-import HomeTwoComponent from './components/HomeTwoComponent.vue'
+// import HomeComponent from './components/HomeComponent.vue'
 // import History from './components/History.vue'
 // import LocalBasket from './components/LocalBasket.vue'
 // import GlobalBasket from './components/GlobalBasket.vue'
@@ -171,8 +170,7 @@ export default {
   components: {
     UserMenu,
     UserControllPanel,
-    HomeComponent,
-    HomeTwoComponent,
+    // HomeComponent,
     // Menu,
     Sidebar,
     // History,

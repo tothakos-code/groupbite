@@ -36,6 +36,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 
 export default {
   name: 'SidebarMenu',
@@ -49,19 +50,17 @@ export default {
   },
   methods: {
     fetch_vendors: function() {
-      fetch(`http://${window.location.host}/get_vendors`,{
-        method: "GET",
-      })
-        .then(response => response.json())
-          .then(data => {
-            this.vendors = data;
-            this.vendors.forEach((item) => {
-              item.component = import("@/../../plugins/"+item.name+"/frontend/App.vue")
+      axios.get(`http://${window.location.host}/api/vendor/find-all-active`)
+        .then(response => {
+          this.vendors = response.data;
+          this.vendors.forEach((item) => {
+            item.component = import("@/../../plugins/"+item.name+"/frontend/App.vue")
 
-            });
-            console.log(this.vendors);
-          })
-        .catch(error => console.error('Error fecthing vendors:',error));
+          });
+          console.log(this.vendors);
+
+        })
+        .catch(error => console.error('Error fecthing vendors: ', error));
     },
     firstChar: function(string) {
       return string.charAt(0);

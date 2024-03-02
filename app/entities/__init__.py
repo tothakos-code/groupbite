@@ -17,7 +17,7 @@ DB_NAME = getenv('POSTGRES_DB_NAME')
 
 DB_URL = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 
-engine = create_engine(DB_URL, pool_size=20, max_overflow=20, echo=True)
+engine = create_engine(DB_URL, pool_size=20, max_overflow=20, echo=False)
 session = Session(bind=engine)
 
 class Base(DeclarativeBase):

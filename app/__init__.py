@@ -5,6 +5,7 @@ from app.services.vendor_service import VendorService
 from app.vendor_factory import VendorFactory
 
 from app.controllers import main_blueprint
+from app.controllers import vendor_blueprint
 from app.controllers import menu_blueprint
 from app.controllers import order_blueprint
 from app.controllers import user_blueprint
@@ -36,6 +37,8 @@ def create_app(debug=False):
 
     import app.controllers.main_controller
     application.register_blueprint(main_blueprint)
+    import app.controllers.vendor_controller
+    application.register_blueprint(vendor_blueprint)
     import app.controllers.menu_controller
     application.register_blueprint(menu_blueprint)
     import app.controllers.order_controller

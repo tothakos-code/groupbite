@@ -1,13 +1,13 @@
 <template>
-  <div class="row">
+  <div class="row col d-flex min-vh-100 h-auto">
     <Sidebar />
-    <div class="col w-100 pt-2 flex-grow-1 ">
-      <div class="row bg-body-secondary d-flex justify-content-between rounded mx-0 px-0 pt-2 pb-2">
+    <div class="col px-0 w-100 flex-grow-1">
+      <div class="row bg-body-secondary d-flex justify-content-between mx-0 px-0">
         <div class="col-11 col-md-7 row d-flex justify-content-between">
           <div class="col-8 row d-flex justify-content-start align-items-center">
-            <h1 class="text-truncate">
+            <h2 class="text-truncate">
               Falusi rendelő
-            </h1>
+            </h2>
           </div>
           <div class="col-3 d-flex align-items-center d-none">
             <span class="col text-danger fs-5 text-truncate">{{ banner() }}</span>
@@ -27,54 +27,41 @@
           </div>
         </div>
       </div>
-      <router-view />
-
-      <!-- <div
-        v-if="isDataLoaded"
-        class="row d-flex"
-      >
-        <div class="col-md-7 col-sm-12">
-          <div class="row p-2">
-            <div
-              v-if="showGlobalMessage"
-              class="col col-md-3 d-flex flex-fill justify-content-start align-items-center bg-warning bg-opacity-10 border border-warning rounded mb-2"
-            >
-              Figyelem! A Dátum választó működése megváltozott. Mostmár a rendelés dátumát állítja, mellyel a hét többi napjára is leadhatod rendelésed előre. Ha másik nap menüjéből szeretnél választani használ alatta a menü választót.
-              <i
-                class="border border-warning rounded p-1"
-                @click="dismissGlobalMessage()"
-              >bezár</i>
-            </div>
-            <Menu
-              v-if="showMenu"
-              key="0"
-            />
-            <GlobalBasket class="mt-2 d-md-none" />
-            <History
-              v-if="showHistroy"
-              @close="toMenu()"
-            />
-          </div>
+      <router-view class="row ps-2" />
+      <div class="row mt-auto p-3 m-0 bg-body-tertiary">
+        <div class="row d-flex justify-content-between text-body-secondary">
+          <span class="col text-center">
+            Készítette:
+            <a
+              class="link-secondary"
+              target="_blank"
+              href="https://www.buymeacoffee.com/tothakos"
+            >Tóth Ákos</a>
+          </span>
+          <span class="col text-center">
+            <a
+              class="link-secondary"
+              target="_blank"
+              href="https://github.com/tothakos-code/order-accumulator"
+            >Forráskód</a>
+          </span>
+          <span class="col text-center">
+            <a
+              class="link-secondary"
+              target="_blank"
+              href="https://docs.google.com/document/d/1x9Wvp5DPZun5OCcNV1B2limlL940EAX6gm03St_Hw-c/edit?usp=sharing"
+            >Felhasználói kézikönyv</a>
+          </span>
+          <span class="col text-center">
+            <a
+              class="link-secondary"
+              target="_blank"
+              :href="'https://github.com/tothakos-code/order-accumulator/releases/tag/' + showVersion()"
+            >Változásnapló</a>
+          </span>
+          <span class="col text-center">Verzió: {{ showVersion() }}</span>
         </div>
-        <div class="my-sticky-container col-12 col-md-5 order-first order-md-last">
-          <div class="row p-2 ">
-            <LocalBasket />
-          </div>
-          <div class="row p-2 d-none d-md-flex">
-            <GlobalBasket />
-          </div>
-        </div>
-      </div> -->
-      <!--
-      <div
-        v-else
-        class="row col d-flex justify-content-center align-items-center"
-      >
-        <div
-          class="spinner-border"
-          style="width: 3rem; height: 3rem;"
-        />
-      </div> -->
+      </div>
     </div>
     <notifications
       position="top center"
@@ -108,52 +95,13 @@
         </div>
       </template>
     </notifications>
-    <div class="footer row mt-auto p-3 bg-body-tertiary">
-      <div class="row d-flex justify-content-between text-body-secondary">
-        <span class="col text-center">
-          Készítette:
-          <a
-            class="link-secondary"
-            target="_blank"
-            href="https://www.buymeacoffee.com/tothakos"
-          >Tóth Ákos</a>
-        </span>
-        <span class="col text-center">
-          <a
-            class="link-secondary"
-            target="_blank"
-            href="https://github.com/tothakos-code/order-accumulator"
-          >Forráskód</a>
-        </span>
-        <span class="col text-center">
-          <a
-            class="link-secondary"
-            target="_blank"
-            href="https://docs.google.com/document/d/1x9Wvp5DPZun5OCcNV1B2limlL940EAX6gm03St_Hw-c/edit?usp=sharing"
-          >Felhasználói kézikönyv</a>
-        </span>
-        <span class="col text-center">
-          <a
-            class="link-secondary"
-            target="_blank"
-            :href="'https://github.com/tothakos-code/order-accumulator/releases/tag/' + showVersion()"
-          >Változásnapló</a>
-        </span>
-        <span class="col text-center">Verzió: {{ showVersion() }}</span>
-      </div>
-    </div>
   </div>
 </template>
 
 
 <script>
 import UserMenu from './components/UserMenu.vue'
-// import Menu from './components/Menu.vue'
 import Sidebar from './components/Sidebar.vue'
-// import HomeComponent from './components/HomeComponent.vue'
-// import History from './components/History.vue'
-// import LocalBasket from './components/LocalBasket.vue'
-// import GlobalBasket from './components/GlobalBasket.vue'
 import OrderState from './components/OrderState.vue'
 import UserControllPanel from './components/UserControllPanel.vue'
 import { state, socket } from "@/socket";
@@ -170,13 +118,8 @@ export default {
   components: {
     UserMenu,
     UserControllPanel,
-    // HomeComponent,
-    // Menu,
     Sidebar,
-    // History,
     OrderState,
-    // LocalBasket,
-    // GlobalBasket
   },
   setup() {
     const { cookies } = useCookies();

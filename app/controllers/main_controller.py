@@ -18,38 +18,16 @@ socketio = SocketioSingleton.get_instance()
 @main_blueprint.route('/', defaults={'path': ''})
 @main_blueprint.route('/<path:path>')
 def catch_all(path):
+    logging.info('Redirecting to Frontned...')
     if True:
-        return requests.get('http://127.0.0.1:8080/{}'.format(path)).text
+        # This is for developer mode only
+        return requests.get('http://127.0.0.1:8080/{0}'.format(path)).text
     return render_template('../../frontend/dist/index.html')
-
 
 @main_blueprint.route("/cron/new_day_refresh")
 def cron_new_day_refresh():
     socketio.emit('Refresh!')
     return "Refreshed", 200
-
-@main_blueprint.route('/get_vendors')
-def handle_get_vendors():
-    result = []
-    for a in Vendor.find_all():
-        result.append(a.serialized)
-    return json.dumps(result)
-
-@main_blueprint.route('/get_vendors_obj')
-def handle_get_vendors_obj():
-    string = str(len(VendorFactory.get_vendor_objects())) + "//"
-    for key,value in VendorFactory.get_vendor_objects().items():
-        string += str(value.id)
-        string += "-"
-        string += value.code_name
-        string += ',\n'
-    return string
-
-@main_blueprint.route('/clearclientsbasket')
-def call_clear_clients_basket():
-    socketio.emit('Clear Local Basket')
-    return "OK"
-
 
 @socketio.on('connect')
 def handle_connect(auth=None):

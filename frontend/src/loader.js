@@ -1,6 +1,6 @@
 
 export function register_plugin_routes(router) {
-  fetch(`http://${window.location.host}/get_vendors`,{
+  fetch(`http://${window.location.host}/api/vendor/find-all-active`,{
     method: "GET",
   })
     .then(response => response.json())

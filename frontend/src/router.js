@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeComponent from "./components/HomeComponent.vue";
+import AdminView from "./views/Admin.vue";
 
 const routes = [
   {
@@ -18,6 +19,11 @@ const routes = [
     params: {
       id: 'home'
     }
+  },
+  {
+    name: 'admin',
+    path: '/admin',
+    component: AdminView,
   },
 ];
 const router = createRouter({

@@ -12,3 +12,6 @@ class BaseVendor(object):
 
     def test(self):
         raise NotImplementedError("Subclasses must implement the scan method")
+
+    def get(self):
+        raise NotImplementedError("Subclasses must implement the scan method")

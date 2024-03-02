@@ -9,6 +9,7 @@ from sqlalchemy import func, cast
 from app.controllers import order_blueprint
 from app.socketio_singleton import SocketioSingleton
 from app.entities.order import Order, OrderState
+from app.entities.user_basket import UserBasket
 from app.entities import Session
 from app.services.order_service import OrderService
 from app.services.user_service import UserService
@@ -28,12 +29,12 @@ def handle_order_history(requested_date):
     OrderService.migrate_to_userid_based_order(requested_date)
     return OrderService.replace_userid_with_username(requested_date)
 
-
-@order_blueprint.route('/get-order-state')
+# TODO: implement this
+# @order_blueprint.route('/get-order-state')
 def handle_get_order_state():
     return json.dumps({"order_state":OrderService.get_order_state()})
 
-
+# TODO: Find all order with orderd state
 @order_blueprint.route('/get-all-order-date')
 def handle_get_all_order_date():
     session = Session()
@@ -41,13 +42,14 @@ def handle_get_all_order_date():
     session.close()
     return [str(order[0]) for order in order_dates]
 
+@order_blueprint.route('/<order_id>/get-basket', methods=['GET'])
+def handle_get_basket(order_id):
+    result = []
+    for basket_entry in UserBasket.find_items_by_order(order_id):
+        result.append(basket_entry.basket_format)
+    return json.dumps(result)
 
-@order_blueprint.route('/get-user-basket', methods=['POST'])
-def handle_get_user_basket():
-    USER = request.json['user']
-    DATE = request.json['date']
-    return OrderService.get_user_basket(USER,DATE)
-
+# TODO: implement this, was there an order for a user
 @order_blueprint.route('/get-user-basket-between', methods=['POST'])
 def handle_get_user_basket_between():
     USER = request.json['user']
@@ -55,47 +57,59 @@ def handle_get_user_basket_between():
     DATE_TO = request.json['date_to']
     return OrderService.get_user_basket_between(UserService.username_to_id(USER), DATE_FROM, DATE_TO)
 
-
+# TODO: Delet this
 @order_blueprint.route('/migrate-basket', methods=['GET'])
 def handle_basket_migration():
     return str(OrderService.migrate_to_userid_based_order(date.today().strftime('%Y-%m-%d')))
 
-
-@socketio.on('Client Date Selection Change')
+# TODO: Upgrade this
+# @socketio.on('Client Date Selection Change')
 def handle_date_selection_change(data):
     new_date = data['selected_date']
     old_date = data['old_selected_date']
     leave_room(old_date)
     join_room(new_date)
-    socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(new_date) }, to=request.sid)
+    socketio.emit('Client Basket Update', {'basket': OrderService.get_formated_full_basket(order_id) }, to=request.sid)
     socketio.emit("Order state changed", OrderService.get_order_state(new_date), room=request.sid)
 
+# TODO: Turn to GET request
+@order_blueprint.route('/get-order/', methods=['POST'])
+def handle_get_order_by_vendor_and_date():
+    VENDOR_ID = request.json['vendor_id']
+    DATE = request.json['date']
+    order = Order.find_open_order_by_date_for_a_vendor(VENDOR_ID, DATE)
+    if not order:
+        order = Order.create_order(VENDOR_ID, DATE)
+    return order.serialized
 
-@socketio.on('Server Basket Update')
-def handle_basket_update(data):
-    """Handling the basket modification event sent from a client."""
-    basket_date = str(data['order_date'])
-    userid = str(data['userid'])
-    basket = data['basket']
+@order_blueprint.route('/<order_id>/add', methods=['POST'])
+def handle_add_to_basket(order_id):
+    USER = request.json['user_id']
+    MI_ID = request.json['menu_item_id']
 
-    # Check if update is possible
-    order_state = OrderService.get_order_state(basket_date)
-    if order_state == str(OrderState.CLOSED):
-        socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(basket_date) }, to=basket_date)
-        socketio.emit("Order state changed", order_state, room=request.sid)
-        return
+    if UserBasket.add_item(USER, MI_ID, order_id):
+        socketio.emit('Client Basket Update', OrderService.get_formated_full_basket(order_id))
+        return "OK", 201
+    return "Error, something went wrong.", 500
 
-    db_basket = OrderService.get_basket(basket_date)
-    if basket:
-        # basket is not empty, save new basket
-        new_basket = OrderService.inject_label_and_price(basket)
-        db_basket[userid] = new_basket
-    elif userid in db_basket:
-        # basket is empty, delete key
-        del db_basket[userid]
-    OrderService.set_basket(db_basket,basket_date)
+@order_blueprint.route('/<order_id>/remove', methods=['POST'])
+def handle_remove_from_basket(order_id):
+    USER = request.json['user_id']
+    MI_ID = request.json['menu_item_id']
 
-    socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(basket_date)}, to=basket_date)
+    if UserBasket.remove_item(USER, MI_ID, order_id):
+        socketio.emit('Client Basket Update', OrderService.get_formated_full_basket(order_id))
+        return "OK", 201
+    return "Error, something went wrong.", 500
+
+@order_blueprint.route('/<order_id>/clear', methods=['POST'])
+def handle_clear_user_basket(order_id):
+    USER = request.json['user_id']
+
+    if UserBasket.clear_items(USER, order_id):
+        socketio.emit('Client Basket Update', OrderService.get_formated_full_basket(order_id))
+        return "OK", 201
+    return "Error, something went wrong.", 500
 
 
 @socketio.on('Ordered and Payed')
@@ -108,7 +122,7 @@ def handle_payed(data):
     session.close()
     socketio.emit("Order state changed", str(OrderState.CLOSED))
 
-
+# TODO: Move to plugin
 @order_blueprint.route('/transferBasket', methods=['POST'])
 def call_transfer_basket():
     PHPSESSIONID = request.json['psid']

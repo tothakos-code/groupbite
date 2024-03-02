@@ -23,13 +23,73 @@ class UserBasket(Base):
     def __repr__(self):
         return "Menu"
 
+    def find_items_by_order(order_id):
+        return session.query(UserBasket).filter(UserBasket.order_id == order_id).all()
+
+    def clear_items(user_id, order_id):
+        user_basket = session.query(UserBasket).filter(
+            UserBasket.order_id == order_id,
+            UserBasket.user_id == user_id
+        ).delete()
+        return True
+
+    def remove_item(user_id, menu_item_id, order_id):
+        user_basket = session.query(UserBasket).filter(
+            UserBasket.order_id == order_id,
+            UserBasket.menu_item_id == menu_item_id,
+            UserBasket.user_id == user_id
+        ).first()
+
+        if not user_basket:
+            logger.error("Error: Cannot remove item. Item not found.")
+        else:
+            if user_basket.count == 1:
+                session.delete(user_basket)
+            else:
+                user_basket.count -= 1
+
+        session.commit()
+        session.close()
+        return user_basket
+
+    def add_item(user_id, menu_item_id, order_id):
+        user_basket = session.query(UserBasket).filter(
+            UserBasket.order_id == order_id,
+            UserBasket.menu_item_id == menu_item_id,
+            UserBasket.user_id == user_id
+        ).first()
+
+        if not user_basket:
+            user_basket = UserBasket(
+                user_id = user_id,
+                menu_item_id = menu_item_id,
+                order_id = order_id,
+                count = 1
+            )
+        else:
+            user_basket.count += 1
+
+        session.add(user_basket)
+        session.commit()
+        session.close()
+        return user_basket
+
     @property
     def serialized(self):
         return {
-            'user_id': self.user_id,
+            'user_id': str(self.user_id),
             'menu_item_id': self.menu_item_id,
             'order_id': self.order_id,
-            'count': self.price
+            'count': self.count
+        }
+
+    @property
+    def basket_format(self):
+        return {
+            'user_id': str(self.user_id),
+            'username': self.user.username,
+            'item': self.item.serialized,
+            'count': self.count
         }
 
 # class UserBasketSchema(Schema):

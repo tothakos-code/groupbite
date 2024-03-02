@@ -14,19 +14,17 @@ from app.services.order_service import OrderService
 
 socketio = SocketioSingleton.get_instance()
 
-@socketio.on('User Login')
-def handle_user_login(user):
-    session = Session()
-    user_to_login = session.query(User).filter(User.username == user['username']).first()
+@user_blueprint.route("/login", methods=['POST'])
+def handle_user_login():
+    username = request.json['username']
+    user_to_login = User.get_one_user(username)
 
     if not user_to_login:
         # register
-        new_user = User(user['username'])
-        session.add(new_user)
-        user_to_login = new_user
+        user_to_login = User.create_user(User(username=username))
+        logging.info(f"User {user_to_login.username} created!")
 
-    # login after all
-    session.commit()
+    logging.info(f"User {user_to_login.username} logged in!")
     return user_to_login.serialized
 
 @socketio.on('User Update')

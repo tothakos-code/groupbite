@@ -31,9 +31,7 @@ def cron_new_day_refresh():
 
 @socketio.on('connect')
 def handle_connect(auth=None):
+    socketio.emit('Client Basket Update', OrderService.get_formated_full_basket(order_id), to=request.sid)
     # today = date.today().strftime('%Y-%m-%d')
-    # socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(today) }, to=request.sid)
     # join_room(today)
-    # from app.controllers.user_controller import emit_user_ds_state
-    # emit_user_ds_state()
     pass

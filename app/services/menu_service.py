@@ -1,6 +1,7 @@
 from datetime import date, timedelta, datetime
 from app.entities import session
 from app.entities.menu import Menu
+from app.entities.menu_item import MenuItem
 
 class MenuService:
     """docstring for UserService."""
@@ -69,6 +70,24 @@ class MenuService:
                         'link': menu_item_size['link']
                     }
         return result
+
+    def fill_menu(vendor_id_to_fill, date_to_fill, raw_item_list):
+        menu = Menu.find_vendor_menu(vendor_id_to_fill,date_to_fill)
+        if menu is None:
+            logging.error("Menu to fill not found!")
+            return
+        # TODO: Handlig items that got out of stock
+        for raw_menu_item in raw_item_list:
+            session.add(
+                MenuItem(
+                    menu_id=menu.id,
+                    name=raw_menu_item['name'],
+                    link=raw_menu_item['link'],
+                    size=raw_menu_item['size'],
+                    price=raw_menu_item['price']
+                )
+            )
+
     # TODO: migrate this to Menu? idea: fat model thin controller
     def create_menu(name, vendor, date, freq):
         menu = Menu.find_vendor_menu(vendor,date)

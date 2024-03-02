@@ -25,16 +25,23 @@ class Order(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     vendor_id: Mapped[UUID] = mapped_column(ForeignKey("vendor.id"))
     state_id: Mapped[OrderState] = mapped_column(default=OrderState.COLLECT)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"))
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"),nullable=True)
     date_of_order: Mapped[date]
-    order_time: Mapped[datetime]
+    order_time: Mapped[datetime] = mapped_column(nullable=True)
 
     items: Mapped[List["UserBasket"]] = relationship(back_populates="order")
     vendor: Mapped["Vendor"] = relationship(back_populates="orders")
     ordered_by: Mapped["User"] = relationship(back_populates="placed_orders")
 
-    def __repr__():
+    def __repr__(self):
         return f"Order(id={self.id},order_time={self.order_time})"
+
+    def create_order(v_id: UUID, doo: date = date.today()):
+        order = Order(vendor_id=v_id,date_of_order=doo)
+        session.add(order)
+        session.commit()
+        session.close()
+        return order
 
     def find_open_order_by_date_for_a_vendor(v_id: UUID, doo: date = date.today() ):
         return session.query(Order).filter(
@@ -46,9 +53,10 @@ class Order(Base):
     def serialized(self):
         return {
             'id': self.id,
-            'menu_id': self.menu_id,
-            'state_id': self.state_id,
+            'vendor_id': self.vendor_id,
+            'state_id': str(self.state_id),
             'user_id': self.user_id,
+            'date_of_order': self.date_of_order.strftime('%Y-%m-%d'),
             'order_time': self.order_time
         }
 #

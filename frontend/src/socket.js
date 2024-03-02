@@ -3,12 +3,14 @@ import { io } from "socket.io-client";
 
 export const state = reactive({
   connected: false,
-  orderState: '',
-  globalBasket: {},
-  localBasket: {},
-  selectedDate: new Date(),
+  orderState: '', // TODO: This will be removed
+  order: {},
+  basket: {},
+  globalBasket: {}, // TODO: This will be removed
+  userBasket: [],
+  selectedDate: new Date(), // TODO: This will be urlencoded
   user: {},
-  userStates: {}
+  userStates: {} // TODO: Something will need to happen to this. currently unclear
 });
 
 // "undefined" means the URL will be computed from the `window.location` object
@@ -37,13 +39,15 @@ socket.on('Order state changed', function(incomingState) {
 });
 
 socket.on('Client Basket Update', function(incomingGlobalBasket) {
-  state.globalBasket = incomingGlobalBasket.basket;
+  state.basket = JSON.parse(incomingGlobalBasket);
   if (state.user.username !== undefined) {
-    if (incomingGlobalBasket.basket[state.user.username] !== undefined) {
-      state.localBasket = incomingGlobalBasket.basket[state.user.username];
-    } else {
-      state.localBasket = {}
+    state.userBasket = [];
+    for (const item of state.basket) {
+      if (item['username'] === state.user.username) {
+        state.userBasket.push(item);
+      }
     }
+
   }
 });
 

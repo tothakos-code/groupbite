@@ -16,23 +16,19 @@ from app.base_vendor import BaseVendor
 
 @menu_blueprint.route('/update/<vendor_id>')
 def update_menu(vendor_id):
-    vendor = VendorFactory.get_one_vendor_object(int(vendor_id))
-    if vendor:
-        logging.warning(vendor)
-        vendor.scan()
-        return "Vendor scan ran for " + str(vendor.id) + " id", 201
+    vendor = VendorFactory.get_one_vendor_object(str(vendor_id))
+    if vendor is None:
+        return "No vendor found with that id", 404
+    vendor.scan()
+    return "Vendor scan ran for " + str(vendor.id) + " id", 201
 
-    else:
-        return "No vendor with that id", 404
-
-
-@menu_blueprint.route('/get', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
-@menu_blueprint.route('/get/<requested_date>')
-def get_requested_menu(requested_date=date.today().strftime('%Y-%m-%d')):
-    requested_menu = MenuService.get_menu_by_date(requested_date)
-    if requested_menu:
-        return json.dumps(requested_menu.menu)
-    return []
+@menu_blueprint.route('/get/<vendor_id>', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
+@menu_blueprint.route('/get/<vendor_id>/<requested_date>')
+def get_requested_menu(vendor_id, requested_date):
+    vendor = VendorFactory.get_one_vendor_object(str(vendor_id))
+    if vendor is None:
+        return "No vendor found with that id", 404
+    return json.dumps(vendor.get_menu(requested_date))
 
 
 @menu_blueprint.route('/get_week', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})

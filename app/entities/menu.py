@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship
 from datetime import date
 import enum
 from typing import List
-from . import Base
+from . import Base, session
 from uuid import UUID
 from .vendor import Vendor
 from marshmallow import Schema, fields
@@ -34,10 +34,13 @@ class Menu(Base):
     vendor_id: Mapped[UUID] = mapped_column(ForeignKey("vendor.id"))
     freq_id: Mapped[Frequency] = mapped_column(default=Frequency.FIX)
 
+    items: Mapped[List["MenuItem"]] = relationship(back_populates="menu")
 
+    def __repr__(self):
+        return f"Menu<{self.id},name={self.name},menu_date={self.menu_date},vendor_id={self.vendor_id}>"
 
-    def __repr__():
-        return "Menu"
+    def find_vendor_menu(vendor_id, menu_date):
+        return session.query(Menu).filter_by(vendor_id = vendor_id, menu_date = menu_date).first()
 
     # def update(self, new_menu):
     #     self.menu = self.merge_lists(self.menu, new_menu)

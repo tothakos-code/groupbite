@@ -13,7 +13,7 @@ class VendorService:
         if not db_vendor:
             # insert
             session.add(Vendor(id=uuid4(),name=vendor_p.name))
-            logging.info("Vendor registered: {0}".format(vendor_p.name))
+            logging.info("Vendor registered in database: {0}".format(vendor_p.name))
         else:
             vendor_p.id = db_vendor.id
 

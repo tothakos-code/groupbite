@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Text, Enum
 from uuid import UUID
-from . import Base
+from . import Base, session
 from marshmallow import Schema, fields
 import enum
 from sqlalchemy import ForeignKey
@@ -20,7 +20,7 @@ class UserBasket(Base):
     user: Mapped["User"] = relationship(back_populates="orders")
     item: Mapped["MenuItem"] = relationship(back_populates="orders")
 
-    def __repr__():
+    def __repr__(self):
         return "Menu"
 
     @property

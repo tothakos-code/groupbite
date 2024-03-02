@@ -1,5 +1,6 @@
-import { state, socket } from "@/socket.js";
+import { state } from "@/socket.js";
 import { computed } from "vue";
+import axios from 'axios';
 
 export function useAuth() {
 
@@ -25,8 +26,16 @@ export function useAuth() {
   });
 
   function login(username) {
-    socket.emit("User Login", {"username": username}, function(user) {
-      state.user = user;
+    axios.post(
+      `http://${window.location.host}/api/user/login`, {
+        "username": username
+    })
+    .then(function(response) {
+      state.user = response.data;
+      console.log(state.user);
+    })
+    .catch(function (error) {
+      console.log("Error during login:" + error);
     });
   }
 

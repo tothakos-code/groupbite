@@ -13,7 +13,7 @@ class UserSetting(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"), primary_key=True)
     setting_id: Mapped[int] = mapped_column(ForeignKey("setting.id"), primary_key=True)
 
-    def __repr__():
+    def __repr__(self):
         return "Menu"
 
     @property

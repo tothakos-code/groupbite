@@ -1,6 +1,6 @@
 from typing import Any, Callable
 import json
-
+import logging
 from app.entities.vendor import Vendor
 from app.services.vendor_service import VendorService
 
@@ -11,7 +11,7 @@ class VendorFactory:
     def register(self, vendor_object) -> None:
         """Register a new vendor."""
         VendorService.add_vendor(vendor_object)
-        self._vendors[vendor_object.id] = vendor_object
+        self._vendors[str(vendor_object.id)] = vendor_object
 
     @classmethod
     def unregister(self, vendor_name) -> None:
@@ -28,4 +28,4 @@ class VendorFactory:
 
     @classmethod
     def get_one_vendor_object(self, vendor_id):
-        return self._vendors[vendor_id];
+        return self._vendors[vendor_id]

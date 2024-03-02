@@ -19,8 +19,8 @@ def load_plugins(plugins: list) -> None:
     for plugin_file in plugins:
         plugin = import_module(plugin_file+".app")
 
-        logging.info("Loaded {0} plugin".format(plugin.__name__))
 
         for name, obj in plugin.__dict__.items():
             if isinstance(obj, type) and issubclass(obj, BaseVendor) and obj != BaseVendor:
                 VendorFactory.register(obj())
+                logging.info("Loaded {0} plugin".format(plugin.__name__))

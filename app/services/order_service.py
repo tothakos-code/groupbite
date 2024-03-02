@@ -1,8 +1,10 @@
 from datetime import date, timedelta, datetime
 import logging
 
+import json
 from app.entities import Session
 from app.entities.order import Order, OrderState
+from app.entities.user_basket import UserBasket
 from app.services.user_service import UserService
 from app.services.menu_service import MenuService
 
@@ -17,26 +19,11 @@ class OrderService:
             return {}
         return order.basket[str(UserService.username_to_id(user))]
 
-    # this is not needed after the migration is complete-
-    def migrate_to_userid_based_order(order_date):
-        # check if this is already been migrated
-        session = Session()
-        order = session.query(Order).filter(Order.order_date == order_date).first()
-        for person in order.basket.keys():
-            if not UserService.username_exist(person):
-                session.close()
-                return True
-
-        # Migrate if not
-        basket = order.basket
-        migrated_basket = {}
-        keys = basket.keys()
-        for person in keys:
-            migrated_basket[UserService.username_to_id(person)] = basket[person]
-        order.basket = migrated_basket
-        session.commit()
-        session.close()
-        return True
+    def get_formated_full_basket(order_id):
+        result = []
+        for basket_entry in UserBasket.find_items_by_order(order_id):
+            result.append(basket_entry.basket_format)
+        return json.dumps(result)
 
     def replace_userid_with_username(order_date):
         order = Order.find_open_order_by_date_for_a_vendor("de06edb7-24db-4869-b476-0ca14d4f1cb6", order_date)

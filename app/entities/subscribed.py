@@ -26,7 +26,7 @@ class Subscribed(Base):
     vendor_id: Mapped[UUID] = mapped_column(ForeignKey("vendor.id"), primary_key=True)
     type: Mapped[SubscriptionType]
 
-    def __repr__():
+    def __repr__(self):
         return "Menu"
 
     @property

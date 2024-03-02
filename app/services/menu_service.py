@@ -69,3 +69,12 @@ class MenuService:
                         'link': menu_item_size['link']
                     }
         return result
+    # TODO: migrate this to Menu? idea: fat model thin controller
+    def create_menu(name, vendor, date, freq):
+        menu = Menu.find_vendor_menu(vendor,date)
+        # TODO: Need to check that date corresponed to the frequency. This currently only works for daily types
+        if menu is not None:
+            return
+        session.add(Menu(name=name, vendor_id=vendor, menu_date=date, freq_id=freq))
+        session.commit()
+        session.close()

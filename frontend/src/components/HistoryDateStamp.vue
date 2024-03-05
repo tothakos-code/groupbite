@@ -91,7 +91,7 @@ export default {
     const auth = useAuth();
     watchEffect(() => {
       console.log(state.localBasket);
-      user_states.value[state.selectedDate.toISOString().split('T')[0]] = state.localBasket
+      user_states.value[state.selectedDate.toISODate()] = state.localBasket
     })
     return {
       user_states,
@@ -123,13 +123,13 @@ export default {
     startDate.setDate(currentDate.getDate() - currentDayOfWeek + (currentDayOfWeek === 0 ? -6 : 1));
     const endDate = new Date();
     endDate.setDate(startDate.getDate() + 6);
-    this.getUserBasketStates(startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0])
+    this.getUserBasketStates(startDate.toISODate(), endDate.toISODate())
   },
   methods: {
     getCurrentWeekDates(date) {
       const centerDate = new Date(date);
       centerDate.setHours(12, 0, 0, 0);
-      console.log("centerDate: " + centerDate.toISOString().split('T')[0]);
+      console.log("centerDate: " + centerDate.toISODate());
 
       const weekDates = [];
 
@@ -137,7 +137,7 @@ export default {
         const iterDate = new Date(centerDate);
         iterDate.setDate(centerDate.getDate() + i);
 
-        const formattedDate = iterDate.toISOString().split('T')[0];
+        const formattedDate = iterDate.toISODate();
         weekDates.push(formattedDate);
       }
       console.log(weekDates);

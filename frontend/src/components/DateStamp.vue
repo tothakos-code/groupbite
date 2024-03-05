@@ -81,7 +81,11 @@ import { useAuth } from '@/auth';
 export default {
   name: 'DateStamp',
   props: {
-    'limitToCurrentWeek': Boolean
+    'limitToCurrentWeek': Boolean,
+    'setDate': {
+      type: String,
+      default: new Date().toISODate()
+    }
   },
   emits: ['selectedDate'],
   setup() {
@@ -90,8 +94,11 @@ export default {
       auth
     }
   },
-  data() {
+  data(props) {
     let date = new Date();
+    if (props.setDate) {
+      date = new Date(props.setDate);
+    }
     return {
       currentDateSelected: date
     }

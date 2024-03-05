@@ -65,9 +65,6 @@ export default {
     firstChar: function(string) {
       return string.charAt(0);
     },
-    switchVendor: function(vendorId) {
-      alert(vendorId)
-    },
     backgroundColor: function(str, s, l) {
 
       var hash = 0;

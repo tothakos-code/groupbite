@@ -5,9 +5,9 @@
       <div class="row bg-body-secondary d-flex justify-content-between mx-0 px-0">
         <div class="col-11 col-md-7 row d-flex justify-content-between">
           <div class="col-8 row d-flex justify-content-start align-items-center">
-            <h2 class="text-truncate">
-              Falusi rendelő
-            </h2>
+            <h3 class="text-truncate">
+              GroupBite
+            </h3>
           </div>
           <div class="col-3 d-flex align-items-center d-none">
             <span class="col text-danger fs-5 text-truncate">{{ banner() }}</span>
@@ -22,7 +22,7 @@
               <UserControllPanel />
             </div>
             <div class="col col-md-3 d-flex justify-content-end align-items-center">
-              <UserMenu @to-history="toHistory()" />
+              <UserMenu />
             </div>
           </div>
         </div>
@@ -185,14 +185,6 @@ export default {
     banner: function() {
       // eslint-disable-next-line
       return process.env.VUE_APP_FALU_BANNER;
-    },
-    toMenu: function() {
-      this.showMenu = true;
-      this.showHistroy = false;
-    },
-    toHistory: function() {
-      this.showHistroy = true;
-      this.showMenu = false;
     },
     dismissGlobalMessage() {
       // Hide the message

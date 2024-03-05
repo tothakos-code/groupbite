@@ -2,12 +2,16 @@
   <div>
     <h1>Home</h1>
   </div>
+  <History />
 </template>
 
 <script>
-
+import History from '@/components/History.vue'
 export default {
-    name: 'HomeComponent',
+    name: 'HomeView',
+    components: {
+      History,
+    }
 };
 </script>
 

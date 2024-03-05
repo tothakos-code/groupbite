@@ -65,12 +65,9 @@
           </button>
         </li>
         <li>
-          <button
-            class="dropdown-item"
-            @click="$emit('toHistory')"
-          >
+          <button class="dropdown-item">
             <span>
-              Előző rendelések
+              Előző rendelések???
             </span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -89,10 +86,7 @@
       </ul>
     </div>
   </div>
-  <div
-    v-else
-    class=""
-  >
+  <div v-else>
     <button
       class="btn btn-dark"
       @click="showLogin = true"
@@ -124,7 +118,6 @@ export default {
     UserControllPanel,
     UserProfilePopup
   },
-  emits: ['toHistory'],
   data() {
     return {
       showProfile: false,

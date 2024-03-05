@@ -36,7 +36,7 @@
           </span>
         </div>
         <div
-          class="row border border-2"
+          class="row border border-2 rounded"
           :class="[
             {'border-3': new Date(item).getDate() === currentDateSelected.getDate()},
             new Date(item).getDate() === currentDateSelected.getDate() ? 'border-'+auth.matchUiColorWithBuiltIn.value : 'border-'+auth.matchUiColorWithBuiltIn.value + '-subtle'

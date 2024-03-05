@@ -1,24 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeComponent from "./components/HomeComponent.vue";
+import HomeView from "./views/Home.vue";
 import AdminView from "./views/Admin.vue";
 
 const routes = [
   {
     name: 'home',
     path: '/home',
-    component: HomeComponent,
-    params: {
-      id: 'home'
-    }
+    component: HomeView,
   },
   {
     name: 'root',
     path: '/',
     redirect: '/home',
-    component: HomeComponent,
-    params: {
-      id: 'home'
-    }
   },
   {
     name: 'admin',

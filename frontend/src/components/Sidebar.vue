@@ -36,32 +36,16 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { state } from "@/socket";
 
 export default {
   name: 'SidebarMenu',
-  data() {
-    return {
-      vendors: {}
-    };
-  },
-  mounted() {
-    this.fetch_vendors();
+  computed: {
+    vendors() {
+      return state.vendors;
+    }
   },
   methods: {
-    fetch_vendors: function() {
-      axios.get(`http://${window.location.host}/api/vendor/find-all-active`)
-        .then(response => {
-          this.vendors = response.data;
-          this.vendors.forEach((item) => {
-            item.component = import("@/../../plugins/"+item.name+"/frontend/App.vue")
-
-          });
-          console.log(this.vendors);
-
-        })
-        .catch(error => console.error('Error fecthing vendors: ', error));
-    },
     firstChar: function(string) {
       return string.charAt(0);
     },

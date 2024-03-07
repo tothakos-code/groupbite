@@ -31,6 +31,8 @@ def cron_new_day_refresh():
 
 @socketio.on('connect')
 def handle_connect(auth=None):
+    socketio.emit('be_vendors_update', VendorService.find_all_active())
+
     # socketio.emit('Client Basket Update', OrderService.get_formated_full_basket(order_id), to=request.sid)
     # today = date.today().strftime('%Y-%m-%d')
     # join_room(today)

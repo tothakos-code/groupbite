@@ -1,5 +1,7 @@
 import { reactive } from "vue";
 import { io } from "socket.io-client";
+import router from './router.js';
+import { register_plugin_routes } from './loader.js';
 
 export const state = reactive({
   connected: false,
@@ -10,6 +12,7 @@ export const state = reactive({
   userBasket: [],
   selectedDate: new Date(), // TODO: This will be urlencoded
   user: {},
+  vendors: [],
   userStates: {} // TODO: Something will need to happen to this. currently unclear
 });
 
@@ -22,12 +25,6 @@ export const socket = io(URL);
 
 socket.on("connect", () => {
   state.connected = true;
-  // fetch(`http://${window.location.host}/api/order/get-order-state`)
-  //   .then(response => response.json())
-  //     .then(data => {
-  //       state.orderState = data.order_state;
-  //     })
-  //   .catch(error => console.error(error));
 });
 
 socket.on("disconnect", () => {
@@ -36,6 +33,16 @@ socket.on("disconnect", () => {
 
 socket.on('Order state changed', function(incomingState) {
   state.orderState = incomingState;
+});
+
+socket.on('be_vendors_update', function(vendors) {
+  state.vendors = JSON.parse(vendors);
+  console.log(state.vendors);
+  state.vendors.forEach((item) => {
+    item.component = import("@/../../plugins/"+item.name+"/frontend/App.vue");
+  });
+  register_plugin_routes(router);
+  console.log(state.vendors);
 });
 
 socket.on('Client Basket Update', function(incomingGlobalBasket) {

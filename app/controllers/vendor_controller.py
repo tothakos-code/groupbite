@@ -7,16 +7,17 @@ import requests
 from app.controllers import vendor_blueprint
 from app.vendor_factory import VendorFactory
 
+from app.socketio_singleton import SocketioSingleton
+
 from app.services.vendor_service import VendorService
 from app.entities.vendor import Vendor
 
+socketio = SocketioSingleton.get_instance()
 
 @vendor_blueprint.route('/find-all-active')
 def handle_get_active_vendors():
-    result = []
-    for a in Vendor.find_all_active():
-        result.append(a.serialized)
-    return json.dumps(result)
+    socketio.emit('be_vendors_update', VendorService.find_all_active())
+    return "OK"
 
 @vendor_blueprint.route('/find-all')
 def handle_get_all_vendors():
@@ -38,6 +39,7 @@ def handle_activation(vendor_id, cmd):
             logging.info(vendor_id + " vendor got deactivated")
         case _:
             return "Command not found", 404
+    socketio.emit('be_vendors_update', VendorService.find_all_active())
     return "OK", 200
 
 

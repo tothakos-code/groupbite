@@ -8,6 +8,7 @@ from sqlalchemy.orm import relationship
 from uuid import UUID
 from typing import List
 
+
 class VendorType(pyenum):
     PLUGIN = 'plugin'
     BASIC = 'basic'
@@ -48,11 +49,13 @@ class Vendor(Base):
 
     @property
     def serialized(self):
+        from app.vendor_factory import VendorFactory
         return {
             'id': str(self.id),
             'name': self.name,
             'active': self.active,
-            'type': str(self.type)
+            'type': str(self.type),
+            'configuration': VendorFactory.get_one_vendor_object(str(self.id)).configuration
         }
 
 # class VendorSchema(SQLAlchemyAutoSchema):

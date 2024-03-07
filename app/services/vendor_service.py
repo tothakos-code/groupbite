@@ -40,3 +40,9 @@ class VendorService:
         session.close()
 
         return db_vendor
+
+    def find_all_active():
+        result = []
+        for a in Vendor.find_all_active():
+            result.append(a.serialized)
+        return json.dumps(result)

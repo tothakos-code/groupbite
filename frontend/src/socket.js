@@ -37,25 +37,23 @@ socket.on('Order state changed', function(incomingState) {
 
 socket.on('be_vendors_update', function(vendors) {
   state.vendors = JSON.parse(vendors);
-  console.log(state.vendors);
   state.vendors.forEach((item) => {
     item.component = import("@/../../plugins/"+item.name+"/frontend/App.vue");
   });
   register_plugin_routes(router);
-  console.log(state.vendors);
 });
 
-socket.on('Client Basket Update', function(incomingGlobalBasket) {
-  state.basket = JSON.parse(incomingGlobalBasket);
-  if (state.user.username !== undefined) {
-    state.userBasket = [];
-    for (const item of state.basket) {
-      if (item['username'] === state.user.username) {
-        state.userBasket.push(item);
-      }
-    }
-
-  }
+socket.on('be_basket_update', function(incomingBasket) {
+  state.basket = JSON.parse(incomingBasket);
+  // if (state.user.username !== undefined) {
+  //   state.userBasket = [];
+  //   for (const item of state.basket) {
+  //     if (item['username'] === state.user.username) {
+  //       state.userBasket.push(item);
+  //     }
+  //   }
+  //
+  // }
 });
 
 socket.on('Waiting Update', function(incomingStateList) {

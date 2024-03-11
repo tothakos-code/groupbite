@@ -25,6 +25,17 @@ class OrderService:
             result.append(basket_entry.basket_format)
         return json.dumps(result)
 
+    def get_formated_full_basket_group_by_user(order_id):
+        result = {}
+        for basket_entry in UserBasket.find_items_by_order(order_id):
+            if str(basket_entry.user_id) not in result:
+                result[str(basket_entry.user_id)] = {
+                    'username': basket_entry.user.username,
+                    'basket_entry': []
+                }
+            result[str(basket_entry.user_id)]['basket_entry'].append(basket_entry.basket_format)
+        return json.dumps(result)
+
     def replace_userid_with_username(order_date):
         order = Order.find_open_order_by_date_for_a_vendor("de06edb7-24db-4869-b476-0ca14d4f1cb6", order_date)
         if not order:

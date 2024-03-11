@@ -69,7 +69,7 @@ def handle_date_selection_change(data):
     old_date = data['old_selected_date']
     leave_room(old_date)
     join_room(new_date)
-    socketio.emit('Client Basket Update', {'basket': OrderService.get_formated_full_basket(order_id) }, to=request.sid)
+    socketio.emit('be_basket_update', {'basket': OrderService.get_formated_full_basket_group_by_user(order_id) }, to=request.sid)
     socketio.emit("Order state changed", OrderService.get_order_state(new_date), room=request.sid)
 
 # TODO: Turn to GET request
@@ -88,7 +88,7 @@ def handle_add_to_basket(order_id):
     MI_ID = request.json['menu_item_id']
 
     if UserBasket.add_item(USER, MI_ID, order_id):
-        socketio.emit('Client Basket Update', OrderService.get_formated_full_basket(order_id))
+        socketio.emit('be_basket_update', OrderService.get_formated_full_basket_group_by_user(order_id))
         return "OK", 201
     return "Error, something went wrong.", 500
 
@@ -98,7 +98,7 @@ def handle_remove_from_basket(order_id):
     MI_ID = request.json['menu_item_id']
 
     if UserBasket.remove_item(USER, MI_ID, order_id):
-        socketio.emit('Client Basket Update', OrderService.get_formated_full_basket(order_id))
+        socketio.emit('be_basket_update', OrderService.get_formated_full_basket_group_by_user(order_id))
         return "OK", 201
     return "Error, something went wrong.", 500
 
@@ -107,7 +107,7 @@ def handle_clear_user_basket(order_id):
     USER = request.json['user_id']
 
     if UserBasket.clear_items(USER, order_id):
-        socketio.emit('Client Basket Update', OrderService.get_formated_full_basket(order_id))
+        socketio.emit('be_basket_update', OrderService.get_formated_full_basket_group_by_user(order_id))
         return "OK", 201
     return "Error, something went wrong.", 500
 

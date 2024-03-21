@@ -26,7 +26,7 @@ class Setting(Base):
     type: Mapped[SettingType]
 
     def __repr__(self):
-        return "Menu"
+        return f"Setting<id={self.id},section={self.section}>"
 
     @property
     def serialized(self):

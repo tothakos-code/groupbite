@@ -34,7 +34,7 @@ class Order(Base):
     ordered_by: Mapped["User"] = relationship(back_populates="placed_orders")
 
     def __repr__(self):
-        return f"Order(id={self.id},order_time={self.order_time})"
+        return f"Order<id={self.id},order_time={self.order_time},vendor_id={self.vendor_id},state_id={str(self.state_id)},user_id={self.user_id},date_of_order={self.date_of_order},order_time={self.order_time}>"
 
     def create_order(v_id: UUID, doo: date = date.today()):
         order = Order(vendor_id=v_id,date_of_order=doo)

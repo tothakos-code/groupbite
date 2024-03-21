@@ -26,7 +26,7 @@ class User(Base):
     placed_orders: Mapped[List["Order"]] = relationship(back_populates="ordered_by")
 
     def __repr__(self):
-        return "Menu"
+        return f"User<id={self.id},username={self.username}>"
 
     def get_one_user(username):
         return session.query(User).filter(User.username == username).first()

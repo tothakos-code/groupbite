@@ -57,8 +57,3 @@ class Vendor(Base):
             'type': str(self.type),
             'configuration': VendorFactory.get_one_vendor_object(str(self.id)).configuration
         }
-
-# class VendorSchema(SQLAlchemyAutoSchema):
-#     class Meta:
-#         model = Vendor
-#         load_instance = True

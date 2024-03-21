@@ -27,7 +27,7 @@ class Subscribed(Base):
     type: Mapped[SubscriptionType]
 
     def __repr__(self):
-        return "Menu"
+        return f"Subscribed<user_id={self.user_id},vendor_id={self.vendor_id},type={str(self.type)}>"
 
     @property
     def serialized(self):

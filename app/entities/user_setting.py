@@ -14,7 +14,7 @@ class UserSetting(Base):
     setting_id: Mapped[int] = mapped_column(ForeignKey("setting.id"), primary_key=True)
 
     def __repr__(self):
-        return "Menu"
+        return f"UserSetting<user_id={self.user_id},setting_id={self.setting_id}>"
 
     @property
     def serialized(self):

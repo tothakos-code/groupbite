@@ -21,7 +21,7 @@ class UserBasket(Base):
     item: Mapped["MenuItem"] = relationship(back_populates="orders")
 
     def __repr__(self):
-        return "Menu"
+        return f"UserBasket<user_id={self.user_id},menu_item_id={self.menu_item_id},order_id={self.order_id},count={self.count}>"
 
     def find_items_by_order(order_id):
         return session.query(UserBasket).filter(UserBasket.order_id == order_id).all()

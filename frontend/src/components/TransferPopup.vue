@@ -143,7 +143,7 @@ export default {
       }
     },
     openPopup: function() {
-      if (state.orderState === 'closed') {
+      if (state.order.state_id === 'closed') {
         notify({
           type: "warn",
           text: "A rendelést ma már elküldték",

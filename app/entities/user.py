@@ -28,8 +28,11 @@ class User(Base):
     def __repr__(self):
         return f"User<id={self.id},username={self.username}>"
 
-    def get_one_user(username):
+    def get_one_by_username(username):
         return session.query(User).filter(User.username == username).first()
+
+    def get_one_by_id(id):
+        return session.query(User).filter(User.id == id).first()
 
     def create_user(user):
         if session.query(User).filter(User.username == user.username).first():

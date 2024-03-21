@@ -17,7 +17,7 @@ socketio = SocketioSingleton.get_instance()
 @user_blueprint.route("/login", methods=['POST'])
 def handle_user_login():
     username = request.json['username']
-    user_to_login = User.get_one_user(username)
+    user_to_login = User.get_one_by_username(username)
 
     if not user_to_login:
         # register

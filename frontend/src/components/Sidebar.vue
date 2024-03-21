@@ -24,7 +24,7 @@
           :onmouseover="'this.style.backgroundColor=\'' + backgroundColor(vendor.name, 30, 70)+'\''"
           :onmouseout="'this.style.backgroundColor=\'' + backgroundColor(vendor.name, 30, 80)+'\''"
           :title="vendor.name"
-          :to="'/'+vendor.name"
+          :to="'/menu/'+vendor.name"
         >
           <span class="text fs-4 text-center text-truncate m-auto">
             {{ firstChar(vendor.name) }}
@@ -34,7 +34,7 @@
     </div>
   </div>
 </template>
-
+<!-- ToDo: update router-link to change the seleted_vendor -->
 <script>
 import { state } from "@/socket";
 
@@ -48,6 +48,9 @@ export default {
   methods: {
     firstChar: function(string) {
       return string.charAt(0);
+    },
+    setVendor: function(vendor_id) {
+      state.selected_vendor = vendor_id
     },
     backgroundColor: function(str, s, l) {
 

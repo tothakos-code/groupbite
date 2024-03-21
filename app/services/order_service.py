@@ -31,6 +31,7 @@ class OrderService:
             if str(basket_entry.user_id) not in result:
                 result[str(basket_entry.user_id)] = {
                     'username': basket_entry.user.username,
+                    'user_id': str(basket_entry.user_id),
                     'basket_entry': []
                 }
             result[str(basket_entry.user_id)]['basket_entry'].append(basket_entry.basket_format)

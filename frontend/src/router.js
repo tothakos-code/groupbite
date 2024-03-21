@@ -18,6 +18,11 @@ const routes = [
     path: '/admin',
     component: AdminView,
   },
+  {
+    name: 'menu',
+    path: '/menu',
+
+  },
 ];
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),

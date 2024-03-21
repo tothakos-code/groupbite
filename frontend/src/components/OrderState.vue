@@ -19,16 +19,16 @@ export default {
   name: 'OrderState',
   computed: {
     status() {
-      if (!state.connected) {
+      if (!state.order.state_id) {
         return 'error'
       }
-      return state.orderState
+      return state.order.state_id
     },
     statusLabel() {
       if (!state.connected) {
         return 'Kapcsolati probléma'
       }
-      switch (state.orderState) {
+      switch (state.order.state_id) {
         case 'collect':
           return 'Rendelhetsz'
         case 'order':
@@ -43,7 +43,7 @@ export default {
       if (!state.connected) {
         return 'Sajnos nem sikerül csatlakozni a szerverhez.'
       }
-      switch (state.orderState) {
+      switch (state.order.state_id) {
         case 'collect':
           return 'Rendelést még nem küldték el, nyugodtan csatlakozhatsz hozzá.'
         case 'order':

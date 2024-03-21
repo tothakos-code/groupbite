@@ -4,7 +4,7 @@ export function register_plugin_routes(router) {
   state.vendors.forEach((item) => {
     if (!router.hasRoute('/'+item.name)) {
       item.configuration.frontend_routes.forEach((route) => {
-        router.addRoute({
+        router.addRoute("menu", {
           name: route.name,
           path: route.path,
           component: () => import(`@/../../plugins/${item.name}/frontend${route.component_file}`),

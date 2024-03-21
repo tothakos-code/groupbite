@@ -32,7 +32,6 @@ export function useAuth() {
     })
     .then(function(response) {
       state.user = response.data;
-      console.log(state.user);
     })
     .catch(function (error) {
       console.log("Error during login:" + error);

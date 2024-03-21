@@ -63,24 +63,30 @@ def handle_basket_migration():
     return str(OrderService.migrate_to_userid_based_order(date.today().strftime('%Y-%m-%d')))
 
 # TODO: Upgrade this
-# @socketio.on('Client Date Selection Change')
+@socketio.on('fe_date_selection')
 def handle_date_selection_change(data):
-    new_date = data['selected_date']
-    old_date = data['old_selected_date']
-    leave_room(old_date)
-    join_room(new_date)
-    socketio.emit('be_basket_update', {'basket': OrderService.get_formated_full_basket_group_by_user(order_id) }, to=request.sid)
-    socketio.emit("Order state changed", OrderService.get_order_state(new_date), room=request.sid)
+    new_date = data['new_selected_date']
+    vendor_id = data['vendor_id']
 
-# TODO: Turn to GET request
-@order_blueprint.route('/get-order/', methods=['POST'])
-def handle_get_order_by_vendor_and_date():
-    VENDOR_ID = request.json['vendor_id']
-    DATE = request.json['date']
-    order = Order.find_open_order_by_date_for_a_vendor(VENDOR_ID, DATE)
+    if 'old_selected_date' in data:
+        old_date = data['old_selected_date']
+        leave_room(f"{vendor_id}_{old_date}")
+
+    join_room(f"{vendor_id}_{new_date}")
+
+    order = Order.find_open_order_by_date_for_a_vendor(vendor_id, new_date)
+
     if not order:
-        order = Order.create_order(VENDOR_ID, DATE)
-    return order.serialized
+        order = Order.create_order(vendor_id, new_date)
+
+    socketio.emit(
+        'be_order_update',
+        {
+            'order': order.serialized,
+            'basket': OrderService.get_formated_full_basket_group_by_user(order.id)
+        },
+        to=request.sid
+        )
 
 @order_blueprint.route('/<order_id>/add', methods=['POST'])
 def handle_add_to_basket(order_id):
@@ -88,7 +94,9 @@ def handle_add_to_basket(order_id):
     MI_ID = request.json['menu_item_id']
 
     if UserBasket.add_item(USER, MI_ID, order_id):
-        socketio.emit('be_basket_update', OrderService.get_formated_full_basket_group_by_user(order_id))
+        socketio.emit('be_order_update', {
+            'basket': OrderService.get_formated_full_basket_group_by_user(order_id)
+        })
         return "OK", 201
     return "Error, something went wrong.", 500
 
@@ -98,7 +106,9 @@ def handle_remove_from_basket(order_id):
     MI_ID = request.json['menu_item_id']
 
     if UserBasket.remove_item(USER, MI_ID, order_id):
-        socketio.emit('be_basket_update', OrderService.get_formated_full_basket_group_by_user(order_id))
+        socketio.emit('be_order_update', {
+            'basket': OrderService.get_formated_full_basket_group_by_user(order_id)
+        })
         return "OK", 201
     return "Error, something went wrong.", 500
 
@@ -107,7 +117,9 @@ def handle_clear_user_basket(order_id):
     USER = request.json['user_id']
 
     if UserBasket.clear_items(USER, order_id):
-        socketio.emit('be_basket_update', OrderService.get_formated_full_basket_group_by_user(order_id))
+        socketio.emit('be_order_update', {
+            'basket': OrderService.get_formated_full_basket_group_by_user(order_id)
+        })
         return "OK", 201
     return "Error, something went wrong.", 500
 

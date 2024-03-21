@@ -5,14 +5,12 @@ import { register_plugin_routes } from './loader.js';
 
 export const state = reactive({
   connected: false,
-  orderState: '', // TODO: This will be removed
   order: {},
   basket: {},
-  globalBasket: {}, // TODO: This will be removed
-  userBasket: [],
   selectedDate: new Date(), // TODO: This will be urlencoded
   user: {},
   vendors: [],
+  selected_vendor: undefined,
   userStates: {} // TODO: Something will need to happen to this. currently unclear
 });
 
@@ -31,10 +29,6 @@ socket.on("disconnect", () => {
   state.connected = false;
 });
 
-socket.on('Order state changed', function(incomingState) {
-  state.orderState = incomingState;
-});
-
 socket.on('be_vendors_update', function(vendors) {
   state.vendors = JSON.parse(vendors);
   state.vendors.forEach((item) => {
@@ -43,17 +37,13 @@ socket.on('be_vendors_update', function(vendors) {
   register_plugin_routes(router);
 });
 
-socket.on('be_basket_update', function(incomingBasket) {
-  state.basket = JSON.parse(incomingBasket);
-  // if (state.user.username !== undefined) {
-  //   state.userBasket = [];
-  //   for (const item of state.basket) {
-  //     if (item['username'] === state.user.username) {
-  //       state.userBasket.push(item);
-  //     }
-  //   }
-  //
-  // }
+socket.on('be_order_update', function(data) {
+  if (data.basket) {
+    state.basket = JSON.parse(data.basket);
+  }
+  if (data.order) {
+    state.order = data.order;
+  }
 });
 
 socket.on('Waiting Update', function(incomingStateList) {
@@ -64,3 +54,12 @@ socket.on('Refresh!', function() {
   console.log("Refresh");
   location.reload();
 });
+
+export function change_selected_date(new_date) {
+  socket.emit("fe_date_selection", {
+    "old_selected_date": state.selectedDate.toISODate(),
+    "new_selected_date": new_date.toISODate(),
+    "vendor_id": state.selected_vendor
+  })
+  state.selectedDate = new_date;
+}

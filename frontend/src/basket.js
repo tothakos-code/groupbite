@@ -4,7 +4,7 @@ import { computed, ref } from "vue";
 export const transportFee = ref(0);
 
 export const personCount = computed(() => {
-    return Object.keys(state.globalBasket).length;
+    return Object.keys(state.basket).length;
   });
 
 export const transportFeePerPerson = computed(() => {
@@ -16,7 +16,7 @@ export const transportFeePerPerson = computed(() => {
 
 export const boxCount = computed(() => {
     let sum=0;
-    Object.values(state.globalBasket).forEach((person) => {
+    Object.values(state.basket).forEach((person) => {
       Object.values(person).forEach((item) => {
         sum+= Number(item.quantity);
       })
@@ -29,9 +29,11 @@ export const basketSum = computed(() => {
       return 0;
     }
     let sum=0;
-    Object.values(state.globalBasket).forEach((person) => {
-      Object.values(person).forEach((item) => {
-        sum+= Number(item.quantity) * Number((item.price).split(' ')[0]);
+    console.log(personCount.value);
+    console.log(state.basket);
+    Object.values(state.basket).forEach((person) => {
+      Object.values(person.basket_entry).forEach((entry) => {
+        sum+= Number(entry.count) * Number(entry.item.price);
       })
     })
     sum += Number(transportFee.value);

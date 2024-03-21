@@ -2,7 +2,7 @@ import enum, json
 from typing import List
 from . import Base, session
 from uuid import UUID
-from datetime import datetime,date
+from datetime import datetime, date
 from marshmallow import Schema, fields
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped
@@ -53,9 +53,9 @@ class Order(Base):
     def serialized(self):
         return {
             'id': self.id,
-            'vendor_id': self.vendor_id,
+            'vendor_id': str(self.vendor_id),
             'state_id': str(self.state_id),
-            'user_id': self.user_id,
+            'user_id': str(self.user_id),
             'date_of_order': self.date_of_order.strftime('%Y-%m-%d'),
             'order_time': self.order_time
         }

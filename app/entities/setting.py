@@ -23,7 +23,7 @@ class Setting(Base):
     section: Mapped[str] = mapped_column(default='root')
     key: Mapped[str]
     value: Mapped[str]
-    type: Mapped[SettingType]
+    type: Mapped[SettingType] = mapped_column(nullable=False)
 
     def __repr__(self):
         return f"Setting<id={self.id},section={self.section}>"
@@ -37,10 +37,3 @@ class Setting(Base):
             'value': self.value,
             'type': str(self.type)
         }
-
-# class SettingSchema(Schema):
-#     id = fields.Integer()
-#     section = fields.String()
-#     key = fields.String()
-#     value = fields.String()
-#     type = fields.Enum(SettingType)

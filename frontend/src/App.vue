@@ -27,7 +27,9 @@
           </div>
         </div>
       </div>
-      <router-view class="row ps-2" />
+      <Transition>
+        <router-view class="row ps-2 me-0" />
+      </Transition>
       <div class="row mt-auto p-3 m-0 bg-body-tertiary">
         <div class="row d-flex justify-content-between text-body-secondary">
           <span class="col text-center">
@@ -212,5 +214,14 @@ export default {
   }
  }
 
+ .v-enter-active,
+ .v-leave-active {
+   transition: opacity 0.5s ease;
+ }
+
+ .v-enter-from,
+ .v-leave-to {
+   opacity: 0;
+ }
 
 </style>

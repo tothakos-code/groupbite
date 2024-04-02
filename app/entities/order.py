@@ -69,8 +69,3 @@ class Order(Base):
             'date_of_order': self.date_of_order.strftime('%Y-%m-%d'),
             'order_time': self.order_time
         }
-#
-# class OrderSchema(SQLAlchemyAutoSchema):
-#     class Meta:
-#         model = Order
-#         load_instance = True

@@ -29,8 +29,6 @@ export const basketSum = computed(() => {
       return 0;
     }
     let sum=0;
-    console.log(personCount.value);
-    console.log(state.basket);
     Object.values(state.basket).forEach((person) => {
       Object.values(person.basket_entry).forEach((entry) => {
         sum+= Number(entry.count) * Number(entry.item.price);

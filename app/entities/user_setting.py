@@ -19,10 +19,6 @@ class UserSetting(Base):
     @property
     def serialized(self):
         return {
-            'user_id': self.id,
-            'setting_id': self.menu_id
+            'user_id': self.user_id,
+            'setting_id': self.setting_id
         }
-#
-# class UserSettingSchema(Schema):
-#     user_id = fields.Integer()
-#     setting_id = fields.Integer()

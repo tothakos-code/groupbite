@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Text, Enum
+from sqlalchemy import Column, Text, Enum, select
 from uuid import UUID, uuid4
 from . import Base, session
+from .order import Order
 from typing import List
 from marshmallow import Schema, fields
 import enum
@@ -42,6 +43,16 @@ class User(Base):
         session.commit()
         session.close()
         return user
+
+    def get_all_orders(self):
+        return self.orders
+
+    def get_all_orders_between(self, start, end):
+        stmt = select(User).where(
+            User.id == self.id,
+            User.orders.any(Order.date_of_order.between(start, end))
+        )
+        return session.execute(stmt).all()
 
     @property
     def serialized(self):

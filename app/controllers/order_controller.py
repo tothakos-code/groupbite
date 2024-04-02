@@ -18,16 +18,28 @@ from app.services.menu_service import MenuService
 sidfdpattern = r"\/sidfd-[0-9]+\/"
 socketio = SocketioSingleton.get_instance()
 
-@order_blueprint.route('/history/<requested_date>')
-@order_blueprint.route('/history', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
-def handle_order_history(requested_date):
-    session = Session()
-    order_history = session.query(Order).filter(Order.order_date == requested_date).first()
-    session.close()
-    if not order_history:
-        return {}
-    OrderService.migrate_to_userid_based_order(requested_date)
-    return OrderService.replace_userid_with_username(requested_date)
+@order_blueprint.route('/history', methods=['POST'])
+def handle_order_history():
+    DATE_FROM = request.json['date_from']
+    DATE_TO = request.json['date_to']
+    USER_ID = request.json['user_id']
+
+    result = {}
+    for value in UserBasket.find_orders_between_dates(DATE_FROM, DATE_TO):
+        order = Order.get_by_id(value[0])
+        date = value[1].strftime('%Y-%m-%d')
+        if date not in result:
+            result[date] = {}
+
+        result[date][value[0]] = order[0].serialized
+        result[date][value[0]]['vendor'] = order[0].vendor.name
+
+        sum = 0
+        for item in order[0].items:
+            sum += item.item.price * item.count
+        result[date][value[0]]['sum'] = sum
+
+    return result
 
 # TODO: implement this
 # @order_blueprint.route('/get-order-state')
@@ -52,15 +64,16 @@ def handle_get_basket(order_id):
 # TODO: implement this, was there an order for a user
 @order_blueprint.route('/get-user-basket-between', methods=['POST'])
 def handle_get_user_basket_between():
-    USER = request.json['user']
+    USER_ID = request.json['user_id']
     DATE_FROM = request.json['date_from']
     DATE_TO = request.json['date_to']
-    return OrderService.get_user_basket_between(UserService.username_to_id(USER), DATE_FROM, DATE_TO)
-
-# TODO: Delet this
-@order_blueprint.route('/migrate-basket', methods=['GET'])
-def handle_basket_migration():
-    return str(OrderService.migrate_to_userid_based_order(date.today().strftime('%Y-%m-%d')))
+    result = []
+    for value in UserBasket.find_user_order_dates_between(USER_ID, DATE_FROM, DATE_TO):
+        result.append({
+            "order_id": value[0],
+            "date": value[1].strftime('%Y-%m-%d'),
+        })
+    return result
 
 # TODO: Upgrade this
 @socketio.on('fe_date_selection')

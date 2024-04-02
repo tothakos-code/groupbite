@@ -71,13 +71,21 @@ class MenuService:
                     }
         return result
 
-    def fill_menu(vendor_id_to_fill, date_to_fill, raw_item_list):
-        menu = Menu.find_vendor_menu(vendor_id_to_fill,date_to_fill)
+    def fill_menu(vendor_id, date_to_fill, raw_item_list):
+        menu = Menu.find_vendor_menu(vendor_id, date_to_fill)
         if menu is None:
             logging.error("Menu to fill not found!")
             return
         # TODO: Handlig items that got out of stock
         for raw_menu_item in raw_item_list:
+            found = False
+            for item in menu.items:
+                if item.name == raw_menu_item['name']:
+                    found = True
+                    break
+            if found:
+                continue
+
             session.add(
                 MenuItem(
                     menu_id=menu.id,

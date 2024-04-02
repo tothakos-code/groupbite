@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Text, Enum
+from sqlalchemy import Column, Text, Enum, select
 from uuid import UUID
 from . import Base, session
+from .order import Order
 from marshmallow import Schema, fields
 import enum
 from sqlalchemy import ForeignKey
@@ -25,6 +26,42 @@ class UserBasket(Base):
 
     def find_items_by_order(order_id):
         return session.query(UserBasket).filter(UserBasket.order_id == order_id).all()
+
+    def find_user_orders(user_id):
+        stmt = select(UserBasket).where(UserBasket.user_id == user_id)
+        return session.execute(stmt).all()
+
+    def find_user_orders_by_date(user_id, date):
+        stmt = select(UserBasket).where(UserBasket.user_id == user_id, UserBasket.order.date_of_order == date)
+        return session.execute(stmt).all()
+
+    def find_user_order_dates(user_id):
+        stmt = select(
+            UserBasket.order_id,
+            Order.date_of_order
+        ).join(Order).where(
+            UserBasket.user_id == user_id
+        ).group_by(UserBasket.order_id, Order.date_of_order)
+        return session.execute(stmt).all()
+
+    def find_orders_between_dates(start, end):
+        stmt = select(
+            UserBasket.order_id,
+            Order.date_of_order
+        ).join(Order).where(
+            Order.date_of_order.between(start, end)
+        ).group_by(UserBasket.order_id, Order.date_of_order)
+        return session.execute(stmt).all()
+
+    def find_user_order_dates_between(user_id, start, end):
+        stmt = select(
+            UserBasket.order_id,
+            Order.date_of_order
+        ).join(Order).where(
+            UserBasket.user_id == user_id,
+            Order.date_of_order.between(start, end)
+        ).group_by(UserBasket.order_id, Order.date_of_order)
+        return session.execute(stmt).all()
 
     def clear_items(user_id, order_id):
         user_basket = session.query(UserBasket).filter(
@@ -91,9 +128,3 @@ class UserBasket(Base):
             'item': self.item.serialized,
             'count': self.count
         }
-
-# class UserBasketSchema(Schema):
-#     id = fields.Integer()
-#     menu_id = fields.Integer()
-#     name = fields.String()
-#     count = fields.Integer()

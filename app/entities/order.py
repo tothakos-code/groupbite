@@ -4,7 +4,7 @@ from . import Base, session
 from uuid import UUID
 from datetime import datetime, date
 from marshmallow import Schema, fields
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, select
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -43,11 +43,21 @@ class Order(Base):
         session.close()
         return order
 
+    def get_by_id(order_id):
+        stmt = select(Order).where(Order.id == order_id)
+        return session.execute(stmt).first()
+
     def find_open_order_by_date_for_a_vendor(v_id: UUID, doo: date = date.today() ):
         return session.query(Order).filter(
             Order.vendor_id == v_id,
             Order.date_of_order == doo,
             Order.state_id == OrderState.COLLECT).first()
+
+    def find_order_between(date_from, date_to):
+        stmt = select(Order).where(
+            Order.date_of_order.between(date_from, date_to)
+        )
+        return session.execute(stmt).all()
 
     @property
     def serialized(self):

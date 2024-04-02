@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from "./views/Home.vue";
 import AdminView from "./views/Admin.vue";
+import PluginSettings from "./components/PluginSettings.vue";
+import PluginList from "./components/PluginList.vue";
 
 const routes = [
   {
@@ -17,6 +19,16 @@ const routes = [
     name: 'admin',
     path: '/admin',
     component: AdminView,
+    children: [
+      {
+        path: '',
+        component: PluginList
+      },
+      {
+        path: ':id/config',
+        component: PluginSettings
+      }
+    ]
   },
   {
     name: 'menu',

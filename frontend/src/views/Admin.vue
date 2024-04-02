@@ -1,15 +1,16 @@
 <template>
   <div class="row ms-2">
-    <div class="">
-      <h1 class="">
+    <div class="row">
+      <h1 class="col">
         Plugin manager
       </h1>
-      <div class="">
+      <div class="col">
         <div
           class="btn"
           :class="['btn-' + auth.userColor.value ]"
-          @click="refreshPluginList()"
+          @click="openAdminHome()"
         >
+          vissza
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -27,90 +28,12 @@
         </div>
       </div>
     </div>
-    <table class="table table-striped table-hover">
-      <thead>
-        <tr>
-          <th scope="col">
-            #
-          </th>
-          <th scope="col">
-            Név
-          </th>
-          <th scope="col">
-            aktív
-          </th>
-          <th scope="col">
-            Műveletek
-          </th>
-        </tr>
-      </thead>
-      <tbody class="table-group-divider">
-        <tr
-          v-for="plugin,i in allPluginList"
-          :key="i"
-        >
-          <th scope="row">
-            {{ i+1 }}
-          </th>
-          <td>
-            {{ plugin.name }}
-          </td>
-          <td>
-            {{ plugin.active }}
-          </td>
-          <td>
-            <div
-              class="btn"
-              :class="['text-' + auth.userColor.value ]"
-              @click="toggleActivation(plugin)"
-            >
-              <svg
-                v-if="plugin.active"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                class="bi bi-toggle-on"
-                viewBox="0 0 16 16"
-              >
-                <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-              </svg>
-              <svg
-                v-else
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                class="bi bi-toggle-off"
-                viewBox="0 0 16 16"
-              >
-                <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-              </svg>
-            </div>
-            <div
-              class="btn"
-              :class="['text-' + auth.userColor.value ]"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                class="bi bi-gear-fill"
-                viewBox="0 0 16 16"
-              >
-                <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z" />
-              </svg>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <router-view />
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+// import axios from 'axios';
 import { useAuth } from '@/auth';
 
 export default {
@@ -122,37 +45,13 @@ export default {
       }
     },
     data() {
-      return {
-        allPluginList: []
-      }
+
     },
     mounted() {
-      this.refreshPluginList()
     },
     methods: {
-      refreshPluginList: function () {
-        axios.get(`http://${window.location.host}/api/vendor/find-all`)
-          .then(response => {
-            this.allPluginList = response.data
-          })
-          .catch(e => {
-              console.log(e);
-          })
-      },
-      toggleActivation: function (to) {
-        let command = 'activate';
-        if (to.active) {
-          command = 'deactivate';
-        }
-        axios.post(`http://${window.location.host}/api/vendor/${to.id}/${command}`)
-          .then(() => {
-            this.refreshPluginList();
-          })
-          .catch(e => {
-            console.log(e);
-          })
-
-
+      openAdminHome: function () {
+        this.$router.push({ path:`/admin`})
       }
     }
 };

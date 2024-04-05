@@ -1,4 +1,5 @@
 from enum import Enum as pyenum
+from sqlalchemy.dialects.postgresql import JSONB
 from . import Base, session
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import Boolean
@@ -23,6 +24,7 @@ class Vendor(Base):
     name: Mapped[str]
     active: Mapped[bool] = mapped_column(Boolean(), default=False)
     type: Mapped[VendorType] = mapped_column(default=VendorType.BASIC)
+    settings: Mapped[dict] = mapped_column(JSONB)
 
     orders: Mapped[List["Order"]] = relationship(back_populates="vendor")
 
@@ -46,6 +48,22 @@ class Vendor(Base):
         self.active = False;
         session.commit()
 
+    def update_settings(self, settings):
+        self.settings = settings;
+        session.commit()
+
+    def add_vendor(vendor_p):
+        db_vendor = session.query(Vendor).filter_by(name = vendor_p.name).first()
+
+        if not db_vendor:
+            # insert
+            session.add(Vendor(id=uuid4(), name=vendor_p.name, settings=vendor_p.settings))
+            logging.info("Vendor registered in database: {0}".format(vendor_p.name))
+        else:
+            vendor_p.id = db_vendor.id
+
+        session.commit()
+        session.close()
 
     @property
     def serialized(self):

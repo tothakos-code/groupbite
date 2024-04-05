@@ -60,3 +60,19 @@ def handle_run_scan(vendor_id):
         return "No vendor found"
     vendor.scan()
     return "OK"
+
+@vendor_blueprint.route('/<vendor_id>/settings/get')
+def handle_get_settings(vendor_id):
+    vendor = Vendor.find_by_id(str(vendor_id))
+    if vendor is None:
+        return "No vendor found"
+    return vendor.settings
+
+@vendor_blueprint.route('/<vendor_id>/settings/save', methods=['POST'])
+def handle_save_settings(vendor_id):
+    settings = request.json['data']
+    vendor = Vendor.find_by_id(vendor_id)
+    if vendor is None:
+        return "No vendor found"
+    vendor.update_settings(settings)
+    return vendor.settings

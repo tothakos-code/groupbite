@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Text, Enum, select
+from sqlalchemy.dialects.postgresql import JSONB
 from uuid import UUID, uuid4
 from . import Base, session
 from .order import Order
@@ -21,6 +22,7 @@ class User(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, unique=True, nullable=False, default=uuid4)
     username: Mapped[str] = mapped_column(Text, unique=True)
+    settings: Mapped[dict] = mapped_column(JSONB)
     theme: Mapped[Theme] = mapped_column(default=Theme.LIGHT)
 
     orders: Mapped[List["UserBasket"]] = relationship(back_populates="user")
@@ -61,8 +63,3 @@ class User(Base):
             'username': self.username,
             'theme': str(self.theme)
         }
-
-# class UserSchema(Schema):
-#     id = fields.UUID()
-#     username = fields.String()
-#     theme = fields.Enum(Theme)

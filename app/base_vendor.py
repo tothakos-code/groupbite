@@ -1,17 +1,16 @@
-from unidecode import unidecode
 
 class BaseVendor(object):
-    def __init__(self, name, config):
-        self.id = -1
+    def __init__(self, name, id=-1, configuration={}, settings={}):
         self.name = name
-        self.code_name = unidecode(name)
-        self.config = config
+        self.id = id
+        self.configuration = configuration
+        self.settings = settings
 
     def scan(self):
         raise NotImplementedError("Subclasses must implement the scan method")
 
     def test(self):
-        raise NotImplementedError("Subclasses must implement the scan method")
+        raise NotImplementedError("Subclasses must implement the test method")
 
     def get(self):
-        raise NotImplementedError("Subclasses must implement the scan method")
+        raise NotImplementedError("Subclasses must implement the get method")

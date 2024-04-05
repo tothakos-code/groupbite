@@ -21,7 +21,7 @@ def handle_user_login():
 
     if not user_to_login:
         # register
-        user_to_login = User.create_user(User(username=username))
+        user_to_login = User.create_user(User(username=username, settings={}))
         logging.info(f"User {user_to_login.username} created!")
 
     logging.info(f"User {user_to_login.username} logged in!")

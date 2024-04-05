@@ -10,7 +10,7 @@ class VendorFactory:
     @classmethod
     def register(self, vendor_object) -> None:
         """Register a new vendor."""
-        VendorService.add_vendor(vendor_object)
+        Vendor.add_vendor(vendor_object)
         self._vendors[str(vendor_object.id)] = vendor_object
 
     @classmethod
@@ -28,4 +28,6 @@ class VendorFactory:
 
     @classmethod
     def get_one_vendor_object(self, vendor_id):
-        return self._vendors[vendor_id]
+        if vendor_id in self._vendors:
+            return self._vendors[vendor_id]
+        return None

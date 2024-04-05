@@ -25,14 +25,11 @@ import VueCookies from 'vue3-cookies';
 import VueClipboard from 'vue3-clipboard';
 import Notifications from '@kyvg/vue3-notification';
 import router from './router.js';
-import { register_plugin_routes } from './loader.js';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap.js';
 import './assets/scss/main.scss';
 
 let app = createApp(App);
-
-register_plugin_routes(router);
 
 app.use(router);
 app.use(VueCookies);

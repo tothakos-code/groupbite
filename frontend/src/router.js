@@ -3,6 +3,7 @@ import HomeView from "./views/Home.vue";
 import AdminView from "./views/Admin.vue";
 import PluginSettings from "./components/PluginSettings.vue";
 import PluginList from "./components/PluginList.vue";
+import NotFound from "./components/NotFound.vue";
 
 const routes = [
   {
@@ -35,6 +36,7 @@ const routes = [
     path: '/menu',
 
   },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },
 ];
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),

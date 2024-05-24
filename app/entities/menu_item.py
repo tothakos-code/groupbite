@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Text, Enum
 from uuid import UUID
-from . import Base
+from . import Base, session
 from marshmallow import Schema, fields
 import enum
 from typing import List
@@ -25,6 +25,16 @@ class MenuItem(Base):
     def __repr__(self):
         return f"MenuItem<{self.id},menu_id={self.menu_id},size={self.size},price={self.price}>"
 
+    def find_all_by_menu(menu_id):
+        return session.query(MenuItem).filter_by(menu_id = menu_id).all()
+
+
+    def add(item):
+        session.add(item)
+        session.commit()
+        session.close()
+
+
     @property
     def serialized(self):
         return {
@@ -33,10 +43,3 @@ class MenuItem(Base):
             'size': self.size,
             'price': self.price
         }
-
-# class MenuItemSchema(Schema):
-#     id = fields.Integer()
-#     menu_id = fields.Integer()
-#     name = fields.String()
-#     size = fields.String()
-#     price = fields.Integer()

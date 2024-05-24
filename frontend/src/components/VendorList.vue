@@ -3,7 +3,7 @@
     <div
       class="btn"
       :class="['btn-' + auth.userColor.value ]"
-      @click="refreshPluginList()"
+      @click="refreshVendorList()"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -18,6 +18,24 @@
           d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"
         />
         <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
+      </svg>
+    </div>
+    <div
+      class="btn"
+      :class="['btn-' + auth.userColor.value ]"
+      @click="addVendor()"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="currentColor"
+        class="bi bi-building-add"
+        viewBox="0 0 16 16"
+      >
+        <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0" />
+        <path d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6.5a.5.5 0 0 1-1 0V1H3v14h3v-2.5a.5.5 0 0 1 .5-.5H8v4H3a1 1 0 0 1-1-1z" />
+        <path d="M4.5 2a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" />
       </svg>
     </div>
   </div>
@@ -41,26 +59,26 @@
       </thead>
       <tbody class="table-group-divider">
         <tr
-          v-for="plugin,i in allPluginList"
+          v-for="vendor,i in allVendorList"
           :key="i"
         >
           <th scope="row">
             {{ i+1 }}
           </th>
           <td>
-            {{ plugin.name }}
+            {{ vendor.name }}
           </td>
           <td>
-            {{ plugin.active }}
+            {{ vendor.active }}
           </td>
           <td>
             <div
               class="btn"
               :class="['text-' + auth.userColor.value ]"
-              @click="toggleActivation(plugin)"
+              @click="toggleActivation(vendor)"
             >
               <svg
-                v-if="plugin.active"
+                v-if="vendor.active"
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
                 height="24"
@@ -85,7 +103,7 @@
             <div
               class="btn"
               :class="['text-' + auth.userColor.value ]"
-              @click="openPluginConfiguration(plugin.id)"
+              @click="openVendorConfiguration(vendor.id)"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -119,17 +137,17 @@ export default {
     },
     data() {
       return {
-        allPluginList: []
+        allVendorList: []
       }
     },
     mounted() {
-      this.refreshPluginList()
+      this.refreshVendorList()
     },
     methods: {
-      refreshPluginList: function () {
+      refreshVendorList: function () {
         axios.get(`http://${window.location.host}/api/vendor/find-all`)
           .then(response => {
-            this.allPluginList = response.data
+            this.allVendorList = response.data
           })
           .catch(e => {
               console.log(e);
@@ -142,7 +160,7 @@ export default {
         }
         axios.post(`http://${window.location.host}/api/vendor/${to.id}/${command}`)
           .then(() => {
-            this.refreshPluginList();
+            this.refreshVendorList();
           })
           .catch(e => {
             console.log(e);
@@ -150,9 +168,12 @@ export default {
 
 
       },
-      openPluginConfiguration: function (id) {
+      openVendorConfiguration: function (id) {
         console.log(id);
-        this.$router.push({ path:`/admin/${id}/config`, replace: true})
+        this.$router.push({ path:`/admin/${id}/config`})
+      },
+      addVendor: function () {
+        this.$router.push({ path:`/admin/add`})
       }
     }
 };

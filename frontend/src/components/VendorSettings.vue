@@ -2,13 +2,13 @@
   <div class="row ms-2">
     <div class="">
       <h1 class="">
-        Plugin Config {{ $route.params.id }}
+        Vendor settings {{ vendor.name }}
       </h1>
     </div>
     <div class="">
       <div
-        v-for="(setting, id) in settings"
-        :key="id"
+        v-for="(setting, sid) in vendor.settings"
+        :key="sid"
         class=""
       >
         <label :for="setting.id">{{ setting.name }}
@@ -37,7 +37,13 @@ import axios from 'axios';
 import { useAuth } from '@/auth';
 
 export default {
-    name: 'PluginConfiguration',
+    name: 'PluginSettings',
+    props: {
+      id:{
+        type: String,
+        required: true
+      },
+    },
     setup() {
       const auth = useAuth();
       return {
@@ -46,7 +52,7 @@ export default {
     },
     data() {
       return {
-        settings: {}
+        vendor: {}
       }
     },
     mounted() {
@@ -54,9 +60,9 @@ export default {
     },
     methods: {
       getSettings: function () {
-        axios.get(`http://${window.location.host}/api/vendor/${this.$route.params.id}/settings/get`)
+        axios.get(`http://${window.location.host}/api/vendor/${this.$route.params.id}/get`)
           .then(response => {
-            this.settings = response.data
+            this.vendor = response.data
           })
           .catch(e => {
               console.log(e);

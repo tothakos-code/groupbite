@@ -49,9 +49,6 @@ export default {
     firstChar: function(string) {
       return string.charAt(0);
     },
-    setVendor: function(vendor_id) {
-      state.selected_vendor = vendor_id
-    },
     backgroundColor: function(str, s, l) {
 
       var hash = 0;

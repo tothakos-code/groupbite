@@ -7,6 +7,7 @@ import logging
 
 from app.controllers import menu_blueprint
 from app.entities.menu import Menu
+from app.entities.menu_item import MenuItem
 from app.entities import Session
 from app.services.menu_service import MenuService
 from app.services.vendor_service import VendorService
@@ -52,3 +53,34 @@ def get_week_requested_menu(requested_date=date.today().strftime('%Y-%m-%d')):
         # stepping to the next day
         start_date += delta
     return result
+
+@menu_blueprint.route('/<vendor_id>/get', methods=['GET'])
+def handle_menu_get(vendor_id):
+    menus = Menu.find_all_by_vendor(vendor_id)
+    result = []
+    for m in menus:
+        result.append(m.serialized)
+    logging.info(result)
+    return json.dumps(result)
+
+@menu_blueprint.route('/<vendor_id>/get-items/<menu_id>', methods=['GET'])
+def handle_menu_get_items(vendor_id, menu_id):
+    items = MenuItem.find_all_by_menu(menu_id)
+    result = []
+    for i in items:
+        result.append(i.serialized)
+    logging.info(result)
+    return json.dumps(result)
+
+@menu_blueprint.route('/<vendor_id>/item-add', methods=['POST'])
+def handle_menu_item_add(vendor_id):
+    item = request.json['data']
+    menu = request.json['menu']
+    MenuItem.add(MenuItem(menu_id=menu, name=item['name'], link="", size=item['size'], price=item['price']))
+    return "OK"
+
+@menu_blueprint.route('/<vendor_id>/add', methods=['POST'])
+def handle_menu_add(vendor_id):
+    menu = request.json['data']
+    Menu.add(Menu(name=menu['name'], vendor_id=vendor_id, freq_id=menu['freq']))
+    return "OK"

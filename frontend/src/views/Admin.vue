@@ -2,7 +2,7 @@
   <div class="row ms-2">
     <div class="row">
       <h1 class="col">
-        Plugin manager
+        Vendor manager
       </h1>
       <div class="col">
         <div

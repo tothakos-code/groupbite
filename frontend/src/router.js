@@ -1,8 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from "./views/Home.vue";
 import AdminView from "./views/Admin.vue";
-import PluginSettings from "./components/PluginSettings.vue";
-import PluginList from "./components/PluginList.vue";
+import MenuView from "./views/MenuRender.vue";
+import VendorConfiguration from "./components/VendorConfiguration.vue";
+import VendorList from "./components/VendorList.vue";
+import VendorAdd from "./components/VendorAdd.vue";
 import NotFound from "./components/NotFound.vue";
 
 const routes = [
@@ -22,21 +24,31 @@ const routes = [
     component: AdminView,
     children: [
       {
+        name:'vendorlist',
         path: '',
-        component: PluginList
+        component: VendorList
       },
       {
         path: ':id/config',
-        component: PluginSettings
+        component: VendorConfiguration,
+        props: true
+      },
+      {
+        path: 'add',
+        component: VendorAdd
       }
     ]
   },
   {
     name: 'menu',
     path: '/menu',
-
+    component: MenuView
   },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },
+  {
+    name: 'NotFound',
+    path: '/:pathMatch(.*)*',
+    component: NotFound
+  },
 ];
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),

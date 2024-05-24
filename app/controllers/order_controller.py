@@ -93,8 +93,7 @@ def handle_date_selection_change(data):
         order = Order.create_order(vendor_id, new_date)
 
     socketio.emit(
-        'be_order_update',
-        {
+        'be_order_update', {
             'order': order.serialized,
             'basket': OrderService.get_formated_full_basket_group_by_user(order.id)
         },

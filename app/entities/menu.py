@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, JSON, func, Sequence
+from sqlalchemy import Column, String, Integer, DateTime, JSON, func, Sequence, select, or_, and_
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped
@@ -39,5 +39,40 @@ class Menu(Base):
     def __repr__(self):
         return f"Menu<{self.id},name={self.name},menu_date={self.menu_date},vendor_id={self.vendor_id}>"
 
-    def find_vendor_menu(vendor_id, menu_date):
+    def find_vendor_daily_menu(vendor_id, menu_date):
         return session.query(Menu).filter_by(vendor_id = vendor_id, menu_date = menu_date).first()
+
+    def find_vendor_all_menu(vendor_id, menu_date):
+        stmt = select(Menu).where(
+            or_(
+                and_(
+                    Menu.vendor_id == vendor_id,
+                    Menu.menu_date == menu_date
+                ),
+                and_(
+                    Menu.vendor_id == vendor_id,
+                    Menu.freq_id == Frequency.FIX
+                )
+            )
+        )
+
+        return session.execute(stmt).scalars().all()
+
+    def find_all_by_vendor(vendor_id):
+        return session.query(Menu).filter_by(vendor_id = vendor_id).all()
+
+    def add(menu):
+        session.add(menu)
+        session.commit()
+        session.close()
+
+    @property
+    def serialized(self):
+        from app.vendor_factory import VendorFactory
+        return {
+            'id': self.id,
+            'name': self.name,
+            'date': str(self.menu_date),
+            'vendor_id': str(self.vendor_id),
+            'freq': str(self.freq_id),
+        }

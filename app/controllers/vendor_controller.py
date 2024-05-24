@@ -4,6 +4,8 @@ import logging
 import json
 import requests
 
+from app.base_vendor import BaseVendor
+
 from app.controllers import vendor_blueprint
 from app.vendor_factory import VendorFactory
 
@@ -42,31 +44,35 @@ def handle_activation(vendor_id, cmd):
     socketio.emit('be_vendors_update', VendorService.find_all_active())
     return "OK", 200
 
+@vendor_blueprint.route('/create', methods=['POST'])
+def handle_create():
+    vendor_json = request.json['data']
+    logging.debug(vendor_json)
 
-@vendor_blueprint.route('/get_vendors_obj')
-def handle_get_vendors_obj():
-    string = str(len(VendorFactory.get_vendor_objects())) + "//"
-    for key,value in VendorFactory.get_vendor_objects().items():
-        string += str(value.id)
-        string += "-"
-        string += value.code_name
-        string += ',\n'
-    return string
+    vendor_obj = BaseVendor(
+        vendor_json['name'],
+        settings=vendor_json['settings']
+        )
+
+    VendorFactory.register(vendor_obj)
+
+    vendor_db = Vendor.find_by_id(vendor_obj.id)
+    return vendor_db.serialized
 
 @vendor_blueprint.route('/<vendor_id>/scan')
 def handle_run_scan(vendor_id):
-    vendor = VendorFactory.get_one_vendor_object(str(vendor_id))
+    vendor = VendorFactory.get_one_vendor_object(vendor_id)
     if vendor is None:
         return "No vendor found"
     vendor.scan()
     return "OK"
 
-@vendor_blueprint.route('/<vendor_id>/settings/get')
+@vendor_blueprint.route('/<vendor_id>/get')
 def handle_get_settings(vendor_id):
-    vendor = Vendor.find_by_id(str(vendor_id))
+    vendor = Vendor.find_by_id(vendor_id)
     if vendor is None:
         return "No vendor found"
-    return vendor.settings
+    return vendor.serialized
 
 @vendor_blueprint.route('/<vendor_id>/settings/save', methods=['POST'])
 def handle_save_settings(vendor_id):

@@ -1,6 +1,7 @@
 import importlib
 import logging
 from app.vendor_factory import VendorFactory
+from app.entities.vendor import VendorType
 from app.base_vendor import BaseVendor
 
 class ModuleInterface:
@@ -22,5 +23,7 @@ def load_plugins(plugins: list) -> None:
 
         for name, obj in plugin.__dict__.items():
             if isinstance(obj, type) and issubclass(obj, BaseVendor) and obj != BaseVendor:
-                VendorFactory.register(obj())
+                vendor_obj = obj()
+                vendor_obj.type = VendorType.PLUGIN
+                VendorFactory.register(vendor_obj)
                 logging.info("Loaded {0} plugin".format(plugin.__name__))

@@ -39,7 +39,7 @@ app.use(VueClipboard, {
   appendToBody: true,
 });
 
-app.mount('#app');
+
 
 Date.prototype.getWeek = function() {
   var date = new Date(this.getTime());
@@ -56,3 +56,4 @@ Date.prototype.getWeek = function() {
 Date.prototype.toISODate = function() {
   return this.toISOString().split('T')[0]
 };
+app.mount('#app');

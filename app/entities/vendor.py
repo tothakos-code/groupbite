@@ -6,8 +6,9 @@ from sqlalchemy import Boolean
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-from uuid import UUID
+from uuid import UUID, uuid4
 from typing import List
+import logging
 
 
 class VendorType(pyenum):
@@ -21,7 +22,7 @@ class Vendor(Base):
     __tablename__ = 'vendor'
 
     id: Mapped[UUID] = mapped_column(primary_key=True, unique=True, nullable=False)
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(unique=True, nullable=False)
     active: Mapped[bool] = mapped_column(Boolean(), default=False)
     type: Mapped[VendorType] = mapped_column(default=VendorType.BASIC)
     settings: Mapped[dict] = mapped_column(JSONB)
@@ -34,8 +35,11 @@ class Vendor(Base):
     def find_all():
         return session.query(Vendor).order_by(Vendor.name).all()
 
+    def find_all_by_type(type):
+        return session.query(Vendor).where(Vendor.type == type).all()
+
     def find_all_active():
-        return session.query(Vendor).where(Vendor.active==True).all()
+        return session.query(Vendor).where(Vendor.active == True).all()
 
     def find_by_id(id):
         return session.query(Vendor).where(Vendor.id == id).first()
@@ -52,15 +56,17 @@ class Vendor(Base):
         self.settings = settings;
         session.commit()
 
-    def add_vendor(vendor_p):
-        db_vendor = session.query(Vendor).filter_by(name = vendor_p.name).first()
+    def add_vendor(vendor_obj):
+        vendor_db = session.query(Vendor).filter_by(name = vendor_obj.name).first()
 
-        if not db_vendor:
+        if not vendor_db:
             # insert
-            session.add(Vendor(id=uuid4(), name=vendor_p.name, settings=vendor_p.settings))
-            logging.info("Vendor registered in database: {0}".format(vendor_p.name))
+            vendor_id = uuid4()
+            session.add(Vendor(id=vendor_id, name=vendor_obj.name, type=vendor_obj.type, settings=vendor_obj.settings))
+            vendor_obj.id = str(vendor_id)
+            logging.info("Vendor registered in database: {0}".format(vendor_obj.name))
         else:
-            vendor_p.id = db_vendor.id
+            vendor_obj.id = str(vendor_db.id)
 
         session.commit()
         session.close()
@@ -73,5 +79,5 @@ class Vendor(Base):
             'name': self.name,
             'active': self.active,
             'type': str(self.type),
-            'configuration': VendorFactory.get_one_vendor_object(str(self.id)).configuration
+            'settings': self.settings,
         }

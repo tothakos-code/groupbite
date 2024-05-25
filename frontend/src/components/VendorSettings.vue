@@ -35,6 +35,7 @@
 <script>
 import axios from 'axios';
 import { useAuth } from '@/auth';
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
     name: 'PluginSettings',
@@ -69,12 +70,25 @@ export default {
           })
       },
       saveSettings: function () {
-        axios.post(`http://${window.location.host}/api/vendor/${this.$route.params.id}/settings/save`, {'data':this.settings})
+        axios.post(
+          `http://${window.location.host}/api/vendor/${this.$route.params.id}/settings/save`,
+          {
+            'data': this.vendor.settings,
+          }
+        )
           .then(response => {
             this.settings = response.data
+            notify({
+              type: "info",
+              text: "Vendor beállítások mentése sikeres!",
+            });
           })
           .catch(e => {
               console.log(e);
+              notify({
+                type: "error",
+                text: "Vendor beállítások mentése nem sikerült!",
+              });
           })
       },
     }

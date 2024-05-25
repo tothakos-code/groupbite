@@ -58,6 +58,14 @@ class Menu(Base):
 
         return session.execute(stmt).scalars().all()
 
+
+    def find_by_id(menu_id):
+        stmt = select(Menu).where(
+            Menu.id == menu_id
+        )
+
+        return session.execute(stmt).scalars().first()
+
     def find_all_by_vendor(vendor_id):
         return session.query(Menu).filter_by(vendor_id = vendor_id).all()
 
@@ -65,6 +73,15 @@ class Menu(Base):
         session.add(menu)
         session.commit()
         session.close()
+
+    def update(self, name, date):
+        self.name = name
+        self.menu_date = date
+        session.commit()
+
+    def delete(self):
+        session.delete(self)
+        session.commit()
 
     @property
     def serialized(self):

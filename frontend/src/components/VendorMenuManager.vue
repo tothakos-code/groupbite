@@ -53,24 +53,86 @@
           <th scope="col">
             Gyakoriság
           </th>
+          <th scope="col">
+            Műveletek
+          </th>
         </tr>
       </thead>
       <tbody class="table-group-divider">
         <tr
-          v-for="menu,i in menulist"
+          v-for="[i, menu] in menulist"
           :key="i"
         >
           <th scope="row">
             {{ menu.id }}
           </th>
           <td>
-            {{ menu.name }}
+            <input
+              v-if="menu.isEditing"
+              v-model="menu.name"
+              type="text"
+            >
+            <span v-else>
+              {{ menu.name }}
+            </span>
           </td>
           <td>
-            {{ menu.menu_date }}
+            <input
+              v-if="menu.isEditing"
+              v-model="menu.date"
+              type="text"
+            >
+            <span v-else>
+              {{ menu.date }}
+            </span>
           </td>
           <td>
             {{ menu.freq }}
+          </td>
+          <td>
+            <button
+              v-if="!menu.isEditing"
+              type="button"
+              name="button"
+              class="btn"
+              title="Szerkesztés"
+              :class="['btn-outline-' + auth.userColor.value ]"
+              @click="edit(menu.id)"
+            >
+              Szerkesztés
+            </button>
+            <div v-else>
+              <button
+                type="button"
+                name="button"
+                class="btn"
+                title="Mentés"
+                :class="['btn-outline-' + auth.userColor.value ]"
+                @click="updateMenu(menu.id)"
+              >
+                Mentés
+              </button>
+              <button
+                type="button"
+                name="button"
+                class="btn"
+                title="Mégse"
+                :class="['btn-outline-' + auth.userColor.value ]"
+                @click="cancelEdit(menu.id)"
+              >
+                Mégse
+              </button>
+            </div>
+            <button
+              type="button"
+              name="button"
+              class="btn"
+              title="Törlés"
+              :class="['btn-outline-' + auth.userColor.value ]"
+              @click="deleteMenu(menu.id)"
+            >
+              Törlés
+            </button>
           </td>
         </tr>
       </tbody>
@@ -112,7 +174,16 @@ export default {
       getMenuList: function () {
         axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/get`)
           .then(response => {
-            this.menulist = response.data
+            let newMenuList = new Map(
+              response.data.map(
+                item => [item.id, item]
+              )
+            )
+            newMenuList.forEach((item) => {
+              item.isEditing = false
+            });
+            this.menulist = newMenuList
+            console.log(newMenuList);
             console.log(this.menulist);
           })
           .catch(e => {
@@ -121,8 +192,39 @@ export default {
       },
       addMenu: function () {
         axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/add`, {'data':this.newMenu})
-          .then(response => {
-            this.items = response.data
+          .then(() => {
+            this.getMenuList()
+          })
+          .catch(e => {
+              console.log(e);
+          })
+      },
+      edit: function (menu_id) {
+        const item = this.menulist.get(menu_id)
+        this.menulist.set(item.id, { ...item, isEditing: true})
+        console.log(this.menulist);
+      },
+      cancelEdit: function (menu_id) {
+        const item = this.menulist.get(menu_id)
+        this.menulist.set(item.id, { ...item, isEditing: false})
+      },
+      updateMenu: function (menu_id) {
+        const menu = this.menulist.get(menu_id)
+        this.menulist.set(menu.id, { ...menu, isEditing: false})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/update`, {'data': menu})
+          .then(() => {
+            this.getMenuList()
+          })
+          .catch(e => {
+              console.log(e);
+          })
+      },
+      deleteMenu: function (menu_id) {
+        const menu = this.menulist.get(menu_id)
+        this.menulist.set(menu.id, { ...menu, isEditing: false})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/delete`, {'data': menu})
+          .then(() => {
+            this.getMenuList()
           })
           .catch(e => {
               console.log(e);

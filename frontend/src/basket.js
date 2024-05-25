@@ -1,7 +1,6 @@
 import { state } from "@/socket.js";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 
-export const transportFee = ref(0);
 
 export const personCount = computed(() => {
     return Object.keys(state.basket).length;
@@ -11,7 +10,7 @@ export const transportFeePerPerson = computed(() => {
     if (personCount.value == 0) {
       return 0;
     }
-    return Math.ceil(transportFee.value / personCount.value);
+    return Math.ceil(state.selected_vendor.settings.transport_price.value / personCount.value);
   });
 
 export const boxCount = computed(() => {
@@ -34,6 +33,6 @@ export const basketSum = computed(() => {
         sum+= Number(entry.count) * Number(entry.item.price);
       })
     })
-    sum += Number(transportFee.value);
+    sum += Number(state.selected_vendor.settings.transport_price.value);
     return sum;
 });

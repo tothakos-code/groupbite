@@ -231,6 +231,7 @@
 
 <script>
 import { socket, state } from "@/socket";
+import { transportFeePerPerson, personCount } from "@/basket";
 import { useAuth } from "@/auth";
 import { notify } from "@kyvg/vue3-notification";
 import axios from 'axios';
@@ -264,10 +265,10 @@ export default {
       for (const item of state.basket[state.user.id].basket_entry) {
         sum+= Number(item.count) * Number(item.item.price);
       }
-      // let pearsonCount = Object.keys(state.globalBasket).length;
-      // if (pearsonCount != 0) {
-      //   sum += Math.ceil(this.transportFeePerPerson/pearsonCount);
-      // }
+      console.log(transportFeePerPerson.value);
+      if (personCount.value != 0) {
+        sum += Math.ceil(transportFeePerPerson.value);
+      }
       return sum;
     },
     currentUserState() {

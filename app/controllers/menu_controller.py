@@ -54,14 +54,6 @@ def get_week_requested_menu(requested_date=date.today().strftime('%Y-%m-%d')):
         start_date += delta
     return result
 
-@menu_blueprint.route('/<vendor_id>/get', methods=['GET'])
-def handle_menu_get(vendor_id):
-    menus = Menu.find_all_by_vendor(vendor_id)
-    result = []
-    for m in menus:
-        result.append(m.serialized)
-    logging.info(result)
-    return json.dumps(result)
 
 @menu_blueprint.route('/<vendor_id>/get-items/<menu_id>', methods=['GET'])
 def handle_menu_get_items(vendor_id, menu_id):
@@ -72,12 +64,38 @@ def handle_menu_get_items(vendor_id, menu_id):
     logging.info(result)
     return json.dumps(result)
 
+
 @menu_blueprint.route('/<vendor_id>/item-add', methods=['POST'])
 def handle_menu_item_add(vendor_id):
     item = request.json['data']
     menu = request.json['menu']
     MenuItem.add(MenuItem(menu_id=menu, name=item['name'], link="", size=item['size'], price=item['price']))
     return "OK"
+
+
+@menu_blueprint.route('/<vendor_id>/get', methods=['GET'])
+def handle_menu_get(vendor_id):
+    menus = Menu.find_all_by_vendor(vendor_id)
+    result = []
+    for m in menus:
+        result.append(m.serialized)
+    logging.info(result)
+    return json.dumps(result)
+
+
+@menu_blueprint.route('/<vendor_id>/update', methods=['POST'])
+def handle_menu_update(vendor_id):
+    menu = request.json['data']
+    menu_db = Menu.find_by_id(menu['id']).update(menu['name'], menu['date'])
+    return json.dumps(menu_db)
+
+
+@menu_blueprint.route('/<vendor_id>/delete', methods=['POST'])
+def handle_menu_delete(vendor_id):
+    menu = request.json['data']
+    Menu.find_by_id(menu['id']).delete()
+    return "OK"
+
 
 @menu_blueprint.route('/<vendor_id>/add', methods=['POST'])
 def handle_menu_add(vendor_id):

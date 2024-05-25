@@ -81,4 +81,6 @@ def handle_save_settings(vendor_id):
     if vendor is None:
         return "No vendor found"
     vendor.update_settings(settings)
+    socketio.emit('be_vendors_update', VendorService.find_all_active())
+
     return vendor.settings

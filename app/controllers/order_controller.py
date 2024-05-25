@@ -87,7 +87,7 @@ def handle_date_selection_change(data):
 
     join_room(f"{vendor_id}_{new_date}")
 
-    order = Order.find_open_order_by_date_for_a_vendor(vendor_id, new_date)
+    order = Order.find_order_by_date_for_a_vendor(vendor_id, new_date)
 
     if not order:
         order = Order.create_order(vendor_id, new_date)

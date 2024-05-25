@@ -130,7 +130,7 @@ export default {
       Object.values(this.personBasket).forEach((entry) => {
           sum+= Number(entry.count) * Number(entry.item.price);
       });
-      sum += Number(this.transportFeePerPerson);
+      sum += Number(transportFeePerPerson.value);
       return sum;
     },
     basketTotalTitle() {
@@ -138,7 +138,7 @@ export default {
       Object.values(this.personBasket).forEach((entry) => {
           sumTitle+= entry.count + '*' + entry.item.price + ' Ft + ';
       });
-      sumTitle+= this.transportFeePerPerson + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
+      sumTitle+= transportFeePerPerson.value + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
       return sumTitle;
     },
     loggedInUser() {

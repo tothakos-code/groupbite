@@ -126,12 +126,10 @@ export default {
       personCount
     }
   },
-  data() {
-    return {
-      transportFee: 400
-    };
-  },
   computed: {
+    transportFee() {
+      return state.selected_vendor.settings.transport_price.value
+    },
     globalBasket() {
       return state.basket;
     },

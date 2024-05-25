@@ -128,8 +128,12 @@ export default {
       showSpinner: false,
       showFinish: false,
       orderItems: [],
-      orderDesc: "Bárdi autó épületén jobb oldalt fotocellás ajtó, balra lift, 3. em, jobbra csengő Tigra Kft.",
       psid: ""
+    }
+  },
+  computed: {
+    orderDesc() {
+      return state.selected_vendor.settings.comment_example.value
     }
   },
   mounted() {

@@ -34,6 +34,14 @@
             name="transport_price"
           >
         </label>
+
+        <label for="transport_price">Rendelés megjegyzés példa:
+          <input
+            v-model="vendor.settings.comment_example.value"
+            type="number"
+            name="transport_price"
+          >
+        </label>
       </div>
       <button
         class="btn"
@@ -77,6 +85,12 @@ export default {
               "value": "0",
               "section": "root"
             },
+            "comment_example": {
+              "name": "Rendelés megjegyzés példa",
+              "type": "STR",
+              "value": "Bárdi autó épületén jobb oldalt fotocellás ajtó, balra lift, 3. em, jobbra csengő Tigra Kft.",
+              "section": "root"
+            },
           },
           'configuration':{},
         }
@@ -89,7 +103,6 @@ export default {
         axios.post(`http://${window.location.host}/api/vendor/create`, {'data':this.vendor})
           .then(response => {
             console.log(response.data);
-            // this.settings = response.data
           })
           .catch(e => {
               console.log(e);

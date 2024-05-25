@@ -136,15 +136,18 @@ def handle_clear_user_basket(order_id):
     return "Error, something went wrong.", 500
 
 
-@socketio.on('Ordered and Payed')
-def handle_payed(data):
+@socketio.on('fe_order_closed')
+def handle_close_order(data):
     order_date = str(data['date'])
-    session = Session()
-    order_state = session.query(Order).filter(Order.order_date == order_date).first()
-    order_state.order_state = OrderState.CLOSED
-    session.commit()
-    session.close()
-    socketio.emit("Order state changed", str(OrderState.CLOSED))
+    user_id = str(data['user_id'])
+    vendor_id = str(data['vendor_id'])
+
+    order = Order.find_open_order_by_date_for_a_vendor(vendor_id, order_date)
+    order.change_state(OrderState.CLOSED, user_id)
+
+    socketio.emit("be_order_update", {
+        'order': order.serialized
+    })
 
 # TODO: Move to plugin
 @order_blueprint.route('/transferBasket', methods=['POST'])

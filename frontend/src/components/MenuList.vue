@@ -8,7 +8,7 @@
           </h2>
         </div>
         <div class="col-0 d-none col-lg-8 d-lg-inline my-auto truncate">
-          <!-- <TransferPopup /> -->
+          <TransferPopup />
         </div>
       </div>
       <div class="col-12 col-sm-6 col-md-6 col-lg-4 d-flex flex-fill ">
@@ -20,30 +20,6 @@
         />
       </div>
     </div>
-    <!-- <div class="row d-flex justify-content-evenly">
-      <div
-        v-for="date,index in getCurrentWeekDates()"
-        :key="index"
-        class="d-flex justify-content-center flex-fill col-6 col-sm-4 col-lg-3 col-xxl-1"
-      >
-        <input
-          :id="date"
-          type="radio"
-          name="daySelectionRadio"
-          class="btn-check"
-          role="button"
-          :checked="date == new Date(selectedDate).toISODate()"
-          @click="loadMenu(date)"
-        >
-        <label
-          :for="date"
-          class="btn btn-sm my-1 rounded rounded-5 text-nowrap d-flex align-items-center"
-          :class="['btn-outline-' + auth.userColor.value]"
-        >
-          {{ dayTitles[index] }}
-        </label>
-      </div>
-    </div> -->
     <div class="row col list-group">
       <div class="col">
         <div class="list-group m-1">
@@ -66,6 +42,7 @@
 
 <script>
 import Datestamp from '@/components/DateStamp.vue'
+import TransferPopup from '@/components/TransferPopup.vue'
 import { state, socket } from "@/socket";
 import { useAuth } from "@/auth";
 import axios from 'axios';
@@ -76,7 +53,8 @@ export default {
   name: 'MenuList',
   components: {
     Datestamp,
-    MenuItem
+    MenuItem,
+    TransferPopup
   },
   setup() {
     const auth = useAuth();

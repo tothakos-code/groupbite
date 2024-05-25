@@ -47,9 +47,9 @@ class Order(Base):
         stmt = select(Order).where(Order.id == order_id)
         return session.execute(stmt).first()
 
-    def find_open_order_by_date_for_a_vendor(v_id: UUID, doo: date = date.today() ):
+    def find_open_order_by_date_for_a_vendor(vendor_id: UUID, doo: date = date.today() ):
         return session.query(Order).filter(
-            Order.vendor_id == v_id,
+            Order.vendor_id == vendor_id,
             Order.date_of_order == doo,
             Order.state_id == OrderState.COLLECT).first()
 
@@ -58,6 +58,11 @@ class Order(Base):
             Order.date_of_order.between(date_from, date_to)
         )
         return session.execute(stmt).all()
+
+    def change_state(self, new_state, user_id=None):
+        self.state_id = new_state
+        self.order_by = user_id
+        session.commit()
 
     @property
     def serialized(self):

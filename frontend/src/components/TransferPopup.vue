@@ -5,7 +5,7 @@
     :class="['btn-' + auth.userColor.value ]"
     @click="openPopup()"
   >
-    Áthelyezés falusiba
+    Rendelés
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="16"
@@ -20,19 +20,34 @@
 
   <Popup
     :show-modal="showInitial"
-    title="Ez a Rendelő ember feladata"
+    title="Rendelés áttöltése"
     @cancel="showInitial = false"
-    @confirm="transferBasketToFalusi()"
+    @confirm="closeOrder()"
   >
-    <p>Írd be a falusi oldalon lévő PHPSESSIONID-det:</p>
-    <p>
-      Falusi oldalán a cookie-k között kell keresned ezt a változót.
-      Legyél bejelentkezve a falusiba! Az értékét másold ide:
-    </p>
-    PHPSESSIONID: <input
-      v-model.trim="psid"
-      type="text"
+    <p>A lista automatikusan frissül, ha valaki változtat a kosarán. Pipáld ki ha átraktad</p>
+    <div
+      v-for="item in orderItems"
+      :key="item.id"
+      class="list-group-item d-flex justify-content-between align-items-center fs-4 rounded"
     >
+      <span
+        :class="{'text-decoration-line-through': item.deleted, 'fw-bold': !item.tick}"
+        class="ms-1"
+      >
+        {{ item.count }}x {{ item.name }} {{ item.size }}
+      </span>
+      <span
+        v-if="item.deleted"
+        class="text-danger"
+      >Törölték</span>
+      <input
+        v-model="item.tick"
+        type="checkbox"
+        class="form-check-input m-0 me-1"
+        name=""
+        :value="item.tick"
+      >
+    </div>
   </Popup>
   <teleport to="body">
     <div
@@ -52,9 +67,9 @@
     :show-modal="showFinish"
     title="Rendelés befejezése"
     @cancel="showFinish = false"
-    @confirm="orderPayed()"
+    @confirm="showFinish = false;"
   >
-    <p>Kosár sikeresen átmásolva a falusira. Frissítsd a falusi oldalát.</p>
+    <p>Rendelés lezárva, további kosármódosítás letiltva.</p>
     <p>
       Rendelés megjegyzés példa:
     </p>
@@ -83,7 +98,7 @@
       </button>
     </div>
     <br>
-    <p>Okézd le , ha kifizetted a rendelést</p>
+    <p>Köszönjük az ebédet!</p>
   </Popup>
 </template>
 
@@ -93,6 +108,7 @@ import { state, socket } from "@/socket";
 import { useAuth } from "@/auth";
 import { copyText } from 'vue3-clipboard';
 import { notify } from "@kyvg/vue3-notification";
+import { watch } from 'vue';
 
 export default {
   name: 'TransferPopup',
@@ -101,6 +117,7 @@ export default {
   },
   setup() {
     const auth = useAuth();
+
     return {
       auth
     }
@@ -110,38 +127,87 @@ export default {
       showInitial: false,
       showSpinner: false,
       showFinish: false,
-      orderDesc: "Tigra kft. Csere edényeket adunk. Mindent külön edénybe szeretnénk. Nagyon szépen köszönjük.",
+      orderItems: [],
+      orderDesc: "Bárdi autó épületén jobb oldalt fotocellás ajtó, balra lift, 3. em, jobbra csengő Tigra Kft.",
       psid: ""
     }
   },
-  methods: {
-    transferBasketToFalusi: function() {
-      console.log("PSID:"+this.psid);
-      if (this.psid !== "") {
-        this.showInitial = false;
-        this.showSpinner = true;
-        fetch(`http://${window.location.host}/api/order/transferBasket`,{
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ psid: this.psid, order_date: state.selectedDate })
-        })
-          .then(response => {
-            this.showSpinner = false;
-            if (response.statusText == "OK") {
-              this.showFinish = true;
-            } else {
-              this.showSpinner = false;
-              notify({
-                type: "error",
-                text: "Valami hiba történt. Hiba: " + response,
-              });
+  mounted() {
+
+        watch(
+          () => state.basket,
+          (newBasket) =>{
+            let resultList = []
+            for (const value of Object.values(newBasket)) {
+              for (const item of value.basket_entry) {
+                let i = item.item;
+                i.count = item.count;
+                i.tick = false;
+                i.deleted = false;
+                resultList.push(i);
+              }
             }
-          })
-            .catch(error => console.error(error))
-      }
-    },
+
+            const itemMap = new Map();
+
+            for (const item of resultList) {
+                if (itemMap.has(item.id)) {
+                    itemMap.get(item.id).count += Number(item.count);
+                } else {
+                    itemMap.set(item.id, { ...item, count: Number(item.count) });
+                }
+            }
+
+            const oldMap = new Map(this.orderItems.map(item => [item.id, item]));
+
+            for (const newItem of Array.from(itemMap.values())) {
+                const oldItem = oldMap.get(newItem.id);
+                if (oldItem) {
+                    if (oldItem.count !== newItem.count) {
+                        itemMap.set(newItem.id, {...newItem, tick: false})
+                        notify({
+                          type: "warn",
+                          text: newItem.name +" mennyisége megváltozott. A lista frissült!",
+                        });
+                    } else {
+                      itemMap.set(newItem.id, {...newItem, tick: oldItem.tick})
+
+                    }
+                    oldMap.delete(newItem.id)
+                } else {
+                  if (this.showInitial) {
+                    notify({
+                      type: "warn",
+                      text: "Új termék került a kosárba: " + newItem.name+". A lista frissült!",
+                    });
+                  }
+                }
+            }
+
+            if (oldMap.size !== 0) {
+              for (const oldItem of oldMap.values()) {
+                if (oldItem.tick && !oldItem.deleted) {
+                  itemMap.set(oldItem.id, {...oldItem, tick: false, deleted:true})
+                  notify({
+                    type: "warn",
+                    text: "Egy terméket töröltek a kosárból amit már átraktál: " + oldItem.name+". A lista frissült!",
+                  });
+                }
+                if (oldItem.deleted && !oldItem.tick) {
+                  itemMap.set(oldItem.id, {...oldItem, tick: false, deleted:true})
+                }
+              }
+            }
+
+            this.orderItems = Array.from(itemMap.values());
+          },
+          {
+             deep: true,
+             immediate: true
+          }
+        )
+  },
+  methods: {
     openPopup: function() {
       if (state.order.state_id === 'closed') {
         notify({
@@ -153,28 +219,34 @@ export default {
         this.showInitial = true;
       }
     },
-    orderPayed: function() {
-      socket.emit("Ordered and Payed", { date: state.selecedDate });
-      this.showFinish = false;
+    closeOrder: function() {
+      console.log(state.selecedDate);
+      socket.emit("fe_order_closed", {
+        date: state.order.date_of_order,
+        user_id: state.user.id,
+        vendor_id: state.selected_vendor.id
+      });
+      this.showInitial = false;
+      this.showFinish = true;
     },
     doCopy: function() {
       copyText(this.orderDesc, undefined, (error, event) =>{
         if (error) {
            notify({
              type: "warn",
-             text: "Nem sikerült a másolás",
+             text: "Nem sikerült a vágólapra másolás",
            });
            console.log(error)
          } else {
            notify({
              type: "info",
-             text: "Másolva",
+             text: "Vágólapra másolva",
            });
            console.log(event)
          }
       });
     }
-  }
+  },
 }
 </script>
 

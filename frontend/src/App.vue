@@ -107,7 +107,7 @@ import Sidebar from './components/Sidebar.vue'
 import OrderState from './components/OrderState.vue'
 import UserControllPanel from './components/UserControllPanel.vue'
 import { state, socket } from "@/socket";
-// import { useAuth } from "@/auth";
+import { useAuth } from "@/auth";
 import { useCookies } from "vue3-cookies";
 import { provide, ref } from 'vue';
 import { notify } from "@kyvg/vue3-notification";
@@ -125,9 +125,11 @@ export default {
   },
   setup() {
     const { cookies } = useCookies();
+    const auth = useAuth();
+    const theme = ref(localStorage.getItem("theme"));
+    const userColor = ref(state.user.ui_color);
 
-    const theme = ref(localStorage.getItem("theme"))
-    const userColor = ref(state.user.ui_color)
+    auth.checkSession();
 
     function toggleDarkMode() {
       if (theme.value === 'dark') {

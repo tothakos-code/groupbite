@@ -24,7 +24,8 @@ def create_app(debug=False):
 
     import app.create_tables
 
-    loader.load_plugins(["plugins.falusi","plugins.makkos"])
+    VendorFactory.load()
+    loader.load_plugins(["plugins.falusi","plugins.makkos","plugins.lugas"])
 
     from app.socketio_singleton import SocketioSingleton
     socketio = SocketioSingleton.get_instance()

@@ -22,9 +22,10 @@ socketio = SocketioSingleton.get_instance()
 def handle_order_history():
     DATE_FROM = request.json['date_from']
     DATE_TO = request.json['date_to']
-    USER_ID = request.json['user_id']
+    # USER_ID = request.json['user_id']
 
     result = {}
+    logging.info(UserBasket.find_orders_between_dates(DATE_FROM, DATE_TO))
     for value in UserBasket.find_orders_between_dates(DATE_FROM, DATE_TO):
         order = Order.get_by_id(value[0])
         date = value[1].strftime('%Y-%m-%d')
@@ -56,10 +57,7 @@ def handle_get_all_order_date():
 
 @order_blueprint.route('/<order_id>/get-basket', methods=['GET'])
 def handle_get_basket(order_id):
-    result = []
-    for basket_entry in UserBasket.find_items_by_order(order_id):
-        result.append(basket_entry.basket_format)
-    return json.dumps(result)
+    return OrderService.get_formated_full_basket_group_by_user(order_id)
 
 # TODO: implement this, was there an order for a user
 @order_blueprint.route('/get-user-basket-between', methods=['POST'])
@@ -73,7 +71,7 @@ def handle_get_user_basket_between():
             "order_id": value[0],
             "date": value[1].strftime('%Y-%m-%d'),
         })
-    return result
+    return json.dumps(result)
 
 # TODO: Upgrade this
 @socketio.on('fe_date_selection')

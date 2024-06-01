@@ -84,7 +84,7 @@ export default {
     'limitToCurrentWeek': Boolean,
     'setDate': {
       type: String,
-      default: new Date().toISODate()
+      default: new Date()
     }
   },
   emits: ['selectedDate'],

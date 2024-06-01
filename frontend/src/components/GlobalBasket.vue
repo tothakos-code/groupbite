@@ -98,7 +98,7 @@
     </div>
     <div
       v-for="(user_entry) in globalBasket"
-      :key="user_entry.username"
+      :key="user_entry.id"
       class="row mt-1 mb-1"
     >
       <GlobalBasketPerson

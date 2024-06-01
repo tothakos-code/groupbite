@@ -39,28 +39,38 @@ class UserBasket(Base):
         stmt = select(
             UserBasket.order_id,
             Order.date_of_order
-        ).join(Order).where(
+        ).join(
+            UserBasket,
+            Order.items
+        ).where(
             UserBasket.user_id == user_id
-        ).group_by(UserBasket.order_id, Order.date_of_order)
+        )
         return session.execute(stmt).all()
 
     def find_orders_between_dates(start, end):
         stmt = select(
             UserBasket.order_id,
-            Order.date_of_order
-        ).join(Order).where(
+            Order.date_of_order,
+            Order.state_id
+        ).join(
+            UserBasket,
+            Order.items
+        ).where(
             Order.date_of_order.between(start, end)
-        ).group_by(UserBasket.order_id, Order.date_of_order)
+        )
         return session.execute(stmt).all()
 
     def find_user_order_dates_between(user_id, start, end):
         stmt = select(
             UserBasket.order_id,
             Order.date_of_order
-        ).join(Order).where(
+        ).join(
+            UserBasket,
+            Order.items
+        ).where(
             UserBasket.user_id == user_id,
             Order.date_of_order.between(start, end)
-        ).group_by(UserBasket.order_id, Order.date_of_order)
+        )
         return session.execute(stmt).all()
 
     def clear_items(user_id, order_id):

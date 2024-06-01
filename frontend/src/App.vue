@@ -127,7 +127,6 @@ export default {
     const { cookies } = useCookies();
     const auth = useAuth();
     const theme = ref(localStorage.getItem("theme"));
-    const userColor = ref(state.user.ui_color);
 
     auth.checkSession();
 
@@ -138,8 +137,8 @@ export default {
         theme.value = 'dark'
       }
       localStorage.setItem("theme", theme.value);
-      socket.emit("User Update", {"id": state.user.id, "ui_theme":this.theme}, function(user) {
-        state.user = user;
+      socket.emit("User Update", {"id": this.auth.user.id, "ui_theme":this.theme}, function(user) {
+        this.auth.user = user;
       });
       document.documentElement.setAttribute('data-bs-theme', theme.value)
     }
@@ -147,7 +146,6 @@ export default {
     provide('theme', {
       theme,
       toggleDarkMode,
-      userColor
     })
     return {
       cookies,
@@ -163,7 +161,7 @@ export default {
   },
   computed: {
     isDataLoaded(){
-      return (state.user !== undefined && state.user.ui_color) || !this.$cookies.isKey('username')
+      return (this.auth.user !== undefined && this.auth.user.ui_color) || !this.$cookies.isKey('username')
     }
   },
   mounted() {

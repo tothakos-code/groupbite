@@ -15,7 +15,7 @@
           v-for="size in item.sizes"
           :key="size.id"
           class="btn btn-sm col-6 col-sm-6 ms-2"
-          :class="['btn-' + auth.userColor.value ]"
+          :class="['btn-' + auth.getUserColor ]"
           @click="addToBasket(size.id, size.size)"
         >
           <span class="text-nowrap me-1">{{ size.size }}</span>
@@ -48,7 +48,7 @@ export default {
   },
   computed: {
     currentUserState() {
-      return state.userStates[state.user.username];
+      return state.userStates[this.auth.user.username];
     }
   },
   methods: {
@@ -68,10 +68,10 @@ export default {
         return;
       }
       if (this.currentUserState === 'skip') {
-        socket.emit("User Daily State Change",{ 'id': state.user.id, 'new_state':'none' });
+        socket.emit("User Daily State Change",{ 'id': this.auth.user.id, 'new_state':'none' });
       }
       axios.post(`http://${window.location.host}/api/order/${state.order.id}/add`,{
-        "user_id":state.user.id,
+        "user_id":this.auth.user.id,
         "menu_item_id":mi_id
       })
     }

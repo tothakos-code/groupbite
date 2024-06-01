@@ -117,21 +117,21 @@ export default {
   },
   computed: {
     loggedInUsername() {
-      return state.user.username;
+      return this.auth.user.username;
     }
   },
   mounted() {
     this.username = this.loggedInUsername;
-    this.ui_color = state.user.ui_color;
+    this.ui_color = this.auth.user.ui_color;
   },
   methods: {
     updateUser: function() {
       let user_update_obj = {};
-      user_update_obj.id = state.user.id
-      if (this.username !== state.user.username) {
+      user_update_obj.id = this.auth.user.id
+      if (this.username !== this.auth.user.username) {
         user_update_obj.username = this.username
       }
-      // if (this.vt_name !== state.user.vt_name) {
+      // if (this.vt_name !== this.auth.user.vt_name) {
       //   user_update_obj.vt_name = this.vt_name
       // }
       user_update_obj.ui_color = this.ui_color
@@ -139,7 +139,7 @@ export default {
       socket.emit("User Update", user_update_obj, (user) => {
         if (user.error === undefined) {
           this.cookies.set("username", user.username, "365d");
-          state.user = user;
+          this.auth.user = user;
           this.$emit('cancel');
         } else {
           notify({
@@ -150,7 +150,7 @@ export default {
       });
     },
     onCancel: function() {
-      fetch(`http://${window.location.host}/api/user/get/${state.user.id}`,{
+      fetch(`http://${window.location.host}/api/user/get/${this.auth.user.id}`,{
         method: "get",
         headers: {
           "Content-Type": "application/json",
@@ -158,14 +158,14 @@ export default {
       })
         .then(response => response.json())
           .then(data => {
-            state.user.ui_color = data.ui_color;
+            this.auth.user.ui_color = data.ui_color;
             this.ui_color = data.ui_color;
           })
           .catch(error => console.error(error))
       this.$emit('cancel')
     },
     onColorChange: function() {
-      state.user.ui_color = this.ui_color
+      this.auth.user.ui_color = this.ui_color
     }
   }
 }

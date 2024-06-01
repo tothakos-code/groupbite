@@ -44,7 +44,7 @@
       </div>
       <button
         class="btn"
-        :class="['btn-' + auth.userColor.value ]"
+        :class="['btn-' + auth.getUserColor ]"
         type="button"
         name="save"
         @click="addToMenu()"

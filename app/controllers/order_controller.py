@@ -22,7 +22,9 @@ socketio = SocketioSingleton.get_instance()
 def handle_order_history():
     DATE_FROM = request.json['date_from']
     DATE_TO = request.json['date_to']
-    # USER_ID = request.json['user_id']
+    USER_ID = None
+    if 'user_id' in request.json:
+        USER_ID = request.json['user_id']
 
     result = {}
     logging.info(UserBasket.find_orders_between_dates(DATE_FROM, DATE_TO))
@@ -40,7 +42,13 @@ def handle_order_history():
             sum += item.item.price * item.count
         result[date][value[0]]['sum'] = sum
 
-    return result
+    if USER_ID != None:
+        for value in UserBasket.find_user_order_dates_between(USER_ID, DATE_FROM, DATE_TO):
+            date = value[1].strftime('%Y-%m-%d')
+            order_id = value[0]
+            result[date][order_id]['ordered'] = True
+
+    return json.dumps(result)
 
 # TODO: implement this
 # @order_blueprint.route('/get-order-state')

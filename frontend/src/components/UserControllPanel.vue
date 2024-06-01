@@ -34,13 +34,13 @@
       </button>
     </div>
     <div
-      v-if="auth.isLoggedIn.value"
+      v-if="auth.isLoggedIn"
       class="col"
     >
       <button
         type="button"
         class="btn ms-2 position-relative"
-        :class="['btn-' + auth.userColor.value ]"
+        :class="['btn-' + auth.getUserColor ]"
         title="Ha feliratkozol megjelenik a neved minden nap a közös kosárban. Így a többiek látják, hogy még nem választottál és biztos nem maradsz le a rendelésről. Akkor érdemes feliratkozni, ha nagyon sokszor rendelsz a falusiból."
         @click="subscribeToggle()"
       >
@@ -118,21 +118,22 @@ export default {
   },
   computed: {
     currentUserState() {
-      return state.userStates[state.user.username];
+      return state.userStates[this.auth.user.username];
     },
     subscriptionState() {
-      return state.user.subscribed;
+      // return this.auth.user.subscribed;
+      return 'none';
     }
   },
   methods: {
     subscribeToggle: function() {
-      if (state.user.subscribed == "full") {
-        socket.emit("User Update", {"id": state.user.id, "subscribed":"none"}, function(user) {
-          state.user = user;
+      if (this.auth.user.subscribed == "full") {
+        socket.emit("User Update", {"id": this.auth.user.id, "subscribed":"none"}, function(user) {
+          this.auth.this.auth.user = user;
         });
-      } else if (state.user.subscribed == "none") {
-        socket.emit("User Update", {"id": state.user.id, "subscribed":"full"}, function(user) {
-          state.user = user;
+      } else if (this.auth.user.subscribed == "none") {
+        socket.emit("User Update", {"id": this.auth.user.id, "subscribed":"full"}, function(user) {
+          this.auth.this.auth.user = user;
         });
       }
     }

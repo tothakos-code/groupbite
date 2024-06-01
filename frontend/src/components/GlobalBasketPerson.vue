@@ -1,15 +1,15 @@
 <template>
   <div
     class="card"
-    :class="name === loggedInUser ? 'border border-2 border-'+ auth.matchUiColorWithBuiltIn.value + (usertheme === 'dark' ? '-subtle' : '') : ''"
+    :class="name === auth.user.username ? 'border border-2 border-'+ auth.getUserColor + (usertheme === 'dark' ? '-subtle' : '') : ''"
   >
     <div class="card-header row d-flex pe-0">
       <div class="col-6">
         <span>{{ name }}</span>
         <a
-          v-if="copyable && name !== loggedInUser"
+          v-if="copyable && name !== auth.user.username"
           class="ms-2 p-1 btn btn-sm"
-          :class="['btn-' + auth.userColor.value ]"
+          :class="['btn-' + auth.getUserColor ]"
           @click="copy"
         >
           Másol
@@ -34,6 +34,7 @@
         <a
           v-if="collapsable"
           class="link-underline link-underline-opacity-0"
+          :class="['text-' + auth.getUserColor ]"
           data-bs-toggle="collapse"
           :data-bs-target="'#' + (name.replace(/[^a-z0-9]/ig, ''))"
           role="button"
@@ -66,9 +67,8 @@
         <span
           class="badge rounded-pill border me-2 col-1"
           :class="[
-            'bg-' + auth.matchUiColorWithBuiltIn.value + '-subtle',
-            'border-' + auth.matchUiColorWithBuiltIn.value + '-subtle',
-            'text-' + auth.matchUiColorWithBuiltIn.value + '-emphasis']"
+            'bg-' + auth.getUserColor,
+            'border-' + auth.getUserColor + '-subtle']"
         >
           {{ item.count }} x
         </span>
@@ -142,10 +142,10 @@ export default {
       return sumTitle;
     },
     loggedInUser() {
-      return state.user.username
+      return this.auth.user.username
     },
     usertheme() {
-      return state.user.ui_theme ? state.user.ui_theme : "light";
+      return this.auth.user.ui_theme ? this.auth.user.ui_theme : "light";
     }
   },
   methods: {
@@ -157,7 +157,7 @@ export default {
         });
         return;
       }
-      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": this.personBasket, "order_date": state.selectedDate.toISOString().split('T')[0] });
+      socket.emit("Server Basket Update", { "userid": this.auth.user.id, "basket": this.personBasket, "order_date": state.selectedDate.toISOString().split('T')[0] });
       notify({
         type: "info",
         text: "Másolva",

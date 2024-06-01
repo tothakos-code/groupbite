@@ -6,7 +6,7 @@
       </h1>
       <button
         class="btn "
-        :class="['btn-' + auth.userColor.value ]"
+        :class="['btn-' + auth.getUserColor ]"
         title="Home"
         @click="openHome()"
       >

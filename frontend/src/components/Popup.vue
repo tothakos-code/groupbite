@@ -25,7 +25,7 @@
             </button>
             <button
               class="btn"
-              :class="['btn-' + auth.userColor.value ]"
+              :class="['btn-' + auth.getUserColor ]"
               @click="$emit('confirm')"
             >
               Folytat

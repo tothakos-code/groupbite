@@ -2,7 +2,7 @@
   <button
     id="transferBasketButton"
     class="btn"
-    :class="['btn-' + auth.userColor.value ]"
+    :class="['btn-' + auth.getUserColor ]"
     @click="openPopup()"
   >
     Rendelés
@@ -227,7 +227,7 @@ export default {
       console.log(state.selecedDate);
       socket.emit("fe_order_closed", {
         date: state.order.date_of_order,
-        user_id: state.user.id,
+        user_id: this.auth.user.id,
         vendor_id: state.selected_vendor.id
       });
       this.showInitial = false;

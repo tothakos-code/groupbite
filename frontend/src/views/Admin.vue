@@ -7,7 +7,7 @@
       <div class="col">
         <div
           class="btn"
-          :class="['btn-' + auth.userColor.value ]"
+          :class="['btn-' + auth.getUserColor ]"
           @click="openAdminHome()"
         >
           vissza

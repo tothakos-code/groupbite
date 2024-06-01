@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 import App from './App.vue';
 import VueCookies from 'vue3-cookies';
 import VueClipboard from 'vue3-clipboard';
@@ -28,10 +29,13 @@ import router from './router.js';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap.js';
 import './assets/scss/main.scss';
+import { useAuth } from "@/auth";
 
-let app = createApp(App);
+const app = createApp(App);
+const pinia = createPinia()
 
 app.use(router);
+app.use(pinia);
 app.use(VueCookies);
 app.use(Notifications);
 app.use(VueClipboard, {
@@ -39,8 +43,8 @@ app.use(VueClipboard, {
   appendToBody: true,
 });
 
-
-
+const auth = useAuth();
+console.log(auth);
 Date.prototype.getWeek = function() {
   var date = new Date(this.getTime());
   date.setHours(0, 0, 0, 0);

@@ -2,7 +2,7 @@
   <div class="">
     <div
       class="btn"
-      :class="['btn-' + auth.userColor.value ]"
+      :class="['btn-' + auth.getUserColor ]"
       @click="refreshVendorList()"
     >
       <svg
@@ -22,7 +22,7 @@
     </div>
     <div
       class="btn"
-      :class="['btn-' + auth.userColor.value ]"
+      :class="['btn-' + auth.getUserColor ]"
       @click="addVendor()"
     >
       <svg
@@ -74,7 +74,7 @@
           <td>
             <div
               class="btn"
-              :class="['text-' + auth.userColor.value ]"
+              :class="['text-' + auth.getUserColor ]"
               @click="toggleActivation(vendor)"
             >
               <svg
@@ -102,7 +102,7 @@
             </div>
             <div
               class="btn"
-              :class="['text-' + auth.userColor.value ]"
+              :class="['text-' + auth.getUserColor ]"
               @click="openVendorConfiguration(vendor.id)"
             >
               <svg

@@ -28,7 +28,7 @@
       </div>
       <button
         class="btn"
-        :class="['btn-' + auth.userColor.value ]"
+        :class="['btn-' + auth.getUserColor ]"
         type="button"
         name="save"
         @click="addMenu()"
@@ -96,7 +96,7 @@
               name="button"
               class="btn"
               title="Szerkesztés"
-              :class="['btn-outline-' + auth.userColor.value ]"
+              :class="['btn-outline-' + auth.getUserColor ]"
               @click="edit(menu.id)"
             >
               Szerkesztés
@@ -107,7 +107,7 @@
                 name="button"
                 class="btn"
                 title="Mentés"
-                :class="['btn-outline-' + auth.userColor.value ]"
+                :class="['btn-outline-' + auth.getUserColor ]"
                 @click="updateMenu(menu.id)"
               >
                 Mentés
@@ -117,7 +117,7 @@
                 name="button"
                 class="btn"
                 title="Mégse"
-                :class="['btn-outline-' + auth.userColor.value ]"
+                :class="['btn-outline-' + auth.getUserColor ]"
                 @click="cancelEdit(menu.id)"
               >
                 Mégse
@@ -128,7 +128,7 @@
               name="button"
               class="btn"
               title="Törlés"
-              :class="['btn-outline-' + auth.userColor.value ]"
+              :class="['btn-outline-' + auth.getUserColor ]"
               @click="deleteMenu(menu.id)"
             >
               Törlés

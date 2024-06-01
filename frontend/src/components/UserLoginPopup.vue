@@ -3,7 +3,7 @@
     :show-modal="show"
     title="Név választás"
     @cancel="$emit('cancel')"
-    @confirm="saveUsername()"
+    @confirm="login()"
   >
     <p>Egy név ami alapján beazonosíthatnak téged.</p>
     <p>Nincs külön regisztráció. A név megadásával már létre is jön a fiókod.</p>
@@ -24,7 +24,6 @@
 
 <script>
 import Popup from './Popup.vue';
-import { useCookies } from "vue3-cookies";
 import { useAuth } from "@/auth.js";
 
 export default {
@@ -37,10 +36,8 @@ export default {
   },
   emits: ['cancel', 'confirm'],
   setup() {
-    const { cookies } = useCookies();
     const auth = useAuth();
     return {
-      cookies,
       auth
     }
   },
@@ -50,17 +47,12 @@ export default {
     }
   },
   mounted() {
-    if (this.$cookies.isKey('username')) {
-      this.username = this.cookies.get('username');
-      this.auth.login(this.username)
+    if (this.auth.isLoggedIn) {
+      this.username = this.auth.user.username;
     }
 
   },
   methods: {
-    saveUsername: function() {
-      this.cookies.set("username", this.username, "365d");
-      this.login();
-    },
     login: function() {
       this.auth.login(this.username)
       this.$emit('cancel')

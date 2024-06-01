@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="isLoggedIn"
+    v-if="auth.isLoggedIn"
     class="d-flex"
   >
     <div class="btn-group ">
@@ -8,7 +8,7 @@
         type="button"
         class="d-none d-md-inline btn pe-none border border-secondary"
       >
-        {{ username }}
+        {{ auth.user.username }}
       </button>
       <button
         id="dropdownMenuButton1"
@@ -29,7 +29,7 @@
             aria-disabled="true"
           >
             <span>
-              {{ username }}
+              {{ auth.user.username }}
             </span>
           </button>
         </li>
@@ -106,10 +106,10 @@
 </template>
 
 <script>
-import { state } from "@/socket.js"
 import UserProfilePopup from './UserProfilePopup.vue';
 import UserLoginPopup from './UserLoginPopup.vue';
 import UserControllPanel from './UserControllPanel.vue'
+import { useAuth } from "@/auth.js";
 
 export default {
   name: 'UserMenu',
@@ -118,20 +118,18 @@ export default {
     UserControllPanel,
     UserProfilePopup
   },
+  setup() {
+    const auth = useAuth();
+    return {
+      auth
+    }
+  },
   data() {
     return {
       showProfile: false,
       showLogin: false
     }
   },
-  computed: {
-    isLoggedIn() {
-      return state.user.id !== undefined;
-    },
-    username() {
-      return state.user.username;
-    }
-  }
 }
 </script>
 

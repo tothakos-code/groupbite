@@ -8,7 +8,6 @@ export const state = reactive({
   order: {},
   basket: {},
   selectedDate: new Date(), // TODO: This will be urlencoded
-  user: {},
   vendors: [],
   selected_vendor: undefined,
   userStates: {} // TODO: Something will need to happen to this. currently unclear

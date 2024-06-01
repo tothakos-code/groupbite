@@ -9,7 +9,7 @@
       <div class="col-4 p-0">
         <button
           class="btn btn-link p-0"
-          :class="['link-' + auth.userColor.value ]"
+          :class="['link-' + auth.getUserColor ]"
           :disabled="limitToCurrentWeek && currentDateSelected.getDay() == 1"
           @click="prevDay()"
         >
@@ -28,7 +28,7 @@
       </div>
       <div class="col-4 p-0">
         <button
-          :class="['link-' + auth.userColor.value ]"
+          :class="['link-' + auth.getUserColor ]"
           class="btn btn-link p-0"
           @click="setDay(new Date())"
         >
@@ -54,7 +54,7 @@
           type="button"
           name="button"
           class="btn btn-link p-0"
-          :class="['link-' + auth.userColor.value ]"
+          :class="['link-' + auth.getUserColor ]"
           :disabled="limitToCurrentWeek && currentDateSelected.getDay() == 0"
           @click="nextDay()"
         >

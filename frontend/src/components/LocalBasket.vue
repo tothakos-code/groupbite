@@ -51,7 +51,7 @@
               <button
                 type="button"
                 class="btn me-2 text-nowrap"
-                :class="['btn-outline-' + auth.userColor.value, currentUserState === 'video' ? 'active' : '']"
+                :class="['btn-outline-' + auth.getUserColor, currentUserState === 'video' ? 'active' : '']"
                 @click="waitForMe(currentUserState == 'video' ? 'none' : 'video')"
               >
                 <div>
@@ -80,7 +80,7 @@
               <button
                 type="button"
                 class="btn me-2 text-nowrap"
-                :class="['btn-outline-' + auth.userColor.value, currentUserState === 'skip' ? 'active' : '']"
+                :class="['btn-outline-' + auth.getUserColor, currentUserState === 'skip' ? 'active' : '']"
                 @click="waitForMe(currentUserState == 'skip' ? 'none' : 'skip')"
               >
                 <div>
@@ -107,7 +107,7 @@
             >
               <button
                 class="btn text-nowrap"
-                :class="['btn-outline-' + auth.userColor.value ]"
+                :class="['btn-outline-' + auth.getUserColor ]"
                 @click="clearBasket()"
               >
                 <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Törlés</span>
@@ -134,7 +134,7 @@
           <div class="col-2">
             <span
               class="badge rounded-pill border"
-              :class="['bg-' + auth.matchUiColorWithBuiltIn.value + '-subtle', 'border-' + auth.matchUiColorWithBuiltIn.value + '-subtle','text-' + auth.matchUiColorWithBuiltIn.value + '-emphasis']"
+              :class="['bg-' + auth.getUserColor + '-subtle', 'border-' + auth.getUserColor + '-subtle','text-' + auth.getUserColor + '-emphasis']"
             >{{ item.count }} x</span>
           </div>
           <div class="col-8">
@@ -252,17 +252,17 @@ export default {
   },
   computed: {
     userBasket() {
-      if (state.basket[state.user.id] === undefined) return [];
-      return state.basket[state.user.id].basket_entry;
+      if (state.basket[this.auth.user.id] === undefined) return [];
+      return state.basket[this.auth.user.id].basket_entry;
     },
     isBasketEmpty() {
-      if (state.basket[state.user.id] === undefined) return true;
-      return state.basket[state.user.id].basket_entry.length == 0;
+      if (state.basket[this.auth.user.id] === undefined) return true;
+      return state.basket[this.auth.user.id].basket_entry.length == 0;
     },
     sumBasket() {
       let sum = 0;
-      if (state.basket[state.user.id] === undefined) return sum;
-      for (const item of state.basket[state.user.id].basket_entry) {
+      if (state.basket[this.auth.user.id] === undefined) return sum;
+      for (const item of state.basket[this.auth.user.id].basket_entry) {
         sum+= Number(item.count) * Number(item.item.price);
       }
       console.log(transportFeePerPerson.value);
@@ -272,10 +272,11 @@ export default {
       return sum;
     },
     currentUserState() {
-      return state.userStates[state.user.username];
+      return state.userStates[this.auth.user.username];
     },
     subscriptionState() {
-      return state.user.subscribed;
+      // return this.auth.user.subscribed;
+      return 'none';
     }
   },
   methods: {
@@ -288,9 +289,9 @@ export default {
           });
           return;
         }
-        socket.emit("Server Basket Update", { "userid": state.user.id, "basket": {}, "order_date": state.selectedDate.toISODate() });
+        socket.emit("Server Basket Update", { "userid": this.auth.user.id, "basket": {}, "order_date": state.selectedDate.toISODate() });
       }
-      socket.emit("User Daily State Change",{ 'id': state.user.id, 'new_state':waitType });
+      socket.emit("User Daily State Change",{ 'id': this.auth.user.id, 'new_state':waitType });
     },
     deleteFromBasket: function(mi_id) {
       if ( state.order.state_id === 'closed') {
@@ -301,7 +302,7 @@ export default {
         return;
       }
       axios.post(`http://${window.location.host}/api/order/${state.order.id}/remove`,{
-        "user_id":state.user.id,
+        "user_id":this.auth.user.id,
         "menu_item_id":mi_id
       })
     },
@@ -314,7 +315,7 @@ export default {
         return;
       }
       axios.post(`http://${window.location.host}/api/order/${state.order.id}/clear`,{
-        "user_id":state.user.id
+        "user_id":this.auth.user.id
       })
     }
   }

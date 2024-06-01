@@ -21,4 +21,5 @@ engine = create_engine(DB_URL, pool_size=20, max_overflow=20, echo=False)
 session = Session(bind=engine)
 
 class Base(DeclarativeBase):
-    pass
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}

@@ -1,7 +1,7 @@
 <template>
   <div class="d-flex p-2">
     <div class="row-12 mb-2">
-      <History />
+      <WeekSummary />
     </div>
     <div class="row-12 mb-2">
       <div class="card">
@@ -17,11 +17,11 @@
 </template>
 
 <script>
-import History from '@/components/History.vue'
+import WeekSummary from '@/components/WeekSummary.vue'
 export default {
     name: 'HomeView',
     components: {
-      History,
+      WeekSummary,
     }
 };
 </script>

@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar col bg-falusi p-0">
-    <div class="p-0 m-0 align-items-start">
-      <ul class="list-group">
+    <div class="col row p-0 m-0 d-flex flex-column flex-fill h-100 justify-content-center align-items-start">
+      <ul class="list-group flex-fill p-0">
         <router-link
           to="/home"
           class="list-group-item border rounded rounded-circle p-auto mt-2 mx-auto"
@@ -31,15 +31,20 @@
           </span>
         </router-link>
       </ul>
+      <VersionInfo class=" d-flex flex-fill p-0 align-items-end justify-content-center mb-2" />
     </div>
   </div>
 </template>
 <!-- ToDo: update router-link to change the seleted_vendor -->
 <script>
 import { state } from "@/socket";
+import VersionInfo from "@/components/VersionInfo.vue"
 
 export default {
   name: 'SidebarMenu',
+  components: {
+    VersionInfo
+  },
   computed: {
     vendors() {
       return state.vendors;

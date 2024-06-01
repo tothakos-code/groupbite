@@ -30,40 +30,6 @@
       <Transition>
         <router-view class="row ps-2 me-0" />
       </Transition>
-      <div class="row mt-auto p-3 m-0 bg-body-tertiary">
-        <div class="row d-flex justify-content-between text-body-secondary">
-          <span class="col text-center">
-            Készítette:
-            <a
-              class="link-secondary"
-              target="_blank"
-              href="https://www.buymeacoffee.com/tothakos"
-            >Tóth Ákos</a>
-          </span>
-          <span class="col text-center">
-            <a
-              class="link-secondary"
-              target="_blank"
-              href="https://github.com/tothakos-code/order-accumulator"
-            >Forráskód</a>
-          </span>
-          <span class="col text-center">
-            <a
-              class="link-secondary"
-              target="_blank"
-              href="https://docs.google.com/document/d/1x9Wvp5DPZun5OCcNV1B2limlL940EAX6gm03St_Hw-c/edit?usp=sharing"
-            >Felhasználói kézikönyv</a>
-          </span>
-          <span class="col text-center">
-            <a
-              class="link-secondary"
-              target="_blank"
-              :href="'https://github.com/tothakos-code/order-accumulator/releases/tag/' + showVersion()"
-            >Változásnapló</a>
-          </span>
-          <span class="col text-center">Verzió: {{ showVersion() }}</span>
-        </div>
-      </div>
     </div>
     <notifications
       position="top center"
@@ -106,7 +72,7 @@ import UserMenu from './components/UserMenu.vue'
 import Sidebar from './components/Sidebar.vue'
 import OrderState from './components/OrderState.vue'
 import UserControllPanel from './components/UserControllPanel.vue'
-import { state, socket } from "@/socket";
+import { socket } from "@/socket";
 import { useAuth } from "@/auth";
 import { useCookies } from "vue3-cookies";
 import { provide, ref } from 'vue';
@@ -180,10 +146,6 @@ export default {
     document.documentElement.setAttribute('data-bs-theme', this.theme)
   },
   methods: {
-    showVersion: function() {
-      // eslint-disable-next-line
-      return 'v' + process.env.VUE_APP_VERSION;
-    },
     banner: function() {
       // eslint-disable-next-line
       return process.env.VUE_APP_FALU_BANNER;

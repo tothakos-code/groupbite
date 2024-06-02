@@ -43,7 +43,7 @@
 
 <script>
 import { ref, watch } from 'vue';
-import { useAuth } from '@/auth';
+import { useAuth } from '@/stores/auth';
 
 export default {
   name: 'BasePopup',

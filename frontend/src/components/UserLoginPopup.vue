@@ -24,7 +24,7 @@
 
 <script>
 import Popup from './Popup.vue';
-import { useAuth } from "@/auth.js";
+import { useAuth } from "@/stores/auth.js";
 
 export default {
   name: 'UserLoginPopup',

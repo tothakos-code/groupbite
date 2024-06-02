@@ -28,7 +28,7 @@
 
 <script>
 import { state, socket } from "@/socket";
-import { useAuth } from "@/auth";
+import { useAuth } from "@/stores/auth";
 import { notify } from "@kyvg/vue3-notification";
 import axios from 'axios';
 
@@ -53,7 +53,7 @@ export default {
   },
   methods: {
     addToBasket: function(mi_id) {
-      if (!this.auth.isLoggedIn.value) {
+      if (!this.auth.isLoggedIn) {
         notify({
           type: "warn",
           text: "Jelentkezz be a rendeléshez!",

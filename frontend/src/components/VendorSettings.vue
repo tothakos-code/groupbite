@@ -34,7 +34,7 @@
 
 <script>
 import axios from 'axios';
-import { useAuth } from '@/auth';
+import { useAuth } from '@/stores/auth';
 import { notify } from "@kyvg/vue3-notification";
 
 export default {

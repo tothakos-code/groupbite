@@ -73,7 +73,7 @@ import Sidebar from './components/Sidebar.vue'
 import OrderState from './components/OrderState.vue'
 import UserControllPanel from './components/UserControllPanel.vue'
 import { socket } from "@/socket";
-import { useAuth } from "@/auth";
+import { useAuth } from "@/stores/auth";
 import { useCookies } from "vue3-cookies";
 import { provide, ref } from 'vue';
 import { notify } from "@kyvg/vue3-notification";

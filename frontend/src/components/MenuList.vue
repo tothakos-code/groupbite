@@ -44,7 +44,7 @@
 import Datestamp from '@/components/DateStamp.vue'
 import TransferPopup from '@/components/TransferPopup.vue'
 import { state, socket } from "@/socket";
-import { useAuth } from "@/auth";
+import { useAuth } from "@/stores/auth";
 import axios from 'axios';
 import MenuItem from '../components/MenuItem.vue'
 

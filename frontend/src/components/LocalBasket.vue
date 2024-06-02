@@ -232,7 +232,7 @@
 <script>
 import { socket, state } from "@/socket";
 import { transportFeePerPerson, personCount } from "@/basket";
-import { useAuth } from "@/auth";
+import { useAuth } from "@/stores/auth";
 import { notify } from "@kyvg/vue3-notification";
 import axios from 'axios';
 

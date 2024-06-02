@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import { useAuth } from '@/auth';
+import { useAuth } from '@/stores/auth';
 
 export default {
     name: 'PluginConfiguration',

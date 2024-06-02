@@ -229,7 +229,7 @@
 <script>
 import GlobalBasketPerson from './GlobalBasketPerson.vue'
 import Popup from './Popup.vue';
-import { useAuth } from '@/auth';
+import { useAuth } from '@/stores/auth';
 import { transportFeePerPerson, personCount, basketSum, boxCount } from '@/basket';
 import axios from 'axios';
 import { ref, watch } from 'vue';

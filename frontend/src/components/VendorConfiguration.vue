@@ -39,7 +39,7 @@
 
 <script>
 import axios from 'axios';
-import { useAuth } from '@/auth';
+import { useAuth } from '@/stores/auth';
 
 import { ref } from 'vue'
 import VendorSettings from './VendorSettings.vue'
@@ -49,13 +49,7 @@ import VendorItemManager from './VendorItemManager.vue'
 // use shallowRef to avoid component being deeply observed
 
 export default {
-    name: 'PluginConfiguration',
-    props: {
-      id:{
-        type: String,
-        required: true
-      },
-    },
+    name: 'VendorConfiguration',
     setup() {
       const auth = useAuth();
       const activeTab = ref('Settings')

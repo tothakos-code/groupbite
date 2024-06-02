@@ -109,7 +109,7 @@
 import UserProfilePopup from './UserProfilePopup.vue';
 import UserLoginPopup from './UserLoginPopup.vue';
 import UserControllPanel from './UserControllPanel.vue'
-import { useAuth } from "@/auth.js";
+import { useAuth } from "@/stores/auth.js";
 
 export default {
   name: 'UserMenu',

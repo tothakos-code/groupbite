@@ -105,7 +105,7 @@
 <script>
 import Popup from './Popup.vue';
 import { state, socket } from "@/socket";
-import { useAuth } from "@/auth";
+import { useAuth } from "@/stores/auth";
 import { copyText } from 'vue3-clipboard';
 import { notify } from "@kyvg/vue3-notification";
 import { watch } from 'vue';

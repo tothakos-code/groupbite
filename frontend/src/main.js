@@ -29,7 +29,7 @@ import router from './router.js';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap.js';
 import './assets/scss/main.scss';
-import { useAuth } from "@/auth";
+import { useAuth } from "@/stores/auth";
 
 const app = createApp(App);
 const pinia = createPinia()

@@ -84,7 +84,7 @@
 
 <script>
 import { state, socket } from "@/socket";
-import { useAuth } from "@/auth";
+import { useAuth } from "@/stores/auth";
 import { transportFeePerPerson } from "@/basket";
 import { notify } from "@kyvg/vue3-notification";
 
@@ -150,7 +150,7 @@ export default {
   },
   methods: {
     copy: function() {
-      if (!this.auth.isLoggedIn.value) {
+      if (!this.auth.isLoggedIn) {
         notify({
           type: "warn",
           text: "Jelentkezz be a rendeléshez!",

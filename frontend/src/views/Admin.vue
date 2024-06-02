@@ -34,7 +34,7 @@
 
 <script>
 // import axios from 'axios';
-import { useAuth } from '@/auth';
+import { useAuth } from '@/stores/auth';
 
 export default {
     name: 'AdminView',

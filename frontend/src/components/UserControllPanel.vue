@@ -101,7 +101,7 @@
 
 <script>
 import { state, socket } from "@/socket.js";
-import { useAuth } from "@/auth.js";
+import { useAuth } from "@/stores/auth.js";
 import { inject } from 'vue';
 
 export default {

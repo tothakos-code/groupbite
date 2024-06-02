@@ -128,7 +128,7 @@ import axios from 'axios';
 import { useAuth } from '@/stores/auth';
 
 export default {
-    name: 'AdminView',
+    name: 'VendorList',
     setup() {
       const auth = useAuth();
       return {
@@ -169,7 +169,6 @@ export default {
 
       },
       openVendorConfiguration: function (id) {
-        console.log(id);
         this.$router.push({ path:`/admin/${id}/config`})
       },
       addVendor: function () {

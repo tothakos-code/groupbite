@@ -1,7 +1,7 @@
 <template>
   <div
     class="card"
-    :class="name === auth.user.username ? 'border border-2 border-'+ auth.getUserColor + (usertheme === 'dark' ? '-subtle' : '') : ''"
+    :class="auth.isLoggedIn && name === auth.user.username ? 'border border-2 border-'+ auth.getUserColor + (usertheme === 'dark' ? '-subtle' : '') : ''"
   >
     <div class="card-header row d-flex pe-0">
       <div class="col-6">
@@ -10,7 +10,7 @@
           v-if="copyable && name !== auth.user.username"
           class="ms-2 p-1 btn btn-sm"
           :class="['btn-' + auth.getUserColor ]"
-          @click="copy"
+          @click="basket.copy()"
         >
           Másol
           <svg
@@ -83,10 +83,9 @@
 </template>
 
 <script>
-import { state, socket } from "@/socket";
 import { useAuth } from "@/stores/auth";
-import { transportFeePerPerson } from "@/basket";
-import { notify } from "@kyvg/vue3-notification";
+import { useBasket } from "@/stores/basket";
+import { transportFeePerPerson } from "@/stores/basket";
 
 export default {
   name: 'PersonComponent',
@@ -114,8 +113,10 @@ export default {
   },
   setup() {
     const auth = useAuth();
+    const basket = useBasket();
     return {
       auth,
+      basket,
       transportFeePerPerson
     };
   },
@@ -130,7 +131,7 @@ export default {
       Object.values(this.personBasket).forEach((entry) => {
           sum+= Number(entry.count) * Number(entry.item.price);
       });
-      sum += Number(transportFeePerPerson.value);
+      sum += Number(this.basket.transportFeePerPerson);
       return sum;
     },
     basketTotalTitle() {
@@ -138,7 +139,7 @@ export default {
       Object.values(this.personBasket).forEach((entry) => {
           sumTitle+= entry.count + '*' + entry.item.price + ' Ft + ';
       });
-      sumTitle+= transportFeePerPerson.value + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
+      sumTitle+= this.basket.transportFeePerPerson + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
       return sumTitle;
     },
     loggedInUser() {
@@ -148,22 +149,6 @@ export default {
       return this.auth.user.ui_theme ? this.auth.user.ui_theme : "light";
     }
   },
-  methods: {
-    copy: function() {
-      if (!this.auth.isLoggedIn) {
-        notify({
-          type: "warn",
-          text: "Jelentkezz be a rendeléshez!",
-        });
-        return;
-      }
-      socket.emit("Server Basket Update", { "userid": this.auth.user.id, "basket": this.personBasket, "order_date": state.selectedDate.toISOString().split('T')[0] });
-      notify({
-        type: "info",
-        text: "Másolva",
-      });
-    }
-  }
 }
 </script>
 

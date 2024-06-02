@@ -1,5 +1,8 @@
 <template>
-  <component :is="activeVendor" />
+  <component
+    :is="activeVendor"
+    :key="activeVendorId"
+  />
 </template>
 
 <script>
@@ -20,7 +23,6 @@ export default {
   },
   beforeRouteEnter(to) {
     state.vendors.forEach((item) => {
-      console.log(to);
       if (item.name === to.name || item.name+'-dated' === to.name) {
         state.selected_vendor = item;
       }
@@ -63,6 +65,9 @@ export default {
   computed:{
     activeVendor() {
       return state.selected_vendor.type === 'basic' ? Menu : PluginMenu;
+    },
+    activeVendorId() {
+      return state.selected_vendor.id;
     },
   },
 };

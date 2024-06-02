@@ -29,7 +29,6 @@ import router from './router.js';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap.js';
 import './assets/scss/main.scss';
-import { useAuth } from "@/stores/auth";
 
 const app = createApp(App);
 const pinia = createPinia()
@@ -43,8 +42,6 @@ app.use(VueClipboard, {
   appendToBody: true,
 });
 
-const auth = useAuth();
-console.log(auth);
 Date.prototype.getWeek = function() {
   var date = new Date(this.getTime());
   date.setHours(0, 0, 0, 0);

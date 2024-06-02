@@ -2,11 +2,11 @@ import { reactive } from "vue";
 import { io } from "socket.io-client";
 import router from './router.js';
 import { register_plugin_routes } from './loader.js';
+import { useBasket } from '@/stores/basket'
 
 export const state = reactive({
   connected: false,
   order: {},
-  basket: {},
   selectedDate: new Date(), // TODO: This will be urlencoded
   vendors: [],
   selected_vendor: undefined,
@@ -18,6 +18,7 @@ export const state = reactive({
 const URL = undefined;
 
 export const socket = io(URL);
+
 
 
 socket.on("connect", () => {
@@ -37,8 +38,9 @@ socket.on('be_vendors_update', function(vendors) {
 });
 
 socket.on('be_order_update', function(data) {
+  const basket = useBasket();
   if (data.basket) {
-    state.basket = JSON.parse(data.basket);
+    basket.basket = JSON.parse(data.basket);
   }
   if (data.order) {
     state.order = data.order;

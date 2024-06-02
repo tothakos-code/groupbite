@@ -73,20 +73,20 @@
       </thead>
       <tbody class="table-group-divider">
         <tr
-          v-for="item,index in items"
+          v-for="menuItem, index in items"
           :key="index"
         >
           <th scope="row">
-            {{ item.id }}
+            {{ menuItem.id }}
           </th>
           <td>
-            {{ item.name }}
+            {{ menuItem.name }}
           </td>
           <td>
-            {{ item.size }}
+            {{ menuItem.size }}
           </td>
           <td>
-            {{ item.price }}
+            {{ menuItem.price }}
           </td>
         </tr>
       </tbody>
@@ -97,15 +97,10 @@
 <script>
 import axios from 'axios';
 import { useAuth } from '@/stores/auth';
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
-    name: 'PluginConfiguration',
-    props: {
-      id:{
-        type: String,
-        required: true
-      },
-    },
+    name: 'VendorItemManager',
     setup() {
       const auth = useAuth();
       return {
@@ -136,7 +131,6 @@ export default {
       getMenuList: function () {
         axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/get`)
           .then(response => {
-            console.log(response);
             this.menus = response.data
           })
           .catch(e => {
@@ -157,9 +151,17 @@ export default {
         axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-add`, {'data':this.item, 'menu': this.selectedMenu})
           .then(() => {
             this.getMenuList()
+            notify({
+              type: "info",
+              text: "MenuItem hozzáadása sikeres!",
+            });
           })
           .catch(e => {
               console.log(e);
+              notify({
+                type: "error",
+                text: "MenuItem hozzáadása nem sikerült!",
+              });
           })
       },
     }

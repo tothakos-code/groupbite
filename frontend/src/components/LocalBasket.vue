@@ -31,7 +31,7 @@
           <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
           <path d="M0 4a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V4zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V6a2 2 0 0 1-2-2H3z" />
         </svg>
-        <span title="A fizetendő összeg még változhat, a rendelést leadó személyek számától.(Szállítási díjat több fele osztjuk)">{{ sumBasket }} Ft</span>
+        <span title="A fizetendő összeg még változhat, a rendelést leadó személyek számától.(Szállítási díjat több fele osztjuk)">{{ basket.userBasketSum }} Ft</span>
       </div>
     </div>
     <div class="row">
@@ -108,7 +108,7 @@
               <button
                 class="btn text-nowrap"
                 :class="['btn-outline-' + auth.getUserColor ]"
-                @click="clearBasket()"
+                @click="basket.clearBasket()"
               >
                 <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Törlés</span>
                 <svg
@@ -127,14 +127,14 @@
           </div>
         </div>
         <div
-          v-for="(item, index) in userBasket"
+          v-for="(item, index) in basket.userBasket"
           :key="index"
           class="list-group-item d-flex justify-content-between"
         >
           <div class="col-2">
             <span
               class="badge rounded-pill border"
-              :class="['bg-' + auth.getUserColor + '-subtle', 'border-' + auth.getUserColor + '-subtle','text-' + auth.getUserColor + '-emphasis']"
+              :class="['bg-' + auth.getUserColor, 'border-' + auth.getUserColor]"
             >{{ item.count }} x</span>
           </div>
           <div class="col-8">
@@ -145,16 +145,16 @@
               type="button"
               title="Törlés"
               class="btn btn-close"
-              @click="deleteFromBasket(item.item.id)"
+              @click="basket.removeItem(item.item.id)"
             />
           </div>
         </div>
         <div
-          v-if="isBasketEmpty"
+          v-if="basket.isUserBasketEmpty"
           class="list-group-item d-flex justify-content-center"
         >
           <div class="d-inline">
-            <div v-if="!isBasketEmpty">
+            <div v-if="!basket.isUserBasketEmpty">
               <span class="me-1">Sikerült választanod</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -231,47 +231,24 @@
 
 <script>
 import { socket, state } from "@/socket";
-import { transportFeePerPerson, personCount } from "@/basket";
 import { useAuth } from "@/stores/auth";
+import { useBasket } from "@/stores/basket";
 import { notify } from "@kyvg/vue3-notification";
-import axios from 'axios';
 
 export default {
   name: 'LocalBasket',
   setup() {
     const auth = useAuth();
+    const basket = useBasket();
     return {
-      auth
+      auth,
+      basket
     }
 
   },
-  data() {
-    return {
-      basket: {}
-    };
-  },
   computed: {
-    userBasket() {
-      if (state.basket[this.auth.user.id] === undefined) return [];
-      return state.basket[this.auth.user.id].basket_entry;
-    },
-    isBasketEmpty() {
-      if (state.basket[this.auth.user.id] === undefined) return true;
-      return state.basket[this.auth.user.id].basket_entry.length == 0;
-    },
-    sumBasket() {
-      let sum = 0;
-      if (state.basket[this.auth.user.id] === undefined) return sum;
-      for (const item of state.basket[this.auth.user.id].basket_entry) {
-        sum+= Number(item.count) * Number(item.item.price);
-      }
-      console.log(transportFeePerPerson.value);
-      if (personCount.value != 0) {
-        sum += Math.ceil(transportFeePerPerson.value);
-      }
-      return sum;
-    },
     currentUserState() {
+      if (state.userStates[this.auth.user.id] === undefined) return 'none';
       return state.userStates[this.auth.user.username];
     },
     subscriptionState() {
@@ -293,31 +270,6 @@ export default {
       }
       socket.emit("User Daily State Change",{ 'id': this.auth.user.id, 'new_state':waitType });
     },
-    deleteFromBasket: function(mi_id) {
-      if ( state.order.state_id === 'closed') {
-        notify({
-          type: "warn",
-          text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
-        });
-        return;
-      }
-      axios.post(`http://${window.location.host}/api/order/${state.order.id}/remove`,{
-        "user_id":this.auth.user.id,
-        "menu_item_id":mi_id
-      })
-    },
-    clearBasket: function() {
-      if ( state.orderState === 'closed') {
-        notify({
-          type: "warn",
-          text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
-        });
-        return;
-      }
-      axios.post(`http://${window.location.host}/api/order/${state.order.id}/clear`,{
-        "user_id":this.auth.user.id
-      })
-    }
   }
 }
 </script>

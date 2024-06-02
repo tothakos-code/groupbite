@@ -31,7 +31,7 @@ const routes = [
       {
         path: ':id/config',
         component: VendorConfiguration,
-        props: true
+        // props: true
       },
       {
         path: 'add',

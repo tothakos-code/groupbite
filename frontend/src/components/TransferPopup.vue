@@ -106,6 +106,7 @@
 import Popup from './Popup.vue';
 import { state, socket } from "@/socket";
 import { useAuth } from "@/stores/auth";
+import { useBasket } from "@/stores/basket";
 import { copyText } from 'vue3-clipboard';
 import { notify } from "@kyvg/vue3-notification";
 import { watch } from 'vue';
@@ -117,9 +118,11 @@ export default {
   },
   setup() {
     const auth = useAuth();
+    const basket = useBasket();
 
     return {
-      auth
+      auth,
+      basket
     }
   },
   data() {
@@ -139,7 +142,7 @@ export default {
   mounted() {
 
         watch(
-          () => state.basket,
+          () => this.basket.basket,
           (newBasket) =>{
             let resultList = []
             for (const value of Object.values(newBasket)) {
@@ -169,10 +172,12 @@ export default {
                 if (oldItem) {
                     if (oldItem.count !== newItem.count) {
                         itemMap.set(newItem.id, {...newItem, tick: false})
-                        notify({
-                          type: "warn",
-                          text: newItem.name +" mennyisége megváltozott. A lista frissült!",
-                        });
+                        if (this.showInitial) {
+                          notify({
+                            type: "warn",
+                            text: newItem.name +" mennyisége megváltozott. A lista frissült!",
+                          });
+                        }
                     } else {
                       itemMap.set(newItem.id, {...newItem, tick: oldItem.tick})
 

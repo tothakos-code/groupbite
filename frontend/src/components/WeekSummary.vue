@@ -174,12 +174,12 @@
         </div>
         <div class="col text-center">
           <span class="btn pe-none border border-secondary-subtle rounded">
-            {{ boxCount }} db doboz
+            {{ basket.itemCount }} db doboz
           </span>
         </div>
         <div class="col text-center">
           <span class="btn pe-none border border-secondary-subtle rounded">
-            {{ transportFeePerPerson }} Ft szállítás díj/fő
+            {{ basket.transportFeePerPerson }} Ft szállítás díj/fő
           </span>
         </div>
 
@@ -196,12 +196,12 @@
             </div>
             <div class="col text-center">
               <span class="btn pe-none border border-secondary-subtle rounded">
-                {{ boxCount }} db doboz
+                {{ basket.itemCount }} db doboz
               </span>
             </div>
             <div class="col text-center">
               <span class="btn pe-none border border-secondary-subtle rounded">
-                {{ transportFeePerPerson }} Ft szállítás díj/fő
+                {{ basket.transportFeePerPerson }} Ft szállítás díj/fő
               </span>
             </div>
           </div>
@@ -230,7 +230,7 @@
 import GlobalBasketPerson from './GlobalBasketPerson.vue'
 import Popup from './Popup.vue';
 import { useAuth } from '@/stores/auth';
-import { transportFeePerPerson, personCount, basketSum, boxCount } from '@/basket';
+import { useBasket } from '@/stores/basket';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 
@@ -245,20 +245,17 @@ export default {
     const user_states = ref({});
     const weekdates = ref([]);
     const auth = useAuth();
+    const basket = useBasket();
     return {
       auth,
-      transportFeePerPerson,
+      basket,
       user_states,
       weekdates,
-      personCount,
-      basketSum,
-      boxCount
     }
   },
   data() {
     return {
       history: {},
-      // weekDates: [],
       selected_history: new Date(),
       currentDateSelected: new Date(),
       showOrderSummary: false,
@@ -280,15 +277,16 @@ export default {
     },
   },
   mounted() {
-    this.getHistroy();
     this.getCurrentWeekDates(new Date()).then(res => {
       this.weekdates = res;
+      this.getHistroy(this.weekdates[0], this.weekdates[this.weekdates.length-1]);
+
       // This might not render if the user is authenticate before thsi line but was not authenticated when the first getHistroy() ran.
       if (!this.auth.isLoggedIn) {
         watch(
           () => this.auth.user,
           () => {
-            this.getHistroy();
+            this.getHistroy(this.weekdates[0], this.weekdates[this.weekdates.length-1]);
           },
           { once: true }
         )
@@ -341,11 +339,11 @@ export default {
       }
       return weekDates;
     },
-    getHistroy: function() {
+    getHistroy: function(from, to) {
       let url = `http://${window.location.host}/api/order/history`
       axios.post(url, {
-          'date_from': '2024-05-27',
-          'date_to': '2024-05-31',
+          'date_from': new Date(from).toISODate(),
+          'date_to': new Date(to).toISODate(),
           'user_id': this.auth.isLoggedIn ? this.auth.user.id : undefined
         })
         .then((data) => {
@@ -378,9 +376,9 @@ export default {
       const newDate = new Date(day);
       this.weekdates.value = this.getCurrentWeekDates(newDate).then(res => {
         this.weekdates = res;
+        this.getHistroy(this.weekdates[0], this.weekdates[this.weekdates.length-1])
       });
       this.currentDateSelected = newDate;
-      this.getHistroy(this.currentDateSelected)
     },
     nextWeek: function() {
       let nextWeek = this.currentDateSelected

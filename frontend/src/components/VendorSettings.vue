@@ -38,13 +38,7 @@ import { useAuth } from '@/stores/auth';
 import { notify } from "@kyvg/vue3-notification";
 
 export default {
-    name: 'PluginSettings',
-    props: {
-      id:{
-        type: String,
-        required: true
-      },
-    },
+    name: 'VendorSettings',
     setup() {
       const auth = useAuth();
       return {

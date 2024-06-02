@@ -16,7 +16,7 @@
           :key="size.id"
           class="btn btn-sm col-6 col-sm-6 ms-2"
           :class="['btn-' + auth.getUserColor ]"
-          @click="addToBasket(size.id, size.size)"
+          @click="basket.addItem(size.id)"
         >
           <span class="text-nowrap me-1">{{ size.size }}</span>
           <span class="text-nowrap">{{ size.price }} Ft</span>
@@ -27,10 +27,10 @@
 </template>
 
 <script>
-import { state, socket } from "@/socket";
+import { state } from "@/socket";
 import { useAuth } from "@/stores/auth";
-import { notify } from "@kyvg/vue3-notification";
-import axios from 'axios';
+import { useBasket } from "@/stores/basket";
+
 
 export default {
   name: 'FalusiMenu',
@@ -42,8 +42,10 @@ export default {
   },
   setup() {
     const auth = useAuth();
+    const basket = useBasket();
     return {
-      auth
+      auth,
+      basket
     }
   },
   computed: {
@@ -51,31 +53,7 @@ export default {
       return state.userStates[this.auth.user.username];
     }
   },
-  methods: {
-    addToBasket: function(mi_id) {
-      if (!this.auth.isLoggedIn) {
-        notify({
-          type: "warn",
-          text: "Jelentkezz be a rendeléshez!",
-        });
-        return;
-      }
-      if (state.order.state_id === 'closed') {
-        notify({
-          type: "warn",
-          text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
-        });
-        return;
-      }
-      if (this.currentUserState === 'skip') {
-        socket.emit("User Daily State Change",{ 'id': this.auth.user.id, 'new_state':'none' });
-      }
-      axios.post(`http://${window.location.host}/api/order/${state.order.id}/add`,{
-        "user_id":this.auth.user.id,
-        "menu_item_id":mi_id
-      })
-    }
-  }
+
 }
 </script>
 

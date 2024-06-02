@@ -143,15 +143,10 @@
 <script>
 import axios from 'axios';
 import { useAuth } from '@/stores/auth';
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
-    name: 'PluginConfiguration',
-    props: {
-      id:{
-        type: String,
-        required: true
-      },
-    },
+    name: 'VendorMenuManager',
     setup() {
       const auth = useAuth();
       return {
@@ -183,8 +178,6 @@ export default {
               item.isEditing = false
             });
             this.menulist = newMenuList
-            console.log(newMenuList);
-            console.log(this.menulist);
           })
           .catch(e => {
               console.log(e);
@@ -194,15 +187,22 @@ export default {
         axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/add`, {'data':this.newMenu})
           .then(() => {
             this.getMenuList()
+            notify({
+              type: "info",
+              text: "Menü hozzáadása sikeres!",
+            });
           })
           .catch(e => {
               console.log(e);
+              notify({
+                type: "error",
+                text: "Menü hozzáadása nem sikerült!",
+              });
           })
       },
       edit: function (menu_id) {
         const item = this.menulist.get(menu_id)
         this.menulist.set(item.id, { ...item, isEditing: true})
-        console.log(this.menulist);
       },
       cancelEdit: function (menu_id) {
         const item = this.menulist.get(menu_id)
@@ -214,9 +214,17 @@ export default {
         axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/update`, {'data': menu})
           .then(() => {
             this.getMenuList()
+            notify({
+              type: "info",
+              text: "Menü frissítés sikeres!",
+            });
           })
           .catch(e => {
               console.log(e);
+              notify({
+                type: "error",
+                text: "Menü frissítés nem sikerült!",
+              });
           })
       },
       deleteMenu: function (menu_id) {
@@ -225,9 +233,17 @@ export default {
         axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/delete`, {'data': menu})
           .then(() => {
             this.getMenuList()
+            notify({
+              type: "info",
+              text: "Menü törlés sikeres!",
+            });
           })
           .catch(e => {
               console.log(e);
+              notify({
+                type: "error",
+                text: "Menü törlés nem sikerült!",
+              });
           })
       },
     }

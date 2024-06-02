@@ -29,11 +29,11 @@
         </li>
       </ul>
     </div>
-    <Transition
+    <!-- <Transition
       name="fade"
-    >
-      <component :is="allTabs[activeTab]" />
-    </Transition>
+    > -->
+    <component :is="allTabs[activeTab]" />
+    <!-- </Transition> -->
   </div>
 </template>
 

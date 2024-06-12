@@ -2,29 +2,17 @@
   <div class="row col d-flex min-vh-100 h-auto">
     <Sidebar />
     <div class="col px-0 w-100 flex-grow-1">
-      <div class="row bg-body-secondary d-flex justify-content-between mx-0 px-0">
-        <div class="col-11 col-md-7 row d-flex justify-content-between">
-          <div class="col-8 row d-flex justify-content-start align-items-center">
-            <h3 class="text-truncate">
-              GroupBite
-            </h3>
-          </div>
-          <div class="col-3 d-flex align-items-center d-none">
-            <span class="col text-danger fs-5 text-truncate">{{ banner() }}</span>
-          </div>
-          <div class="col-4 d-flex align-items-center">
-            <OrderState class="text-truncate" />
-          </div>
+      <div class="row col-12 bg-body-secondary d-flex justify-content-between mx-0 px-0">
+        <div class="col-8 justify-content-start align-items-center">
+          <h3 class="text-truncate">
+            GroupBite
+          </h3>
         </div>
-        <div class="col-1 col-md-5 justify-content-end align-items-center my-auto">
-          <div class="row">
-            <div class="col-0 d-none col-md-9 d-md-flex">
-              <UserControllPanel />
-            </div>
-            <div class="col col-md-3 d-flex justify-content-end align-items-center">
-              <UserMenu />
-            </div>
-          </div>
+        <div class="col-3 d-flex align-items-center d-none">
+          <span class="col text-danger fs-5 text-truncate">{{ banner() }}</span>
+        </div>
+        <div class="col col-md-3 d-flex justify-content-end align-items-center">
+          <UserMenu />
         </div>
       </div>
       <Transition>
@@ -70,8 +58,6 @@
 <script>
 import UserMenu from './components/UserMenu.vue'
 import Sidebar from './components/Sidebar.vue'
-import OrderState from './components/OrderState.vue'
-import UserControllPanel from './components/UserControllPanel.vue'
 import { socket } from "@/socket";
 import { useAuth } from "@/stores/auth";
 import { useCookies } from "vue3-cookies";
@@ -85,9 +71,7 @@ export default {
   name: 'App',
   components: {
     UserMenu,
-    UserControllPanel,
     Sidebar,
-    OrderState,
   },
   setup() {
     const { cookies } = useCookies();

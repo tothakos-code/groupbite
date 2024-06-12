@@ -1,26 +1,23 @@
 <template>
   <div class="row ms-2">
     <div class="">
-      <h1 class="">
-        Vendor settings {{ vendor.name }}
-      </h1>
-    </div>
-    <div class="">
       <div
         v-for="(setting, sid) in vendor.settings"
         :key="sid"
-        class=""
+        class="my-2"
       >
-        <label :for="setting.id">{{ setting.name }}
-          <input
-            v-model="setting.value"
-            type="text"
-            :name="setting.id"
-          >
+        <label :for="setting.id">
+          {{ setting.name }}:
         </label>
+        <input
+          v-model="setting.value"
+          type="text"
+          class="form-control w-25"
+          :name="setting.id"
+        >
       </div>
       <button
-        class="btn"
+        class="btn mt-1"
         :class="['btn-' + auth.getUserColor ]"
         type="button"
         name="save"

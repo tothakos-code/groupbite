@@ -5,23 +5,17 @@
   >
     <div class="btn-group ">
       <button
-        type="button"
-        class="d-none d-md-inline btn pe-none border border-secondary"
-      >
-        {{ auth.user.username }}
-      </button>
-      <button
         id="dropdownMenuButton1"
         type="button"
-        class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split rounded-sm hide-sm-arrow"
+        class="btn btn-outline-falusi dropdown-toggle hide-xs-arrow"
         data-bs-toggle="dropdown"
         aria-expanded="false"
       >
-        <span class="d-inline d-md-none">☰</span>
+        <span class="d-none d-sm-inline">{{ auth.user.username }}</span>
+        <span class="d-inline d-sm-none">☰</span>
       </button>
       <ul
         class="dropdown-menu"
-        aria-labelledby="dropdownMenuButton1"
       >
         <li class="d-inline d-md-none">
           <button
@@ -138,8 +132,10 @@ export default {
      .rounded-sm {
        border-radius: 0.375rem !important;
      }
-     .hide-sm-arrow::after {
-      display: none !important;
-    }
    }
+@media (max-width: 576px) {
+    .hide-xs-arrow::after {
+     display: none !important;
+   }
+  }
 </style>

@@ -2,45 +2,60 @@
   <div class="row ms-2">
     <div class="">
       <div
-        class=""
+        class="row my-2 w-75"
       >
-        <label for="itemName">
-          Menü:
+        <div class="col-auto">
+          <label for="itemName">
+            Menü:
+          </label>
           <select
             v-model="selectedMenu"
             name="itemMenu"
+            class="form-control"
           >
             <option
               v-for="m in menus"
               :key="m.id"
               :value="m.id"
-            >{{ m.name }} - {{ m.date }}</option>
+            >
+              {{ m.name }} - {{ m.date }}
+            </option>
           </select>
-        </label>
-        <label for="itemName">
-          Név:
+        </div>
+        <div class="col-auto">
+          <label for="itemName">
+            Név:
+          </label>
           <input
             v-model="item.name"
             type="text"
             name="itemName"
+            class="form-control"
           >
-        </label>
-        <label for="itemSize">
-          Méret:
+        </div>
+
+        <div class="col-auto">
+          <label for="itemSize">
+            Méret:
+          </label>
           <input
             v-model="item.size"
             type="text"
             name="itemSize"
+            class="form-control"
           >
-        </label>
-        <label for="itemPrice">
-          Ár:
+        </div>
+        <div class="col-auto">
+          <label for="itemPrice">
+            Ár:
+          </label>
           <input
             v-model="item.price"
             type="number"
             name="itemPrice"
+            class="form-control"
           >
-        </label>
+        </div>
       </div>
       <button
         class="btn"

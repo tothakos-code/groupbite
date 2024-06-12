@@ -1,17 +1,18 @@
 <template>
   <div class="card">
-    <div class="card-header row d-flex px-2">
-      <div class="col-3 col-md-6 col-lg-8 row px-0">
-        <div class="col-0 d-none d-sm-inline col-sm-6 col-lg-4 my-auto">
-          <h2 class="text-nowrap">
-            Étlap
-          </h2>
-        </div>
-        <div class="col-0 d-none col-lg-8 d-lg-inline my-auto truncate">
-          <TransferPopup />
-        </div>
+    <div class="card-header row col px-2">
+      <div class="col-0 d-none col-md-0 col-lg-3 d-xl-inline my-auto">
+        <h2 class="text-nowrap">
+          Étlap
+        </h2>
       </div>
-      <div class="col-12 col-sm-6 col-md-6 col-lg-4 d-flex flex-fill ">
+      <div class="col-6 col-sm-4 col-xl-3 my-auto text-truncate">
+        <TransferPopup />
+      </div>
+      <div class="col-6 d-flex justify-content-center col-sm-4 col-xl-3">
+        <OrderState class="text-truncate my-auto" />
+      </div>
+      <div class="col-12 d-flex justify-content-center col-sm-4 col-xl-3 px-0">
         <Datestamp
           ref="dateSelector"
           :limit-to-current-week="true"
@@ -43,6 +44,7 @@
 <script>
 import Datestamp from '@/components/DateStamp.vue'
 import TransferPopup from '@/components/TransferPopup.vue'
+import OrderState from '@/components/OrderState.vue'
 import { state, socket } from "@/socket";
 import { useAuth } from "@/stores/auth";
 import axios from 'axios';
@@ -53,6 +55,7 @@ export default {
   name: 'MenuList',
   components: {
     Datestamp,
+    OrderState,
     MenuItem,
     TransferPopup
   },

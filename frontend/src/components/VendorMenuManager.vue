@@ -2,29 +2,48 @@
   <div class="row ms-2">
     <div class="">
       <div
-        class=""
+        class="row my-2"
       >
-        <label for="name">
-          Név:
+        <div class="col-auto">
+          <label for="name">
+            Név:
+          </label>
           <input
             v-model="newMenu.name"
+            class="form-control"
             type="text"
             name="name"
           >
-        </label>
-        <label for="freq">Menü gyakorisága:
+        </div>
+        <div class="col-auto">
+          <label for="freq">Menü gyakorisága:
+          </label>
           <select
             id="freq"
             v-model="newMenu.freq"
+            class="form-select"
             name="freq"
           >
-            <option value="FIX">Fix</option>
-            <option value="DAILY">Napi</option>
-            <option value="WEAKLY">Heti</option>
-            <option value="MONTLY">Havi</option>
-            <option value="YEARLY">Évi</option>
+            <option
+              value="FIX"
+              selected
+            >
+              Fix
+            </option>
+            <option value="DAILY">
+              Napi
+            </option>
+            <option value="WEAKLY">
+              Heti
+            </option>
+            <option value="MONTLY">
+              Havi
+            </option>
+            <option value="YEARLY">
+              Éves
+            </option>
           </select>
-        </label>
+        </div>
       </div>
       <button
         class="btn"
@@ -158,7 +177,7 @@ export default {
         menulist: [],
         newMenu: {
           name: "",
-          freq: "",
+          freq: "FIX",
         },
       }
     },

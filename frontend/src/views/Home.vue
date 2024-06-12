@@ -4,14 +4,14 @@
       <WeekSummary />
     </div>
     <div class="row-12 mb-2">
-      <div class="card">
+      <!-- <div class="card">
         <div class="card-header">
           asd
         </div>
         <div class="card-body">
           ad
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>

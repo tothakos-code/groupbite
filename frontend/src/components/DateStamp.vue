@@ -1,12 +1,12 @@
 <template>
-  <div class="col-9 row my-auto flex-fill">
-    <div class="col-7 text-center my-auto px-1">
+  <div class="col my-auto">
+    <div class="col-12 text-center my-auto px-1">
       <span class="text-center text-nowrap px-1">
         {{ getShownDate }}
       </span>
     </div>
-    <div class="col-5 row d-flex justify-content-between">
-      <div class="col-4 p-0">
+    <div class="col-12 d-flex justify-content-between">
+      <div class="col-4 p-0 text-center">
         <button
           class="btn btn-link p-0"
           :class="['link-' + auth.getUserColor ]"
@@ -26,7 +26,7 @@
           </svg>
         </button>
       </div>
-      <div class="col-4 p-0">
+      <div class="col-4 p-0 text-center">
         <button
           :class="['link-' + auth.getUserColor ]"
           class="btn btn-link p-0"
@@ -49,7 +49,7 @@
           </svg>
         </button>
       </div>
-      <div class="col-4 p-0">
+      <div class="col-4 p-0 text-center">
         <button
           type="button"
           name="button"

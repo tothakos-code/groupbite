@@ -1,88 +1,79 @@
 <template>
   <div class="card">
-    <div class="card-header justify-content-between">
-      <div class="col-12 px-0 d-flex ">
-        <div class="col-0 col-lg-4 my-auto truncate ms-0 flex-fill  d-flex justify-content-start align-items-center">
-          <div class="row justify-content-start">
-            <h2 class="">
-              Heti összegző
-            </h2>
-          </div>
+    <div class="card-header d-flex justify-content-center">
+      <div class="col-12 row px-0">
+        <div class="col-12 d-flex justify-content-center col-sm-6 col-md-4 justify-content-md-start">
+          <h2 class="">
+            Heti összegző
+          </h2>
         </div>
-        <div class="col-6 col-lg-4 p-0 flex-fill d-flex justify-content-center align-items-center">
-          <div class="row justify-content-center px-1">
-            <span class="text-center text-nowrap px-2 fs-4">
-              {{ getCurrentMonthName }} {{ currentDateSelected.getWeek() }}. hét
-            </span>
-          </div>
+        <div class="col-12 d-flex justify-content-center col-sm-6 d-md-inline col-md-4">
+          <span class="text-center text-nowrap px-2 fs-4">
+            {{ getCurrentMonthName }} {{ currentDateSelected.getWeek() }}. hét
+          </span>
         </div>
-        <div class="col-6 col-lg-4 p-0 flex-fill d-flex justify-content-end align-items-center">
-          <div class="col-6">
-            <div class="row ">
-              <div class="col-4 d-flex justify-content-center ">
-                <a
-                  type="button"
-                  name="button"
-                  class="btn btn-link py-0 px-2 "
-                  :class="['text-' + auth.getUserColor ]"
-                  @click="prevWeek()"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="32"
-                    height="32"
-                    fill="currentColor"
-                    class="bi bi-caret-left"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M10 12.796V3.204L4.519 8zm-.659.753-5.48-4.796a1 1 0 0 1 0-1.506l5.48-4.796A1 1 0 0 1 11 3.204v9.592a1 1 0 0 1-1.659.753" />
-                  </svg>
-                </a>
-              </div>
-              <div class="col-4 d-flex justify-content-center">
-                <button
-                  v-if="new Date().getDate() !== currentDateSelected.getDate()"
-                  type="button"
-                  name="button"
-                  class="btn btn-sm py-0 px-2"
-                  :class="['btn-' + auth.getUserColor ]"
-                  @click="setDay(new Date())"
-                >
-                  Ma
-                </button>
-              </div>
-              <div class="col-4 d-flex justify-content-center">
-                <a
-                  type="button"
-                  name="button"
-                  class="btn btn-link py-0 px-2"
-                  :class="['text-' + auth.getUserColor ]"
-                  @click="nextWeek()"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="32"
-                    height="32"
-                    fill="currentColor"
-                    class="bi bi-caret-right"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M6 12.796V3.204L11.481 8zm.659.753 5.48-4.796a1 1 0 0 0 0-1.506L6.66 2.451C6.011 1.885 5 2.345 5 3.204v9.592a1 1 0 0 0 1.659.753" />
-                  </svg>
-                </a>
-              </div>
-            </div>
+        <div class="col-12 d-flex col-md-4">
+          <div class="col-4 text-center">
+            <a
+              type="button"
+              name="button"
+              class="btn btn-link py-0 px-2 "
+              :class="['text-' + auth.getUserColor ]"
+              @click="prevWeek()"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                fill="currentColor"
+                class="bi bi-caret-left"
+                viewBox="0 0 16 16"
+              >
+                <path d="M10 12.796V3.204L4.519 8zm-.659.753-5.48-4.796a1 1 0 0 1 0-1.506l5.48-4.796A1 1 0 0 1 11 3.204v9.592a1 1 0 0 1-1.659.753" />
+              </svg>
+            </a>
+          </div>
+          <div class="col-4 text-center">
+            <button
+              v-if="new Date().getDate() !== currentDateSelected.getDate()"
+              type="button"
+              name="button"
+              class="btn btn-sm py-0 px-2"
+              :class="['btn-' + auth.getUserColor ]"
+              @click="setDay(new Date())"
+            >
+              Ma
+            </button>
+          </div>
+          <div class="col-4 text-center">
+            <a
+              type="button"
+              name="button"
+              class="btn btn-link py-0 px-2"
+              :class="['text-' + auth.getUserColor ]"
+              @click="nextWeek()"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                fill="currentColor"
+                class="bi bi-caret-right"
+                viewBox="0 0 16 16"
+              >
+                <path d="M6 12.796V3.204L11.481 8zm.659.753 5.48-4.796a1 1 0 0 0 0-1.506L6.66 2.451C6.011 1.885 5 2.345 5 3.204v9.592a1 1 0 0 0 1.659.753" />
+              </svg>
+            </a>
           </div>
         </div>
       </div>
-      <div class="col-9 col-md-6 col-lg-4 d-flex flex-fill px-0" />
     </div>
     <div class="card-body">
       <div class="">
         <div
           class="col mb-2"
         >
-          <div class="row row-10 d-flex justify-content-between">
+          <div class="col-12 d-md-flex justify-content-md-between">
             <div
               v-for="day in weekdates"
               :key="day"

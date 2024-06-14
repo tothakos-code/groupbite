@@ -165,7 +165,7 @@ export default {
       addToMenu: function () {
         axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-add`, {'data':this.item, 'menu': this.selectedMenu})
           .then(() => {
-            this.getMenuList()
+            this.getItemList()
             notify({
               type: "info",
               text: "MenuItem hozzáadása sikeres!",

@@ -88,7 +88,7 @@ import { useBasket } from "@/stores/basket";
 import { transportFeePerPerson } from "@/stores/basket";
 
 export default {
-  name: 'PersonComponent',
+  name: 'GlobalBasketUser',
   props: {
     'name':{
       type: String,

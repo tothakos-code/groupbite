@@ -22,19 +22,12 @@
 import { useAuth } from '@/stores/auth';
 
 export default {
-    name: 'PluginConfiguration',
+    name: 'NotFound',
     setup() {
       const auth = useAuth();
       return {
         auth
       }
-    },
-    data() {
-      return {
-        settings: {}
-      }
-    },
-    mounted() {
     },
     methods: {
       openHome: function() {

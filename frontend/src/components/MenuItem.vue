@@ -27,13 +27,12 @@
 </template>
 
 <script>
-import { state } from "@/socket";
 import { useAuth } from "@/stores/auth";
 import { useBasket } from "@/stores/basket";
 
 
 export default {
-  name: 'FalusiMenu',
+  name: 'MenuItem',
   props: {
     'item':{
       type: Object,
@@ -48,12 +47,6 @@ export default {
       basket
     }
   },
-  computed: {
-    currentUserState() {
-      return state.userStates[this.auth.user.username];
-    }
-  },
-
 }
 </script>
 

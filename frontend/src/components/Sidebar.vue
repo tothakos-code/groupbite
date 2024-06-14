@@ -4,21 +4,30 @@
       <ul class="list-group flex-fill p-0">
         <router-link
           to="/home"
-          class="list-group-item border rounded rounded-circle p-auto mt-2 mx-auto"
+          class="list-group-item border rounded rounded-circle mt-2 mx-auto p-0 position-relative"
           style="width: 3rem; height: 3rem;"
           :style="'background-color: ' + backgroundColor('Home', 30, 80) + ';'"
           :onmouseover="'this.style.backgroundColor=\'' + backgroundColor('Home', 30, 70)+'\''"
           :onmouseout="'this.style.backgroundColor=\'' + backgroundColor('Home', 30, 80)+'\''"
           title="Home"
         >
-          <span class="text fs-4 text-center text-truncate m-auto">
-            H
+          <span class="position-absolute top-50 start-50 translate-middle">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="28"
+              height="28"
+              fill="currentColor"
+              class="bi bi-house"
+              viewBox="0 0 16 16"
+            >
+              <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z" />
+            </svg>
           </span>
         </router-link>
         <router-link
           v-for="vendor in vendors"
           :key="vendor.name"
-          class="list-group-item border rounded rounded-circle p-auto mt-2 mx-auto"
+          class="list-group-item border rounded rounded-circle mt-2 mx-auto p-0 position-relative"
           style="width: 3rem; height: 3rem;"
           :style="'background-color: ' + backgroundColor(vendor.name, 30, 80) + ';'"
           :onmouseover="'this.style.backgroundColor=\'' + backgroundColor(vendor.name, 30, 70)+'\''"
@@ -26,7 +35,7 @@
           :title="vendor.name"
           :to="'/menu/'+vendor.name"
         >
-          <span class="text fs-4 text-center text-truncate m-auto">
+          <span class="fs-4 position-absolute top-50 start-50 translate-middle">
             {{ firstChar(vendor.name) }}
           </span>
         </router-link>
@@ -35,7 +44,6 @@
     </div>
   </div>
 </template>
-<!-- ToDo: update router-link to change the seleted_vendor -->
 <script>
 import { state } from "@/socket";
 import VersionInfo from "@/components/VersionInfo.vue"

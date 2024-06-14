@@ -61,7 +61,7 @@ import axios from 'axios';
 import { useAuth } from '@/stores/auth';
 
 export default {
-    name: 'PluginConfiguration',
+    name: 'VendorAdd',
     setup() {
       const auth = useAuth();
       return {

@@ -89,7 +89,7 @@
     </button>
   </div>
   <UserProfilePopup
-    v-if="isLoggedIn"
+    v-if="auth.isLoggedIn"
     :show="showProfile"
     @cancel="showProfile = false"
   />

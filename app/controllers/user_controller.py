@@ -9,6 +9,7 @@ from app.socketio_singleton import SocketioSingleton
 from app.entities import Session
 from app.entities.subscribed import SubscriptionType
 from app.entities.user import User
+from app.entities.order import Order
 from app.services.user_service import UserService
 from app.services.order_service import OrderService
 
@@ -16,68 +17,64 @@ socketio = SocketioSingleton.get_instance()
 
 @user_blueprint.route("/login", methods=['POST'])
 def handle_user_login():
-    username = request.json['username']
-    user_to_login = User.get_one_by_username(username)
+    user_id = request.json['user']
+    user_to_login = User.get_one_by_id(user_id)
 
     if not user_to_login:
-        # register
-        user_to_login = User.create_user(User(username=username, settings={}))
-        logging.info(f"User {user_to_login.username} created!")
+        # user not found error
+        logging.error(f"Error during login: {user_id} user id does not excist, cannot log in.")
 
     logging.info(f"User {user_to_login.username} logged in!")
     return user_to_login.serialized
 
-@socketio.on('User Update')
-def handle_user_update(user):
-    logging.info("Updated User" + str(user['id']))
+@user_blueprint.route("/register", methods=['POST'])
+def handle_user_register():
+    username = request.json['username']
+    user_to_register = User.get_one_by_username(username)
 
-    session = Session()
-    user_to_update = session.query(User).filter(User.id == user['id']).first()
+    if user_to_register:
+        logging.warn(f"Username elready taken: {username}")
 
-    if 'subscribed' in user:
-        # if user['subscribed'] == 'none':
-        #     user_to_update.subscribed = SubscriptionType.none
-        if user['subscribed'] == 'full':
-            user_to_update.subscribed = SubscriptionType.SUB
+    user_to_register = User.create_user(User(username=username, settings={}))
+    logging.info(f"User {user_to_register.username} created!")
+
+    return user_to_login.serialized
+
+@user_blueprint.route("/update", methods=['POST'])
+def handle_user_update():
+    user = request.json['user']
+    logging.info("Updated User: " + str(user['id']))
+
+    user_to_update = User.get_one_by_id(user['id'])
 
     if 'username' in user:
-        is_username_valid, error = UserService.is_username_valid(user['username'])
+        is_username_valid, error = User.is_username_valid(user['username'])
         if is_username_valid:
-            user_to_update.username = user['username']
+            user_to_update.update_user(user)
 
         else:
-            session.close()
             return {"error": error}
 
-    if 'ui_color' in user:
-        user_to_update.ui_color = user['ui_color']
-
-    if 'ui_theme' in user:
-        user_to_update.ui_theme = user['ui_theme']
-
-    session.commit()
-    json_to_return = user_to_update.serialized
-    session.close()
+    logging.info("Szobák:")
+    logging.info(socketio.server.manager.rooms['/'])
     if 'username' in user:
         # Updating the username in every basket(room) a user is in
-        for room in rooms():
-            try:
-                socketio.emit('Client Basket Update', {'basket': OrderService.replace_userid_with_username(datetime.strptime(room, "%Y-%m-%d"))}, to=room)
-            except ValueError:
-                pass
+        for room_name,room in socketio.server.manager.rooms['/'].items():
+            if room_name != None and '_' in room_name:
+                logging.info(room_name)
+                logging.info(room)
+                vendor, date = room_name.split('_')
+                # TODO: check if user has items in that oreder, and only update them
+                order = Order.find_order_by_date_for_a_vendor(vendor, date)
+                socketio.emit(
+                    'be_order_update', {
+                        'basket': OrderService.get_formated_full_basket_group_by_user(order.id)
+                    },
+                    to=room_name
+                )
 
-    emit_user_ds_state()
-    return json_to_return
+    return user_to_update.serialized
 
-
-@user_blueprint.route("/cron/clear_users_temp_state")
-def cron_clear_users_temp_state():
-    # session = Session()
-    # # session.query(User).update({User.daily_state: str(SubscriptionType.none)})
-    # session.commit()
-    # session.close()
-    emit_user_ds_state()
-    return "OK", 200
 
 @user_blueprint.route("/get/<id>")
 def handle_get_user_by_id(id):
@@ -85,35 +82,3 @@ def handle_get_user_by_id(id):
     if not user:
         return {}
     return user.serialized
-
-
-@socketio.on('User Daily State Change')
-def handle_user_ds_change(user):
-    session = Session()
-    user_to_update = session.query(User).filter(User.id == user['id']).first()
-
-    user_to_update.daily_state = user['new_state']
-
-    session.commit()
-    user_result = user_to_update.serialized
-    session.close()
-    emit_user_ds_state()
-    return user_result
-
-def emit_user_ds_state():
-    session = Session()
-    user_list = session.query(User).all()
-    session.close()
-    result = {}
-    # TODO: switct to enum reference
-    for user in user_list:
-        result_state = 'none'
-        if str(user.subscribed) == 'full':
-            result_state = 'sub'
-        if str(user.daily_state) == 'video':
-            result_state = 'video'
-        if str(user.daily_state) == 'skip':
-            result_state = 'skip'
-        result[user.username] = result_state
-
-    socketio.emit('Waiting Update', result)

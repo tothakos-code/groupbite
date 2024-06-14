@@ -37,6 +37,27 @@ class User(Base):
     def get_one_by_id(id):
         return session.query(User).filter(User.id == id).first()
 
+    def is_username_valid(username):
+        notvalid_usernames = [
+            "null",
+            "None",
+            None,
+            "undefined",
+            ""
+        ]
+        if username in notvalid_usernames:
+            return False, "Ez nem lehet a neved: " + username
+
+        notvalid_characters = ["'", '"', "=", ",", ".", "&", "@", "#", "<", ">", "(", ")","[", "]", "{", "}"]
+        for char in notvalid_characters:
+            if char in username:
+                return False, "Tiltott karakter a felhasználónévben: " + char
+
+        if User.get_one_by_username(username):
+            return False, "Ez a felhasználónév már foglalt"
+
+        return True, ""
+
     def create_user(user):
         if session.query(User).filter(User.username == user.username).first():
             logging.error(f"Error in user creation. User '{user.username}' already exist.")
@@ -45,6 +66,11 @@ class User(Base):
         session.commit()
         session.close()
         return user
+
+    def update_user(self, user):
+        self.username = user['username']
+        session.commit()
+        return self
 
     def get_all_orders(self):
         return self.orders

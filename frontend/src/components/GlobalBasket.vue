@@ -102,7 +102,8 @@
       class="row mt-1 mb-1"
     >
       <GlobalBasketPerson
-        :name="user_entry.username"
+        :username="user_entry.username"
+        :user-id="user_entry.user_id"
         :person-basket="user_entry.basket_entry"
         :collapsable="false"
       />

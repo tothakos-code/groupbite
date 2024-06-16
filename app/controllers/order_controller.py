@@ -50,17 +50,13 @@ def handle_order_history():
 
     return json.dumps(result)
 
-# TODO: implement this
-# @order_blueprint.route('/get-order-state')
-def handle_get_order_state():
-    return json.dumps({"order_state":OrderService.get_order_state()})
 
 # TODO: Find all order with orderd state
 @order_blueprint.route('/get-all-order-date')
 def handle_get_all_order_date():
     session = Session()
     order_dates = session.query(Order.order_date).filter(Order.basket != {}).all()
-    session.close()
+
     return [str(order[0]) for order in order_dates]
 
 @order_blueprint.route('/<order_id>/get-basket', methods=['GET'])
@@ -117,6 +113,23 @@ def handle_add_to_basket(order_id):
         })
         return "OK", 201
     return "Error, something went wrong.", 500
+
+@order_blueprint.route('/<order_id>/copy', methods=['POST'])
+def handle_copy_basket(order_id):
+    # who wants to copy
+    USER = request.json['user_id']
+    # user he want to copy
+    COPY_USER = request.json['copy_user_id']
+
+    UserBasket.clear_items(USER, order_id)
+    for item in UserBasket.find_user_basket(COPY_USER, order_id):
+        for i in range(0,item.count):
+            UserBasket.add_item(USER, str(item.menu_item_id), order_id)
+
+    socketio.emit('be_order_update', {
+        'basket': OrderService.get_formated_full_basket_group_by_user(order_id)
+    })
+    return "OK", 201
 
 @order_blueprint.route('/<order_id>/remove', methods=['POST'])
 def handle_remove_from_basket(order_id):

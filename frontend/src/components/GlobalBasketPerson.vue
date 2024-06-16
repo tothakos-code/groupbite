@@ -1,16 +1,16 @@
 <template>
   <div
     class="card"
-    :class="auth.isLoggedIn && name === auth.user.username ? 'border border-2 border-'+ auth.getUserColor + (usertheme === 'dark' ? '-subtle' : '') : ''"
+    :class="auth.isLoggedIn && username === auth.user.username ? 'border border-2 border-'+ auth.getUserColor : ''"
   >
     <div class="card-header row d-flex pe-0">
       <div class="col-6">
-        <span>{{ name }}</span>
+        <span>{{ username }}</span>
         <a
-          v-if="copyable && name !== auth.user.username"
+          v-if="copyable && auth.isLoggedIn && username !== auth.user.username"
           class="ms-2 p-1 btn btn-sm"
           :class="['btn-' + auth.getUserColor ]"
-          @click="basket.copy()"
+          @click="basket.copy(userId)"
         >
           Másol
           <svg
@@ -36,10 +36,10 @@
           class="link-underline link-underline-opacity-0"
           :class="['text-' + auth.getUserColor ]"
           data-bs-toggle="collapse"
-          :data-bs-target="'#' + (name.replace(/[^a-z0-9]/ig, ''))"
+          :data-bs-target="'#' + userId"
           role="button"
           :aria-expanded="!collapsable || !startCollapsed"
-          :aria-controls="name"
+          :aria-controls="userId"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -55,7 +55,7 @@
       </div>
     </div>
     <div
-      :id="collapsable ? (name.replace(/[^a-z0-9]/ig, '')) : false"
+      :id="collapsable ? userId : false"
       class="row list-group"
       :class="{ show: !collapsable || !startCollapsed, collapse: startCollapsed}"
     >
@@ -90,7 +90,11 @@ import { transportFeePerPerson } from "@/stores/basket";
 export default {
   name: 'GlobalBasketUser',
   props: {
-    'name':{
+    'username':{
+      type: String,
+      default: ""
+    },
+    'userId':{
       type: String,
       default: ""
     },
@@ -142,12 +146,6 @@ export default {
       sumTitle+= this.basket.transportFeePerPerson + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
       return sumTitle;
     },
-    loggedInUser() {
-      return this.auth.user.username
-    },
-    usertheme() {
-      return this.auth.user.ui_theme ? this.auth.user.ui_theme : "light";
-    }
   },
 }
 </script>

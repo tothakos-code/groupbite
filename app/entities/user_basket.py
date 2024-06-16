@@ -30,6 +30,13 @@ class UserBasket(Base):
         stmt = select(UserBasket).where(UserBasket.user_id == user_id)
         return session.execute(stmt).all()
 
+    def find_user_basket(user_id, order_id):
+        stmt = select(UserBasket).where(
+            UserBasket.user_id == user_id,
+            UserBasket.order_id == order_id
+        )
+        return session.execute(stmt).scalars().all()
+
     def find_user_orders_by_date(user_id, date):
         stmt = select(UserBasket).where(UserBasket.user_id == user_id, UserBasket.order.date_of_order == date)
         return session.execute(stmt).all()

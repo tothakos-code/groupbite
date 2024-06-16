@@ -21,14 +21,14 @@
               class="btn btn-secondary"
               @click="$emit('cancel')"
             >
-              Mégse
+              {{ cancelText }}
             </button>
             <button
               class="btn"
               :class="['btn-' + auth.getUserColor ]"
               @click="$emit('confirm')"
             >
-              Folytat
+              {{ confirmText }}
             </button>
           </div>
         </div>
@@ -49,7 +49,9 @@ export default {
   name: 'BasePopup',
   props: {
     title: String(""),
-    showModal: Boolean
+    showModal: Boolean,
+    cancelText: String("Mégse"),
+    confirmText: String("Folytat"),
   },
   emits: ['cancel', 'confirm'],
   setup(props) {

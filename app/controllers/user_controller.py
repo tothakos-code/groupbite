@@ -17,12 +17,26 @@ socketio = SocketioSingleton.get_instance()
 
 @user_blueprint.route("/login", methods=['POST'])
 def handle_user_login():
-    user_id = request.json['user']
+    username = request.json['username']
+    user_to_login = User.get_one_by_username(username)
+
+    if not user_to_login:
+        # user not found error
+        logging.error(f"Error during login: {username} user does not excist, cannot log in.")
+        return {"error": f"{username} felhasználó nem létezik!"}
+
+    logging.info(f"User {user_to_login.username} logged in!")
+    return user_to_login.serialized
+
+@user_blueprint.route("/checkSession", methods=['POST'])
+def handle_user_check_session():
+    user_id = request.json['session']
     user_to_login = User.get_one_by_id(user_id)
 
     if not user_to_login:
         # user not found error
         logging.error(f"Error during login: {user_id} user id does not excist, cannot log in.")
+        return {"error": f"{user_id} felhasználó nem létezik!"}
 
     logging.info(f"User {user_to_login.username} logged in!")
     return user_to_login.serialized
@@ -33,12 +47,14 @@ def handle_user_register():
     user_to_register = User.get_one_by_username(username)
 
     if user_to_register:
-        logging.warn(f"Username elready taken: {username}")
+        logging.warn(f"Username already taken: {username}")
+        return {"error": f"Username already taken: {username}"}
 
     user_to_register = User.create_user(User(username=username, settings={}))
+    logging.info(user_to_register)
     logging.info(f"User {user_to_register.username} created!")
 
-    return user_to_login.serialized
+    return user_to_register.serialized
 
 @user_blueprint.route("/update", methods=['POST'])
 def handle_user_update():

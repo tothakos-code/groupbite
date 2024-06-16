@@ -8,6 +8,7 @@ import enum
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+import logging
 
 class Theme(enum.Enum):
     LIGHT = 'light'
@@ -34,6 +35,11 @@ class User(Base):
         return session.query(User).filter(User.username == username).first()
 
     def get_one_by_id(id):
+        # check if uuid is valid
+        try:
+            UUID(id)
+        except ValueError as e:
+            return None
         return session.query(User).filter(User.id == id).first()
 
     def is_username_valid(username):
@@ -63,8 +69,12 @@ class User(Base):
             return None
         session.add(user)
         session.commit()
-        session.close()
-        return user
+
+        stmt = select(User).where(
+            User.id == user.id
+        )
+
+        return session.execute(stmt).scalars().first()
 
     def update_user(self, user):
         self.username = user['username']

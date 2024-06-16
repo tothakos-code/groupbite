@@ -43,6 +43,9 @@ export const useBasket = defineStore('basket', {
     userBasketSum(state) {
       const auth = useAuth()
       let sum = 0;
+      if (!auth.isLoggedIn) {
+        return sum;
+      }
       if (state.basket[auth.user.id] === undefined) return sum;
 
       for (const item of state.basket[auth.user.id].basket_entry) {
@@ -56,11 +59,17 @@ export const useBasket = defineStore('basket', {
     },
     userBasket(state) {
       const auth = useAuth()
+      if (!auth.isLoggedIn) {
+        return [];
+      }
       if (state.basket[auth.user.id] === undefined) return [];
       return state.basket[auth.user.id].basket_entry;
     },
     isUserBasketEmpty(state) {
       const auth = useAuth()
+      if (!auth.isLoggedIn) {
+        return true;
+      }
       if (state.basket[auth.user.id] === undefined) return true;
       return state.basket[auth.user.id].basket_entry.length == 0;
     },
@@ -96,7 +105,7 @@ export const useBasket = defineStore('basket', {
         "menu_item_id": menuItem_id
       })
     },
-    copy() {
+    copy(copy_user_id) {
       const auth = useAuth()
       if (!auth.isLoggedIn) {
         notify({
@@ -105,7 +114,11 @@ export const useBasket = defineStore('basket', {
         });
         return;
       }
-      socket.emit("Server Basket Update", { "userid": auth.user.id, "basket": this.personBasket, "order_date": vuestate.selectedDate.toISOString().split('T')[0] });
+
+      axios.post(`http://${window.location.host}/api/order/${vuestate.order.id}/copy`,{
+        "user_id": auth.user.id,
+        "copy_user_id": copy_user_id
+      });     
       notify({
         type: "info",
         text: "Másolva",

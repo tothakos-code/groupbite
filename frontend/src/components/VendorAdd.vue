@@ -2,49 +2,53 @@
   <div class="row ms-2">
     <div class="">
       <h1 class="">
-        Vendor létrehozás
+        Új üzlet létrehozás
       </h1>
     </div>
     <div class="">
       <div
         class=""
       >
-        <label for="short-name">rövid Név:
-          <input
-            v-model="vendor.name"
-            type="text"
-            name="short-name"
-            required
-          >
+        <label for="short-name">Rövid Név:
         </label>
+        <input
+          v-model="vendor.name"
+          class="form-control"
+          type="text"
+          name="short-name"
+          required
+        >
 
         <label for="full-name">Teljes név:
-          <input
-            v-model="vendor.settings.title.value"
-            type="text"
-            name="full-name"
-            required
-          >
         </label>
+        <input
+          v-model="vendor.settings.title.value"
+          type="text"
+          name="full-name"
+          class="form-control"
+          required
+        >
 
         <label for="transport_price">Szállítási Díj:
-          <input
-            v-model="vendor.settings.transport_price.value"
-            type="number"
-            name="transport_price"
-          >
         </label>
+        <input
+          v-model="vendor.settings.transport_price.value"
+          type="number"
+          name="transport_price"
+          class="form-control"
+        >
 
         <label for="transport_price">Rendelés megjegyzés példa:
-          <input
-            v-model="vendor.settings.comment_example.value"
-            type="number"
-            name="transport_price"
-          >
         </label>
+        <input
+          v-model="vendor.settings.comment_example.value"
+          type="text"
+          name="transport_price"
+          class="form-control"
+        >
       </div>
       <button
-        class="btn"
+        class="btn mt-2"
         :class="['btn-' + auth.getUserColor ]"
         type="button"
         name="save"
@@ -59,6 +63,7 @@
 <script>
 import axios from 'axios';
 import { useAuth } from '@/stores/auth';
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
     name: 'VendorAdd',
@@ -103,9 +108,18 @@ export default {
         axios.post(`http://${window.location.host}/api/vendor/create`, {'data':this.vendor})
           .then(response => {
             console.log(response.data);
+            notify({
+              type: "info",
+              text: "Üzlet hozzáadása sikeres!",
+            });
+            history.pushState({}, "", "/admin")
           })
           .catch(e => {
               console.log(e);
+              notify({
+                type: "error",
+                text: "Üzlet hozzáadása nem sikerült!",
+              });
           })
       },
     }

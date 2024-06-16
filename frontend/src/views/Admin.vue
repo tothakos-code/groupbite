@@ -2,7 +2,7 @@
   <div class="row ms-2">
     <div class="row">
       <h1 class="col">
-        Vendor manager
+        Üzlet kezelő
       </h1>
       <div class="col">
         <div

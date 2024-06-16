@@ -40,7 +40,7 @@
 <script>
 import axios from 'axios';
 import { useAuth } from '@/stores/auth';
-
+import { notify } from "@kyvg/vue3-notification";
 import { ref } from 'vue'
 import VendorSettings from './VendorSettings.vue'
 import VendorMenuManager from './VendorMenuManager.vue'
@@ -86,9 +86,17 @@ export default {
         axios.post(`http://${window.location.host}/api/vendor/${this.$route.params.id}/settings/save`, {'data':this.settings})
           .then(response => {
             this.settings = response.data
+            notify({
+              type: "info",
+              text: "Beállítások mentése sikeres!",
+            });
           })
           .catch(e => {
               console.log(e);
+              notify({
+                type: "error",
+                text: "Beállítások mentése nem sikerült!",
+              });
           })
       },
     }

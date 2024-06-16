@@ -4,7 +4,6 @@ from uuid import UUID, uuid4
 from . import Base, session
 from .order import Order
 from typing import List
-from marshmallow import Schema, fields
 import enum
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column

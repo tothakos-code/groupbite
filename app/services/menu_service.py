@@ -8,7 +8,7 @@ class MenuService:
     def get_menu_by_date(requested_date=date.today().strftime('%Y-%m-%d')):
         # fetching from the database
         requested_menu = session.query(Menu).filter(Menu.menu_date == requested_date).first()
-        session.close()
+        
         return requested_menu
 
     def get_all_fdid_with_link():
@@ -21,7 +21,7 @@ class MenuService:
 
         # fetching from the database
         menus = session.query(Menu).filter(Menu.menu_date.between(start_date,end_date))
-        session.close()
+        
         result = {}
         if not menus:
             return result
@@ -53,7 +53,7 @@ class MenuService:
 
         # fetching from the database
         menus = session.query(Menu).filter(Menu.menu_date.between(start_date,end_date))
-        session.close()
+        
         result = {}
         if not menus:
             return result
@@ -104,4 +104,4 @@ class MenuService:
             return
         session.add(Menu(name=name, vendor_id=vendor, menu_date=date, freq_id=freq))
         session.commit()
-        session.close()
+        

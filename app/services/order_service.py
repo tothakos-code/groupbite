@@ -14,7 +14,7 @@ class OrderService:
     def get_user_basket(user, date=date.today().strftime('%Y-%m-%d')):
         session = Session()
         order = session.query(Order).filter(Order.order_date == date).first()
-        session.close()
+        
         if not order or not str(UserService.username_to_id(user)) in order.basket:
             return {}
         return order.basket[str(UserService.username_to_id(user))]
@@ -63,7 +63,7 @@ class OrderService:
     def get_basket(date=date.today().strftime('%Y-%m-%d')):
         session = Session()
         db_basket = session.query(Order).filter(Order.order_date == date).first()
-        session.close()
+        
 
         if not db_basket:
             return {}
@@ -84,14 +84,14 @@ class OrderService:
             logging.warning("Updated today's basket row")
 
         session.commit()
-        session.close()
+        
 
 
     def get_order_state(order_date=date.today().strftime('%Y-%m-%d')):
         """Returns to current order state value"""
         session = Session()
         order_state = session.query(Order).filter(Order.order_date == order_date).first()
-        session.close()
+        
         if not order_state:
             return str(OrderState.COLLECT)
 
@@ -103,19 +103,19 @@ class OrderService:
         session = Session()
         order = session.query(Order).filter(Order.order_date == order_date).first()
         if not order:
-            session.close()
+            
             return str(OrderState.COLLECT)
 
         order.order_state = new_state
         session.commit()
         result_state = str(order.order_state)
-        session.close()
+        
         return result_state
 
     def get_user_basket_between(user_id, date_from=date.today().strftime('%Y-%m-%d'), date_to=date.today().strftime('%Y-%m-%d')):
         session = Session()
         orders = session.query(Order).filter(Order.order_date.between(date_from, date_to)).all()
-        session.close()
+        
         result = {}
         for order in orders:
             if not order or not str(user_id) in order.basket:

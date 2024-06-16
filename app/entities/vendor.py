@@ -1,7 +1,6 @@
 from enum import Enum as pyenum
 from sqlalchemy.dialects.postgresql import JSONB
 from . import Base, session
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import Boolean
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -69,7 +68,7 @@ class Vendor(Base):
             vendor_obj.id = str(vendor_db.id)
 
         session.commit()
-        session.close()
+
 
     @property
     def serialized(self):

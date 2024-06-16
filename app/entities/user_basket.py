@@ -2,7 +2,6 @@ from sqlalchemy import Column, Text, Enum, select
 from uuid import UUID
 from . import Base, session
 from .order import Order
-from marshmallow import Schema, fields
 import enum
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped
@@ -96,7 +95,7 @@ class UserBasket(Base):
                 user_basket.count -= 1
 
         session.commit()
-        session.close()
+
         return user_basket
 
     def add_item(user_id, menu_item_id, order_id):
@@ -118,7 +117,7 @@ class UserBasket(Base):
 
         session.add(user_basket)
         session.commit()
-        session.close()
+
         return user_basket
 
     @property

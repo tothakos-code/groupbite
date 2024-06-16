@@ -8,9 +8,6 @@
             GroupBite
           </h3>
         </div>
-        <div class="col-3 d-flex align-items-center d-none">
-          <span class="col text-danger fs-5 text-truncate">{{ banner() }}</span>
-        </div>
         <div class="col col-md-3 d-flex justify-content-end align-items-center">
           <UserMenu />
         </div>
@@ -62,7 +59,6 @@ import { socket } from "@/socket";
 import { useAuth } from "@/stores/auth";
 import { useCookies } from "vue3-cookies";
 import { provide, ref } from 'vue';
-import { notify } from "@kyvg/vue3-notification";
 
 
 
@@ -129,24 +125,6 @@ export default {
     localStorage.setItem("theme", this.theme);
     document.documentElement.setAttribute('data-bs-theme', this.theme)
   },
-  methods: {
-    banner: function() {
-      // eslint-disable-next-line
-      return process.env.VUE_APP_FALU_BANNER;
-    },
-    dismissGlobalMessage() {
-      // Hide the message
-      this.showGlobalMessage = false;
-
-      notify({
-        type: "info",
-        text: "Az üzenet nemfog többet megjelenni."
-      });
-
-      // Save in local storage that the user has dismissed the message
-      localStorage.setItem("gm-date-func-change", "true");
-    },
-  }
 }
 </script>
 

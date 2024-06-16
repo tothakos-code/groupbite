@@ -18,7 +18,11 @@ def import_module(name: str) -> ModuleInterface:
 def load_plugins(plugins: list) -> None:
     """Loads the plugins defined in the plugins list."""
     for plugin_file in plugins:
-        plugin = import_module(plugin_file+".app")
+        try:
+            plugin = import_module(plugin_file+".app")
+        except ModuleNotFoundError as e:
+            logging.error(f"{plugin_file} plugin can not be imported, module not found")
+            continue
 
 
         for name, obj in plugin.__dict__.items():

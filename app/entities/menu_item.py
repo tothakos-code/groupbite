@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Text, Enum
 from uuid import UUID
 from . import Base, session
-from marshmallow import Schema, fields
 import enum
 from typing import List
 from sqlalchemy import ForeignKey
@@ -32,7 +31,7 @@ class MenuItem(Base):
     def add(item):
         session.add(item)
         session.commit()
-        session.close()
+
 
 
     @property

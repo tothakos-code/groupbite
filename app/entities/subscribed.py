@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Text, Enum
 from uuid import UUID
 from . import Base
-from marshmallow import Schema, fields
 import enum
 from uuid import UUID
 from sqlalchemy import ForeignKey

@@ -3,12 +3,10 @@ from typing import List
 from . import Base, session
 from uuid import UUID
 from datetime import datetime, date
-from marshmallow import Schema, fields
 from sqlalchemy import ForeignKey, select
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 class OrderState(enum.Enum):
     COLLECT = 'collect'
@@ -40,7 +38,7 @@ class Order(Base):
         order = Order(vendor_id=v_id,date_of_order=doo)
         session.add(order)
         session.commit()
-        session.close()
+
         return order
 
     def get_by_id(order_id):

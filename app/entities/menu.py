@@ -10,7 +10,6 @@ from typing import List
 from . import Base, session
 from uuid import UUID
 from .vendor import Vendor
-from marshmallow import Schema, fields
 
 class Frequency(enum.Enum):
     FIX = 'fix'
@@ -72,7 +71,7 @@ class Menu(Base):
     def add(menu):
         session.add(menu)
         session.commit()
-        session.close()
+
 
     def update(self, name, date):
         self.name = name

@@ -11,7 +11,7 @@
           :onmouseout="'this.style.backgroundColor=\'' + backgroundColor('Home', 30, 80)+'\''"
           title="Home"
         >
-          <span class="position-absolute top-50 start-50 translate-middle">
+          <span class="position-absolute top-50 start-50 translate-middle text-dark">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="28"
@@ -35,7 +35,7 @@
           :title="vendor.name"
           :to="'/menu/'+vendor.name"
         >
-          <span class="fs-4 position-absolute top-50 start-50 translate-middle">
+          <span class="fs-4 position-absolute top-50 start-50 translate-middle text-dark">
             {{ firstChar(vendor.name) }}
           </span>
         </router-link>

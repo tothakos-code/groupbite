@@ -85,7 +85,6 @@
 <script>
 import { useAuth } from "@/stores/auth";
 import { useBasket } from "@/stores/basket";
-import { transportFeePerPerson } from "@/stores/basket";
 
 export default {
   name: 'GlobalBasketUser',
@@ -121,7 +120,6 @@ export default {
     return {
       auth,
       basket,
-      transportFeePerPerson
     };
   },
   data() {

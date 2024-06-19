@@ -7,16 +7,21 @@
     @cancel="cancel()"
     @confirm="confirm()"
   >
-    <p v-if="showLogin">Írd be a nevet amit regisztrációnál megadtál.</p>
-    <p v-else>Válassz egy felhasználó nevet.</p>
-    <p>{{ showLogin ? "Nincs fiókod?" : "Már van fiókod?"}}
+    <p v-if="showLogin">
+      Írd be a nevet amit regisztrációnál megadtál.
+    </p>
+    <p v-else>
+      Válassz egy felhasználó nevet.
+    </p>
+    <p>
+      {{ showLogin ? "Nincs fiókod?" : "Már van fiókod?" }}
       <a
         type="button"
         name="button"
         class="text-link"
         @click="change_login()"
       >
-        {{ showLogin ? "Regisztrálj!" : "Jelentkezz be!"}}
+        {{ showLogin ? "Regisztrálj!" : "Jelentkezz be!" }}
       </a>
     </p>
     <div class="input-group mb-3">

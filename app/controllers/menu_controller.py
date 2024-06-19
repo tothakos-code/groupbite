@@ -73,6 +73,24 @@ def handle_menu_item_add(vendor_id):
     return "OK"
 
 
+@menu_blueprint.route('/<vendor_id>/item-update', methods=['POST'])
+def handle_menu_item_update(vendor_id):
+    item = request.json['data']
+    logging.info(item)
+    logging.info(MenuItem.find_by_id(item['id']))
+    item_db = MenuItem.find_by_id(item['id']).update(item['name'], item['size'], item['price'])
+    return json.dumps(item_db)
+
+
+@menu_blueprint.route('/<vendor_id>/item-delete', methods=['POST'])
+def handle_menu_item_delete(vendor_id):
+    item = request.json['data']
+    logging.info(item)
+    logging.info(MenuItem.find_by_id(item['id']))
+    item_db = MenuItem.find_by_id(item['id']).delete()
+    return "OK"
+
+
 @menu_blueprint.route('/<vendor_id>/get', methods=['GET'])
 def handle_menu_get(vendor_id):
     menus = Menu.find_all_by_vendor(vendor_id)

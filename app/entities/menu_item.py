@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text, Enum
+from sqlalchemy import Column, Text, Enum, select
 from uuid import UUID
 from . import Base, session
 import enum
@@ -27,11 +27,26 @@ class MenuItem(Base):
     def find_all_by_menu(menu_id):
         return session.query(MenuItem).filter_by(menu_id = menu_id).all()
 
+    def find_by_id(id):
+        stmt = select(MenuItem).where(
+            MenuItem.id == id
+        )
+
+        return session.execute(stmt).scalars().first()
 
     def add(item):
         session.add(item)
         session.commit()
 
+    def update(self, name, size, price):
+        self.name = name
+        self.size = size
+        self.price = price
+        session.commit()
+
+    def delete(self):
+        session.delete(self)
+        session.commit()
 
 
     @property

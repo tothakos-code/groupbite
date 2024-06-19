@@ -27,7 +27,7 @@
             Név:
           </label>
           <input
-            v-model="item.name"
+            v-model="newItem.name"
             type="text"
             name="itemName"
             class="form-control"
@@ -39,7 +39,7 @@
             Méret:
           </label>
           <input
-            v-model="item.size"
+            v-model="newItem.size"
             type="text"
             name="itemSize"
             class="form-control"
@@ -50,7 +50,7 @@
             Ár:
           </label>
           <input
-            v-model="item.price"
+            v-model="newItem.price"
             type="number"
             name="itemPrice"
             class="form-control"
@@ -84,24 +84,93 @@
           <th scope="col">
             Gyakoriság
           </th>
+          <th scope="col">
+            Műveletek
+          </th>
         </tr>
       </thead>
       <tbody class="table-group-divider">
         <tr
-          v-for="menuItem, index in items"
+          v-for="[index, menuItem] in items"
           :key="index"
         >
           <th scope="row">
             {{ menuItem.id }}
           </th>
           <td>
-            {{ menuItem.name }}
+            <input
+              v-if="menuItem.isEditing"
+              v-model="menuItem.name"
+              type="text"
+            >
+            <span v-else>
+              {{ menuItem.name }}
+            </span>
           </td>
           <td>
-            {{ menuItem.size }}
+            <input
+              v-if="menuItem.isEditing"
+              v-model="menuItem.size"
+              type="text"
+            >
+            <span v-else>
+              {{ menuItem.size }}
+            </span>
           </td>
           <td>
-            {{ menuItem.price }}
+            <input
+              v-if="menuItem.isEditing"
+              v-model="menuItem.price"
+              type="number"
+            >
+            <span v-else>
+              {{ menuItem.price }}
+            </span>
+          </td>
+          <td>
+            <button
+              v-if="!menuItem.isEditing"
+              type="button"
+              name="button"
+              class="btn"
+              title="Szerkesztés"
+              :class="['btn-outline-' + auth.getUserColor ]"
+              @click="edit(menuItem.id)"
+            >
+              Szerkesztés
+            </button>
+            <div v-else>
+              <button
+                type="button"
+                name="button"
+                class="btn"
+                title="Mentés"
+                :class="['btn-outline-' + auth.getUserColor ]"
+                @click="updateItem(menuItem.id)"
+              >
+                Mentés
+              </button>
+              <button
+                type="button"
+                name="button"
+                class="btn"
+                title="Mégse"
+                :class="['btn-outline-' + auth.getUserColor ]"
+                @click="cancelEdit(menuItem.id)"
+              >
+                Mégse
+              </button>
+            </div>
+            <button
+              type="button"
+              name="button"
+              class="btn"
+              title="Törlés"
+              :class="['btn-outline-' + auth.getUserColor ]"
+              @click="deleteItem(menuItem.id)"
+            >
+              Törlés
+            </button>
           </td>
         </tr>
       </tbody>
@@ -126,7 +195,7 @@ export default {
       return {
         menus: [],
         selectedMenu: "",
-        item: {
+        newItem: {
           name: "",
           size: "",
           price: 0,
@@ -156,14 +225,22 @@ export default {
         axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/get-items/${this.selectedMenu}`)
           .then(response => {
             console.log(response);
-            this.items = response.data
+            let newItemsList = new Map(
+              response.data.map(
+                item => [item.id, item]
+              )
+            )
+            this.items.forEach((item) => {
+              item.isEditing = false
+            });
+            this.items = newItemsList;
           })
           .catch(e => {
               console.log(e);
           })
       },
       addToMenu: function () {
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-add`, {'data':this.item, 'menu': this.selectedMenu})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-add`, {'data':this.newItem, 'menu': this.selectedMenu})
           .then(() => {
             this.getItemList()
             notify({
@@ -176,6 +253,52 @@ export default {
               notify({
                 type: "error",
                 text: "MenuItem hozzáadása nem sikerült!",
+              });
+          })
+      },
+      edit: function (menu_id) {
+        const item = this.items.get(menu_id)
+        this.items.set(item.id, { ...item, isEditing: true})
+      },
+      cancelEdit: function (menu_id) {
+        const item = this.items.get(menu_id)
+        this.items.set(item.id, { ...item, isEditing: false})
+      },
+      updateItem: function (item_id) {
+        const item = this.items.get(item_id)
+        this.items.set(item.id, { ...item, isEditing: false})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-update`, {'data': item})
+          .then(() => {
+            this.getItemList()
+            notify({
+              type: "info",
+              text: "Item frissítés sikeres!",
+            });
+          })
+          .catch(e => {
+              console.log(e);
+              notify({
+                type: "error",
+                text: "Item frissítés nem sikerült!",
+              });
+          })
+      },
+      deleteItem: function (item_id) {
+        const item = this.items.get(item_id)
+        this.items.set(item.id, { ...item, isEditing: false})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-delete`, {'data': item})
+          .then(() => {
+            this.getItemList()
+            notify({
+              type: "info",
+              text: "Item törlés sikeres!",
+            });
+          })
+          .catch(e => {
+              console.log(e);
+              notify({
+                type: "error",
+                text: "Item törlés nem sikerült!",
               });
           })
       },

@@ -12,9 +12,14 @@
           <UserMenu />
         </div>
       </div>
-      <Transition>
-        <router-view class="row ps-2 me-0" />
-      </Transition>
+      <router-view
+        v-slot="{ Component }"
+        class="row ps-2 me-0"
+      >
+        <Transition>
+          <component :is="Component" />
+        </Transition>
+      </router-view>
     </div>
     <notifications
       position="top center"

@@ -1,7 +1,6 @@
 from datetime import date, timedelta, datetime
 from app.entities import Session
 from app.entities.user import User
-from app.entities.subscribed import SubscriptionType
 
 class UserService:
     """docstring for UserService."""
@@ -9,7 +8,7 @@ class UserService:
     def username_to_id(username):
         session = Session()
         user = session.query(User).filter(User.username == username).first()
-        
+
         if not user:
             return None
         return user.id
@@ -18,7 +17,7 @@ class UserService:
     def id_to_username(id):
         session = Session()
         user = session.query(User).filter(User.id == id).first()
-        
+
         if not user:
             return None
         return user.username
@@ -26,7 +25,7 @@ class UserService:
     def get_user_by_id(id):
         session = Session()
         user = session.query(User).filter(User.id == id).first()
-        
+
         if not user:
             return None
         return user
@@ -34,7 +33,7 @@ class UserService:
     def user_exist(id):
         session = Session()
         user = session.query(User).filter(User.id == id).first()
-        
+
         if not user:
             return False
         return True
@@ -42,7 +41,7 @@ class UserService:
     def username_exist(username):
         session = Session()
         user = session.query(User).filter(User.username == username).first()
-        
+
         if not user:
             return False
         return True

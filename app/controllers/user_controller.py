@@ -7,7 +7,6 @@ import logging
 from app.controllers import user_blueprint
 from app.socketio_singleton import SocketioSingleton
 from app.entities import Session
-from app.entities.subscribed import SubscriptionType
 from app.entities.user import User
 from app.entities.order import Order
 from app.services.user_service import UserService

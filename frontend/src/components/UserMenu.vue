@@ -86,10 +86,13 @@
             </svg>
           </button>
         </li>
-        <li>
-          <button class="dropdown-item">
+        <!-- <li>
+          <button
+            class="dropdown-item"
+            @click="openUserHistory()"
+          >
             <span>
-              Előző rendelések???
+              Előző rendeléseim
             </span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -104,7 +107,7 @@
               <path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z" />
             </svg>
           </button>
-        </li>
+        </li> -->
         <li>
           <button
             class="dropdown-item"

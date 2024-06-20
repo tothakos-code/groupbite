@@ -60,7 +60,7 @@
       :class="{ show: !collapsable || !startCollapsed, collapse: startCollapsed}"
     >
       <div
-        v-for="item in personBasket"
+        v-for="item in userBasket"
         :key="item.item.id"
         class="list-group-item  d-flex justify-content-between align-items-center"
       >
@@ -97,7 +97,7 @@ export default {
       type: String,
       default: ""
     },
-    'personBasket':{
+    'userBasket':{
       type: Object,
       default: new Object()
     },
@@ -130,7 +130,7 @@ export default {
   computed: {
     basketTotal() {
       let sum=0;
-      Object.values(this.personBasket).forEach((entry) => {
+      Object.values(this.userBasket).forEach((entry) => {
           sum+= Number(entry.count) * Number(entry.item.price);
       });
       sum += Number(this.basket.transportFeePerPerson);
@@ -138,7 +138,7 @@ export default {
     },
     basketTotalTitle() {
       let sumTitle = ""
-      Object.values(this.personBasket).forEach((entry) => {
+      Object.values(this.userBasket).forEach((entry) => {
           sumTitle+= entry.count + '*' + entry.item.price + ' Ft + ';
       });
       sumTitle+= this.basket.transportFeePerPerson + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';

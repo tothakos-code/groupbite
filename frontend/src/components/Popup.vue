@@ -48,10 +48,19 @@ import { useAuth } from '@/stores/auth';
 export default {
   name: 'BasePopup',
   props: {
-    title: String(""),
+    title: {
+      type: String,
+      default: ""
+    },
     showModal: Boolean,
-    cancelText: String("Mégse"),
-    confirmText: String("Folytat"),
+    cancelText: {
+      type: String,
+      default: "Mégse"
+    },
+    confirmText: {
+      type: String,
+      default: "Folytat"
+    },
   },
   emits: ['cancel', 'confirm'],
   setup(props) {

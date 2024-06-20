@@ -177,6 +177,7 @@
         <Popup
           :show-modal="showOrderSummary"
           title="Rendelés összesítő"
+          confirm-text="Ok"
           @cancel="showOrderSummary = false"
         >
           <div class="row d-flex align-items-strech">
@@ -198,13 +199,14 @@
           </div>
           <div
             v-for="(user_entry) in loaded_menu"
-            :key="user_entry.id"
+            :key="user_entry.user_id"
             class="row mt-1 mb-1"
           >
             <div class="list-group-item row m-0">
               <GlobalBasketPerson
-                :name="user_entry.username"
-                :person-basket="user_entry.basket_entry"
+                :username="user_entry.username"
+                :user-id="user_entry.user_id"
+                :user-basket="user_entry.basket_entry"
                 :start-collapsed="true"
                 :collapsable="true"
                 :copyable="false"
@@ -309,12 +311,8 @@ export default {
       axios.get(`http://${window.location.host}/api/order/${item}/get-basket`)
         .then(response => {
             this.loaded_menu = response.data;
-            for (const [index, user] of Object.entries(this.loaded_menu)){
-              console.log("item");
-              console.log(index);
-              console.log(user);
-            }
             this.showOrderSummary = true
+            console.log(this.loaded_menu);
         })
     },
     async getCurrentWeekDates(date) {

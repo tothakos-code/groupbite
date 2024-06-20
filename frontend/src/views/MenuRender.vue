@@ -29,12 +29,7 @@ export default {
     });
     let today = new Date()
     if (to.params.selected_date === undefined) {
-      if (today.getHours() >= 13) {
-        state.selectedDate.setDate(today.getDate() + 1);
-      } else {
-
-        state.selectedDate.setDate(today.getDate());
-      }
+      state.selectedDate.setDate(today.getDate());
       history.pushState({}, "", `${to.path}`)
     } else {
       if (new Date(to.params.selected_date).getWeek() !== today.getWeek()) {

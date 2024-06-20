@@ -2,6 +2,7 @@
   <Popup
     :show-modal="show"
     title="Profil beállítások"
+    confirm-text="Mentés"
     @cancel="onCancel()"
     @confirm="updateUser()"
   >

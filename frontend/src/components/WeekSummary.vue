@@ -203,7 +203,7 @@
             class="row mt-1 mb-1"
           >
             <div class="list-group-item row m-0">
-              <GlobalBasketPerson
+              <GlobalBasketUser
                 :username="user_entry.username"
                 :user-id="user_entry.user_id"
                 :user-basket="user_entry.basket_entry"
@@ -220,7 +220,7 @@
 </template>
 
 <script>
-import GlobalBasketPerson from './GlobalBasketPerson.vue'
+import GlobalBasketUser from '@/components/GlobalBasketPerson.vue'
 import Popup from './Popup.vue';
 import { useAuth } from '@/stores/auth';
 import { useBasket } from '@/stores/basket';
@@ -231,7 +231,7 @@ export default {
   name: 'WeekSummary',
   components: {
     Popup,
-    GlobalBasketPerson,
+    GlobalBasketUser,
   },
   emits: ['close'],
   setup() {

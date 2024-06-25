@@ -27,7 +27,6 @@ def handle_order_history():
         USER_ID = request.json['user_id']
 
     result = {}
-    logging.info(UserBasket.find_orders_between_dates(DATE_FROM, DATE_TO))
     for value in UserBasket.find_orders_between_dates(DATE_FROM, DATE_TO):
         order = Order.get_by_id(value[0])
         date = value[1].strftime('%Y-%m-%d')
@@ -47,6 +46,27 @@ def handle_order_history():
             date = value[1].strftime('%Y-%m-%d')
             order_id = value[0]
             result[date][order_id]['ordered'] = True
+
+    return json.dumps(result)
+
+    # TODO: add a limit and a pager option
+@order_blueprint.route('/history/<user_id>', methods=['GET'])
+def handle_user_order_history(user_id):
+
+    result = {}
+    for item in UserBasket.find_user_orders(user_id):
+        date = item.order.date_of_order.strftime('%Y-%m-%d')
+        vendor = item.order.vendor.name
+        key_format = f"{vendor}-{date}"
+        if key_format not in result:
+            result[key_format] = {}
+
+        if "items" not in result[key_format]:
+            result[key_format]['items'] = []
+
+        result[key_format]['items'].append(item.basket_format)
+        result[key_format]['vendor'] = vendor
+        result[key_format]['date'] = date
 
     return json.dumps(result)
 

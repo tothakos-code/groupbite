@@ -86,7 +86,7 @@
             </svg>
           </button>
         </li>
-        <!-- <li>
+        <li>
           <button
             class="dropdown-item"
             @click="openUserHistory()"
@@ -107,7 +107,7 @@
               <path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z" />
             </svg>
           </button>
-        </li> -->
+        </li>
         <li>
           <button
             class="dropdown-item"
@@ -146,15 +146,55 @@
       Bejelentkezés
     </button>
   </div>
+  <UserLoginPopup
+    :show="showLogin"
+    @cancel="showLogin = false"
+  />
   <UserProfilePopup
     v-if="auth.isLoggedIn"
     :show="showProfile"
     @cancel="showProfile = false"
   />
-  <UserLoginPopup
-    :show="showLogin"
-    @cancel="showLogin = false"
-  />
+  <Popup
+    :show-modal="showOrderHistory"
+    title="Rendelés összesítő"
+    confirm-text="Ok"
+    @cancel="showOrderHistory = false"
+  >
+    <div class="row d-flex align-items-strech">
+      <div class="col text-center align-center">
+        <span class="btn pe-none border border-secondary-subtle rounded">
+          Összesen {{ Object.keys(orderHistoryList).length }} redelésed volt.
+        </span>
+      </div>
+      <div class="col text-center">
+        <span class="btn pe-none border border-secondary-subtle rounded">
+          Ennyi pénzt költöttél ebédre összesen: 0 Ft
+        </span>
+      </div>
+      <div class="col text-center">
+        <span class="btn pe-none border border-secondary-subtle rounded">
+          Átlagosan ennyért ettél: 0 Ft / nap
+        </span>
+      </div>
+    </div>
+    <div
+      v-for="(order , date) in orderHistoryList"
+      :key="date"
+      class="row mt-1 mb-1"
+    >
+      <div class="list-group-item row m-0">
+        <GlobalBasketUser
+          :username="order.vendor + ' - ' + order.date"
+          :user-id="date"
+          :user-basket="order.items"
+          :start-collapsed="true"
+          :collapsable="true"
+          :copyable="false"
+        />
+      </div>
+    </div>
+  </Popup>
 </template>
 
 <script>
@@ -162,12 +202,17 @@ import UserProfilePopup from './UserProfilePopup.vue';
 import UserLoginPopup from './UserLoginPopup.vue';
 import { useAuth } from "@/stores/auth.js";
 import { inject } from 'vue';
+import axios from 'axios';
+import Popup from './Popup.vue';
+import GlobalBasketUser from './GlobalBasketPerson.vue';
 
 export default {
   name: 'UserMenu',
   components: {
     UserLoginPopup,
-    UserProfilePopup
+    UserProfilePopup,
+    Popup,
+    GlobalBasketUser
   },
   setup() {
     const auth = useAuth();
@@ -181,9 +226,21 @@ export default {
   data() {
     return {
       showProfile: false,
-      showLogin: false
+      showLogin: false,
+      showOrderHistory: false,
+      orderHistoryList: {}
     }
   },
+  methods: {
+    openUserHistory: function(){
+      axios.get(`http://${window.location.host}/api/order/history/${this.auth.user.id}`)
+        .then(response => {
+            this.orderHistoryList = response.data;
+            console.log(this.orderHistoryList);
+            this.showOrderHistory = true
+        })
+    },
+  }
 }
 </script>
 

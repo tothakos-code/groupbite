@@ -28,7 +28,7 @@ class UserBasket(Base):
 
     def find_user_orders(user_id):
         stmt = select(UserBasket).where(UserBasket.user_id == user_id)
-        return session.execute(stmt).all()
+        return session.execute(stmt).scalars().all()
 
     def find_user_basket(user_id, order_id):
         stmt = select(UserBasket).where(

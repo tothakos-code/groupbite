@@ -10,7 +10,6 @@ export const state = reactive({
   selectedDate: new Date(), // TODO: This will be urlencoded
   vendors: [],
   selected_vendor: undefined,
-  userStates: {} // TODO: Something will need to happen to this. currently unclear
 });
 
 // "undefined" means the URL will be computed from the `window.location` object
@@ -45,10 +44,6 @@ socket.on('be_order_update', function(data) {
   if (data.order) {
     state.order = data.order;
   }
-});
-
-socket.on('Waiting Update', function(incomingStateList) {
-  state.userStates = incomingStateList;
 });
 
 socket.on('Refresh!', function() {

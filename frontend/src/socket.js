@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 import router from './router.js';
 import { register_plugin_routes } from './loader.js';
 import { useBasket } from '@/stores/basket'
+import { useVendor } from '@/stores/vendor'
 
 export const state = reactive({
   connected: false,
@@ -30,17 +31,20 @@ socket.on("disconnect", () => {
 
 socket.on('be_vendors_update', function(vendors) {
   state.vendors = JSON.parse(vendors);
-  state.vendors.forEach((item) => {
-    item.component = import("@/../../plugins/"+item.name+"/frontend/App.vue");
-  });
+  const vendor = useVendor();
+  vendor.vendors = JSON.parse(vendors)
+  // state.vendors.forEach((item) => {
+  //   item.component = import("@/../../plugins/"+item.name+"/frontend/App.vue");
+  // });
   register_plugin_routes(router);
 });
 
 socket.on('be_order_update', function(data) {
   const basket = useBasket();
   if (data.basket) {
-    basket.basket = JSON.parse(data.basket);
+    basket.basket = data.basket;
   }
+  console.log(data.basket);
   if (data.order) {
     state.order = data.order;
   }

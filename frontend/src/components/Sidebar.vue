@@ -1,10 +1,14 @@
 <template>
-  <div class="sidebar col bg-falusi p-0">
+  <div
+    class="sidebar col p-0"
+    :class="['bg-' + auth.getUserColor ]"
+  >
     <div class="col row p-0 m-0 d-flex flex-column flex-fill h-100 justify-content-center align-items-start">
       <ul class="list-group flex-fill p-0">
         <router-link
           to="/home"
           class="list-group-item border rounded rounded-circle mt-2 mx-auto p-0 position-relative"
+
           style="width: 3rem; height: 3rem;"
           :style="'background-color: ' + backgroundColor('Home', 30, 80) + ';'"
           :onmouseover="'this.style.backgroundColor=\'' + backgroundColor('Home', 30, 70)+'\''"
@@ -28,6 +32,7 @@
           v-for="vendor in vendors"
           :key="vendor.name"
           class="list-group-item border rounded rounded-circle mt-2 mx-auto p-0 position-relative"
+          :class="(selectedVendor && selectedVendor.id === vendor.id) ? 'border-3' : ''"
           style="width: 3rem; height: 3rem;"
           :style="'background-color: ' + backgroundColor(vendor.name, 30, 80) + ';'"
           :onmouseover="'this.style.backgroundColor=\'' + backgroundColor(vendor.name, 30, 70)+'\''"
@@ -47,15 +52,25 @@
 <script>
 import { state } from "@/socket";
 import VersionInfo from "@/components/VersionInfo.vue"
+import { useAuth } from "@/stores/auth";
 
 export default {
   name: 'SidebarMenu',
   components: {
     VersionInfo
   },
+  setup(){
+    const auth = useAuth()
+    return {
+      auth
+    }
+  },
   computed: {
     vendors() {
       return state.vendors;
+    },
+    selectedVendor() {
+      return state.selected_vendor;
     }
   },
   methods: {

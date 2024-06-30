@@ -1,10 +1,11 @@
 @import "~bootstrap/scss/functions";
 @import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/variables-dark";
 @import "~bootstrap/scss/mixins";
 
 $custom-colors: (
-  "falusi":    #73BFB8,
-  // "falusi":    #367773,
+  "groupbite":    #73BFB8,
+  "groupbite-dark":    #5a938d,
   "steelblue": #0081A7,
   "tigragold": #bb9b68,
   "raspberry": #ac3253

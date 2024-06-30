@@ -60,7 +60,7 @@
 <script>
 import UserMenu from './components/UserMenu.vue'
 import Sidebar from './components/Sidebar.vue'
-import { socket } from "@/socket";
+// import { socket } from "@/socket";
 import { useAuth } from "@/stores/auth";
 import { useCookies } from "vue3-cookies";
 import { provide, ref } from 'vue';
@@ -88,9 +88,12 @@ export default {
         theme.value = 'dark'
       }
       localStorage.setItem("theme", theme.value);
-      socket.emit("User Update", {"id": this.auth.user.id, "ui_theme":this.theme}, function(user) {
-        this.auth.user = user;
-      });
+      location.reload();
+      // if (this.auth.isLoggedIn) {
+      //   socket.emit("User Update", {"id": this.auth.user.id, "ui_theme":this.theme}, function(user) {
+      //     this.auth.user = user;
+      //   });
+      // }
       document.documentElement.setAttribute('data-bs-theme', theme.value)
     }
 

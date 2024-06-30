@@ -127,7 +127,8 @@
                 >
                   <span
 
-                    class=" badge rounder-pill bg-falusi p-2 py-1 fs-6"
+                    class=" badge rounder-pill p-2 py-1 fs-6"
+                    :class="['bg-' + auth.getUserColor ]"
                     :title="order.vendor + ' rendelés lett leadva ezen a napon'"
                   >
                     @{{ order.vendor }}

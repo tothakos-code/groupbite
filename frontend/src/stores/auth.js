@@ -3,6 +3,7 @@ import Cookies from 'js-cookie';
 import { defineStore } from 'pinia'
 import { notify } from "@kyvg/vue3-notification";
 
+
 export const useAuth = defineStore('user', {
   state: () => ({ user: null, isLoggedIn: false, isLoading: true}),
   getters: {
@@ -11,7 +12,12 @@ export const useAuth = defineStore('user', {
       // if (state.isLoggedIn) {
       //   return this.auth.user.ui_color;
       // }
-      return "falusi"
+      const theme  = localStorage.getItem("theme")
+      if (theme === "light") {
+        return "groupbite"
+      } else {
+        return "groupbite-dark"
+      }
     },
   },
   actions: {

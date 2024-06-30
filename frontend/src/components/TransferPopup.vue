@@ -1,8 +1,8 @@
 <template>
   <button
     id="transferBasketButton"
-    class="btn"
-    :class="['btn-' + auth.getUserColor ]"
+    class="btn my-1"
+    :class="['btn-outline-' + auth.getUserColor ]"
     @click="openPopup()"
   >
     Rendelés

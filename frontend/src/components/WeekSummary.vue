@@ -169,13 +169,8 @@
             {{ basket.itemCount }} db doboz
           </span>
         </div>
-        <div class="col text-center">
-          <span class="btn pe-none border border-secondary-subtle rounded">
-            {{ basket.transportFeePerPerson }} Ft szállítás díj/fő
-          </span>
-        </div>
-
         <Popup
+          v-if="showOrderSummary"
           :show-modal="showOrderSummary"
           title="Rendelés összesítő"
           confirm-text="Ok"
@@ -221,12 +216,13 @@
 </template>
 
 <script>
-import GlobalBasketUser from '@/components/GlobalBasketPerson.vue'
+import GlobalBasketUser from '@/components/GlobalBasketPerson.vue';
 import Popup from './Popup.vue';
 import { useAuth } from '@/stores/auth';
 import { useBasket } from '@/stores/basket';
 import axios from 'axios';
 import { ref, watch } from 'vue';
+import { state } from "@/socket.js";
 
 export default {
   name: 'WeekSummary',
@@ -312,7 +308,12 @@ export default {
       axios.get(`http://${window.location.host}/api/order/${item}/get-basket`)
         .then(response => {
             this.loaded_menu = response.data;
-            this.showOrderSummary = true
+            this.showOrderSummary = true;
+            state.vendors.forEach((vendor) => {
+              if (vendor.id === this.loaded_menu.vendor_id ) {
+                state.selected_vendor = vendor;
+              }
+            });
             console.log(this.loaded_menu);
         })
     },

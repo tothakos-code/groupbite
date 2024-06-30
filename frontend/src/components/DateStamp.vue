@@ -11,6 +11,7 @@
           class="btn btn-link p-0"
           :class="['link-' + auth.getUserColor ]"
           :disabled="limitToCurrentWeek && currentDateSelected.getDay() == 1"
+          title="Előző nap"
           @click="prevDay()"
         >
           <svg
@@ -30,6 +31,7 @@
         <button
           :class="['link-' + auth.getUserColor ]"
           class="btn btn-link p-0"
+          title="Vissza a mai napra"
           @click="setDay(new Date())"
         >
           <svg
@@ -54,6 +56,7 @@
           type="button"
           name="button"
           class="btn btn-link p-0"
+          title="Következő nap"
           :class="['link-' + auth.getUserColor ]"
           :disabled="limitToCurrentWeek && currentDateSelected.getDay() == 0"
           @click="nextDay()"
@@ -105,7 +108,7 @@ export default {
   },
   computed: {
     getShownDate() {
-      return this.currentDateSelected.toLocaleDateString('hu-HU', {weekday:'long', month:'short',day:'numeric'});
+      return this.currentDateSelected.toLocaleDateString('hu-HU', {month:'short',day:'numeric'});
     },
     getTodayDayDate() {
       return this.currentDateSelected.toLocaleDateString('hu-HU');

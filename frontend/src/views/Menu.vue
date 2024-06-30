@@ -4,6 +4,44 @@
   >
     <div class="col-md-7 col-sm-12">
       <div class="row p-2">
+        <div class="col-12 col-sm-4 col-xl-3 d-flex justify-content-center justify-content-xl-start">
+          <h2>
+            {{ vendorTitle }}
+          </h2>
+        </div>
+        <div class="col col-sm-4 d-flex align-items-center justify-content-center justify-content-xl-start">
+          <OrderState class="text-truncate my-auto" />
+        </div>
+        <div class="col col-sm-4 col-xl-5 d-flex justify-content-sm-center justify-content-xl-end">
+          <a
+            v-if="vendorLink !== ''"
+            class="btn my-1 me-2"
+            :class="['btn-outline-' + auth.getUserColor ]"
+            target="_blank"
+            :href="vendorLink"
+          >Eredeti oldal
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              class="bi bi-box-arrow-up-right mb-1"
+              viewBox="0 0 16 16"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"
+              />
+              <path
+                fill-rule="evenodd"
+                d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"
+              />
+            </svg>
+          </a>
+          <TransferPopup />
+        </div>
+      </div>
+      <div class="row p-2">
         <MenuList
           key="0"
         />
@@ -35,19 +73,39 @@
 import LocalBasket from '@/components/LocalBasket.vue';
 import GlobalBasket from '@/components/GlobalBasket.vue';
 import MenuList from '@/components/MenuList.vue';
-// import { state } from "@/socket";
+import TransferPopup from '@/components/TransferPopup.vue';
+import OrderState from '@/components/OrderState.vue';
+import { state } from "@/socket";
+import { useAuth } from "@/stores/auth";
 
 export default {
   name: 'MenuView',
   components: {
     LocalBasket,
     GlobalBasket,
-    MenuList
+    MenuList,
+    OrderState,
+    TransferPopup
+  },
+  setup() {
+    const auth = useAuth();
+
+    return {
+      auth,
+    }
   },
   data() {
     return {
     };
   },
+  computed: {
+    vendorTitle() {
+      return state.selected_vendor.settings.title.value
+    },
+    vendorLink() {
+      return state.selected_vendor.settings.link.value
+    },
+  }
 };
 </script>
 

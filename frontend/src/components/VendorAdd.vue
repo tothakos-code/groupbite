@@ -84,6 +84,12 @@ export default {
               "value": "",
               "section": "root"
             },
+            "link": {
+              "name": "Eredeti oldal elérhetősége",
+              "type": "STR",
+              "value": "",
+              "section": "root"
+            },
             "transport_price": {
               "name": "Szállítási díj",
               "type": "INT",
@@ -112,7 +118,7 @@ export default {
               type: "info",
               text: "Üzlet hozzáadása sikeres!",
             });
-            history.pushState({}, "", "/admin")
+            this.$router.push("/admin")
           })
           .catch(e => {
               console.log(e);

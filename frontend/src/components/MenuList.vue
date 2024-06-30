@@ -1,18 +1,12 @@
 <template>
   <div class="card">
     <div class="card-header row col px-2">
-      <div class="col-0 d-none col-md-0 col-lg-3 d-xl-inline my-auto">
+      <div class="col-0 d-none d-sm-inline col-sm-6 col-lg-8 my-auto">
         <h2 class="text-nowrap">
-          Étlap
+          Étlap - {{ selectedDate.toLocaleDateString('hu-HU', {weekday:'long'}) }}
         </h2>
       </div>
-      <div class="col-6 col-sm-4 col-xl-3 my-auto text-truncate">
-        <TransferPopup />
-      </div>
-      <div class="col-6 d-flex justify-content-center col-sm-4 col-xl-3">
-        <OrderState class="text-truncate my-auto" />
-      </div>
-      <div class="col-12 d-flex justify-content-center col-sm-4 col-xl-3 px-0">
+      <div class="col-12 d-flex justify-content-center col-sm-6 col-lg-4 px-0">
         <Datestamp
           ref="dateSelector"
           :limit-to-current-week="true"
@@ -48,8 +42,6 @@
 
 <script>
 import Datestamp from '@/components/DateStamp.vue'
-import TransferPopup from '@/components/TransferPopup.vue'
-import OrderState from '@/components/OrderState.vue'
 import { state, socket } from "@/socket";
 import { useAuth } from "@/stores/auth";
 import axios from 'axios';
@@ -60,9 +52,7 @@ export default {
   name: 'MenuList',
   components: {
     Datestamp,
-    OrderState,
     MenuItem,
-    TransferPopup
   },
   setup() {
     const auth = useAuth();
@@ -103,15 +93,13 @@ export default {
       axios.get(url)
         .then(response => {
           this.menulist = response.data;
+          console.log(this.menulist);
         })
         .catch(error => console.error(error));
     },
     getMenu: function(day) {
       if (day === undefined) {
         day = new Date()
-        if (day.getHours() >= 13) {
-          day.setDate(day.getDate() +1)
-        }
       }
       let formated_day = new Date(day).toISODate();
       socket.emit("fe_date_selection", {

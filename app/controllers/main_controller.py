@@ -8,7 +8,6 @@ from app.controllers import main_blueprint
 from app.vendor_factory import VendorFactory
 from flask_socketio import join_room
 from app.socketio_singleton import SocketioSingleton
-from app.services.order_service import OrderService
 from app.services.vendor_service import VendorService
 from app.entities.vendor import Vendor
 

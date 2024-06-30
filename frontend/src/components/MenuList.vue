@@ -24,11 +24,16 @@
     <div class="row col list-group">
       <div class="col">
         <div class="list-group m-1">
-          <MenuItem
-            v-for="(item, index) in menulist"
+          <template
+            v-for="(menu, index) in menulist"
             :key="index"
-            :item="item"
-          />
+          >
+            <MenuItem
+              v-for="(item, i) in menu.items"
+              :key="'item-'+i"
+              :item="item"
+            />
+          </template>
           <div
             v-if="menulist.length === 0"
             class="d-flex justify-content-center"

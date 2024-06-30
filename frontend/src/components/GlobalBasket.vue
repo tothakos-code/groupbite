@@ -52,7 +52,7 @@
       <GlobalBasketPerson
         :username="user_entry.username"
         :user-id="user_entry.user_id"
-        :user-basket="user_entry.basket_entry"
+        :user-basket="user_entry.items"
         :collapsable="false"
       />
     </div>

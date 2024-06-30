@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Text, Enum, select
 from uuid import UUID
 from . import Base, session
+from .size import Size
 import enum
 from typing import List
 from sqlalchemy import ForeignKey
@@ -14,18 +15,24 @@ class MenuItem(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     menu_id: Mapped[int] = mapped_column(ForeignKey("menu.id"))
     name: Mapped[str]
-    link: Mapped[str]
-    size: Mapped[str]
-    price: Mapped[int]
+    index: Mapped[int]
+    category: Mapped[str]
 
+    sizes: Mapped[List["Size"]] = relationship(back_populates="menu_item", cascade="all, delete-orphan", passive_deletes=True)
     orders: Mapped[List["UserBasket"]] = relationship(back_populates="item")
     menu: Mapped["Menu"] = relationship(back_populates="items")
 
     def __repr__(self):
-        return f"MenuItem<{self.id},menu_id={self.menu_id},size={self.size},price={self.price}>"
+        return f"MenuItem<{self.id},menu_id={self.menu_id},index={self.index},category={self.category}>"
 
-    def find_all_by_menu(menu_id):
-        return session.query(MenuItem).filter_by(menu_id = menu_id).all()
+    def find_all_by_menu(menu_id, desc=False):
+        stmt = select(MenuItem).where(MenuItem.menu_id == menu_id)
+        if desc:
+            stmt.order_by(MenuItem.index.desc())
+        else:
+            stmt.order_by(MenuItem.index)
+
+        return session.execute(stmt).scalars().all()
 
     def find_by_id(id):
         stmt = select(MenuItem).where(
@@ -35,13 +42,18 @@ class MenuItem(Base):
         return session.execute(stmt).scalars().first()
 
     def add(item):
+        items = MenuItem.find_all_by_menu(item.menu_id, True)
+        if not items:
+            item.index = 0
+        else:
+            item.index = items[0].index + 1
         session.add(item)
         session.commit()
 
-    def update(self, name, size, price):
+    def update(self, name, index, category):
         self.name = name
-        self.size = size
-        self.price = price
+        self.index = index
+        self.category = category
         session.commit()
 
     def delete(self):
@@ -54,6 +66,7 @@ class MenuItem(Base):
         return {
             'id': self.id,
             'name': self.name,
-            'size': self.size,
-            'price': self.price
+            'index': self.index,
+            'sizes': [size.serialized for size in self.sizes],
+            'category': self.category
         }

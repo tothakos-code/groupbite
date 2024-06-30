@@ -46,6 +46,17 @@
           >
         </div>
         <div class="col-auto">
+          <label for="itemCategory">
+            Kategória:
+          </label>
+          <input
+            v-model="newItem.category"
+            type="text"
+            name="itemCategory"
+            class="form-control"
+          >
+        </div>
+        <div class="col-auto">
           <label for="itemPrice">
             Ár:
           </label>
@@ -53,6 +64,17 @@
             v-model="newItem.price"
             type="number"
             name="itemPrice"
+            class="form-control"
+          >
+        </div>
+        <div class="col-auto">
+          <label for="itemQuantity">
+            Mennyiség:
+          </label>
+          <input
+            v-model="newItem.quantity"
+            type="number"
+            name="itemQuantity"
             class="form-control"
           >
         </div>
@@ -68,111 +90,281 @@
       </button>
     </div>
   </div>
-  <div class="">
-    <table class="table table-striped table-hover">
+  <div class="mt-2">
+    <table class="table table-striped table-bordered table-hover">
       <thead>
         <tr>
-          <th scope="col">
+          <th
+            scope="col"
+            class="col-auto"
+          >
             #
           </th>
-          <th scope="col">
+          <th
+            scope="col"
+            class="col-auto"
+          >
             Név
           </th>
-          <th scope="col">
-            Dátum
+          <th
+            scope="col"
+            class="col-auto"
+          >
+            Kategória
           </th>
-          <th scope="col">
-            Gyakoriság
+          <th
+            scope="col"
+            class="col-auto"
+          >
+            Sorrend index
           </th>
-          <th scope="col">
+          <th
+            scope="col"
+            class="col-auto"
+          >
             Műveletek
           </th>
         </tr>
       </thead>
       <tbody class="table-group-divider">
-        <tr
-          v-for="[index, menuItem] in items"
-          :key="index"
+        <template
+          v-for="[id, menuItem] in items"
+          :key="id"
         >
-          <th scope="row">
-            {{ menuItem.id }}
-          </th>
-          <td>
-            <input
-              v-if="menuItem.isEditing"
-              v-model="menuItem.name"
-              type="text"
+          <tr>
+            <td
+              scope="row"
+              class="col-auto"
             >
-            <span v-else>
-              {{ menuItem.name }}
-            </span>
-          </td>
-          <td>
-            <input
-              v-if="menuItem.isEditing"
-              v-model="menuItem.size"
-              type="text"
-            >
-            <span v-else>
-              {{ menuItem.size }}
-            </span>
-          </td>
-          <td>
-            <input
-              v-if="menuItem.isEditing"
-              v-model="menuItem.price"
-              type="number"
-            >
-            <span v-else>
-              {{ menuItem.price }}
-            </span>
-          </td>
-          <td>
-            <button
-              v-if="!menuItem.isEditing"
-              type="button"
-              name="button"
-              class="btn"
-              title="Szerkesztés"
-              :class="['btn-outline-' + auth.getUserColor ]"
-              @click="edit(menuItem.id)"
-            >
-              Szerkesztés
-            </button>
-            <div v-else>
+              {{ menuItem.id }}
+            </td>
+            <td>
+              <input
+                v-if="menuItem.isEditing"
+                v-model="menuItem.name"
+                class="form-control"
+                type="text"
+              >
+              <span v-else>
+                {{ menuItem.name }}
+              </span>
+            </td>
+            <td>
+              <input
+                v-if="menuItem.isEditing"
+                v-model="menuItem.category"
+                class="form-control"
+
+                type="text"
+              >
+              <span v-else>
+                {{ menuItem.category }}
+              </span>
+            </td>
+            <td>
+              <input
+                v-if="menuItem.isEditing"
+                v-model="menuItem.index"
+                class="form-control"
+                type="number"
+              >
+              <span v-else>
+                {{ menuItem.index }}
+              </span>
+            </td>
+            <td>
+              <button
+                v-if="!menuItem.isEditing"
+                type="button"
+                name="button"
+                class="btn"
+                title="Szerkesztés"
+                :class="['btn-outline-' + auth.getUserColor ]"
+                @click="edit(menuItem.id)"
+              >
+                Szerkesztés
+              </button>
+              <div v-else>
+                <button
+                  type="button"
+                  name="button"
+                  class="btn"
+                  title="Mentés"
+                  :class="['btn-outline-' + auth.getUserColor ]"
+                  @click="updateItem(menuItem.id)"
+                >
+                  Mentés
+                </button>
+                <button
+                  type="button"
+                  name="button"
+                  class="btn"
+                  title="Mégse"
+                  :class="['btn-outline-' + auth.getUserColor ]"
+                  @click="cancelEdit(menuItem.id)"
+                >
+                  Mégse
+                </button>
+              </div>
               <button
                 type="button"
                 name="button"
                 class="btn"
-                title="Mentés"
+                title="Törlés"
                 :class="['btn-outline-' + auth.getUserColor ]"
-                @click="updateItem(menuItem.id)"
+                @click="newSize(menuItem.id)"
               >
-                Mentés
+                Új méret
               </button>
               <button
                 type="button"
                 name="button"
                 class="btn"
-                title="Mégse"
+                title="Törlés"
                 :class="['btn-outline-' + auth.getUserColor ]"
-                @click="cancelEdit(menuItem.id)"
+                @click="deleteItem(menuItem.id)"
               >
-                Mégse
+                Törlés
               </button>
-            </div>
-            <button
-              type="button"
-              name="button"
-              class="btn"
-              title="Törlés"
-              :class="['btn-outline-' + auth.getUserColor ]"
-              @click="deleteItem(menuItem.id)"
-            >
-              Törlés
-            </button>
-          </td>
-        </tr>
+            </td>
+          </tr>
+          <tr>
+            <td />
+            <td colSpan="4">
+              <table class="table mb-0 table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th
+                      scope="col"
+                      class="col-auto"
+                    >
+                      Méret
+                    </th>
+                    <th
+                      scope="col"
+                      class="col-auto"
+                    >
+                      Ár
+                    </th>
+                    <th
+                      scope="col"
+                      class="col-auto"
+                    >
+                      Mennyiség
+                    </th>
+                    <th
+                      scope="col"
+                      class="col-auto"
+                    >
+                      Sorrend index
+                    </th>
+                    <th
+                      scope="col"
+                      class="col-auto"
+                    >
+                      Műveletek
+                    </th>
+                  </tr>
+                  <tr
+                    v-for="[sizeId, size] in menuItem.sizes"
+                    :key="'size-' + sizeId"
+                  >
+                    <td>
+                      <input
+                        v-if="size.isEditing"
+                        v-model="size.name"
+                        class="form-control"
+
+                        type="text"
+                      >
+                      <span v-else>
+                        {{ size.name }}
+                      </span>
+                    </td>
+                    <td>
+                      <input
+                        v-if="size.isEditing"
+                        v-model="size.price"
+                        class="form-control"
+                        type="number"
+                      >
+                      <span v-else>
+                        {{ size.price }}
+                      </span>
+                    </td>
+                    <td>
+                      <input
+                        v-if="size.isEditing"
+                        v-model="size.quantity"
+                        class="form-control"
+                        type="number"
+                      >
+                      <span v-else>
+                        {{ size.quantity }}
+                      </span>
+                    </td>
+                    <td>
+                      <input
+                        v-if="size.isEditing"
+                        v-model="size.index"
+                        class="form-control"
+                        type="number"
+                      >
+                      <span v-else>
+                        {{ size.index }}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        v-if="!size.isEditing"
+                        type="button"
+                        name="button"
+                        class="btn"
+                        title="Szerkesztés"
+                        :class="['btn-outline-' + auth.getUserColor ]"
+                        @click="editSize(menuItem.id, size.id)"
+                      >
+                        Szerkesztés
+                      </button>
+                      <div v-else>
+                        <button
+                          type="button"
+                          name="button"
+                          class="btn"
+                          title="Mentés"
+                          :class="['btn-outline-' + auth.getUserColor ]"
+                          @click="updateSize(menuItem.id, size.id)"
+                        >
+                          Mentés
+                        </button>
+                        <button
+                          type="button"
+                          name="button"
+                          class="btn"
+                          title="Mégse"
+                          :class="['btn-outline-' + auth.getUserColor ]"
+                          @click="cancelSizeEdit(menuItem.id, size.id)"
+                        >
+                          Mégse
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        name="button"
+                        class="btn"
+                        title="Törlés"
+                        :class="['btn-outline-' + auth.getUserColor ]"
+                        @click="deleteSize(menuItem.id, size.id)"
+                      >
+                        Törlés
+                      </button>
+                    </td>
+                  </tr>
+                </thead>
+              </table>
+            </td>
+          </tr>
+        </template>
       </tbody>
     </table>
   </div>
@@ -198,7 +390,10 @@ export default {
         newItem: {
           name: "",
           size: "",
+          category: "",
           price: 0,
+          quantity: -1,
+          index: 0,
         },
         items: []
       }
@@ -213,7 +408,7 @@ export default {
     },
     methods: {
       getMenuList: function () {
-        axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/get`)
+        axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-get`)
           .then(response => {
             this.menus = response.data
           })
@@ -224,16 +419,23 @@ export default {
       getItemList: function () {
         axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/get-items/${this.selectedMenu}`)
           .then(response => {
-            console.log(response);
-            let newItemsList = new Map(
-              response.data.map(
-                item => [item.id, item]
-              )
-            )
-            this.items.forEach((item) => {
+
+            let menuItemsMap = new Map();
+            response.data.forEach(item => {
               item.isEditing = false
+
+
+              let sizesMap = new Map();
+              item.sizes.forEach(size => {
+                size.isEditing = false;
+                sizesMap.set(size.id, size);
+              });
+              item.sizes = sizesMap;
+              menuItemsMap.set(item.id, item)
             });
-            this.items = newItemsList;
+
+            this.items = menuItemsMap;
+            console.log(this.items);
           })
           .catch(e => {
               console.log(e);
@@ -256,13 +458,33 @@ export default {
               });
           })
       },
+      newSize: function (itemId) {
+        let newSize = {
+            "id": -1,
+            "name": "",
+            "price": 0,
+            "quantity": -1,
+            "index": 0,
+            "isEditing": true
+        }
+
+        this.items.get(itemId).sizes.set(-1, newSize)
+      },
       edit: function (menu_id) {
         const item = this.items.get(menu_id)
         this.items.set(item.id, { ...item, isEditing: true})
       },
-      cancelEdit: function (menu_id) {
-        const item = this.items.get(menu_id)
+      editSize: function (itemId, sizeId) {
+        const size = this.items.get(itemId).sizes.get(sizeId)
+        this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: true})
+      },
+      cancelEdit: function (itemId) {
+        const item = this.items.get(itemId)
         this.items.set(item.id, { ...item, isEditing: false})
+      },
+      cancelSizeEdit: function (itemId, sizeId) {
+        const size = this.items.get(itemId).sizes.get(sizeId)
+        this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
       },
       updateItem: function (item_id) {
         const item = this.items.get(item_id)
@@ -283,6 +505,25 @@ export default {
               });
           })
       },
+      updateSize: function (itemId, sizeId) {
+        const size = this.items.get(itemId).sizes.get(sizeId)
+        this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-size-update`, {'data': size, 'item': itemId})
+          .then(() => {
+            this.getItemList()
+            notify({
+              type: "info",
+              text: "Méret frissítés sikeres!",
+            });
+          })
+          .catch(e => {
+              console.log(e);
+              notify({
+                type: "error",
+                text: "Méret frissítés nem sikerült!",
+              });
+          })
+      },
       deleteItem: function (item_id) {
         const item = this.items.get(item_id)
         this.items.set(item.id, { ...item, isEditing: false})
@@ -299,6 +540,25 @@ export default {
               notify({
                 type: "error",
                 text: "Item törlés nem sikerült!",
+              });
+          })
+      },
+      deleteSize: function (itemId, sizeId) {
+        const size = this.items.get(itemId).sizes.get(sizeId)
+        this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-size-delete`, {'data': size})
+          .then(() => {
+            this.getItemList()
+            notify({
+              type: "info",
+              text: "Méret törlés sikeres!",
+            });
+          })
+          .catch(e => {
+              console.log(e);
+              notify({
+                type: "error",
+                text: "Méret törlés nem sikerült!",
               });
           })
       },

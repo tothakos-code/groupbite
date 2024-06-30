@@ -11,9 +11,7 @@ from app.socketio_singleton import SocketioSingleton
 from app.entities.order import Order, OrderState
 from app.entities.user_basket import UserBasket
 from app.entities import Session
-from app.services.order_service import OrderService
-from app.services.user_service import UserService
-from app.services.menu_service import MenuService
+
 
 sidfdpattern = r"\/sidfd-[0-9]+\/"
 socketio = SocketioSingleton.get_instance()
@@ -38,7 +36,7 @@ def handle_order_history():
 
         sum = 0
         for item in order[0].items:
-            sum += item.item.price * item.count
+            sum += item.size.price * item.count
         result[date][value[0]]['sum'] = sum
 
     if USER_ID != None:
@@ -81,7 +79,7 @@ def handle_get_all_order_date():
 
 @order_blueprint.route('/<order_id>/get-basket', methods=['GET'])
 def handle_get_basket(order_id):
-    return OrderService.get_formated_full_basket_group_by_user(order_id)
+    return UserBasket.get_basket_group_by_user(order_id)
 
 # TODO: implement this, was there an order for a user
 @order_blueprint.route('/get-user-basket-between', methods=['POST'])
@@ -117,7 +115,7 @@ def handle_date_selection_change(data):
     socketio.emit(
         'be_order_update', {
             'order': order.serialized,
-            'basket': OrderService.get_formated_full_basket_group_by_user(order.id)
+            'basket': UserBasket.get_basket_group_by_user(order.id)
         },
         to=request.sid
         )
@@ -126,12 +124,17 @@ def handle_date_selection_change(data):
 def handle_add_to_basket(order_id):
     USER = request.json['user_id']
     MI_ID = request.json['menu_item_id']
+    MIS_ID = request.json['size_id']
 
-    if UserBasket.add_item(USER, MI_ID, order_id):
+    result, error = UserBasket.add_item(USER, MI_ID, MIS_ID, order_id)
+
+    if result:
         socketio.emit('be_order_update', {
-            'basket': OrderService.get_formated_full_basket_group_by_user(order_id)
+            'basket': UserBasket.get_basket_group_by_user(order_id)
         })
         return "OK", 201
+    else:
+        return {"error":"Item out of stock"}, 200
     return "Error, something went wrong.", 500
 
 @order_blueprint.route('/<order_id>/copy', methods=['POST'])
@@ -144,10 +147,10 @@ def handle_copy_basket(order_id):
     UserBasket.clear_items(USER, order_id)
     for item in UserBasket.find_user_basket(COPY_USER, order_id):
         for i in range(0,item.count):
-            UserBasket.add_item(USER, str(item.menu_item_id), order_id)
+            UserBasket.add_item(USER, str(item.menu_item_id), item.size_id, order_id)
 
     socketio.emit('be_order_update', {
-        'basket': OrderService.get_formated_full_basket_group_by_user(order_id)
+        'basket': UserBasket.get_basket_group_by_user(order_id)
     })
     return "OK", 201
 
@@ -155,10 +158,11 @@ def handle_copy_basket(order_id):
 def handle_remove_from_basket(order_id):
     USER = request.json['user_id']
     MI_ID = request.json['menu_item_id']
+    MIS_ID = request.json['size_id']
 
-    if UserBasket.remove_item(USER, MI_ID, order_id):
+    if UserBasket.remove_item(USER, MI_ID, MIS_ID, order_id):
         socketio.emit('be_order_update', {
-            'basket': OrderService.get_formated_full_basket_group_by_user(order_id)
+            'basket': UserBasket.get_basket_group_by_user(order_id)
         })
         return "OK", 201
     return "Error, something went wrong.", 500
@@ -169,7 +173,7 @@ def handle_clear_user_basket(order_id):
 
     if UserBasket.clear_items(USER, order_id):
         socketio.emit('be_order_update', {
-            'basket': OrderService.get_formated_full_basket_group_by_user(order_id)
+            'basket': UserBasket.get_basket_group_by_user(order_id)
         })
         return "OK", 201
     return "Error, something went wrong.", 500

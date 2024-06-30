@@ -34,7 +34,7 @@
         :class="{'text-decoration-line-through': item.deleted, 'fw-bold': !item.tick}"
         class="ms-1"
       >
-        {{ item.count }}x {{ item.name }} {{ item.size }}
+        {{ item.quantity }}x {{ item.item_name }} {{ item.size_name }}
       </span>
       <span
         v-if="item.deleted"
@@ -146,9 +146,9 @@ export default {
           (newBasket) =>{
             let resultList = []
             for (const value of Object.values(newBasket)) {
-              for (const item of value.basket_entry) {
-                let i = item.item;
-                i.count = item.count;
+              for (const item of value.items) {
+                let i = item;
+                i.quantity = item.quantity;
                 i.tick = false;
                 i.deleted = false;
                 resultList.push(i);
@@ -158,36 +158,36 @@ export default {
             const itemMap = new Map();
 
             for (const item of resultList) {
-                if (itemMap.has(item.id)) {
-                    itemMap.get(item.id).count += Number(item.count);
+                if (itemMap.has(item.item_id)) {
+                    itemMap.get(item.item_id).quantity += Number(item.quantity);
                 } else {
-                    itemMap.set(item.id, { ...item, count: Number(item.count) });
+                    itemMap.set(item.item_id, { ...item, count: Number(item.quantity) });
                 }
             }
 
-            const oldMap = new Map(this.orderItems.map(item => [item.id, item]));
+            const oldMap = new Map(this.orderItems.map(item => [item.item_id, item]));
 
             for (const newItem of Array.from(itemMap.values())) {
-                const oldItem = oldMap.get(newItem.id);
+                const oldItem = oldMap.get(newItem.item_id);
                 if (oldItem) {
-                    if (oldItem.count !== newItem.count) {
-                        itemMap.set(newItem.id, {...newItem, tick: false})
+                    if (oldItem.quantity !== newItem.quantity) {
+                        itemMap.set(newItem.item_id, {...newItem, tick: false})
                         if (this.showInitial) {
                           notify({
                             type: "warn",
-                            text: newItem.name +" mennyisége megváltozott. A lista frissült!",
+                            text: newItem.item_name +" mennyisége megváltozott. A lista frissült!",
                           });
                         }
                     } else {
-                      itemMap.set(newItem.id, {...newItem, tick: oldItem.tick})
+                      itemMap.set(newItem.item_id, {...newItem, tick: oldItem.tick})
 
                     }
-                    oldMap.delete(newItem.id)
+                    oldMap.delete(newItem.item_id)
                 } else {
                   if (this.showInitial) {
                     notify({
                       type: "warn",
-                      text: "Új termék került a kosárba: " + newItem.name+". A lista frissült!",
+                      text: "Új termék került a kosárba: " + newItem.item_name+". A lista frissült!",
                     });
                   }
                 }
@@ -196,14 +196,14 @@ export default {
             if (oldMap.size !== 0) {
               for (const oldItem of oldMap.values()) {
                 if (oldItem.tick && !oldItem.deleted) {
-                  itemMap.set(oldItem.id, {...oldItem, tick: false, deleted:true})
+                  itemMap.set(oldItem.item_id, {...oldItem, tick: false, deleted:true})
                   notify({
                     type: "warn",
-                    text: "Egy terméket töröltek a kosárból amit már átraktál: " + oldItem.name+". A lista frissült!",
+                    text: "Egy terméket töröltek a kosárból amit már átraktál: " + oldItem.item_name+". A lista frissült!",
                   });
                 }
                 if (oldItem.deleted && !oldItem.tick) {
-                  itemMap.set(oldItem.id, {...oldItem, tick: false, deleted:true})
+                  itemMap.set(oldItem.item_id, {...oldItem, tick: false, deleted:true})
                 }
               }
             }

@@ -61,7 +61,7 @@
     >
       <div
         v-for="item in userBasket"
-        :key="item.item.id"
+        :key="item.item_id"
         class="list-group-item  d-flex justify-content-between align-items-center"
       >
         <span
@@ -70,12 +70,12 @@
             'bg-' + auth.getUserColor,
             'border-' + auth.getUserColor + '-subtle']"
         >
-          {{ item.count }} x
+          {{ item.quantity }} x
         </span>
-        <span class="col-7">{{ item.item.name }}</span>
+        <span class="col-7">{{ item.item_name }}</span>
         <div class="col-3 row mx-0">
-          <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-start text-nowrap px-0">{{ item.item.size.split(' ')[0] }}</span>
-          <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-end text-nowrap pe-0">{{ item.item.price }} Ft</span>
+          <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-start text-nowrap px-0">{{ item.size_name.split(' ')[0] }}</span>
+          <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-end text-nowrap pe-0">{{ item.price }} Ft</span>
         </div>
       </div>
     </div>
@@ -131,7 +131,7 @@ export default {
     basketTotal() {
       let sum=0;
       Object.values(this.userBasket).forEach((entry) => {
-          sum+= Number(entry.count) * Number(entry.item.price);
+          sum+= Number(entry.quantity) * Number(entry.price);
       });
       sum += Number(this.basket.transportFeePerPerson);
       return sum;
@@ -139,7 +139,7 @@ export default {
     basketTotalTitle() {
       let sumTitle = ""
       Object.values(this.userBasket).forEach((entry) => {
-          sumTitle+= entry.count + '*' + entry.item.price + ' Ft + ';
+          sumTitle+= entry.quantity + '*' + entry.price + ' Ft + ';
       });
       sumTitle+= this.basket.transportFeePerPerson + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
       return sumTitle;

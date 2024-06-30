@@ -186,7 +186,7 @@ export default {
     },
     methods: {
       getMenuList: function () {
-        axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/get`)
+        axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-get`)
           .then(response => {
             let newMenuList = new Map(
               response.data.map(
@@ -203,7 +203,7 @@ export default {
           })
       },
       addMenu: function () {
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/add`, {'data':this.newMenu})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-add`, {'data':this.newMenu})
           .then(() => {
             this.getMenuList()
             notify({
@@ -230,7 +230,7 @@ export default {
       updateMenu: function (menu_id) {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/update`, {'data': menu})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-update`, {'data': menu})
           .then(() => {
             this.getMenuList()
             notify({
@@ -249,7 +249,7 @@ export default {
       deleteMenu: function (menu_id) {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/delete`, {'data': menu})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-delete`, {'data': menu})
           .then(() => {
             this.getMenuList()
             notify({

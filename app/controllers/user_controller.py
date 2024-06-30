@@ -9,8 +9,7 @@ from app.socketio_singleton import SocketioSingleton
 from app.entities import Session
 from app.entities.user import User
 from app.entities.order import Order
-from app.services.user_service import UserService
-from app.services.order_service import OrderService
+
 
 socketio = SocketioSingleton.get_instance()
 
@@ -83,7 +82,7 @@ def handle_user_update():
                 order = Order.find_order_by_date_for_a_vendor(vendor, date)
                 socketio.emit(
                     'be_order_update', {
-                        'basket': OrderService.get_formated_full_basket_group_by_user(order.id)
+                        'basket': UserBasket.get_basket_group_by_user(order.id)
                     },
                     to=room_name
                 )
@@ -91,9 +90,9 @@ def handle_user_update():
     return user_to_update.serialized
 
 
-@user_blueprint.route("/get/<id>")
-def handle_get_user_by_id(id):
-    user = UserService.get_user_by_id(id)
-    if not user:
-        return {}
-    return user.serialized
+# @user_blueprint.route("/get/<id>")
+# def handle_get_user_by_id(id):
+#     user = UserService.get_user_by_id(id)
+#     if not user:
+#         return {}
+#     return user.serialized

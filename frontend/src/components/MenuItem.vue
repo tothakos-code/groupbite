@@ -7,20 +7,27 @@
     </div>
     <div class="col-12 col-lg-4 p-0 flex-wrap">
       <div class="d-flex justify-content-end">
-        <!-- <span
-          v-if="item.sold_out"
-          class="btn pe-none btn-outline-danger btn-sm"
-        >Elfogyott</span> -->
-        <button
+        <div
           v-for="size in item.sizes"
           :key="size.id"
-          class="btn btn-sm col-6 col-sm-6 ms-2"
-          :class="['btn-' + auth.getUserColor ]"
-          @click="basket.addItem(size.id)"
+          class="col-6 col-sm-6 ms-2 "
         >
-          <span class="text-nowrap me-1">{{ size.size }}</span>
-          <span class="text-nowrap">{{ size.price }} Ft</span>
-        </button>
+          <button
+            v-if="size.quantity !== 0"
+            class="btn btn-sm w-100"
+            :class="['btn-' + auth.getUserColor ]"
+            @click="basket.addItem(item.id, size.id)"
+          >
+            <span class="text-nowrap me-1">{{ size.name }}</span>
+            <span class="text-nowrap">{{ size.price }} Ft</span>
+          </button>
+          <span
+            v-else
+            class="btn pe-none btn-outline-danger btn-sm"
+          >
+            Elfogyott
+          </span>
+        </div>
       </div>
     </div>
   </div>

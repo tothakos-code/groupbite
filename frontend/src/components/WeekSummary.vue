@@ -206,7 +206,7 @@
               <GlobalBasketUser
                 :username="user_entry.username"
                 :user-id="user_entry.user_id"
-                :user-basket="user_entry.basket_entry"
+                :user-basket="user_entry.items"
                 :start-collapsed="true"
                 :collapsable="true"
                 :copyable="false"
@@ -355,8 +355,8 @@ export default {
     calculateHistorySum: function(){
       let sum=0;
       Object.values(this.loaded_menu).forEach((person) => {
-        Object.values(person.basket_entry).forEach((entry) => {
-          sum+= Number(entry.count) * Number(entry.item.price);
+        Object.values(person.items).forEach((entry) => {
+          sum+= Number(entry.quantity) * Number(entry.price);
         })
       })
       return sum;

@@ -77,17 +77,17 @@
             <span
               class="badge rounded-pill border"
               :class="['bg-' + auth.getUserColor, 'border-' + auth.getUserColor]"
-            >{{ item.count }} x</span>
+            >{{ item.quantity }} x</span>
           </div>
           <div class="col-8">
-            <span>{{ item.item.name }} ({{ item.item.size }}) - {{ item.item.price }} Ft</span>
+            <span>{{ item.item_name }} ({{ item.size_name }}) - {{ item.price }} Ft</span>
           </div>
           <div class="col-2 text-end">
             <button
               type="button"
               title="Törlés"
               class="btn btn-close"
-              @click="basket.removeItem(item.item.id)"
+              @click="basket.removeItem(item.item_id, item.size_id)"
             />
           </div>
         </div>

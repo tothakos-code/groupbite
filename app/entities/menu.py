@@ -33,7 +33,7 @@ class Menu(Base):
     vendor_id: Mapped[UUID] = mapped_column(ForeignKey("vendor.id"))
     freq_id: Mapped[Frequency] = mapped_column(default=Frequency.FIX)
 
-    items: Mapped[List["MenuItem"]] = relationship(back_populates="menu")
+    items: Mapped[List["MenuItem"]] = relationship(back_populates="menu", order_by="MenuItem.index")
 
     def __repr__(self):
         return f"Menu<{self.id},name={self.name},menu_date={self.menu_date},vendor_id={self.vendor_id}>"
@@ -57,6 +57,9 @@ class Menu(Base):
 
         return session.execute(stmt).scalars().all()
 
+    def find_by_date(date=date.today().strftime('%Y-%m-%d')):
+        stmt = select(Menu).where(Menu.menu_date == date)
+        return session.execute(stmt).scalars().first()
 
     def find_by_id(menu_id):
         stmt = select(Menu).where(
@@ -91,4 +94,5 @@ class Menu(Base):
             'date': str(self.menu_date),
             'vendor_id': str(self.vendor_id),
             'freq': str(self.freq_id),
+            'items': [item.serialized for item in self.items]
         }

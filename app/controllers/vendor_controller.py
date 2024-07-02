@@ -32,15 +32,16 @@ def handle_get_all_vendors():
 def handle_activation(vendor_id, cmd):
     if not vendor_id:
         return "Vendor not found", 404
-    match cmd:
-        case "activate":
-            Vendor.find_by_id(vendor_id).activate()
-            logging.info(vendor_id + " vendor got activated")
-        case "deactivate":
-            Vendor.find_by_id(vendor_id).deactivate()
-            logging.info(vendor_id + " vendor got deactivated")
-        case _:
-            return "Command not found", 404
+
+    if cmd == "activate":
+        Vendor.find_by_id(vendor_id).activate()
+        logging.info(vendor_id + " vendor got activated")
+    elif cmd == "deactivate":
+        Vendor.find_by_id(vendor_id).deactivate()
+        logging.info(vendor_id + " vendor got deactivated")
+    else:
+        return "Command not found", 404
+        
     socketio.emit('be_vendors_update', VendorService.find_all_active())
     return "OK", 200
 

@@ -2,8 +2,8 @@
   <teleport to="body">
     <div
       ref="modal"
-      class="modal fade"
-      :class="{ show: active, 'd-block': active }"
+      class="modal fade modal-dialog-scrollable"
+      :class="{ show: active, 'd-block': active, 'modal-lg': large }"
       tabindex="-1"
       role="dialog"
       :aria-hidden="active"
@@ -60,6 +60,10 @@ export default {
     confirmText: {
       type: String,
       default: "Folytat"
+    },
+    large: {
+      type: Boolean,
+      default: false
     },
   },
   emits: ['cancel', 'confirm'],

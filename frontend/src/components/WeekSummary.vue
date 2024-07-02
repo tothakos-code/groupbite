@@ -173,8 +173,10 @@
           v-if="showOrderSummary"
           :show-modal="showOrderSummary"
           title="Rendelés összesítő"
+          large="true"
           confirm-text="Ok"
           @cancel="showOrderSummary = false"
+          @confirm="showOrderSummary = false"
         >
           <div class="row d-flex align-items-strech">
             <div class="col text-center align-center">

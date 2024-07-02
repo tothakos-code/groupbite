@@ -13,11 +13,16 @@
         </div>
       </div>
       <router-view
-        v-slot="{ Component }"
+        v-slot="{ Component, route }"
         class="row ps-2 me-0"
       >
-        <Transition>
-          <component :is="Component" />
+        <Transition
+          mode="out-in"
+        >
+          <component
+            :is="Component"
+            :key="route.path"
+          />
         </Transition>
       </router-view>
     </div>
@@ -144,16 +149,16 @@ export default {
         top: 5px;
         z-index: 1;
   }
- }
+}
 
- .v-enter-active,
- .v-leave-active {
-   transition: opacity 0.5s ease;
- }
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.2s ease;
+}
 
- .v-enter-from,
- .v-leave-to {
-   opacity: 0;
- }
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
 
 </style>

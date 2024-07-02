@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import router from './router.js';
 import { register_plugin_routes } from './loader.js';
 import { useBasket } from '@/stores/basket'
-import { useVendor } from '@/stores/vendor'
+// import { useVendor } from '@/stores/vendor'
 
 export const state = reactive({
   connected: false,
@@ -31,8 +31,8 @@ socket.on("disconnect", () => {
 
 socket.on('be_vendors_update', function(vendors) {
   state.vendors = JSON.parse(vendors);
-  const vendor = useVendor();
-  vendor.vendors = JSON.parse(vendors)
+  // const vendor = useVendor();
+  // vendor.vendors = JSON.parse(vendors)
   // state.vendors.forEach((item) => {
   //   item.component = import("@/../../plugins/"+item.name+"/frontend/App.vue");
   // });

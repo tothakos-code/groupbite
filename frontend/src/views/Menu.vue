@@ -57,16 +57,6 @@
       </div>
     </div>
   </div>
-
-  <!-- <div
-      v-else
-      class="row col d-flex justify-content-center align-items-center"
-    >
-      <div
-        class="spinner-border"
-        style="width: 3rem; height: 3rem;"
-      />
-    </div> -->
 </template>
 
 <script>

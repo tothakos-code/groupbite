@@ -3,6 +3,7 @@ import logging
 
 from app.services.vendor_service import VendorService
 from app.vendor_factory import VendorFactory
+import app.loader
 
 from app.controllers import main_blueprint
 from app.controllers import vendor_blueprint
@@ -12,7 +13,7 @@ from app.controllers import user_blueprint
 
 from dotenv import load_dotenv
 from pathlib import Path
-from os import getenv
+from os import getenv, scandir
 
 dotenv_path = Path('.env')
 load_dotenv(dotenv_path=dotenv_path)
@@ -32,7 +33,7 @@ def create_app(debug=False):
     import app.create_tables
 
     VendorFactory.load()
-    loader.load_plugins(["plugins.falusi","plugins.makkos","plugins.lugas"])
+    loader.load_plugins([d.path.replace('/','.') for d in scandir('plugins') if d.is_dir()])
 
     from app.socketio_singleton import SocketioSingleton
     socketio = SocketioSingleton.get_instance()

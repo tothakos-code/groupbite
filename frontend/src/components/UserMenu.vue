@@ -204,7 +204,7 @@ import { useAuth } from "@/stores/auth.js";
 import { inject } from 'vue';
 import axios from 'axios';
 import Popup from './Popup.vue';
-import GlobalBasketUser from './GlobalBasketPerson.vue';
+import GlobalBasketUser from './GlobalBasketUser.vue';
 
 export default {
   name: 'UserMenu',

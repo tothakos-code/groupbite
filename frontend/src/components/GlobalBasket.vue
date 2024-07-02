@@ -49,7 +49,7 @@
       :key="user_entry.id"
       class="row mt-1 mb-1"
     >
-      <GlobalBasketPerson
+      <GlobalBasketUser
         :username="user_entry.username"
         :user-id="user_entry.user_id"
         :user-basket="user_entry.items"
@@ -61,13 +61,13 @@
 
 <script>
 import { state } from "@/socket";
-import GlobalBasketPerson from './GlobalBasketPerson.vue'
+import GlobalBasketUser from './GlobalBasketUser.vue'
 import { useBasket } from "@/stores/basket";
 
 export default {
   name: 'GlobalBasket',
   components: {
-    GlobalBasketPerson
+    GlobalBasketUser
   },
   setup() {
     const basket = useBasket();

@@ -151,74 +151,70 @@
                 </button>
               </div>
             </div>
-            <div
-              class="row"
-              :class="{'border-3':new Date(day).getDate() === currentDateSelected.getDate()}"
-            />
           </div>
         </div>
-      </div>
-      <div class="row d-flex align-items-strech">
-        <div class="col text-center align-center">
-          <span class="btn pe-none border border-secondary-subtle rounded">
-            A hét rendeléseinek összege {{ sum }} Ft
-          </span>
-        </div>
-        <div class="col text-center">
-          <span class="btn pe-none border border-secondary-subtle rounded">
-            {{ basket.itemCount }} db doboz
-          </span>
-        </div>
-        <Popup
-          v-if="showOrderSummary"
-          :show-modal="showOrderSummary"
-          title="Rendelés összesítő"
-          large="true"
-          confirm-text="Ok"
-          @cancel="showOrderSummary = false"
-          @confirm="showOrderSummary = false"
-        >
-          <div class="row d-flex align-items-strech">
-            <div class="col text-center align-center">
-              <span class="btn pe-none border border-secondary-subtle rounded">
-                Összesen {{ calculateHistorySum() }} Ft
-              </span>
-            </div>
-            <div class="col text-center">
-              <span class="btn pe-none border border-secondary-subtle rounded">
-                {{ basket.itemCount }} db doboz
-              </span>
-            </div>
-            <div class="col text-center">
-              <span class="btn pe-none border border-secondary-subtle rounded">
-                {{ basket.transportFeePerPerson }} Ft szállítás díj/fő
-              </span>
-            </div>
+        <div class="row d-flex align-items-strech">
+          <div class="col text-center align-center">
+            <span class="btn pe-none border border-secondary-subtle rounded">
+              A hét rendeléseinek összege {{ sum }} Ft
+            </span>
           </div>
-          <div
-            v-for="(user_entry) in loaded_menu"
-            :key="user_entry.user_id"
-            class="row mt-1 mb-1"
+          <div class="col text-center">
+            <span class="btn pe-none border border-secondary-subtle rounded">
+              {{ basket.itemCount }} db doboz
+            </span>
+          </div>
+          <Popup
+            v-if="showOrderSummary"
+            :show-modal="showOrderSummary"
+            title="Rendelés összesítő"
+            large="true"
+            confirm-text="Ok"
+            @cancel="showOrderSummary = false"
+            @confirm="showOrderSummary = false"
           >
-            <div class="list-group-item row m-0">
-              <GlobalBasketUser
-                :username="user_entry.username"
-                :user-id="user_entry.user_id"
-                :user-basket="user_entry.items"
-                :start-collapsed="true"
-                :collapsable="true"
-                :copyable="false"
-              />
+            <div class="row d-flex align-items-strech">
+              <div class="col text-center align-center">
+                <span class="btn pe-none border border-secondary-subtle rounded">
+                  Összesen {{ calculateHistorySum() }} Ft
+                </span>
+              </div>
+              <div class="col text-center">
+                <span class="btn pe-none border border-secondary-subtle rounded">
+                  {{ basket.itemCount }} db doboz
+                </span>
+              </div>
+              <div class="col text-center">
+                <span class="btn pe-none border border-secondary-subtle rounded">
+                  {{ basket.transportFeePerPerson }} Ft szállítás díj/fő
+                </span>
+              </div>
             </div>
-          </div>
-        </Popup>
+            <div
+              v-for="(user_entry) in loaded_menu"
+              :key="user_entry.user_id"
+              class="row mt-1 mb-1"
+            >
+              <div class="list-group-item row m-0">
+                <GlobalBasketUser
+                  :username="user_entry.username"
+                  :user-id="user_entry.user_id"
+                  :user-basket="user_entry.items"
+                  :start-collapsed="true"
+                  :collapsable="true"
+                  :copyable="false"
+                />
+              </div>
+            </div>
+          </Popup>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import GlobalBasketUser from '@/components/GlobalBasketPerson.vue';
+import GlobalBasketUser from '@/components/GlobalBasketUser.vue';
 import Popup from './Popup.vue';
 import { useAuth } from '@/stores/auth';
 import { useBasket } from '@/stores/basket';

@@ -13,12 +13,13 @@
           </span>
         </div>
         <div class="col-12 d-flex col-md-4">
-          <div class="col-4 text-center">
+          <div class="col-4 d-flex align-items-center justify-content-center">
             <a
               type="button"
               name="button"
               class="btn btn-link py-0 px-2 "
               :class="['text-' + auth.getUserColor ]"
+              title="Ugrás a következő hétre"
               @click="prevWeek()"
             >
               <svg
@@ -33,24 +34,26 @@
               </svg>
             </a>
           </div>
-          <div class="col-4 text-center">
+          <div class="col-4 d-flex align-items-center justify-content-center">
             <button
               v-if="new Date().getDate() !== currentDateSelected.getDate()"
               type="button"
               name="button"
               class="btn btn-sm py-0 px-2"
-              :class="['btn-' + auth.getUserColor ]"
+              :class="['btn-outline-' + auth.getUserColor ]"
+              title="Ugrás vissza a mai napra"
               @click="setDay(new Date())"
             >
               Ma
             </button>
           </div>
-          <div class="col-4 text-center">
+          <div class="col-4 d-flex align-items-center justify-content-center">
             <a
               type="button"
               name="button"
               class="btn btn-link py-0 px-2"
               :class="['text-' + auth.getUserColor ]"
+              title="Ugrás az előző hétre"
               @click="nextWeek()"
             >
               <svg
@@ -168,7 +171,7 @@
             v-if="showOrderSummary"
             :show-modal="showOrderSummary"
             title="Rendelés összesítő"
-            large="true"
+            :large="true"
             confirm-text="Ok"
             @cancel="showOrderSummary = false"
             @confirm="showOrderSummary = false"

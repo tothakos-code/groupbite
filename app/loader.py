@@ -21,7 +21,7 @@ def load_plugins(plugins: list) -> None:
         try:
             plugin = import_module(plugin_file+".app")
         except ModuleNotFoundError as e:
-            logging.error(f"{plugin_file} plugin can not be imported, module not found")
+            logging.exception(f"{plugin_file} plugin can not be imported, module not found: ")
             continue
 
 

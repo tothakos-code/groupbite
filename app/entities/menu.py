@@ -85,6 +85,39 @@ class Menu(Base):
         session.delete(self)
         session.commit()
 
+    def fill_menu(vendor_id, date_to_fill, raw_item_list):
+        menu = Menu.find_vendor_menu(vendor_id, date_to_fill)
+        if menu is None:
+            logging.error("Menu to fill not found!")
+            return
+        # TODO: Handlig items that got out of stock
+        for raw_menu_item in raw_item_list:
+            found = False
+            for item in menu.items:
+                if item.name == raw_menu_item['name']:
+                    found = True
+                    break
+            if found:
+                continue
+
+            session.add(
+                MenuItem(
+                    menu_id=menu.id,
+                    name=raw_menu_item['name'],
+                    link=raw_menu_item['link'],
+                    size=raw_menu_item['size'],
+                    price=raw_menu_item['price']
+                )
+            )
+
+    def create_menu(name, vendor, date, freq):
+        menu = Menu.find_vendor_menu(vendor,date)
+        # TODO: Need to check that date corresponed to the frequency. This currently only works for daily types
+        if menu is not None:
+            return
+        session.add(Menu(name=name, vendor_id=vendor, menu_date=date, freq_id=freq))
+        session.commit()
+
     @property
     def serialized(self):
         from app.vendor_factory import VendorFactory

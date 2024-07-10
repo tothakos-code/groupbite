@@ -21,14 +21,6 @@ APP_ENV = getenv('APP_ENV')
 
 socketio = SocketioSingleton.get_instance()
 
-@main_blueprint.route('/')
-def index():
-    if APP_ENV == "development":
-        # This is for developer mode only
-        return requests.get('http://127.0.0.1:8080/').text
-    return render_template('index.html')
-
-
 @main_blueprint.route('/', defaults={'path': ''})
 @main_blueprint.route('/<path:path>')
 def catch_all(path):
@@ -36,7 +28,12 @@ def catch_all(path):
     if APP_ENV == "development":
         # This is for developer mode only
         return requests.get('http://127.0.0.1:8080/{0}'.format(path)).text
-    return send_from_directory(main_blueprint.static_folder, path)
+
+    if path.startswith(('css/', 'js/', 'styles.css')):
+        return send_from_directory(main_blueprint.static_folder, path)
+
+    return render_template('index.html')
+
 
 @main_blueprint.route("/cron/new_day_refresh")
 def cron_new_day_refresh():

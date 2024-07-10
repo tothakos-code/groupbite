@@ -13,7 +13,7 @@
         </div>
       </div>
       <router-view
-        v-slot="{ Component, route }"
+        v-slot="{ Component }"
         class="row ps-2 me-0"
       >
         <Transition
@@ -21,7 +21,6 @@
         >
           <component
             :is="Component"
-            :key="route.path"
           />
         </Transition>
       </router-view>

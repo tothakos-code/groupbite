@@ -64,6 +64,11 @@ class Menu(Base):
                     Menu.vendor_id == vendor_id,
                     extract("month",Menu.menu_date) == datetime.datetime.strptime(menu_date, "%Y-%m-%d").month,
                     Menu.freq_id == Frequency.MONTHLY
+                ),
+                and_(
+                    Menu.vendor_id == vendor_id,
+                    extract("year",Menu.menu_date) == datetime.datetime.strptime(menu_date, "%Y-%m-%d").year,
+                    Menu.freq_id == Frequency.YEARLY
                 )
             )
         )

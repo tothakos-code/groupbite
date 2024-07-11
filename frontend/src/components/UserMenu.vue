@@ -159,7 +159,9 @@
     :show-modal="showOrderHistory"
     title="Rendelés összesítő"
     confirm-text="Ok"
+    :large="true"
     @cancel="showOrderHistory = false"
+    @confirm="showOrderHistory = false"
   >
     <div class="row d-flex align-items-strech">
       <div class="col text-center align-center">
@@ -169,12 +171,12 @@
       </div>
       <div class="col text-center">
         <span class="btn pe-none border border-secondary-subtle rounded">
-          Ennyi pénzt költöttél ebédre összesen: 0 Ft
+          Ennyi pénzt költöttél ebédre összesen: {{ orderHistoryListSum }} Ft
         </span>
       </div>
       <div class="col text-center">
         <span class="btn pe-none border border-secondary-subtle rounded">
-          Átlagosan ennyért ettél: 0 Ft / nap
+          Átlagosan ennyért ettél: {{ orderHistoryListSum/Object.keys(orderHistoryList).length }} Ft / rendelés
         </span>
       </div>
     </div>
@@ -231,6 +233,18 @@ export default {
       orderHistoryList: {}
     }
   },
+  computed: {
+    orderHistoryListSum() {
+      let sum = 0;
+      Object.values(this.orderHistoryList).forEach((basket) => {
+        for (const item of basket.items) {
+          sum += item.price * item.quantity
+        }
+      });
+
+      return sum;
+    }
+  },
   methods: {
     openUserHistory: function(){
       axios.get(`http://${window.location.host}/api/order/history/${this.auth.user.id}`)
@@ -240,6 +254,7 @@ export default {
             this.showOrderHistory = true
         })
     },
+
   }
 }
 </script>

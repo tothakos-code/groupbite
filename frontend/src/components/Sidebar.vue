@@ -50,7 +50,7 @@
   </div>
 </template>
 <script>
-import { state } from "@/socket";
+import { state } from "@/main";
 import VersionInfo from "@/components/VersionInfo.vue"
 import { useAuth } from "@/stores/auth";
 

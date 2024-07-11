@@ -65,7 +65,7 @@ import GlobalBasket from '@/components/GlobalBasket.vue';
 import MenuList from '@/components/MenuList.vue';
 import TransferPopup from '@/components/TransferPopup.vue';
 import OrderState from '@/components/OrderState.vue';
-import { state } from "@/socket";
+import { state } from "@/main";
 import { useAuth } from "@/stores/auth";
 
 export default {

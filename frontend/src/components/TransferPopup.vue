@@ -104,7 +104,7 @@
 
 <script>
 import Popup from './Popup.vue';
-import { state, socket } from "@/socket";
+import { state, socket } from "@/main";
 import { useAuth } from "@/stores/auth";
 import { useBasket } from "@/stores/basket";
 import { copyText } from 'vue3-clipboard';

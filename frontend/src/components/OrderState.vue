@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import { state } from "@/socket";
+import { state } from "@/main";
 
 export default {
   name: 'OrderState',

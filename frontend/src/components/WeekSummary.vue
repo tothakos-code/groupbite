@@ -223,7 +223,7 @@ import { useAuth } from '@/stores/auth';
 import { useBasket } from '@/stores/basket';
 import axios from 'axios';
 import { ref, watch } from 'vue';
-import { state } from "@/socket.js";
+import { state } from "@/main.js";
 
 export default {
   name: 'WeekSummary',

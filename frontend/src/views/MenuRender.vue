@@ -7,7 +7,7 @@
 
 <script>
 import Menu from '@/views/Menu.vue';
-import { state } from "@/socket";
+import { state } from "@/main";
 import { defineAsyncComponent } from 'vue';
 // import axios from 'axios';
 

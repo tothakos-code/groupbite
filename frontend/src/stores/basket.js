@@ -1,4 +1,4 @@
-import { state as vuestate, socket } from "@/socket.js";
+import { socket, state as vuestate  } from "@/main";
 import { defineStore } from 'pinia'
 import { notify } from "@kyvg/vue3-notification";
 import axios from 'axios';

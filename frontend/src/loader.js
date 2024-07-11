@@ -1,4 +1,4 @@
-import { state } from "@/socket";
+import { state } from "@/main";
 
 export function register_plugin_routes(router) {
   state.vendors.forEach((item) => {

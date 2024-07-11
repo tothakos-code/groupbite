@@ -60,7 +60,7 @@
 </template>
 
 <script>
-import { state } from "@/socket";
+import { state } from "@/main";
 import GlobalBasketUser from './GlobalBasketUser.vue'
 import { useBasket } from "@/stores/basket";
 

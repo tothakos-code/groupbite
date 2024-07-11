@@ -29,6 +29,7 @@ import router from './router.js';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap.js';
 import './assets/scss/main.scss';
+import { socket, state } from '@/socket'
 
 const app = createApp(App);
 const pinia = createPinia()
@@ -58,3 +59,5 @@ Date.prototype.toISODate = function() {
   return this.toISOString().split('T')[0]
 };
 app.mount('#app');
+
+export { socket, state }

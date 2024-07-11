@@ -64,7 +64,7 @@
 <script>
 import UserMenu from './components/UserMenu.vue'
 import Sidebar from './components/Sidebar.vue'
-// import { socket } from "@/socket";
+// import { socket } from "@/main";
 import { useAuth } from "@/stores/auth";
 import { useCookies } from "vue3-cookies";
 import { provide, ref } from 'vue';

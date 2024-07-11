@@ -42,7 +42,7 @@
 
 <script>
 import Datestamp from '@/components/DateStamp.vue'
-import { state, socket } from "@/socket";
+import { state, socket } from "@/main";
 import { useAuth } from "@/stores/auth";
 import axios from 'axios';
 import MenuItem from '../components/MenuItem.vue'

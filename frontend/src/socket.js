@@ -1,3 +1,4 @@
+import 'setimmediate'
 import { reactive } from "vue";
 import { io } from "socket.io-client";
 import router from './router.js';

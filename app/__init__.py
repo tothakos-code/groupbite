@@ -42,6 +42,7 @@ def create_app(debug=False):
         host=APP_HOST,
         port=APP_PORT,
         debug=debug,
+        async_mode='eventlet',
         allow_unsafe_werkzeug=True)
 
     import app.controllers.main_controller

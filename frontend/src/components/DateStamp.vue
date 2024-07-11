@@ -10,7 +10,7 @@
         <button
           class="btn btn-link p-0"
           :class="['link-' + auth.getUserColor ]"
-          :disabled="limitToCurrentWeek && currentDateSelected.getDay() == 1"
+          :disabled="limitToCurrentWeek && currentDateSelected.getAdjustedDay() == 0"
           title="Előző nap"
           @click="prevDay()"
         >
@@ -58,7 +58,7 @@
           class="btn btn-link p-0"
           title="Következő nap"
           :class="['link-' + auth.getUserColor ]"
-          :disabled="limitToCurrentWeek && currentDateSelected.getDay() == 0"
+          :disabled="limitToCurrentWeek && currentDateSelected.getAdjustedDay() == 6"
           @click="nextDay()"
         >
           <svg
@@ -116,7 +116,7 @@ export default {
   },
   methods: {
     nextDay: function() {
-      if (this.limitToCurrentWeek && this.currentDateSelected.getDay() == 0) {
+      if (this.limitToCurrentWeek && this.currentDateSelected.getAdjustedDay() == 6) {
         return;
       }
       const newDate = new Date(this.currentDateSelected);
@@ -125,7 +125,7 @@ export default {
       this.$emit('selectedDate', this.currentDateSelected);
     },
     prevDay: function() {
-      if (this.limitToCurrentWeek && this.currentDateSelected.getDay() == 1) {
+      if (this.limitToCurrentWeek && this.currentDateSelected.getAdjustedDay() == 0) {
         return;
       }
       const newDate = new Date(this.currentDateSelected);

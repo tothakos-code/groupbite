@@ -117,11 +117,11 @@ export default {
     },
     getCurrentWeekDates() {
       const currentDate = new Date();
-      const currentDayOfWeek = currentDate.getDay();
+      const currentDayOfWeek = currentDate.getAdjustedDay();
 
       // Calculate the start date of the current week (Sunday)
       const startDate = new Date(currentDate);
-      startDate.setDate(currentDate.getDate() - currentDayOfWeek + (currentDayOfWeek === 0 ? -6 : 1));
+      startDate.setDate(currentDate.getDate() - currentDayOfWeek);
 
       const weekDates = [];
 

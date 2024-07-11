@@ -164,7 +164,7 @@
           </div>
           <div class="col text-center">
             <span class="btn pe-none border border-secondary-subtle rounded">
-              {{ basket.itemCount }} db doboz
+              {{ orderCount }} db rendelés a héten
             </span>
           </div>
           <Popup
@@ -266,6 +266,9 @@ export default {
     getTodayDayDate() {
       return this.currentDateSelected.toLocaleDateString('hu-HU');
     },
+    orderCount(){
+      return Object.keys(this.history).length;
+    }
   },
   mounted() {
     this.getCurrentWeekDates(new Date()).then(res => {
@@ -321,11 +324,11 @@ export default {
     async getCurrentWeekDates(date) {
       const weekDates = [];
       const weekStart = new Date(date);
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay())
+      weekStart.setDate(weekStart.getDate() - weekStart.getAdjustedDay())
       weekStart.setHours(12, 0, 0, 0);
       for (let i = 0; i <= 6; i++) {
         const iterDate = new Date(weekStart);
-        iterDate.setDate(weekStart.getDate()+ i+1)
+        iterDate.setDate(weekStart.getDate()+ i)
         const formattedDate = iterDate.toISODate();
         weekDates.push(formattedDate);
       }
@@ -340,7 +343,6 @@ export default {
         })
         .then((data) => {
           this.history = data.data;
-          console.log(this.history);
           this.calculateStats();
         })
         .catch(e => {
@@ -366,10 +368,12 @@ export default {
     },
     setDay: function(day) {
       const newDate = new Date(day);
+
       this.weekdates.value = this.getCurrentWeekDates(newDate).then(res => {
         this.weekdates = res;
         this.getHistroy(this.weekdates[0], this.weekdates[this.weekdates.length-1])
       });
+
       this.currentDateSelected = newDate;
     },
     nextWeek: function() {

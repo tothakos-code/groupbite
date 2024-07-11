@@ -24,8 +24,8 @@ socketio = SocketioSingleton.get_instance()
 @main_blueprint.route('/', defaults={'path': ''})
 @main_blueprint.route('/<path:path>')
 def catch_all(path):
-    logging.info('Redirecting to Frontned...')
     if APP_ENV == "development":
+        logging.info('Redirecting to Frontned...')
         # This is for developer mode only
         return requests.get('http://127.0.0.1:8080/{0}'.format(path)).text
 

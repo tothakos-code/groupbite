@@ -5,7 +5,7 @@ class SocketioSingleton(object):
 
     def __init__(self):
         if SocketioSingleton.__instance__ is None:
-            SocketioSingleton.__instance__ = SocketIO(logger=True, engineio_logger=True, cors_allowed_origins="*")
+            SocketioSingleton.__instance__ = SocketIO(logger=False, engineio_logger=False, cors_allowed_origins="*")
         else:
             raise Exception("You cannot create another SocketioSingleton class")
 

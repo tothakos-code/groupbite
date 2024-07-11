@@ -28,22 +28,17 @@ export default {
       }
     });
     let today = new Date()
+    const urlDate = new Date(to.params.selected_date)
     if (to.params.selected_date === undefined) {
       state.selectedDate.setDate(today.getDate());
-      history.pushState({}, "", `${to.path}`)
     } else {
-      if (new Date(to.params.selected_date).getWeek() !== today.getWeek()) {
+      if (urlDate.getWeek() !== today.getWeek()) {
         state.selectedDate = today;
-        history.pushState({}, "", `${to.path}`)
       } else {
-        if (new Date(to.params.selected_date).getDate() === today.getDate()) {
-          history.pushState({}, "", `${to.path}`)
-        } else {
-          state.selectedDate = new Date(to.params.selected_date);
-          history.pushState({}, "", `${to.path}/${state.selectedDate.toISODate()}`)
-        }
+        state.selectedDate = urlDate;
       }
     }
+    history.pushState({}, "", `${to.path}/${state.selectedDate.toISODate()}`)
   },
   beforeRouteUpdate(to) {
     if (to.params.selected_date === undefined) {
@@ -51,6 +46,7 @@ export default {
     } else {
       state.selectedDate = new Date(to.params.selected_date);
     }
+    history.pushState({}, "", `${to.path}/${state.selectedDate.toISODate()}`)
   },
   setup() {
     return {

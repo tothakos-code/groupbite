@@ -83,7 +83,6 @@ export const useAuth = defineStore('user', {
     },
     async checkSession() {
       let session = Cookies.get('user')
-      console.log(session);
       if (session) {
         try {
           const response = await axios.post(

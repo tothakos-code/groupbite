@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, Integer, DateTime, JSON, func, Sequence, select, or_, and_
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy import ForeignKey
+from sqlalchemy.sql import extract
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -10,6 +11,8 @@ from typing import List
 from . import Base, session
 from uuid import UUID
 from .vendor import Vendor
+import datetime
+import logging
 
 class Frequency(enum.Enum):
     FIX = 'fix'
@@ -51,6 +54,16 @@ class Menu(Base):
                 and_(
                     Menu.vendor_id == vendor_id,
                     Menu.freq_id == Frequency.FIX
+                ),
+                and_(
+                    Menu.vendor_id == vendor_id,
+                    extract("week",Menu.menu_date) == datetime.datetime.strptime(menu_date, "%Y-%m-%d").isocalendar()[1],
+                    Menu.freq_id == Frequency.WEEKLY
+                ),
+                and_(
+                    Menu.vendor_id == vendor_id,
+                    extract("month",Menu.menu_date) == datetime.datetime.strptime(menu_date, "%Y-%m-%d").month,
+                    Menu.freq_id == Frequency.MONTHLY
                 )
             )
         )

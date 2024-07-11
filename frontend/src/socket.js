@@ -45,7 +45,6 @@ socket.on('be_order_update', function(data) {
   if (data.basket) {
     basket.basket = data.basket;
   }
-  console.log(data.basket);
   if (data.order) {
     state.order = data.order;
   }

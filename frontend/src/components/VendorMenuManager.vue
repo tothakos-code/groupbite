@@ -33,10 +33,10 @@
             <option value="DAILY">
               Napi
             </option>
-            <option value="WEAKLY">
+            <option value="WEEKLY">
               Heti
             </option>
-            <option value="MONTLY">
+            <option value="MONTHLY">
               Havi
             </option>
             <option value="YEARLY">

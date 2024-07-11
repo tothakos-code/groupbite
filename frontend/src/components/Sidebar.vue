@@ -38,7 +38,7 @@
           :onmouseover="'this.style.backgroundColor=\'' + backgroundColor(vendor.name, 30, 70)+'\''"
           :onmouseout="'this.style.backgroundColor=\'' + backgroundColor(vendor.name, 30, 80)+'\''"
           :title="vendor.name"
-          :to="'/menu/'+vendor.name"
+          :to="'/menu/'+vendor.name+'/'+new Date().toISODate()"
         >
           <span class="fs-4 position-absolute top-50 start-50 translate-middle text-dark">
             {{ firstChar(vendor.name) }}
@@ -71,7 +71,7 @@ export default {
     },
     selectedVendor() {
       return state.selected_vendor;
-    }
+    },
   },
   methods: {
     firstChar: function(string) {

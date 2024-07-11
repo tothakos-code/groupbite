@@ -93,13 +93,16 @@ export default {
       axios.get(url)
         .then(response => {
           this.menulist = response.data;
-          console.log(this.menulist);
         })
         .catch(error => console.error(error));
     },
     getMenu: function(day) {
       if (day === undefined) {
-        day = new Date()
+        if (state.selectedDate === undefined) {
+          day = new Date()
+        } else {
+          day = state.selectedDate;
+        }
       }
       let formated_day = new Date(day).toISODate();
       socket.emit("fe_date_selection", {
@@ -108,18 +111,14 @@ export default {
         "vendor_id": state.selected_vendor.id
       })
       state.selectedDate = new Date(day);
-      if (state.selectedDate.toISODate() === new Date().toISODate()) {
-        history.pushState({}, "", `/menu/${state.selected_vendor.name}`)
-      } else {
-        history.pushState({}, "", `/menu/${state.selected_vendor.name}/${state.selectedDate.toISODate()}`)
-      }
+      history.pushState({}, "", `/menu/${state.selected_vendor.name}/${state.selectedDate.toISODate()}`)
       this.loadMenu(formated_day);
     },
     getCurrentWeekDates() {
       const currentDate = new Date();
       const currentDayOfWeek = currentDate.getAdjustedDay();
 
-      // Calculate the start date of the current week (Sunday)
+      // Calculate the start date of the current week (Monday)
       const startDate = new Date(currentDate);
       startDate.setDate(currentDate.getDate() - currentDayOfWeek);
 

@@ -56,26 +56,27 @@
     </div>
     <div
       :id="collapsable ? userId : false"
-      class="row list-group"
       :class="{ show: !collapsable || !startCollapsed, collapse: startCollapsed}"
     >
-      <div
-        v-for="item in userBasket"
-        :key="item.item_id"
-        class="list-group-item  d-flex justify-content-between align-items-center"
-      >
-        <span
-          class="badge rounded-pill border me-2 col-1"
-          :class="[
-            'bg-' + auth.getUserColor,
-            'border-' + auth.getUserColor + '-subtle']"
+      <div class="row list-group">
+        <div
+          v-for="item in userBasket"
+          :key="item.item_id"
+          class="list-group-item d-flex  justify-content-between align-items-center"
         >
-          {{ item.quantity }} x
-        </span>
-        <span class="col-7">{{ item.item_name }}</span>
-        <div class="col-3 row mx-0">
-          <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-start text-nowrap px-0">{{ item.size_name.split(' ')[0] }}</span>
-          <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-end text-nowrap pe-0">{{ item.price }} Ft</span>
+          <span
+            class="badge rounded-pill border me-2 col-1"
+            :class="[
+              'bg-' + auth.getUserColor,
+              'border-' + auth.getUserColor + '-subtle']"
+          >
+            {{ item.quantity }} x
+          </span>
+          <span class="col-7">{{ item.item_name }}</span>
+          <div class="col-3 row mx-0">
+            <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-start text-nowrap px-0">{{ item.size_name.split(' ')[0] }}</span>
+            <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-end text-nowrap pe-0">{{ item.price }} Ft</span>
+          </div>
         </div>
       </div>
     </div>
@@ -148,5 +149,10 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
+
+.collapsing {
+  width: 100%;
+  margin: 0;
+}
 </style>

@@ -196,6 +196,16 @@
             >
               Törlés
             </button>
+            <button
+              type="button"
+              name="button"
+              class="btn"
+              title="Duplikál"
+              :class="['btn-outline-' + auth.getUserColor ]"
+              @click="duplicateMenu(menu.id)"
+            >
+              Duplikál
+            </button>
           </td>
         </tr>
       </tbody>
@@ -323,8 +333,6 @@ export default {
           .catch(e => {
             console.log(e);
           })
-
-
       },
       getMenuList: function () {
         axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-get`)
@@ -403,6 +411,25 @@ export default {
               notify({
                 type: "error",
                 text: "Menü törlés nem sikerült!",
+              });
+          })
+      },
+      duplicateMenu: function (menu_id) {
+        const menu = this.menulist.get(menu_id)
+        this.menulist.set(menu.id, { ...menu, isEditing: false})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-duplicate`, {'data': menu})
+          .then(() => {
+            this.getMenuList()
+            notify({
+              type: "info",
+              text: "Menü duplikálva!",
+            });
+          })
+          .catch(e => {
+              console.log(e);
+              notify({
+                type: "error",
+                text: "Menü duplikáció nem sikerült!",
               });
           })
       },

@@ -68,9 +68,6 @@ def import_menu(vendor_id):
                 menu_db.items.append(menu_item)
             Menu.add(menu_db)
 
-
-
-
     except Exception as e:
         logging.error(f"Failed to parse JSON file: {e}")
         return "Failed to parse JSON file", 400
@@ -226,6 +223,43 @@ def handle_menu_update(vendor_id):
 def handle_menu_delete(vendor_id):
     menu = request.json['data']
     Menu.find_by_id(menu['id']).delete()
+    return "OK"
+
+
+@menu_blueprint.route('/<vendor_id>/menu-duplicate', methods=['POST'])
+def handle_menu_duplicate(vendor_id):
+    menu = request.json['data']
+    original_menu = Menu.find_by_id(menu['id'])
+
+    menu_db = Menu(
+        name=original_menu.name+"-copy",
+        vendor_id=vendor_id,
+        freq_id=original_menu.freq_id,
+        date=date.today().strftime('%Y-%m-%d'),
+        active=False
+    )
+
+
+    for item in original_menu.items:
+        menu_item = MenuItem(
+            name=item.name,
+            category=item.category,
+            index=item.index
+        )
+
+        for size in item.sizes:
+            menu_item.sizes.append(Size(
+                link=size.link,
+                name=size.name,
+                price=size.price,
+                index=size.index,
+                quantity=size.quantity
+            ))
+
+
+        menu_db.items.append(menu_item)
+    Menu.add(menu_db)
+
     return "OK"
 
 

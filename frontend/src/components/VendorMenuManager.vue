@@ -54,6 +54,15 @@
       >
         Létrehoz
       </button>
+      <button
+        class="btn ms-2"
+        :class="['btn-' + auth.getUserColor ]"
+        type="button"
+        name="save"
+        @click="openImportPopup()"
+      >
+        Importálás
+      </button>
     </div>
   </div>
   <div class="">
@@ -156,16 +165,43 @@
         </tr>
       </tbody>
     </table>
+    <Popup
+      title="Menü importlálsa JSON fájlból"
+      :show-modal="showImportPopup"
+      confirm-text="Küldés"
+      @cancel="showImportPopup=false"
+      @confirm="submitJsonFile()"
+    >
+      <p>
+        A JSON fájlnak követnie kell egy meghatárotzott struktúrát. Bővebben lásd a dokumentációban(bal alsó sarok <span class="fst-italic">i</span> ikon).
+      </p>
+      <div class="mb-3">
+        <label
+          for="importJson"
+          class="form-label"
+        >JSON fájl:</label>
+        <input
+          id="importJson"
+          class="form-control"
+          type="file"
+          @change="handleFileUpload( $event )"
+        >
+      </div>
+    </Popup>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
 import { useAuth } from '@/stores/auth';
+import Popup from './Popup.vue';
 import { notify } from "@kyvg/vue3-notification";
 
 export default {
     name: 'VendorMenuManager',
+    components: {
+      Popup
+    },
     setup() {
       const auth = useAuth();
       return {
@@ -179,12 +215,67 @@ export default {
           name: "",
           freq: "FIX",
         },
+        showImportPopup: false,
+        json_file: ""
       }
     },
     mounted() {
       this.getMenuList()
     },
     methods: {
+      openImportPopup: function () {
+        this.showImportPopup = true;
+      },
+      submitJsonFile: function () {
+        let formData = new FormData();
+        formData.append('file', this.file);
+        axios.post( `http://${window.location.host}/api/menu/import/${this.$route.params.id}`,
+          formData,
+          {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+          }
+        ).then(() => {
+          console.log('SUCCESS file upload!!');
+          this.showImportPopup=false
+          this.getMenuList()
+          notify({
+            type: "info",
+            text: "Menü importálás sikeres!",
+          });
+        })
+        .catch(e => {
+          console.log('FAILURE in file upload!!');
+          console.log(e);
+          notify({
+            type: "error",
+            text: "Menü importálása nem sikerült!",
+          });
+        });
+      },
+      handleFileUpload: function (event) {
+        const file = event.target.files[0];
+        if (file && file.type === 'application/json') {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const json = JSON.parse(e.target.result);
+              console.log('Valid JSON:', json);
+              this.file = event.target.files[0];
+            } catch (error) {
+              console.log('Invalid JSON:', error);
+              notify({
+                type: "error",
+                text: "Helytelen JSON fájl: " + error,
+              })
+            }
+          };
+          reader.readAsText(file);
+        } else {
+          console.log('Only .json files are allowed');
+        }
+      },
       getMenuList: function () {
         axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-get`)
           .then(response => {

@@ -75,6 +75,7 @@
             <div
               class="btn"
               :class="['text-' + auth.getUserColor ]"
+              title="Üzlet elérhetőség ki/be kapcsolása"
               @click="toggleActivation(vendor)"
             >
               <svg
@@ -103,6 +104,7 @@
             <div
               class="btn"
               :class="['text-' + auth.getUserColor ]"
+              title="Üzlet beállítások"
               @click="openVendorConfiguration(vendor.id)"
             >
               <svg

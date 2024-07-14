@@ -23,6 +23,59 @@ def update_menu(vendor_id):
     vendor.scan()
     return "Vendor scan ran for " + str(vendor.id) + " id", 201
 
+@menu_blueprint.route('/import/<vendor_id>', methods=['POST'])
+def import_menu(vendor_id):
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part in the request'}), 400
+
+    json_file = request.files['file']
+
+    if json_file.filename == '':
+        return jsonify({'error': 'No file selected for uploading'}), 400
+
+    try:
+        file_content = json.loads(json_file.read())
+        for menu in file_content["menus"]:
+            menu_db = Menu(
+                name=menu['name'] if "name" in menu else "imported-" + datetime.now().strftime('%Y-%m-%d-%H:%M'),
+                vendor_id=vendor_id,
+                freq_id=menu['freq'] if "freq" in menu else "DAILY",
+                menu_date=menu['date'] if "date" in menu else date.today().strftime('%Y-%m-%d')
+            )
+
+            item_index = 0
+            for item in menu["items"]:
+                menu_item = MenuItem(
+                    name=item['name'],
+                    category=item['category'] if "category" in item else "",
+                    index=item['index'] if "index" in item else item_index
+                )
+                if "index" not in item:
+                    item_index+= 1
+
+                size_index=0
+                for size in item["sizes"]:
+                    menu_item.sizes.append(Size(
+                        link="",
+                        name=size['name'],
+                        price=size['price'],
+                        index=size['index'] if "index" in size else size_index,
+                        quantity=size['quantity'] if "quantity" in size else -1,
+                    ))
+                    if "index" not in size:
+                        size_index+= 1
+
+                menu_db.items.append(menu_item)
+            Menu.add(menu_db)
+
+
+
+
+    except Exception as e:
+        logging.error(f"Failed to parse JSON file: {e}")
+        return "Failed to parse JSON file", 400
+    return "OK", 201
+
 @menu_blueprint.route('/get/<vendor_id>', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})
 @menu_blueprint.route('/get/<vendor_id>/<requested_date>')
 def get_requested_menu(vendor_id, requested_date):

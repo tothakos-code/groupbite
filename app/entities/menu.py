@@ -41,8 +41,13 @@ class Menu(Base):
     def __repr__(self):
         return f"Menu<{self.id},name={self.name},menu_date={self.menu_date},vendor_id={self.vendor_id}>"
 
-    def find_vendor_daily_menu(vendor_id, menu_date):
-        return session.query(Menu).filter_by(vendor_id = vendor_id, menu_date = menu_date).first()
+    def find_vendor_menu(vendor_id, menu_date, menu_freq):
+        stmt = select(Menu).where(
+            Menu.vendor_id == vendor_id,
+            Menu.menu_date == menu_date,
+            menu.freq_id == menu_freq
+        )
+        return session.execute(stmt).scalars().first()
 
     def find_vendor_all_menu(vendor_id, menu_date):
         stmt = select(Menu).where(
@@ -87,7 +92,10 @@ class Menu(Base):
         return session.execute(stmt).scalars().first()
 
     def find_all_by_vendor(vendor_id):
-        return session.query(Menu).filter_by(vendor_id = vendor_id).all()
+        stmt = select(Menu).where(
+            Menu.vendor_id == vendor_id
+        ).order_by(Menu.menu_date.desc())
+        return session.execute(stmt).scalars().all()
 
     def add(menu):
         session.add(menu)

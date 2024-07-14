@@ -82,6 +82,9 @@
             Gyakoriság
           </th>
           <th scope="col">
+            Aktív
+          </th>
+          <th scope="col">
             Műveletek
           </th>
         </tr>
@@ -118,6 +121,38 @@
             {{ menu.freq }}
           </td>
           <td>
+            {{ menu.active }}
+          </td>
+          <td>
+            <div
+              class="btn"
+              :class="['text-' + auth.getUserColor ]"
+              title="Üzlet elérhetőség ki/be kapcsolása"
+              @click="toggleActivation(menu)"
+            >
+              <svg
+                v-if="menu.active"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="currentColor"
+                class="bi bi-toggle-on"
+                viewBox="0 0 16 16"
+              >
+                <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
+              </svg>
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="currentColor"
+                class="bi bi-toggle-off"
+                viewBox="0 0 16 16"
+              >
+                <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
+              </svg>
+            </div>
             <button
               v-if="!menu.isEditing"
               type="button"
@@ -275,6 +310,21 @@ export default {
         } else {
           console.log('Only .json files are allowed');
         }
+      },
+      toggleActivation: function (to) {
+        let command = 'activate';
+        if (to.active) {
+          command = 'deactivate';
+        }
+        axios.post(`http://${window.location.host}/api/menu/${to.id}/${command}`)
+          .then(() => {
+            this.getMenuList();
+          })
+          .catch(e => {
+            console.log(e);
+          })
+
+
       },
       getMenuList: function () {
         axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-get`)

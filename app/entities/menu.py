@@ -51,29 +51,24 @@ class Menu(Base):
 
     def find_vendor_all_menu(vendor_id, date):
         stmt = select(Menu).where(
-            or_(
-                and_(
-                    Menu.vendor_id == vendor_id,
-                    Menu.date == date
-                ),
-                and_(
-                    Menu.vendor_id == vendor_id,
-                    Menu.freq_id == Frequency.FIX
-                ),
-                and_(
-                    Menu.vendor_id == vendor_id,
-                    extract("week",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").isocalendar()[1],
-                    Menu.freq_id == Frequency.WEEKLY
-                ),
-                and_(
-                    Menu.vendor_id == vendor_id,
-                    extract("month",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").month,
-                    Menu.freq_id == Frequency.MONTHLY
-                ),
-                and_(
-                    Menu.vendor_id == vendor_id,
-                    extract("year",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").year,
-                    Menu.freq_id == Frequency.YEARLY
+            and_(
+                Menu.vendor_id == vendor_id,
+                Menu.active == True,
+                or_(
+                    Menu.date == date,
+                    Menu.freq_id == Frequency.FIX,
+                    and_(
+                        extract("week",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").isocalendar()[1],
+                        Menu.freq_id == Frequency.WEEKLY
+                    ),
+                    and_(
+                        extract("month",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").month,
+                        Menu.freq_id == Frequency.MONTHLY
+                    ),
+                    and_(
+                        extract("year",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").year,
+                        Menu.freq_id == Frequency.YEARLY
+                    )
                 )
             )
         )
@@ -101,6 +96,13 @@ class Menu(Base):
         session.add(menu)
         session.commit()
 
+    def activate(self):
+        self.active = True;
+        session.commit()
+
+    def deactivate(self):
+        self.active = False;
+        session.commit()
 
     def update(self, name, date):
         self.name = name
@@ -153,5 +155,6 @@ class Menu(Base):
             'date': str(self.date),
             'vendor_id': str(self.vendor_id),
             'freq': str(self.freq_id),
+            'active': self.active,
             'items': [item.serialized for item in self.items]
         }

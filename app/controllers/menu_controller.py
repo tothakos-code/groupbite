@@ -234,3 +234,19 @@ def handle_menu_add(vendor_id):
     menu = request.json['data']
     Menu.add(Menu(name=menu['name'], vendor_id=vendor_id, freq_id=menu['freq']))
     return "OK"
+
+@menu_blueprint.route('/<menu_id>/<cmd>', methods=['POST'])
+def handle_activation(menu_id, cmd):
+    if not menu_id:
+        return "Vendor not found", 404
+
+    if cmd == "activate":
+        Menu.find_by_id(menu_id).activate()
+        logging.info(menu_id + " vendor got activated")
+    elif cmd == "deactivate":
+        Menu.find_by_id(menu_id).deactivate()
+        logging.info(menu_id + " vendor got deactivated")
+    else:
+        return "Command not found", 404
+
+    return "OK", 200

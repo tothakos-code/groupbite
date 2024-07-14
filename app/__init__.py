@@ -11,14 +11,8 @@ from app.controllers import menu_blueprint
 from app.controllers import order_blueprint
 from app.controllers import user_blueprint
 
-from dotenv import load_dotenv
-from pathlib import Path
-from os import getenv, scandir
+from os import scandir
 
-dotenv_path = Path('.env')
-load_dotenv(dotenv_path=dotenv_path)
-APP_HOST = getenv('APP_HOST')
-APP_PORT = getenv('APP_PORT')
 
 def create_app(debug=False):
     logging.basicConfig(
@@ -39,8 +33,6 @@ def create_app(debug=False):
     socketio = SocketioSingleton.get_instance()
     socketio.init_app(
         application,
-        host=APP_HOST,
-        port=APP_PORT,
         debug=debug,
         async_mode='eventlet',
         allow_unsafe_werkzeug=True)

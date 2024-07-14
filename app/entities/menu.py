@@ -1,11 +1,10 @@
-from sqlalchemy import Column, String, Integer, DateTime, JSON, func, Sequence, select, or_, and_
+from sqlalchemy import Column, ForeignKey, String, Integer, DateTime, JSON, func, Sequence, Boolean, select, or_, and_
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
-from sqlalchemy import ForeignKey
 from sqlalchemy.sql import extract
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-from datetime import date
+from datetime import date as d
 import enum
 from typing import List
 from . import Base, session
@@ -32,29 +31,30 @@ class Menu(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str]
-    menu_date: Mapped[date] = mapped_column(insert_default=func.current_date())
+    active: Mapped[bool] = mapped_column(Boolean(), default=False)
+    date: Mapped[d] = mapped_column(insert_default=func.current_date())
     vendor_id: Mapped[UUID] = mapped_column(ForeignKey("vendor.id"))
     freq_id: Mapped[Frequency] = mapped_column(default=Frequency.FIX)
 
     items: Mapped[List["MenuItem"]] = relationship(back_populates="menu", order_by="MenuItem.index")
 
     def __repr__(self):
-        return f"Menu<{self.id},name={self.name},menu_date={self.menu_date},vendor_id={self.vendor_id}>"
+        return f"Menu<{self.id},name={self.name},date={self.date},vendor_id={self.vendor_id}>"
 
-    def find_vendor_menu(vendor_id, menu_date, menu_freq):
+    def find_vendor_menu(vendor_id, date, menu_freq):
         stmt = select(Menu).where(
             Menu.vendor_id == vendor_id,
-            Menu.menu_date == menu_date,
+            Menu.date == date,
             menu.freq_id == menu_freq
         )
         return session.execute(stmt).scalars().first()
 
-    def find_vendor_all_menu(vendor_id, menu_date):
+    def find_vendor_all_menu(vendor_id, date):
         stmt = select(Menu).where(
             or_(
                 and_(
                     Menu.vendor_id == vendor_id,
-                    Menu.menu_date == menu_date
+                    Menu.date == date
                 ),
                 and_(
                     Menu.vendor_id == vendor_id,
@@ -62,17 +62,17 @@ class Menu(Base):
                 ),
                 and_(
                     Menu.vendor_id == vendor_id,
-                    extract("week",Menu.menu_date) == datetime.datetime.strptime(menu_date, "%Y-%m-%d").isocalendar()[1],
+                    extract("week",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").isocalendar()[1],
                     Menu.freq_id == Frequency.WEEKLY
                 ),
                 and_(
                     Menu.vendor_id == vendor_id,
-                    extract("month",Menu.menu_date) == datetime.datetime.strptime(menu_date, "%Y-%m-%d").month,
+                    extract("month",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").month,
                     Menu.freq_id == Frequency.MONTHLY
                 ),
                 and_(
                     Menu.vendor_id == vendor_id,
-                    extract("year",Menu.menu_date) == datetime.datetime.strptime(menu_date, "%Y-%m-%d").year,
+                    extract("year",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").year,
                     Menu.freq_id == Frequency.YEARLY
                 )
             )
@@ -80,8 +80,8 @@ class Menu(Base):
 
         return session.execute(stmt).scalars().all()
 
-    def find_by_date(date=date.today().strftime('%Y-%m-%d')):
-        stmt = select(Menu).where(Menu.menu_date == date)
+    def find_by_date(date=d.today().strftime('%Y-%m-%d')):
+        stmt = select(Menu).where(Menu.me_date == date)
         return session.execute(stmt).scalars().first()
 
     def find_by_id(menu_id):
@@ -94,7 +94,7 @@ class Menu(Base):
     def find_all_by_vendor(vendor_id):
         stmt = select(Menu).where(
             Menu.vendor_id == vendor_id
-        ).order_by(Menu.menu_date.desc())
+        ).order_by(Menu.date.desc())
         return session.execute(stmt).scalars().all()
 
     def add(menu):
@@ -104,7 +104,7 @@ class Menu(Base):
 
     def update(self, name, date):
         self.name = name
-        self.menu_date = date
+        self.date = date
         session.commit()
 
     def delete(self):
@@ -141,7 +141,7 @@ class Menu(Base):
         # TODO: Need to check that date corresponed to the frequency. This currently only works for daily types
         if menu is not None:
             return
-        session.add(Menu(name=name, vendor_id=vendor, menu_date=date, freq_id=freq))
+        session.add(Menu(name=name, vendor_id=vendor, date=date, freq_id=freq))
         session.commit()
 
     @property
@@ -150,7 +150,7 @@ class Menu(Base):
         return {
             'id': self.id,
             'name': self.name,
-            'date': str(self.menu_date),
+            'date': str(self.date),
             'vendor_id': str(self.vendor_id),
             'freq': str(self.freq_id),
             'items': [item.serialized for item in self.items]

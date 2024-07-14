@@ -1,372 +1,396 @@
 <template>
-  <div class="row ms-2">
-    <div class="">
-      <div
-        class="row my-2 w-75"
-      >
-        <div class="col-auto">
-          <label for="itemName">
-            Menü:
-          </label>
-          <select
-            v-model="selectedMenu"
-            name="itemMenu"
-            class="form-control"
-          >
-            <option
-              v-for="m in menus"
-              :key="m.id"
-              :value="m.id"
+  <div class="">
+    <div
+      v-if="menus.length == 0"
+      class="mt-2"
+    >
+      <span class="h4">
+        Hozz létre egy menüt, hogy feltudd tölteni
+      </span>
+    </div>
+    <div
+      v-else
+      class=""
+    >
+      <div class="row ms-2">
+        <div
+          class="row my-2"
+        >
+          <div class="col-auto">
+            <label for="itemName">
+              Válassz egy Menüt:
+            </label>
+            <select
+              v-model="selectedMenu"
+              name="itemMenu"
+              class="form-control"
             >
-              {{ m.name }} - {{ m.date }}
-            </option>
-          </select>
-        </div>
-        <div class="col-auto">
-          <label for="itemName">
-            Név:
-          </label>
-          <input
-            v-model="newItem.name"
-            type="text"
-            name="itemName"
-            class="form-control"
+              <option
+                v-for="m in menus"
+                :key="m.id"
+                :value="m.id"
+              >
+                {{ m.name }} - {{ m.date }}
+              </option>
+            </select>
+          </div>
+          <div
+            v-if="selectedMenu"
+            class="row mt-2"
           >
-        </div>
+            <span class="row ms-1 h4">
+              Új étel hozzáadása:
+            </span>
+            <div class="col-2">
+              <label for="itemName">
+                Név:
+              </label>
+              <input
+                v-model="newItem.name"
+                type="text"
+                name="itemName"
+                class="form-control"
+              >
+            </div>
 
-        <div class="col-auto">
-          <label for="itemSize">
-            Méret:
-          </label>
-          <input
-            v-model="newItem.size"
-            type="text"
-            name="itemSize"
-            class="form-control"
-          >
-        </div>
-        <div class="col-auto">
-          <label for="itemCategory">
-            Kategória:
-          </label>
-          <input
-            v-model="newItem.category"
-            type="text"
-            name="itemCategory"
-            class="form-control"
-          >
-        </div>
-        <div class="col-auto">
-          <label for="itemPrice">
-            Ár:
-          </label>
-          <input
-            v-model="newItem.price"
-            type="number"
-            name="itemPrice"
-            class="form-control"
-          >
-        </div>
-        <div class="col-auto">
-          <label for="itemQuantity">
-            Mennyiség:
-          </label>
-          <input
-            v-model="newItem.quantity"
-            type="number"
-            name="itemQuantity"
-            class="form-control"
-          >
+            <div class="col-2">
+              <label for="itemSize">
+                Méret:
+              </label>
+              <input
+                v-model="newItem.size"
+                type="text"
+                name="itemSize"
+                class="form-control"
+              >
+            </div>
+            <div class="col-2">
+              <label for="itemCategory">
+                Kategória:
+              </label>
+              <input
+                v-model="newItem.category"
+                type="text"
+                name="itemCategory"
+                class="form-control"
+              >
+            </div>
+            <div class="col-1">
+              <label for="itemPrice">
+                Ár:
+              </label>
+              <input
+                v-model="newItem.price"
+                type="number"
+                name="itemPrice"
+                class="form-control"
+              >
+            </div>
+            <div class="col-1">
+              <label
+                for="itemQuantity"
+                title="Végtelen mennyiséghez adj megy egy negatív számot"
+              >
+                Mennyiség:
+              </label>
+              <input
+                v-model="newItem.quantity"
+                type="number"
+                name="itemQuantity"
+                class="form-control"
+              >
+            </div>
+            <button
+              class="btn col-auto"
+              :class="['btn-' + auth.getUserColor ]"
+              type="button"
+              name="save"
+              @click="addToMenu()"
+            >
+              Menühöz adás
+            </button>
+          </div>
         </div>
       </div>
-      <button
-        class="btn"
-        :class="['btn-' + auth.getUserColor ]"
-        type="button"
-        name="save"
-        @click="addToMenu()"
-      >
-        Menühöz adás
-      </button>
-    </div>
-  </div>
-  <div class="mt-2">
-    <table class="table table-striped table-bordered table-hover">
-      <thead>
-        <tr>
-          <th
-            scope="col"
-            class="col-auto"
-          >
-            #
-          </th>
-          <th
-            scope="col"
-            class="col-auto"
-          >
-            Név
-          </th>
-          <th
-            scope="col"
-            class="col-auto"
-          >
-            Kategória
-          </th>
-          <th
-            scope="col"
-            class="col-auto"
-          >
-            Sorrend index
-          </th>
-          <th
-            scope="col"
-            class="col-auto"
-          >
-            Műveletek
-          </th>
-        </tr>
-      </thead>
-      <tbody class="table-group-divider">
-        <template
-          v-for="[id, menuItem] in items"
-          :key="id"
-        >
-          <tr>
-            <td
-              scope="row"
-              class="col-auto"
+      <div class="mt-2">
+        <table class="table table-striped table-bordered table-hover">
+          <thead>
+            <tr>
+              <th
+                scope="col"
+                class="col-auto"
+              >
+                #
+              </th>
+              <th
+                scope="col"
+                class="col-auto"
+              >
+                Név
+              </th>
+              <th
+                scope="col"
+                class="col-auto"
+              >
+                Kategória
+              </th>
+              <th
+                scope="col"
+                class="col-auto"
+              >
+                Sorrend index
+              </th>
+              <th
+                scope="col"
+                class="col-auto"
+              >
+                Műveletek
+              </th>
+            </tr>
+          </thead>
+          <tbody class="table-group-divider">
+            <template
+              v-for="[id, menuItem] in items"
+              :key="id"
             >
-              {{ menuItem.id }}
-            </td>
-            <td>
-              <input
-                v-if="menuItem.isEditing"
-                v-model="menuItem.name"
-                class="form-control"
-                type="text"
-              >
-              <span v-else>
-                {{ menuItem.name }}
-              </span>
-            </td>
-            <td>
-              <input
-                v-if="menuItem.isEditing"
-                v-model="menuItem.category"
-                class="form-control"
-
-                type="text"
-              >
-              <span v-else>
-                {{ menuItem.category }}
-              </span>
-            </td>
-            <td>
-              <input
-                v-if="menuItem.isEditing"
-                v-model="menuItem.index"
-                class="form-control"
-                type="number"
-              >
-              <span v-else>
-                {{ menuItem.index }}
-              </span>
-            </td>
-            <td>
-              <button
-                v-if="!menuItem.isEditing"
-                type="button"
-                name="button"
-                class="btn"
-                title="Szerkesztés"
-                :class="['btn-outline-' + auth.getUserColor ]"
-                @click="edit(menuItem.id)"
-              >
-                Szerkesztés
-              </button>
-              <div v-else>
-                <button
-                  type="button"
-                  name="button"
-                  class="btn"
-                  title="Mentés"
-                  :class="['btn-outline-' + auth.getUserColor ]"
-                  @click="updateItem(menuItem.id)"
+              <tr>
+                <td
+                  scope="row"
+                  class="col-auto"
                 >
-                  Mentés
-                </button>
-                <button
-                  type="button"
-                  name="button"
-                  class="btn"
-                  title="Mégse"
-                  :class="['btn-outline-' + auth.getUserColor ]"
-                  @click="cancelEdit(menuItem.id)"
-                >
-                  Mégse
-                </button>
-              </div>
-              <button
-                type="button"
-                name="button"
-                class="btn"
-                title="Törlés"
-                :class="['btn-outline-' + auth.getUserColor ]"
-                @click="newSize(menuItem.id)"
-              >
-                Új méret
-              </button>
-              <button
-                type="button"
-                name="button"
-                class="btn"
-                title="Törlés"
-                :class="['btn-outline-' + auth.getUserColor ]"
-                @click="deleteItem(menuItem.id)"
-              >
-                Törlés
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td />
-            <td colSpan="4">
-              <table class="table mb-0 table-striped table-hover">
-                <thead>
-                  <tr>
-                    <th
-                      scope="col"
-                      class="col-auto"
-                    >
-                      Méret
-                    </th>
-                    <th
-                      scope="col"
-                      class="col-auto"
-                    >
-                      Ár
-                    </th>
-                    <th
-                      scope="col"
-                      class="col-auto"
-                    >
-                      Mennyiség
-                    </th>
-                    <th
-                      scope="col"
-                      class="col-auto"
-                    >
-                      Sorrend index
-                    </th>
-                    <th
-                      scope="col"
-                      class="col-auto"
-                    >
-                      Műveletek
-                    </th>
-                  </tr>
-                  <tr
-                    v-for="[sizeId, size] in menuItem.sizes"
-                    :key="'size-' + sizeId"
+                  {{ menuItem.id }}
+                </td>
+                <td>
+                  <input
+                    v-if="menuItem.isEditing"
+                    v-model="menuItem.name"
+                    class="form-control"
+                    type="text"
                   >
-                    <td>
-                      <input
-                        v-if="size.isEditing"
-                        v-model="size.name"
-                        class="form-control"
+                  <span v-else>
+                    {{ menuItem.name }}
+                  </span>
+                </td>
+                <td>
+                  <input
+                    v-if="menuItem.isEditing"
+                    v-model="menuItem.category"
+                    class="form-control"
 
-                        type="text"
-                      >
-                      <span v-else>
-                        {{ size.name }}
-                      </span>
-                    </td>
-                    <td>
-                      <input
-                        v-if="size.isEditing"
-                        v-model="size.price"
-                        class="form-control"
-                        type="number"
-                      >
-                      <span v-else>
-                        {{ size.price }}
-                      </span>
-                    </td>
-                    <td>
-                      <input
-                        v-if="size.isEditing"
-                        v-model="size.quantity"
-                        class="form-control"
-                        type="number"
-                      >
-                      <span v-else>
-                        {{ size.quantity }}
-                      </span>
-                    </td>
-                    <td>
-                      <input
-                        v-if="size.isEditing"
-                        v-model="size.index"
-                        class="form-control"
-                        type="number"
-                      >
-                      <span v-else>
-                        {{ size.index }}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        v-if="!size.isEditing"
-                        type="button"
-                        name="button"
-                        class="btn"
-                        title="Szerkesztés"
-                        :class="['btn-outline-' + auth.getUserColor ]"
-                        @click="editSize(menuItem.id, size.id)"
-                      >
-                        Szerkesztés
-                      </button>
-                      <div v-else>
-                        <button
-                          type="button"
-                          name="button"
-                          class="btn"
-                          title="Mentés"
-                          :class="['btn-outline-' + auth.getUserColor ]"
-                          @click="updateSize(menuItem.id, size.id)"
+                    type="text"
+                  >
+                  <span v-else>
+                    {{ menuItem.category }}
+                  </span>
+                </td>
+                <td>
+                  <input
+                    v-if="menuItem.isEditing"
+                    v-model="menuItem.index"
+                    class="form-control"
+                    type="number"
+                  >
+                  <span v-else>
+                    {{ menuItem.index }}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    v-if="!menuItem.isEditing"
+                    type="button"
+                    name="button"
+                    class="btn"
+                    title="Szerkesztés"
+                    :class="['btn-outline-' + auth.getUserColor ]"
+                    @click="edit(menuItem.id)"
+                  >
+                    Szerkesztés
+                  </button>
+                  <div v-else>
+                    <button
+                      type="button"
+                      name="button"
+                      class="btn"
+                      title="Mentés"
+                      :class="['btn-outline-' + auth.getUserColor ]"
+                      @click="updateItem(menuItem.id)"
+                    >
+                      Mentés
+                    </button>
+                    <button
+                      type="button"
+                      name="button"
+                      class="btn"
+                      title="Mégse"
+                      :class="['btn-outline-' + auth.getUserColor ]"
+                      @click="cancelEdit(menuItem.id)"
+                    >
+                      Mégse
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    name="button"
+                    class="btn"
+                    title="Törlés"
+                    :class="['btn-outline-' + auth.getUserColor ]"
+                    @click="newSize(menuItem.id)"
+                  >
+                    Új méret
+                  </button>
+                  <button
+                    type="button"
+                    name="button"
+                    class="btn"
+                    title="Törlés"
+                    :class="['btn-outline-' + auth.getUserColor ]"
+                    @click="deleteItem(menuItem.id)"
+                  >
+                    Törlés
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td />
+                <td colSpan="4">
+                  <table class="table mb-0 table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th
+                          scope="col"
+                          class="col-auto"
                         >
-                          Mentés
-                        </button>
-                        <button
-                          type="button"
-                          name="button"
-                          class="btn"
-                          title="Mégse"
-                          :class="['btn-outline-' + auth.getUserColor ]"
-                          @click="cancelSizeEdit(menuItem.id, size.id)"
+                          Méret
+                        </th>
+                        <th
+                          scope="col"
+                          class="col-auto"
                         >
-                          Mégse
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        name="button"
-                        class="btn"
-                        title="Törlés"
-                        :class="['btn-outline-' + auth.getUserColor ]"
-                        @click="deleteSize(menuItem.id, size.id)"
+                          Ár
+                        </th>
+                        <th
+                          scope="col"
+                          class="col-auto"
+                        >
+                          Mennyiség
+                        </th>
+                        <th
+                          scope="col"
+                          class="col-auto"
+                        >
+                          Sorrend index
+                        </th>
+                        <th
+                          scope="col"
+                          class="col-auto"
+                        >
+                          Műveletek
+                        </th>
+                      </tr>
+                      <tr
+                        v-for="[sizeId, size] in menuItem.sizes"
+                        :key="'size-' + sizeId"
                       >
-                        Törlés
-                      </button>
-                    </td>
-                  </tr>
-                </thead>
-              </table>
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
+                        <td>
+                          <input
+                            v-if="size.isEditing"
+                            v-model="size.name"
+                            class="form-control"
+
+                            type="text"
+                          >
+                          <span v-else>
+                            {{ size.name }}
+                          </span>
+                        </td>
+                        <td>
+                          <input
+                            v-if="size.isEditing"
+                            v-model="size.price"
+                            class="form-control"
+                            type="number"
+                          >
+                          <span v-else>
+                            {{ size.price }}
+                          </span>
+                        </td>
+                        <td>
+                          <input
+                            v-if="size.isEditing"
+                            v-model="size.quantity"
+                            class="form-control"
+                            type="number"
+                          >
+                          <span v-else>
+                            {{ size.quantity }}
+                          </span>
+                        </td>
+                        <td>
+                          <input
+                            v-if="size.isEditing"
+                            v-model="size.index"
+                            class="form-control"
+                            type="number"
+                          >
+                          <span v-else>
+                            {{ size.index }}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            v-if="!size.isEditing"
+                            type="button"
+                            name="button"
+                            class="btn"
+                            title="Szerkesztés"
+                            :class="['btn-outline-' + auth.getUserColor ]"
+                            @click="editSize(menuItem.id, size.id)"
+                          >
+                            Szerkesztés
+                          </button>
+                          <div v-else>
+                            <button
+                              type="button"
+                              name="button"
+                              class="btn"
+                              title="Mentés"
+                              :class="['btn-outline-' + auth.getUserColor ]"
+                              @click="updateSize(menuItem.id, size.id)"
+                            >
+                              Mentés
+                            </button>
+                            <button
+                              type="button"
+                              name="button"
+                              class="btn"
+                              title="Mégse"
+                              :class="['btn-outline-' + auth.getUserColor ]"
+                              @click="cancelSizeEdit(menuItem.id, size.id)"
+                            >
+                              Mégse
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            name="button"
+                            class="btn"
+                            title="Törlés"
+                            :class="['btn-outline-' + auth.getUserColor ]"
+                            @click="deleteSize(menuItem.id, size.id)"
+                          >
+                            Törlés
+                          </button>
+                        </td>
+                      </tr>
+                    </thead>
+                  </table>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -494,14 +518,14 @@ export default {
             this.getItemList()
             notify({
               type: "info",
-              text: "Item frissítés sikeres!",
+              text: "Étel frissítés sikeres!",
             });
           })
           .catch(e => {
               console.log(e);
               notify({
                 type: "error",
-                text: "Item frissítés nem sikerült!",
+                text: "Étel frissítés nem sikerült!",
               });
           })
       },
@@ -532,14 +556,14 @@ export default {
             this.getItemList()
             notify({
               type: "info",
-              text: "Item törlés sikeres!",
+              text: "Étel törlés sikeres!",
             });
           })
           .catch(e => {
               console.log(e);
               notify({
                 type: "error",
-                text: "Item törlés nem sikerült!",
+                text: "Étel törlés nem sikerült!",
               });
           })
       },

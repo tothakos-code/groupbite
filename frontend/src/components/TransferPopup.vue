@@ -24,7 +24,35 @@
     @cancel="showInitial = false"
     @confirm="closeOrder()"
   >
-    <p>A lista automatikusan frissül, ha valaki változtat a kosarán. Pipáld ki ha átraktad</p>
+    <div class="row">
+      <div class="col-9 me-0 pe-0">
+        <p>A lista automatikusan frissül, ha valaki változtat a kosarán. Pipáld ki ha átraktad VAGY másold a teljes rendelést szövegként</p>
+      </div>
+      <div class="col-3 text-end">
+        <button
+          type="button"
+          name="button"
+          title="Copy to clipboard"
+          class="btn btn-sm ms-0"
+          :class="['btn-outline-' + auth.getUserColor ]"
+          @click="doCopyOrder()"
+        >
+          Másol
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="28"
+            height="28"
+            fill="currentColor"
+            class="bi bi-clipboard2"
+            viewBox="0 0 16 16"
+          >
+            <path d="M3.5 2a.5.5 0 0 0-.5.5v12a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-12a.5.5 0 0 0-.5-.5H12a.5.5 0 0 1 0-1h.5A1.5 1.5 0 0 1 14 2.5v12a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-12A1.5 1.5 0 0 1 3.5 1H4a.5.5 0 0 1 0 1h-.5Z" />
+            <path d="M10 .5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5.5.5 0 0 1-.5.5.5.5 0 0 0-.5.5V2a.5.5 0 0 0 .5.5h5A.5.5 0 0 0 11 2v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 1-.5-.5Z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
     <div
       v-for="item in orderItems"
       :key="item.id"
@@ -137,7 +165,7 @@ export default {
   computed: {
     orderDesc() {
       return state.selected_vendor.settings.comment_example.value
-    }
+    },
   },
   mounted() {
 
@@ -238,6 +266,37 @@ export default {
       this.showInitial = false;
       this.showFinish = true;
     },
+    doCopyOrder: function() {
+      let orderText = ""
+      for (const item of this.orderItems) {
+        if (item.deleted) {
+          continue
+        }
+        orderText += state.selected_vendor.settings.order_text_template.value
+          .replace('${quantity}', item.quantity)
+          .replace('${item_name}', item.item_name)
+          .replace('${size_name}', item.size_name)
+          .replace('\\n', "\n");
+
+        // orderText += `${item.quantity}x ${item.item_name} ${item.size_name}\n`;
+        item.tick = true;
+      }
+      copyText(orderText, undefined, (error, event) =>{
+        if (error) {
+           notify({
+             type: "warn",
+             text: "Nem sikerült a vágólapra másolás",
+           });
+           console.log(error)
+         } else {
+           notify({
+             type: "info",
+             text: "Rendelés vágólapra másolva",
+           });
+           console.log(event)
+         }
+      });
+    },
     doCopy: function() {
       copyText(this.orderDesc, undefined, (error, event) =>{
         if (error) {
@@ -249,13 +308,13 @@ export default {
          } else {
            notify({
              type: "info",
-             text: "Vágólapra másolva",
+             text: "Rendelés vágólapra másolva",
            });
            console.log(event)
          }
       });
     }
-  },
+  }
 }
 </script>
 

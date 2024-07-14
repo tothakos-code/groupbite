@@ -102,6 +102,12 @@ export default {
               "value": "Bárdi autó épületén jobb oldalt fotocellás ajtó, balra lift, 3. em, jobbra csengő Tigra Kft.",
               "section": "root"
             },
+            "order_text_template": {
+              "name": "Rendelés szöveg sor minta",
+              "type": "STR",
+              "value": "${quantity}x ${item_name} ${size_name}\\n",
+              "section": "root"
+            },
           },
           'configuration':{},
         }

@@ -127,16 +127,15 @@ def handle_menu_item_size_update(vendor_id):
             size['index']
         )
     else:
-        Size.add(
-            Size(
-                menu_item_id=item_id,
-                link="",
-                name=size['name'],
-                price=size['price'],
-                quantity=size['quantity'],
-                index=size['index']
-            )
+        size_db = Size(
+            menu_item_id=item_id,
+            link="",
+            name=size['name'],
+            price=size['price'],
+            quantity=size['quantity'],
+            index=size['index']
         )
+        Size.add(size_db)
     return json.dumps(size_db.serialized)
 
 

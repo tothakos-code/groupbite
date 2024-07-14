@@ -18,7 +18,7 @@ class MenuItem(Base):
     index: Mapped[int]
     category: Mapped[str]
 
-    sizes: Mapped[List["Size"]] = relationship(back_populates="menu_item", cascade="all, delete-orphan", passive_deletes=True)
+    sizes: Mapped[List["Size"]] = relationship(back_populates="menu_item", cascade="all, delete-orphan", order_by="Size.index", passive_deletes=True)
     orders: Mapped[List["UserBasket"]] = relationship(back_populates="item")
     menu: Mapped["Menu"] = relationship(back_populates="items")
 
@@ -46,7 +46,7 @@ class MenuItem(Base):
         if not items:
             item.index = 0
         else:
-            item.index = items[0].index + 1
+            item.index = items[-1].index + 1
         session.add(item)
         session.commit()
 

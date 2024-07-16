@@ -18,18 +18,13 @@
     <div class="row col list-group">
       <div class="col">
         <div class="list-group m-1">
-          <template
-            v-for="(menu, index) in menulist"
-            :key="index"
-          >
-            <MenuItem
-              v-for="(item, i) in menu.items"
-              :key="'item-'+i"
-              :item="item"
-            />
-          </template>
+          <MenuItem
+            v-for="(item, i) in itemlist"
+            :key="'item-'+i"
+            :item="item"
+          />
           <div
-            v-if="menulist.length === 0"
+            v-if="itemlist.length === 0"
             class="d-flex justify-content-center"
           >
             <span>Erre a napra nincsen mit betöltenem</span>
@@ -62,7 +57,7 @@ export default {
   },
   data() {
     return {
-      menulist: [],
+      itemlist: [],
       others: {'0':'[]','1':'[]','2':'[]','3':'[]','4':'[]','5':'[]','6':'[]'},
       dayTitles: {
         '0':'Hétfői menü',
@@ -92,7 +87,7 @@ export default {
 
       axios.get(url)
         .then(response => {
-          this.menulist = response.data;
+          this.itemlist = response.data;
         })
         .catch(error => console.error(error));
     },

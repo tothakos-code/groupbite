@@ -79,7 +79,7 @@ def get_requested_menu(vendor_id, requested_date):
     vendor = VendorFactory.get_one_vendor_object(str(vendor_id))
     if vendor is None:
         return "No vendor found with that id", 404
-    return json.dumps(vendor.get_menu(requested_date))
+    return vendor.get_menu(requested_date)
 
 
 @menu_blueprint.route('/get_week', defaults={'requested_date': date.today().strftime('%Y-%m-%d')})

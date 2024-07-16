@@ -51,24 +51,27 @@ class Menu(Base):
 
     def find_vendor_all_menu(vendor_id, date):
         stmt = select(Menu).where(
-            and_(
-                Menu.vendor_id == vendor_id,
-                Menu.active == True,
-                or_(
+            Menu.active,
+            Menu.vendor_id == vendor_id,
+            or_(
+                and_(
                     Menu.date == date,
-                    Menu.freq_id == Frequency.FIX,
-                    and_(
-                        extract("week",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").isocalendar()[1],
-                        Menu.freq_id == Frequency.WEEKLY
-                    ),
-                    and_(
-                        extract("month",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").month,
-                        Menu.freq_id == Frequency.MONTHLY
-                    ),
-                    and_(
-                        extract("year",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").year,
-                        Menu.freq_id == Frequency.YEARLY
-                    )
+                    Menu.freq_id == Frequency.DAILY
+                ),
+                and_(
+                    Menu.freq_id == Frequency.FIX
+                ),
+                and_(
+                    extract("week",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").isocalendar()[1],
+                    Menu.freq_id == Frequency.WEEKLY
+                ),
+                and_(
+                    extract("month",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").month,
+                    Menu.freq_id == Frequency.MONTHLY
+                ),
+                and_(
+                    extract("year",Menu.date) == datetime.datetime.strptime(date, "%Y-%m-%d").year,
+                    Menu.freq_id == Frequency.YEARLY
                 )
             )
         )

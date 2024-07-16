@@ -1,5 +1,6 @@
 from app.entities.vendor import VendorType
 from app.entities.menu import Menu, Frequency
+from app.entities.menu_item import MenuItem
 
 import logging
 
@@ -20,6 +21,12 @@ class BaseVendor(object):
         raise NotImplementedError("Subclasses must implement the get method")
 
     def get_menu(self, date):
-        requested_menu = Menu.find_vendor_all_menu(self.id, date)
-        result = [menu.serialized for menu in requested_menu]
+        menus = Menu.find_vendor_all_menu(self.id, date)
+        menuids = [menu.id for menu in menus]
+        logging.info(menuids)
+        items = MenuItem.find_all_by_menu_list(menuids)
+        result = []
+        for i in items:
+            result.append(i.serialized)
+        # result = [menu.serialized for menu in requested_menu]
         return result

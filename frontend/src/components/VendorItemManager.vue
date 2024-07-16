@@ -30,7 +30,7 @@
                 :key="m.id"
                 :value="m.id"
               >
-                {{ m.name }} - {{ m.date }}
+                {{ m.name }} - {{ m.date }} - {{ m.freq }}
               </option>
             </select>
           </div>

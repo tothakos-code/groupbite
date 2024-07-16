@@ -28,9 +28,9 @@ class Size(Base):
     def find_all_by_menu_item(menu_item_id, desc=False):
         stmt = select(Size).where(Size.menu_item_id == menu_item_id)
         if desc:
-            stmt.order_by(Size.index.desc())
+            stmt = stmt.order_by(Size.index.desc())
         else:
-            stmt.order_by(Size.index)
+            stmt = stmt.order_by(Size.index)
 
         return session.execute(stmt).scalars().all()
 

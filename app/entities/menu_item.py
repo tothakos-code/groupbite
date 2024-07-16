@@ -28,9 +28,18 @@ class MenuItem(Base):
     def find_all_by_menu(menu_id, desc=False):
         stmt = select(MenuItem).where(MenuItem.menu_id == menu_id)
         if desc:
-            stmt.order_by(MenuItem.index.desc())
+            stmt = stmt.order_by(MenuItem.category, MenuItem.index.desc())
         else:
-            stmt.order_by(MenuItem.index)
+            stmt = stmt.order_by(MenuItem.category, MenuItem.index)
+
+        return session.execute(stmt).scalars().all()
+
+    def find_all_by_menu_list(menu_id_list, desc=False):
+        stmt = select(MenuItem).where(MenuItem.menu_id.in_(menu_id_list))
+        if desc:
+            stmt = stmt.order_by(MenuItem.category, MenuItem.index.desc())
+        else:
+            stmt = stmt.order_by(MenuItem.category, MenuItem.index)
 
         return session.execute(stmt).scalars().all()
 

@@ -122,11 +122,17 @@ def handle_date_selection_change(data):
 
 @order_blueprint.route('/<order_id>/add', methods=['POST'])
 def handle_add_to_basket(order_id):
-    USER = request.json['user_id']
-    MI_ID = request.json['menu_item_id']
-    MIS_ID = request.json['size_id']
+    from app.event_manager import event_manager
+    event_manager.trigger_event("beforeAdd", request.json)
 
-    result, error = UserBasket.add_item(USER, MI_ID, MIS_ID, order_id)
+    result, error = UserBasket.add_item(
+        request.json["user_id"],
+        request.json["menu_item_id"],
+        request.json['size_id'],
+        order_id
+    )
+
+    event_manager.trigger_event("afterAdd", result, error)
 
     if result:
         socketio.emit('be_order_update', {
@@ -141,7 +147,7 @@ def handle_add_to_basket(order_id):
 def handle_copy_basket(order_id):
     # who wants to copy
     USER = request.json['user_id']
-    # user he want to copy
+    # user he want to copy from
     COPY_USER = request.json['copy_user_id']
 
     UserBasket.clear_items(USER, order_id)
@@ -156,11 +162,19 @@ def handle_copy_basket(order_id):
 
 @order_blueprint.route('/<order_id>/remove', methods=['POST'])
 def handle_remove_from_basket(order_id):
-    USER = request.json['user_id']
-    MI_ID = request.json['menu_item_id']
-    MIS_ID = request.json['size_id']
+    from app.event_manager import event_manager
+    event_manager.trigger_event("beforeRemove", request.json)
 
-    if UserBasket.remove_item(USER, MI_ID, MIS_ID, order_id):
+    result = UserBasket.remove_item(
+        request.json["user_id"],
+        request.json["menu_item_id"],
+        request.json['size_id'],
+        order_id
+    )
+
+    event_manager.trigger_event("afterRemove", result)
+
+    if result:
         socketio.emit('be_order_update', {
             'basket': UserBasket.get_basket_group_by_user(order_id)
         })

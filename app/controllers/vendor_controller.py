@@ -41,7 +41,7 @@ def handle_activation(vendor_id, cmd):
         logging.info(vendor_id + " vendor got deactivated")
     else:
         return "Command not found", 404
-        
+
     socketio.emit('be_vendors_update', VendorService.find_all_active())
     return "OK", 200
 
@@ -80,7 +80,7 @@ def handle_save_settings(vendor_id):
     settings = request.json['data']
     vendor = Vendor.find_by_id(vendor_id)
     if vendor is None:
-        return "No vendor found"
+        return "No vendor found with given id"
     vendor.update_settings(settings)
     socketio.emit('be_vendors_update', VendorService.find_all_active())
 

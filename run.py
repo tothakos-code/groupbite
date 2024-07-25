@@ -1,4 +1,7 @@
 #!/bin/env python
+import eventlet
+eventlet.monkey_patch(thread=True, time=True)
+
 from app import create_app
 from app import loader
 from app.socketio_singleton import SocketioSingleton

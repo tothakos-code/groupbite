@@ -37,6 +37,32 @@ class VendorFactory:
 
             self._vendors[vendor_obj.id] = vendor_obj
 
+            logging.info(vendor_db.settings)
+
+            if vendor_db.settings["closure_scheduler"]["value"] != "manual":
+                from app.scheduler import schedule_task, cancel_task
+                from app.socketio_singleton import SocketioSingleton
+
+                def closure_wrapper():
+                    logging.info("Scheduled order state stepping running")
+                    from app.entities.order import Order, OrderState
+
+                    order = Order.find_open_order_by_date_for_a_vendor(str(vendor_db.id), date.today().strftime('%Y-%m-%d'))
+                    if order:
+                        order.change_state(OrderState.ORDER, None)
+
+                        socketio = SocketioSingleton.get_instance()
+                        socketio.emit("be_order_update", {
+                            'order': order.serialized
+                        })
+                    else:
+                        logging.info("State already changed")
+
+
+                hh, mm = vendor_db.settings["closure_scheduler"]["value"].split(":")
+                schedule_task(str(vendor_db.id), int(hh), int(mm), closure_wrapper)
+
+
     @classmethod
     def get_vendors(self) -> str:
         return json.dumps(VendorService.get_vendors());

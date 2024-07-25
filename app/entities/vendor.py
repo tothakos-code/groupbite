@@ -1,6 +1,7 @@
 from enum import Enum as pyenum
 from sqlalchemy.dialects.postgresql import JSONB
 from . import Base, session
+from datetime import date
 from sqlalchemy import Boolean
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -52,6 +53,34 @@ class Vendor(Base):
         session.commit()
 
     def update_settings(self, settings):
+        if self.settings["closure_scheduler"]["value"] != settings["closure_scheduler"]["value"]:
+            from app.scheduler import schedule_task, cancel_task
+            cancel_task(self.id)
+
+
+            if settings["closure_scheduler"]["value"] != "manual":
+
+                from app.socketio_singleton import SocketioSingleton
+
+                def closure_wrapper():
+                    logging.info("Scheduled order state stepping running")
+                    from app.entities.order import Order, OrderState
+
+                    order = Order.find_open_order_by_date_for_a_vendor(self.id, date.today().strftime('%Y-%m-%d'))
+                    if order:
+                        order.change_state(OrderState.ORDER, None)
+
+                        socketio = SocketioSingleton.get_instance()
+                        socketio.emit("be_order_update", {
+                            'order': order.serialized
+                        })
+                    else:
+                        logging.info("State already changed")
+
+
+                hh, mm = settings["closure_scheduler"]["value"].split(":")
+                schedule_task(str(self.id), int(hh), int(mm), closure_wrapper)
+
         self.settings = settings;
         session.commit()
 
@@ -66,6 +95,30 @@ class Vendor(Base):
             logging.info("Vendor registered in database: {0}".format(vendor_obj.name))
         else:
             vendor_obj.id = str(vendor_db.id)
+            logging.info(vendor_db.settings)
+
+            if vendor_db.settings["closure_scheduler"]["value"] != "manual":
+                from app.scheduler import schedule_task, cancel_task
+                from app.socketio_singleton import SocketioSingleton
+
+                def closure_wrapper():
+                    logging.info("Scheduled order state stepping running")
+                    from app.entities.order import Order, OrderState
+
+                    order = Order.find_open_order_by_date_for_a_vendor(str(vendor_db.id), date.today().strftime('%Y-%m-%d'))
+                    if order:
+                        order.change_state(OrderState.ORDER, None)
+
+                        socketio = SocketioSingleton.get_instance()
+                        socketio.emit("be_order_update", {
+                            'order': order.serialized
+                        })
+                    else:
+                        logging.info("State already changed")
+
+
+                hh, mm = settings["closure_scheduler"]["value"].split(":")
+                schedule_task(str(vendor_db.id), int(hh), int(mm), closure_wrapper)
 
         session.commit()
 

@@ -43,7 +43,7 @@ class Order(Base):
 
     def get_by_id(order_id):
         stmt = select(Order).where(Order.id == order_id)
-        return session.execute(stmt).first()
+        return session.execute(stmt).scalars().first()
 
     def find_open_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today() ):
         return session.query(Order).filter(

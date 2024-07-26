@@ -62,20 +62,23 @@
         <div
           v-for="item in userBasket"
           :key="item.item_id"
-          class="list-group-item d-flex  justify-content-between align-items-center"
+          class="list-group-item d-flex  justify-content-between"
         >
-          <span
-            class="badge rounded-pill border me-2 col-1"
-            :class="[
-              'bg-' + auth.getUserColor,
-              'border-' + auth.getUserColor + '-subtle']"
-          >
-            {{ item.quantity }} x
-          </span>
-          <span class="col-7">{{ item.item_name }}</span>
-          <div class="col-3 row mx-0">
-            <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-start text-nowrap px-0">{{ item.size_name.split(' ')[0] }}</span>
-            <span class="col-12 col-lg-6 d-flex justify-content-center justify-content-lg-end text-nowrap pe-0">{{ item.price }} Ft</span>
+          <div class="col-2">
+            <span
+              class="badge rounded-pill border"
+              :class="[
+                'bg-' + auth.getUserColor,
+                'border-' + auth.getUserColor + '-subtle']"
+            >
+              {{ item.quantity }} x
+            </span>
+          </div>
+          <div class="col-8">
+            <span>{{ item.item_name }} ({{ item.size_name }})</span>
+          </div>
+          <div class="col-2 d-flex justify-content-end">
+            <span class="text-nowrap pe-0">{{ item.price }} Ft</span>
           </div>
         </div>
       </div>

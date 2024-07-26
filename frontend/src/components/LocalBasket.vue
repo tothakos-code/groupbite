@@ -76,13 +76,17 @@
           <div class="col-2">
             <span
               class="badge rounded-pill border"
-              :class="['bg-' + auth.getUserColor, 'border-' + auth.getUserColor]"
+              :class="['bg-' + auth.getUserColor, 'border-' + auth.getUserColor, {pulse: itemQuantityPulse}]"
+              @animationend="itemQuantityPulse = false"
             >{{ item.quantity }} x</span>
           </div>
-          <div class="col-8">
-            <span>{{ item.item_name }} ({{ item.size_name }}) - {{ item.price }} Ft</span>
+          <div class="col-7">
+            <span>{{ item.item_name }} ({{ item.size_name }})</span>
           </div>
-          <div class="col-2 text-end">
+          <div class="col-2 d-flex justify-content-end">
+            <span class="text-nowrap pe-0">{{ item.price }} Ft</span>
+          </div>
+          <div class="col-1 text-end">
             <button
               type="button"
               title="Törlés"
@@ -132,20 +136,45 @@
 <script>
 import { useAuth } from "@/stores/auth";
 import { useBasket } from "@/stores/basket";
+import { ref, watch } from 'vue';
 
 export default {
   name: 'LocalBasket',
   setup() {
     const auth = useAuth();
     const basket = useBasket();
+    const itemQuantityPulse = ref(false);
+
+    watch(() => basket.basket, () => {
+      itemQuantityPulse.value = true;
+    });
+
     return {
       auth,
-      basket
+      basket,
+      itemQuantityPulse
     }
 
   },
 }
 </script>
 
-<style>
+<style scoped>
+/* styles.css or within a <style> block */
+.pulse {
+  animation: pulse-animation 0.5s;
+}
+
+@keyframes pulse-animation {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 </style>

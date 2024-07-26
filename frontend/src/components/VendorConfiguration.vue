@@ -4,8 +4,8 @@
       <ul class="nav nav-tabs">
         <li class="nav-item">
           <a
-            class="nav-link"
-            :class="{ active: activeTab === 'Settings'}"
+            class="nav-link text-groupbite"
+            :class="{ 'active text-reset': activeTab === 'Settings'}"
             aria-current="page"
             href="#"
             @click="activeTab='Settings'"
@@ -13,16 +13,16 @@
         </li>
         <li class="nav-item">
           <a
-            class="nav-link"
-            :class="{ active: activeTab === 'Menus'}"
+            class="nav-link text-groupbite"
+            :class="{ 'active text-reset': activeTab === 'Menus'}"
             href="#"
             @click="activeTab='Menus'"
           >Menus</a>
         </li>
         <li class="nav-item">
           <a
-            class="nav-link"
-            :class="{ active: activeTab === 'Items'}"
+            class="nav-link text-groupbite"
+            :class="{ 'active text-reset': activeTab === 'Items'}"
             href="#"
             @click="activeTab='Items'"
           >Menu Items</a>

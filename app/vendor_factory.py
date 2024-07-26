@@ -4,7 +4,7 @@ import logging
 from app.entities.vendor import Vendor, VendorType
 from app.services.vendor_service import VendorService
 from app.base_vendor import BaseVendor
-
+from datetime import date
 
 class VendorFactory:
     _vendors = {}

@@ -1,10 +1,28 @@
-# order-accumulator
+# GroupBite
 
-This is a web application that aims for food orders for a group of friends. You can create multiple restaurants and manage its menu and menu items, prices.
+GroupBite is an open-source food ordering application to help summarize ordering for a team or for your friends who order regularly. You can create multiple vendors and manage their menus and prices manually, or you can extend the applications vie its plugin architecture so no manual management is necessary.
 
-## Getting Started
+## Features
 
-__Notice__: With the release of 2.0 the support for 1.x version will end. The release can be expected in 2024 june.
+ * Vendor/Restaurant menu manual management
+ * Plugin architecture to extend it capability
+ * Instant menu/basket updates with websockets
+ * Ability to see every user's order and the ability to copy them
+ * Automatic transport fee divide between users who ordered
+ * Easy to understand UI to see how much each user has to pay
+ * Light/Dark mode UI
+
+### Future features
+
+ * Automatic ordering via email
+ * User and guest account management and authorization for more security
+ * User Group handling
+ * Push notifications for order state, reminding users to order
+ * Language and currency support
+
+## Getting Started for development
+
+__Notice__: With the release of 2.0 the support for 1.x version will end.
 
 To quickly get started with the project, follow these steps:
 
@@ -12,8 +30,8 @@ To quickly get started with the project, follow these steps:
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your-username/order-accumulator.git
-    cd order-accumulator
+    git clone https://github.com/your-username/groupbite.git
+    cd groupbite
     ```
 
 2. Create a .env file from the example and adjust the settings if needed.
@@ -24,7 +42,7 @@ To quickly get started with the project, follow these steps:
 
 3. Setup python virtual environment for the project and install the requirements
 
-    Tested with Python version: 3.10+
+    Tested with Python version: 3.9+
 
     ```bash
     python -m venv env
@@ -47,6 +65,7 @@ To quickly get started with the project, follow these steps:
     The database at this stage of the development for 2.0 is:
 
     ```bash
+    cd ..
     docker-compose up -d database
     ```
 

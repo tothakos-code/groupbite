@@ -41,7 +41,7 @@
           <a
             class="dropdown-item"
             target="_blank"
-            :href="'https://github.com/tothakos-code/order-accumulator/releases/tag/' + showVersion()"
+            :href="'https://github.com/tothakos-code/groupbite/releases/tag/' + showVersion()"
           >
             <span>
               Verzió: {{ showVersion() }}

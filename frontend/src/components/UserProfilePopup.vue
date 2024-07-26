@@ -2,6 +2,7 @@
   <Popup
     :show-modal="show"
     title="Profil beállítások"
+    confirm-text="Mentés"
     @cancel="onCancel()"
     @confirm="updateUser()"
   >
@@ -18,11 +19,7 @@
         aria-describedby="basic-addon1"
       >
     </div>
-    <!-- <p>A szabadság táblázatban így szerepel a neved:</p>
-    <div class="input-group mb-3">
-      <span class="input-group-text">Szabadság tábla név:</span>
-      <input type="text" v-model.trim="vt_name" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
-    </div> -->
+    <!--
     <span class="input-group-radio">Felület szine:</span>
     <div class="d-flex justify-content-around m-2">
       <input
@@ -84,15 +81,15 @@
         class="btn btn-outline-tigragold"
         for="warning1-outlined"
       >Tigra</label>
-    </div>
+    </div> -->
   </Popup>
 </template>
 
 <script>
 import Popup from './Popup.vue';
-import { useCookies } from "vue3-cookies";
-import { state, socket } from "@/socket";
 import { notify } from "@kyvg/vue3-notification";
+import { useAuth } from '@/stores/auth';
+import axios from 'axios';
 
 export default {
   name: 'UserProfilePopup',
@@ -104,42 +101,33 @@ export default {
   },
   emits: ['cancel', 'confirm'],
   setup() {
-    const { cookies } = useCookies();
-    return { cookies };
+    const auth = useAuth();
+    return { auth };
   },
   data() {
     return {
-      username: "",
-      vt_name: "",
+      username: this.auth.user.username,
       theme: "",
       ui_color: ""
     }
   },
-  computed: {
-    loggedInUsername() {
-      return state.user.username;
-    }
-  },
-  mounted() {
-    this.username = this.loggedInUsername;
-    this.ui_color = state.user.ui_color;
-  },
+
   methods: {
     updateUser: function() {
       let user_update_obj = {};
-      user_update_obj.id = state.user.id
-      if (this.username !== state.user.username) {
+      user_update_obj.id = this.auth.user.id
+      if (this.username !== this.auth.user.username) {
         user_update_obj.username = this.username
       }
-      // if (this.vt_name !== state.user.vt_name) {
-      //   user_update_obj.vt_name = this.vt_name
-      // }
+
       user_update_obj.ui_color = this.ui_color
 
-      socket.emit("User Update", user_update_obj, (user) => {
+      axios.post(`http://${window.location.host}/api/user/update`, {'user': user_update_obj }).then(response => {
+        let user= response.data;
         if (user.error === undefined) {
-          this.cookies.set("username", user.username, "365d");
-          state.user = user;
+          this.auth.$patch({
+            user: user
+          });
           this.$emit('cancel');
         } else {
           notify({
@@ -150,7 +138,7 @@ export default {
       });
     },
     onCancel: function() {
-      fetch(`http://${window.location.host}/api/user/get/${state.user.id}`,{
+      fetch(`http://${window.location.host}/api/user/get/${this.auth.user.id}`,{
         method: "get",
         headers: {
           "Content-Type": "application/json",
@@ -158,14 +146,14 @@ export default {
       })
         .then(response => response.json())
           .then(data => {
-            state.user.ui_color = data.ui_color;
+            this.auth.user.ui_color = data.ui_color;
             this.ui_color = data.ui_color;
           })
           .catch(error => console.error(error))
       this.$emit('cancel')
     },
     onColorChange: function() {
-      state.user.ui_color = this.ui_color
+      this.auth.user.ui_color = this.ui_color
     }
   }
 }

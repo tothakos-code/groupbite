@@ -1,27 +1,52 @@
 <template>
+  <button
+    class="btn btn-sm me-2"
+    :class="{
+      'btn-dark':theme === 'light',
+      'btn-light':theme === 'dark'
+    }"
+    @click="toggleDarkMode"
+  >
+    <svg
+      v-if="theme === 'light'"
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      fill="currentColor"
+      class="bi bi-moon-fill"
+      viewBox="0 0 16 16"
+    >
+      <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z" />
+    </svg>
+    <svg
+      v-else
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      fill="currentColor"
+      class="bi bi-brightness-high-fill"
+      viewBox="0 0 16 16"
+    >
+      <path d="M12 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z" />
+    </svg>
+  </button>
   <div
-    v-if="isLoggedIn"
+    v-if="auth.isLoggedIn"
     class="d-flex"
   >
-    <div class="btn-group ">
-      <button
-        type="button"
-        class="d-none d-md-inline btn pe-none border border-secondary"
-      >
-        {{ username }}
-      </button>
-      <button
+    <div class="btn-group fs-5 ">
+      <a
         id="dropdownMenuButton1"
         type="button"
-        class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split rounded-sm hide-sm-arrow"
+        class="text-reset links dropdown-toggle hide-xs-arrow"
         data-bs-toggle="dropdown"
         aria-expanded="false"
       >
-        <span class="d-inline d-md-none">☰</span>
-      </button>
+        <span class="d-none d-sm-inline pe-1">{{ auth.user.username }}</span>
+        <span class="d-inline d-sm-none">☰</span>
+      </a>
       <ul
         class="dropdown-menu"
-        aria-labelledby="dropdownMenuButton1"
       >
         <li class="d-inline d-md-none">
           <button
@@ -29,15 +54,12 @@
             aria-disabled="true"
           >
             <span>
-              {{ username }}
+              {{ auth.user.username }}
             </span>
           </button>
         </li>
         <li class="d-inline d-md-none">
           <hr class="dropdown-divider">
-        </li>
-        <li class="d-inline d-md-none">
-          <UserControllPanel />
         </li>
         <li class="d-inline d-md-none">
           <hr class="dropdown-divider">
@@ -67,10 +89,10 @@
         <li>
           <button
             class="dropdown-item"
-            @click="$emit('toHistory')"
+            @click="openUserHistory()"
           >
             <span>
-              Előző rendelések
+              Előző rendeléseim
             </span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -86,58 +108,153 @@
             </svg>
           </button>
         </li>
+        <li>
+          <button
+            class="dropdown-item"
+            @click="auth.logout()"
+          >
+            <span>
+              Kijelentkezés
+            </span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              class="bi bi-box-arrow-right"
+              viewBox="0 0 16 16"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"
+              />
+              <path
+                fill-rule="evenodd"
+                d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"
+              />
+            </svg>
+          </button>
+        </li>
       </ul>
     </div>
   </div>
-  <div
-    v-else
-    class=""
-  >
+  <div v-else>
     <button
-      class="btn btn-dark"
+      class="btn btn-sm btn-dark"
       @click="showLogin = true"
     >
       Bejelentkezés
     </button>
   </div>
-  <UserProfilePopup
-    v-if="isLoggedIn"
-    :show="showProfile"
-    @cancel="showProfile = false"
-  />
   <UserLoginPopup
     :show="showLogin"
     @cancel="showLogin = false"
   />
+  <UserProfilePopup
+    v-if="auth.isLoggedIn"
+    :show="showProfile"
+    @cancel="showProfile = false"
+  />
+  <Popup
+    :show-modal="showOrderHistory"
+    title="Rendelés összesítő"
+    confirm-text="Ok"
+    :large="true"
+    @cancel="showOrderHistory = false"
+    @confirm="showOrderHistory = false"
+  >
+    <div class="row d-flex align-items-strech">
+      <div class="col text-center align-center">
+        <span class="btn pe-none border border-secondary-subtle rounded">
+          Összesen {{ Object.keys(orderHistoryList).length }} redelésed volt.
+        </span>
+      </div>
+      <div class="col text-center">
+        <span class="btn pe-none border border-secondary-subtle rounded">
+          Ennyi pénzt költöttél ebédre összesen: {{ orderHistoryListSum }} Ft
+        </span>
+      </div>
+      <div class="col text-center">
+        <span class="btn pe-none border border-secondary-subtle rounded">
+          Átlagosan ennyért ettél: {{ orderHistoryListSum/Object.keys(orderHistoryList).length }} Ft / rendelés
+        </span>
+      </div>
+    </div>
+    <div
+      v-for="(order , date) in orderHistoryList"
+      :key="date"
+      class="row mt-1 mb-1"
+    >
+      <div class="list-group-item row m-0">
+        <GlobalBasketUser
+          :username="order.vendor + ' - ' + order.date"
+          :user-id="date"
+          :user-basket="order.items"
+          :start-collapsed="true"
+          :collapsable="true"
+          :copyable="false"
+        />
+      </div>
+    </div>
+  </Popup>
 </template>
 
 <script>
-import { state } from "@/socket.js"
 import UserProfilePopup from './UserProfilePopup.vue';
 import UserLoginPopup from './UserLoginPopup.vue';
-import UserControllPanel from './UserControllPanel.vue'
+import { useAuth } from "@/stores/auth.js";
+import { inject } from 'vue';
+import axios from 'axios';
+import Popup from './Popup.vue';
+import GlobalBasketUser from './GlobalBasketUser.vue';
 
 export default {
   name: 'UserMenu',
   components: {
     UserLoginPopup,
-    UserControllPanel,
-    UserProfilePopup
+    UserProfilePopup,
+    Popup,
+    GlobalBasketUser
   },
-  emits: ['toHistory'],
+  setup() {
+    const auth = useAuth();
+    const { theme, toggleDarkMode } = inject('theme')
+    return {
+      theme,
+      toggleDarkMode,
+      auth
+    }
+  },
   data() {
     return {
       showProfile: false,
-      showLogin: false
+      showLogin: false,
+      showOrderHistory: false,
+      orderHistoryList: {}
     }
   },
   computed: {
-    isLoggedIn() {
-      return state.user.id !== undefined;
-    },
-    username() {
-      return state.user.username;
+    orderHistoryListSum() {
+      let sum = 0;
+      Object.values(this.orderHistoryList).forEach((basket) => {
+        for (const item of basket.items) {
+          sum += item.price * item.quantity
+        }
+      });
+
+      return sum;
     }
+  },
+  methods: {
+    openUserHistory: function(){
+      axios.get(`http://${window.location.host}/api/order/history/${this.auth.user.id}`)
+        .then(response => {
+            this.orderHistoryList = response.data;
+            console.log(this.orderHistoryList);
+            this.showOrderHistory = true
+        })
+    },
+
   }
 }
 </script>
@@ -147,8 +264,13 @@ export default {
      .rounded-sm {
        border-radius: 0.375rem !important;
      }
-     .hide-sm-arrow::after {
-      display: none !important;
-    }
    }
+@media (max-width: 576px) {
+    .hide-xs-arrow::after {
+     display: none !important;
+   }
+  }
+.links {
+  text-decoration: none;
+}
 </style>

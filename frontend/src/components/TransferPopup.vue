@@ -1,11 +1,11 @@
 <template>
   <button
     id="transferBasketButton"
-    class="btn"
-    :class="['btn-' + auth.userColor.value ]"
+    class="btn my-1"
+    :class="['btn-outline-' + auth.getUserColor ]"
     @click="openPopup()"
   >
-    Áthelyezés falusiba
+    Rendelés
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="16"
@@ -20,19 +20,62 @@
 
   <Popup
     :show-modal="showInitial"
-    title="Ez a Rendelő ember feladata"
+    title="Rendelés áttöltése"
     @cancel="showInitial = false"
-    @confirm="transferBasketToFalusi()"
+    @confirm="closeOrder()"
   >
-    <p>Írd be a falusi oldalon lévő PHPSESSIONID-det:</p>
-    <p>
-      Falusi oldalán a cookie-k között kell keresned ezt a változót.
-      Legyél bejelentkezve a falusiba! Az értékét másold ide:
-    </p>
-    PHPSESSIONID: <input
-      v-model.trim="psid"
-      type="text"
+    <div class="row">
+      <div class="col-9 me-0 pe-0">
+        <p>A lista automatikusan frissül, ha valaki változtat a kosarán. Pipáld ki ha átraktad VAGY másold a teljes rendelést szövegként</p>
+      </div>
+      <div class="col-3 text-end">
+        <button
+          type="button"
+          name="button"
+          title="Copy to clipboard"
+          class="btn btn-sm ms-0"
+          :class="['btn-outline-' + auth.getUserColor ]"
+          @click="doCopyOrder()"
+        >
+          Másol
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="28"
+            height="28"
+            fill="currentColor"
+            class="bi bi-clipboard2"
+            viewBox="0 0 16 16"
+          >
+            <path d="M3.5 2a.5.5 0 0 0-.5.5v12a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-12a.5.5 0 0 0-.5-.5H12a.5.5 0 0 1 0-1h.5A1.5 1.5 0 0 1 14 2.5v12a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-12A1.5 1.5 0 0 1 3.5 1H4a.5.5 0 0 1 0 1h-.5Z" />
+            <path d="M10 .5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5.5.5 0 0 1-.5.5.5.5 0 0 0-.5.5V2a.5.5 0 0 0 .5.5h5A.5.5 0 0 0 11 2v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 1-.5-.5Z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div
+      v-for="item in orderItems"
+      :key="item.id"
+      class="list-group-item d-flex justify-content-between align-items-center fs-4 rounded"
     >
+      <span
+        :class="{'text-decoration-line-through': item.deleted, 'fw-bold': !item.tick}"
+        class="ms-1"
+      >
+        {{ item.quantity }}x {{ item.item_name }} {{ item.size_name }}
+      </span>
+      <span
+        v-if="item.deleted"
+        class="text-danger"
+      >Törölték</span>
+      <input
+        v-model="item.tick"
+        type="checkbox"
+        class="form-check-input m-0 me-1"
+        name=""
+        :value="item.tick"
+      >
+    </div>
   </Popup>
   <teleport to="body">
     <div
@@ -52,9 +95,9 @@
     :show-modal="showFinish"
     title="Rendelés befejezése"
     @cancel="showFinish = false"
-    @confirm="orderPayed()"
+    @confirm="showFinish = false;"
   >
-    <p>Kosár sikeresen átmásolva a falusira. Frissítsd a falusi oldalát.</p>
+    <p>Rendelés lezárva, további kosármódosítás letiltva.</p>
     <p>
       Rendelés megjegyzés példa:
     </p>
@@ -83,16 +126,18 @@
       </button>
     </div>
     <br>
-    <p>Okézd le , ha kifizetted a rendelést</p>
+    <p>Köszönjük az ebédet!</p>
   </Popup>
 </template>
 
 <script>
 import Popup from './Popup.vue';
-import { state, socket } from "@/socket";
-import { useAuth } from "@/auth";
+import { state, socket } from "@/main";
+import { useAuth } from "@/stores/auth";
+import { useBasket } from "@/stores/basket";
 import { copyText } from 'vue3-clipboard';
 import { notify } from "@kyvg/vue3-notification";
+import { watch } from 'vue';
 
 export default {
   name: 'TransferPopup',
@@ -101,8 +146,11 @@ export default {
   },
   setup() {
     const auth = useAuth();
+    const basket = useBasket();
+
     return {
-      auth
+      auth,
+      basket
     }
   },
   data() {
@@ -110,40 +158,95 @@ export default {
       showInitial: false,
       showSpinner: false,
       showFinish: false,
-      orderDesc: "Tigra kft. Csere edényeket adunk. Mindent külön edénybe szeretnénk. Nagyon szépen köszönjük.",
+      orderItems: [],
       psid: ""
     }
   },
-  methods: {
-    transferBasketToFalusi: function() {
-      console.log("PSID:"+this.psid);
-      if (this.psid !== "") {
-        this.showInitial = false;
-        this.showSpinner = true;
-        fetch(`http://${window.location.host}/api/order/transferBasket`,{
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ psid: this.psid, order_date: state.selectedDate })
-        })
-          .then(response => {
-            this.showSpinner = false;
-            if (response.statusText == "OK") {
-              this.showFinish = true;
-            } else {
-              this.showSpinner = false;
-              notify({
-                type: "error",
-                text: "Valami hiba történt. Hiba: " + response,
-              });
-            }
-          })
-            .catch(error => console.error(error))
-      }
+  computed: {
+    orderDesc() {
+      return state.selected_vendor.settings.comment_example.value
     },
+  },
+  mounted() {
+
+        watch(
+          () => this.basket.basket,
+          (newBasket) =>{
+            let resultList = []
+            for (const value of Object.values(newBasket)) {
+              for (const item of value.items) {
+                let i = item;
+                i.quantity = item.quantity;
+                i.tick = false;
+                i.deleted = false;
+                resultList.push(i);
+              }
+            }
+
+            const itemMap = new Map();
+
+            for (const item of resultList) {
+                if (itemMap.has(item.item_id)) {
+                    itemMap.get(item.item_id).quantity += Number(item.quantity);
+                } else {
+                    itemMap.set(item.item_id, { ...item, count: Number(item.quantity) });
+                }
+            }
+
+            const oldMap = new Map(this.orderItems.map(item => [item.item_id, item]));
+
+            for (const newItem of Array.from(itemMap.values())) {
+                const oldItem = oldMap.get(newItem.item_id);
+                if (oldItem) {
+                    if (oldItem.quantity !== newItem.quantity) {
+                        itemMap.set(newItem.item_id, {...newItem, tick: false})
+                        if (this.showInitial) {
+                          notify({
+                            type: "warn",
+                            text: newItem.item_name +" mennyisége megváltozott. A lista frissült!",
+                          });
+                        }
+                    } else {
+                      itemMap.set(newItem.item_id, {...newItem, tick: oldItem.tick})
+
+                    }
+                    oldMap.delete(newItem.item_id)
+                } else {
+                  if (this.showInitial) {
+                    notify({
+                      type: "warn",
+                      text: "Új termék került a kosárba: " + newItem.item_name+". A lista frissült!",
+                    });
+                  }
+                }
+            }
+
+            if (oldMap.size !== 0) {
+              for (const oldItem of oldMap.values()) {
+                if (oldItem.tick && !oldItem.deleted) {
+                  itemMap.set(oldItem.item_id, {...oldItem, tick: false, deleted:true})
+                  notify({
+                    type: "warn",
+                    text: "Egy terméket töröltek a kosárból amit már átraktál: " + oldItem.item_name+". A lista frissült!",
+                  });
+                }
+                if (oldItem.deleted && !oldItem.tick) {
+                  itemMap.set(oldItem.item_id, {...oldItem, tick: false, deleted:true})
+                }
+              }
+            }
+
+            this.orderItems = Array.from(itemMap.values());
+          },
+          {
+             deep: true,
+             immediate: true
+          }
+        )
+  },
+  methods: {
     openPopup: function() {
-      if (state.orderState === 'closed') {
+      if (state.order.state_id === 'closed') {
         notify({
           type: "warn",
           text: "A rendelést ma már elküldték",
@@ -153,22 +256,59 @@ export default {
         this.showInitial = true;
       }
     },
-    orderPayed: function() {
-      socket.emit("Ordered and Payed", { date: state.selecedDate });
-      this.showFinish = false;
+    closeOrder: function() {
+      console.log(state.selecedDate);
+      socket.emit("fe_order_closed", {
+        date: state.order.date_of_order,
+        user_id: this.auth.user.id,
+        vendor_id: state.selected_vendor.id
+      });
+      this.showInitial = false;
+      this.showFinish = true;
+    },
+    doCopyOrder: function() {
+      let orderText = ""
+      for (const item of this.orderItems) {
+        if (item.deleted) {
+          continue
+        }
+        orderText += state.selected_vendor.settings.order_text_template.value
+          .replace('${quantity}', item.quantity)
+          .replace('${item_name}', item.item_name)
+          .replace('${size_name}', item.size_name)
+          .replace('\\n', "\n");
+
+        // orderText += `${item.quantity}x ${item.item_name} ${item.size_name}\n`;
+        item.tick = true;
+      }
+      copyText(orderText, undefined, (error, event) =>{
+        if (error) {
+           notify({
+             type: "warn",
+             text: "Nem sikerült a vágólapra másolás",
+           });
+           console.log(error)
+         } else {
+           notify({
+             type: "info",
+             text: "Rendelés vágólapra másolva",
+           });
+           console.log(event)
+         }
+      });
     },
     doCopy: function() {
       copyText(this.orderDesc, undefined, (error, event) =>{
         if (error) {
            notify({
              type: "warn",
-             text: "Nem sikerült a másolás",
+             text: "Nem sikerült a vágólapra másolás",
            });
            console.log(error)
          } else {
            notify({
              type: "info",
-             text: "Másolva",
+             text: "Rendelés vágólapra másolva",
            });
            console.log(event)
          }

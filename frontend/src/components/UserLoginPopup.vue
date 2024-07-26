@@ -1,20 +1,36 @@
 <template>
   <Popup
     :show-modal="show"
-    title="Név választás"
-    @cancel="$emit('cancel')"
-    @confirm="saveUsername()"
+    :title="showLogin ? 'Jelentkezz be!' : 'Regisztráció!'"
+    :confirm-text="showLogin ? 'Belépés' : 'Regisztrál'"
+    cancel-text="Mégse"
+    @cancel="cancel()"
+    @confirm="confirm()"
   >
-    <p>Egy név ami alapján beazonosíthatnak téged.</p>
-    <p>Nincs külön regisztráció. A név megadásával már létre is jön a fiókod.</p>
-    <p>A fiókodba belépni későb a neved megadásával tudsz.</p>
+    <p v-if="showLogin">
+      Írd be a nevet amit regisztrációnál megadtál.
+    </p>
+    <p v-else>
+      Válassz egy felhasználó nevet.
+    </p>
+    <p>
+      {{ showLogin ? "Nincs fiókod?" : "Már van fiókod?" }}
+      <a
+        type="button"
+        name="button"
+        class="text-link"
+        @click="change_login()"
+      >
+        {{ showLogin ? "Regisztrálj!" : "Jelentkezz be!" }}
+      </a>
+    </p>
     <div class="input-group mb-3">
       <span class="input-group-text">Név</span>
       <input
         v-model.trim="username"
         type="text"
         class="form-control"
-        placeholder="Username"
+        placeholder="Felhasználónév"
         aria-label="Username"
         aria-describedby="basic-addon1"
       >
@@ -24,8 +40,7 @@
 
 <script>
 import Popup from './Popup.vue';
-import { useCookies } from "vue3-cookies";
-import { useAuth } from "@/auth.js";
+import { useAuth } from "@/stores/auth.js";
 
 export default {
   name: 'UserLoginPopup',
@@ -37,34 +52,44 @@ export default {
   },
   emits: ['cancel', 'confirm'],
   setup() {
-    const { cookies } = useCookies();
     const auth = useAuth();
     return {
-      cookies,
       auth
     }
   },
   data() {
     return {
-      username: ""
+      username: "",
+      showLogin: true
     }
   },
   mounted() {
-    if (this.$cookies.isKey('username')) {
-      this.username = this.cookies.get('username');
-      this.auth.login(this.username)
+    if (this.auth.isLoggedIn) {
+      this.username = this.auth.user.username;
     }
-
   },
   methods: {
-    saveUsername: function() {
-      this.cookies.set("username", this.username, "365d");
-      this.login();
-    },
     login: function() {
-      this.auth.login(this.username)
-      this.$emit('cancel')
-
+      this.auth.login(this.username);
+      this.$emit('cancel');
+    },
+    register: function() {
+      this.auth.register(this.username);
+      this.$emit('cancel');
+    },
+    change_login: function() {
+      this.showLogin = !this.showLogin;
+    },
+    confirm: function() {
+      if (this.showLogin) {
+        this.login();
+      } else {
+        this.register();
+      }
+    },
+    cancel: function() {
+      this.showLogin = true;
+      this.$emit('cancel');
     }
   }
 }

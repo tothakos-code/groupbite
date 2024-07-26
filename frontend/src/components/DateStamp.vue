@@ -1,16 +1,17 @@
 <template>
-  <div class="col-9 row my-auto flex-fill">
-    <div class="col-7 text-center my-auto px-1">
+  <div class="col my-auto">
+    <div class="col-12 text-center my-auto px-1">
       <span class="text-center text-nowrap px-1">
         {{ getShownDate }}
       </span>
     </div>
-    <div class="col-5 row d-flex justify-content-between">
-      <div class="col-4 p-0">
+    <div class="col-12 d-flex justify-content-between">
+      <div class="col-4 p-0 text-center">
         <button
           class="btn btn-link p-0"
-          :class="['link-' + auth.userColor ]"
-          :disabled="limitToCurrentWeek && currentDateSelected.getDay() == 1"
+          :class="['link-' + auth.getUserColor ]"
+          :disabled="limitToCurrentWeek && currentDateSelected.getAdjustedDay() == 0"
+          title="Előző nap"
           @click="prevDay()"
         >
           <svg
@@ -26,10 +27,11 @@
           </svg>
         </button>
       </div>
-      <div class="col-4 p-0">
+      <div class="col-4 p-0 text-center">
         <button
-          :class="['link-' + userColor ]"
+          :class="['link-' + auth.getUserColor ]"
           class="btn btn-link p-0"
+          title="Vissza a mai napra"
           @click="setDay(new Date())"
         >
           <svg
@@ -49,13 +51,14 @@
           </svg>
         </button>
       </div>
-      <div class="col-4 p-0">
+      <div class="col-4 p-0 text-center">
         <button
           type="button"
           name="button"
           class="btn btn-link p-0"
-          :class="['link-' + userColor ]"
-          :disabled="limitToCurrentWeek && currentDateSelected.getDay() == 0"
+          title="Következő nap"
+          :class="['link-' + auth.getUserColor ]"
+          :disabled="limitToCurrentWeek && currentDateSelected.getAdjustedDay() == 6"
           @click="nextDay()"
         >
           <svg
@@ -76,12 +79,16 @@
 </template>
 
 <script>
-import { useAuth } from '@/auth';
+import { useAuth } from '@/stores/auth';
 
 export default {
   name: 'DateStamp',
   props: {
-    'limitToCurrentWeek': Boolean
+    'limitToCurrentWeek': Boolean,
+    'setDate': {
+      type: String,
+      default: new Date()
+    }
   },
   emits: ['selectedDate'],
   setup() {
@@ -90,15 +97,18 @@ export default {
       auth
     }
   },
-  data() {
+  data(props) {
     let date = new Date();
+    if (props.setDate) {
+      date = new Date(props.setDate);
+    }
     return {
       currentDateSelected: date
     }
   },
   computed: {
     getShownDate() {
-      return this.currentDateSelected.toLocaleDateString('hu-HU', {weekday:'long', month:'short',day:'numeric'});
+      return this.currentDateSelected.toLocaleDateString('hu-HU', {month:'short',day:'numeric'});
     },
     getTodayDayDate() {
       return this.currentDateSelected.toLocaleDateString('hu-HU');
@@ -106,7 +116,7 @@ export default {
   },
   methods: {
     nextDay: function() {
-      if (this.limitToCurrentWeek && this.currentDateSelected.getDay() == 0) {
+      if (this.limitToCurrentWeek && this.currentDateSelected.getAdjustedDay() == 6) {
         return;
       }
       const newDate = new Date(this.currentDateSelected);
@@ -115,7 +125,7 @@ export default {
       this.$emit('selectedDate', this.currentDateSelected);
     },
     prevDay: function() {
-      if (this.limitToCurrentWeek && this.currentDateSelected.getDay() == 1) {
+      if (this.limitToCurrentWeek && this.currentDateSelected.getAdjustedDay() == 0) {
         return;
       }
       const newDate = new Date(this.currentDateSelected);

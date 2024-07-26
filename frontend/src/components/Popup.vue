@@ -2,8 +2,8 @@
   <teleport to="body">
     <div
       ref="modal"
-      class="modal fade"
-      :class="{ show: active, 'd-block': active }"
+      class="modal fade modal-dialog-scrollable"
+      :class="{ show: active, 'd-block': active, 'modal-lg': large }"
       tabindex="-1"
       role="dialog"
       :aria-hidden="active"
@@ -21,14 +21,14 @@
               class="btn btn-secondary"
               @click="$emit('cancel')"
             >
-              Mégse
+              {{ cancelText }}
             </button>
             <button
               class="btn"
-              :class="['btn-' + auth.userColor.value ]"
+              :class="['btn-' + auth.getUserColor ]"
               @click="$emit('confirm')"
             >
-              Folytat
+              {{ confirmText }}
             </button>
           </div>
         </div>
@@ -43,13 +43,28 @@
 
 <script>
 import { ref, watch } from 'vue';
-import { useAuth } from '@/auth';
+import { useAuth } from '@/stores/auth';
 
 export default {
   name: 'BasePopup',
   props: {
-    title: String(""),
-    showModal: Boolean
+    title: {
+      type: String,
+      default: ""
+    },
+    showModal: Boolean,
+    cancelText: {
+      type: String,
+      default: "Mégse"
+    },
+    confirmText: {
+      type: String,
+      default: "Folytat"
+    },
+    large: {
+      type: Boolean,
+      default: false
+    },
   },
   emits: ['cancel', 'confirm'],
   setup(props) {

@@ -1,6 +1,8 @@
-backend/__pycache__
-backend/entities/__pycache__
-backend/controllers/__pycache__
-backend/services/__pycache__
+app/__pycache__
+app/entities/__pycache__
+app/controllers/__pycache__
+app/services/__pycache__
 db/data/
 .env
+env/
+plugins/*

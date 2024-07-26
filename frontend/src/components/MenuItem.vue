@@ -1,39 +1,45 @@
 <template>
   <div class="list-group-item row d-flex ">
-    <div class="col-12 col-lg-8 p-0">
+    <div class="col-12 col-lg-6 p-0 text-wrap">
       <span>
-        {{ item.label }}
+        {{ item.name }}
       </span>
     </div>
-    <div class="col-12 col-lg-4 p-0 flex-wrap">
-      <div class="d-flex justify-content-end">
-        <span
-          v-if="item.sold_out"
-          class="btn pe-none btn-outline-danger btn-sm"
-        >Elfogyott</span>
-        <button
+    <div class="col-12 col-lg-6 p-0">
+      <div class="row d-flex flex justify-content-end px-0 mx-0">
+        <div
           v-for="size in item.sizes"
-          v-else
-          :key="item.id+'-'+size.size"
-          class="btn btn-sm col-6 col-sm-6 ms-2"
-          :class="['btn-' + auth.userColor.value ]"
-          @click="addToBasket(item.id, size.size)"
+          :key="size.id"
+          class="row col-6 col-sm-4 col-lg-6 col-xl-4 ms-2 mb-2"
         >
-          <span class="text-nowrap me-1">{{ size.size }}</span>
-          <span class="text-nowrap">{{ size.price }}</span>
-        </button>
+          <button
+            v-if="size.quantity !== 0"
+            class="btn btn-sm w-100 h-100"
+            :class="['btn-' + auth.getUserColor ]"
+            @click="basket.addItem(item.id, size.id)"
+          >
+            <span class="text-nowrap me-1">{{ size.name }}</span>
+            <span class="text-nowrap">{{ size.price }} Ft</span>
+          </button>
+          <span
+            v-else
+            class="btn pe-none btn-outline-danger btn-sm"
+          >
+            Elfogyott
+          </span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { state, socket } from "@/socket";
-import { useAuth } from "@/auth";
-import { notify } from "@kyvg/vue3-notification";
+import { useAuth } from "@/stores/auth";
+import { useBasket } from "@/stores/basket";
+
 
 export default {
-  name: 'FalusiMenu',
+  name: 'MenuItem',
   props: {
     'item':{
       type: Object,
@@ -42,51 +48,12 @@ export default {
   },
   setup() {
     const auth = useAuth();
+    const basket = useBasket();
     return {
-      auth
+      auth,
+      basket
     }
   },
-  computed: {
-    currentUserState() {
-      return state.userStates[state.user.username];
-    }
-  },
-  methods: {
-    addToBasket: function(fid, size) {
-      if (!this.auth.isLoggedIn.value) {
-        notify({
-          type: "warn",
-          text: "Jelentkezz be a rendeléshez!",
-        });
-        return;
-      }
-      if (state.orderState === 'closed') {
-        notify({
-          type: "warn",
-          text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
-        });
-        return;
-      }
-      if (this.currentUserState === 'skip') {
-        socket.emit("User Daily State Change",{ 'id': state.user.id, 'new_state':'none' });
-      }
-      const itemSizeKey = fid + '-' + size;
-      const updated_basket = structuredClone(state.localBasket);
-      if (updated_basket[itemSizeKey]) {
-        // If the item already exists in the basket, increment the quantity
-        updated_basket[itemSizeKey].quantity += 1;
-      } else {
-        // Otherwise, add a new entry to the basket
-        updated_basket[itemSizeKey] = {
-          id: fid,
-          size: size,
-          quantity: 1
-        };
-      }
-      socket.emit("Server Basket Update", { "userid": state.user.id, "basket": updated_basket, "order_date": state.selectedDate.toISOString().split('T')[0] });
-
-    }
-  }
 }
 </script>
 

@@ -20,16 +20,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 import App from './App.vue';
 import VueCookies from 'vue3-cookies';
 import VueClipboard from 'vue3-clipboard';
 import Notifications from '@kyvg/vue3-notification';
+import router from './router.js';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap.js';
-import './assets/scss/main.scss'
+import './assets/scss/main.scss';
+import { socket, state } from '@/socket'
 
-let app = createApp(App);
+const app = createApp(App);
+const pinia = createPinia()
 
+app.use(router);
+app.use(pinia);
 app.use(VueCookies);
 app.use(Notifications);
 app.use(VueClipboard, {
@@ -37,4 +43,28 @@ app.use(VueClipboard, {
   appendToBody: true,
 });
 
+
+Date.prototype.getAdjustedDay = function() {
+  var day = this.getDay();
+  return (day === 0) ? 6 : day - 1;
+};
+
+
+Date.prototype.getWeek = function() {
+  var date = new Date(this.getTime());
+  date.setHours(0, 0, 0, 0);
+  // Thursday in current week decides the year.
+  date.setDate(date.getDate() + 3 - date.getAdjustedDay());
+  // January 4 is always in week 1.
+  var week1 = new Date(date.getFullYear(), 0, 4);
+  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
+                        - 3 + week1.getAdjustedDay()) / 7);
+}
+
+Date.prototype.toISODate = function() {
+  return this.toISOString().split('T')[0]
+};
 app.mount('#app');
+
+export { socket, state }

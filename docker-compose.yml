@@ -1,72 +1,12 @@
 version: "3.4"
 
 services:
-  frontend:
-    hostname: falu_fe
-    build:
-      context: ./frontend/
-      target: "${FALU_ENV}"
-    depends_on:
-      - backend
-      - nginx
-    restart: on-failure
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    env_file:
-      - .env
-    networks:
-      falu_net:
-
-  nginx:
-    image: nginx:alpine
-    hostname: falu_nginx
-    restart: on-failure
-    volumes:
-      - ./nginx:/etc/nginx/templates
-    env_file:
-      - .env
-    ports:
-      - ${FALU_APP_PORT}:${FALU_APP_PORT}
-    networks:
-      falu_net:
-
-  cron:
-    hostname: falu_cron
-    build: ./cron/
-    restart: on-failure
-    depends_on:
-      - backend
-    networks:
-      falu_net:
-
-  backend:
-    hostname: falu_be
-    build: ./backend/
-    depends_on:
-      - database
-    restart: on-failure
-    env_file:
-      - .env
-    ports:
-      - ${FALU_BE_PORT}:5000
-    volumes:
-      - ./backend:/app
-    networks:
-      falu_net:
-
   database:
     build: ./db/
     restart: on-failure
     ports:
-     - ${FALU_DB_PORT}:5432
-    networks:
-      falu_net:
+     - 5432:5432
     env_file:
       - .env
     volumes:
       - ./db/data/:/var/lib/postgresql/data/
-
-networks:
-  falu_net:
-    driver: bridge

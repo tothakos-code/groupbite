@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 import logging
+import re
 
 class Theme(enum.Enum):
     LIGHT = 'light'
@@ -34,7 +35,16 @@ class User(Base):
         return f"User<id={self.id},username={self.username}>"
 
     def get_one_by_username(username):
-        return session.query(User).filter(User.username == username).first()
+        stmt = select(User).where(
+            User.username == username
+        )
+        return session.execute(stmt).first()
+
+    def get_one_by_email(email):
+        stmt = select(User).where(
+            User.email == email
+        )
+        return session.execute(stmt).first()
 
     def get_one_by_id(id):
         # check if uuid is valid
@@ -62,6 +72,15 @@ class User(Base):
 
         if User.get_one_by_username(username):
             return False, "Ez a felhasználónév már foglalt"
+
+        return True, ""
+
+    def is_email_valid(email):
+        if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
+            return False, "Helytelen email formátum"
+
+        if User.get_one_by_email(email):
+            return False, "Ez az email cím már foglalt"
 
         return True, ""
 

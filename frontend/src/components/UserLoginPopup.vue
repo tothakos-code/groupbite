@@ -35,6 +35,20 @@
         aria-describedby="basic-addon1"
       >
     </div>
+    <div
+      v-if="!showLogin"
+      class="input-group mb-3"
+    >
+      <span class="input-group-text">Email cím</span>
+      <input
+        v-model.trim="email"
+        type="text"
+        class="form-control"
+        placeholder="Email cím"
+        aria-label="Email"
+        aria-describedby="basic-addon2"
+      >
+    </div>
   </Popup>
 </template>
 
@@ -60,6 +74,7 @@ export default {
   data() {
     return {
       username: "",
+      email: "",
       showLogin: true
     }
   },
@@ -74,7 +89,7 @@ export default {
       this.$emit('cancel');
     },
     register: function() {
-      this.auth.register(this.username);
+      this.auth.register(this.username, this.email);
       this.$emit('cancel');
     },
     change_login: function() {

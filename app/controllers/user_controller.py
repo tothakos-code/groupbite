@@ -42,14 +42,18 @@ def handle_user_check_session():
 @user_blueprint.route("/register", methods=['POST'])
 def handle_user_register():
     username = request.json['username']
-    user_to_register = User.get_one_by_username(username)
+    email = request.json['email']
 
-    if user_to_register:
-        logging.warn(f"Username already taken: {username}")
-        return {"error": f"Username already taken: {username}"}
+    is_username_valid, username_error = User.is_username_valid(username)
+    is_email_valid, email_error = User.is_email_valid(email)
 
-    user_to_register = User.create_user(User(username=username, settings={}))
-    logging.info(user_to_register)
+    if not is_username_valid:
+        return {"error": username_error}
+
+    if not is_email_valid:
+        return {"error": email_error}
+
+    user_to_register = User.create_user(User(username=username, email=email, settings={}))
     logging.info(f"User {user_to_register.username} created!")
 
     return user_to_register.serialized
@@ -69,8 +73,6 @@ def handle_user_update():
         else:
             return {"error": error}
 
-    logging.info("Szobák:")
-    logging.info(socketio.server.manager.rooms['/'])
     if 'username' in user:
         # Updating the username in every basket(room) a user is in
         for room_name,room in socketio.server.manager.rooms['/'].items():

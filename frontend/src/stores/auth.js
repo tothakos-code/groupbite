@@ -54,11 +54,12 @@ export const useAuth = defineStore('user', {
       this.isLoggedIn = false;
       Cookies.remove("user");
     },
-    async register(username) {
+    async register(username, email) {
       try {
         const response = await axios.post(
           `http://${window.location.host}/api/user/register`, {
-            "username": username
+            "username": username,
+            "email": email
           });
         if (response.data.error) {
           notify({

@@ -4,8 +4,11 @@
     :class="auth.isLoggedIn && username === auth.user.username ? 'border border-2 border-'+ auth.getUserColor : ''"
   >
     <div class="card-header row d-flex pe-0">
-      <div class="col-6">
-        <span>{{ username }}</span>
+      <div class="col-6 d-inline-block d-flex align-items-center">
+        <span
+          class=" text-truncate"
+          style="max-width: 120px;"
+        >{{ username }}</span>
         <a
           v-if="copyable && auth.isLoggedIn && username !== auth.user.username"
           class="ms-2 p-1 btn btn-sm"

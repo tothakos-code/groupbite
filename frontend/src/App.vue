@@ -3,12 +3,12 @@
     <Sidebar />
     <div class="col px-0 w-100 flex-grow-1">
       <div class="row col-12 bg-body-secondary d-flex justify-content-between mx-0 px-0">
-        <div class="col-8 justify-content-start align-items-center">
+        <div class="col-7 justify-content-start align-items-center">
           <h3 class="text-truncate">
             GroupBite
           </h3>
         </div>
-        <div class="col col-md-3 d-flex justify-content-end align-items-center">
+        <div class="col col-sm-3 d-flex justify-content-end align-items-center">
           <UserMenu />
         </div>
       </div>

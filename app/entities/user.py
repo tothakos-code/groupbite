@@ -38,13 +38,13 @@ class User(Base):
         stmt = select(User).where(
             User.username == username
         )
-        return session.execute(stmt).first()
+        return session.execute(stmt).scalars().first()
 
     def get_one_by_email(email):
         stmt = select(User).where(
             User.email == email
         )
-        return session.execute(stmt).first()
+        return session.execute(stmt).scalars().first()
 
     def get_one_by_id(id):
         # check if uuid is valid

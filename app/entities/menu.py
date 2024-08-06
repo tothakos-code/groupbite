@@ -45,7 +45,7 @@ class Menu(Base):
         stmt = select(Menu).where(
             Menu.vendor_id == vendor_id,
             Menu.date == date,
-            menu.freq_id == menu_freq
+            Menu.freq_id == menu_freq
         )
         return session.execute(stmt).scalars().first()
 
@@ -117,6 +117,13 @@ class Menu(Base):
         session.commit()
 
     def fill_menu(vendor_id, date_to_fill, raw_item_list):
+        """Creates MenuItem's from a raw json list of items.
+
+        Parameters:
+        vendor_id (str): Vendor ID which menu to be filled
+        raw_item_list (Dict):
+
+        """
         menu = Menu.find_vendor_menu(vendor_id, date_to_fill)
         if menu is None:
             logging.error("Menu to fill not found!")

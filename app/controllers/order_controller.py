@@ -31,11 +31,11 @@ def handle_order_history():
         if date not in result:
             result[date] = {}
 
-        result[date][value[0]] = order[0].serialized
-        result[date][value[0]]['vendor'] = order[0].vendor.name
+        result[date][value[0]] = order.serialized
+        result[date][value[0]]['vendor'] = order.vendor.name
 
         sum = 0
-        for item in order[0].items:
+        for item in order.items:
             sum += item.size.price * item.count
         result[date][value[0]]['sum'] = sum
 

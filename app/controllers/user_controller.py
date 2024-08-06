@@ -9,6 +9,7 @@ from app.socketio_singleton import SocketioSingleton
 from app.entities import Session
 from app.entities.user import User
 from app.entities.order import Order
+from app.entities.user_basket import UserBasket
 
 
 socketio = SocketioSingleton.get_instance()

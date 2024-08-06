@@ -129,7 +129,7 @@ def handle_menu_item_add(vendor_id):
         name=item['size'],
         price=item['price'],
         index=0,
-        quantity=item['quantity'],
+        quantity=item['quantity']
     ))
 
     MenuItem.add(menu_item)

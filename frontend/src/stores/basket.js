@@ -118,7 +118,13 @@ export const useBasket = defineStore("basket", {
         });
         return;
       }
-
+      if ( vuestate.order.state_id === "closed") {
+        notify({
+          type: "warn",
+          text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
+        });
+        return;
+      }
       axios.post(`http://${window.location.host}/api/order/${vuestate.order.id}/copy`,{
         "user_id": auth.user.id,
         "copy_user_id": copy_user_id

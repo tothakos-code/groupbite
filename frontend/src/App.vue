@@ -27,6 +27,8 @@
     </div>
     <notifications
       position="top center"
+      ignore-duplicates="true"
+      pause-on-hover="true"
       classes="my-custom-class"
     >
       <template #body="props">

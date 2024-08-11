@@ -98,31 +98,30 @@ class UserBasket(Base):
         return session.execute(stmt).all()
 
     def clear_items(user_id, order_id):
-        user_basket = session.query(UserBasket).filter(
+        stmt = select(UserBasket).where(
             UserBasket.order_id == order_id,
             UserBasket.user_id == user_id
         )
+        user_basket = session.execute(stmt).scalars().all()
         for basket_entry in user_basket:
-            if basket_entry.size.quantity >= 0:
-                basket_entry.size.quantity += basket_entry.count
-        user_basket.delete()
+            basket_entry.delete()
         session.commit()
         return True
 
     def remove_item(user_id, menu_item_id, size_id, order_id):
-        user_basket = session.query(UserBasket).filter(
+        stmt = select(UserBasket).where(
             UserBasket.order_id == order_id,
             UserBasket.menu_item_id == menu_item_id,
             UserBasket.size_id == size_id,
             UserBasket.user_id == user_id
-        ).first()
-
+        )
+        user_basket = session.execute(stmt).scalars().first()
 
         if not user_basket:
             logging.error("Cannot remove item. Item not found.")
         else:
             size_stmt = select(Size).where(
-            Size.id == size_id
+                Size.id == size_id
             )
             size_to_add = session.execute(size_stmt).scalars().first()
 
@@ -139,12 +138,14 @@ class UserBasket(Base):
         return user_basket
 
     def add_item(user_id, menu_item_id, size_id, order_id):
-        user_basket = session.query(UserBasket).filter(
+        stmt = select(UserBasket).where(
             UserBasket.order_id == order_id,
             UserBasket.menu_item_id == menu_item_id,
             UserBasket.size_id == size_id,
             UserBasket.user_id == user_id
-        ).first()
+        )
+
+        user_basket = session.execute(stmt).scalars().first()
 
         size_stmt = select(Size).where(
             Size.id == size_id
@@ -171,6 +172,10 @@ class UserBasket(Base):
         session.commit()
 
         return user_basket, None
+
+    def delete(self):
+        session.delete(self)
+        session.commit()
 
     @property
     def serialized(self):

@@ -2,7 +2,7 @@ from enum import Enum as pyenum
 from sqlalchemy.dialects.postgresql import JSONB
 from . import Base, session
 from datetime import date
-from sqlalchemy import Boolean
+from sqlalchemy import Boolean, select
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -33,16 +33,20 @@ class Vendor(Base):
         return f"Vendor<id={self.id},name={self.name},type={str(self.type)}>"
 
     def find_all():
-        return session.query(Vendor).order_by(Vendor.name).all()
+        stmt = select(Vendor).order_by(Vendor.name)
+        return session.execute(stmt).scalars().all()
 
     def find_all_by_type(type):
-        return session.query(Vendor).where(Vendor.type == type).all()
+        stmt = select(Vendor).where(Vendor.type == type)
+        return session.execute(stmt).scalars().all()
 
     def find_all_active():
-        return session.query(Vendor).where(Vendor.active == True).all()
+        stmt = select(Vendor).where(Vendor.active == True)
+        return session.execute(stmt).scalars().all()
 
     def find_by_id(id):
-        return session.query(Vendor).where(Vendor.id == id).first()
+        stmt = select(Vendor).where(Vendor.id == id)
+        return session.execute(stmt).scalars().first()
 
     def activate(self):
         self.active = True;
@@ -85,7 +89,8 @@ class Vendor(Base):
         session.commit()
 
     def add_vendor(vendor_obj):
-        vendor_db = session.query(Vendor).filter_by(name = vendor_obj.name).first()
+        stmt = select(Vendor).where(Vendor.name == vendor_obj.name)
+        vendor_db = session.execute(stmt).scalars().first()
 
         if not vendor_db:
             # insert

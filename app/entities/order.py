@@ -45,16 +45,18 @@ class Order(Base):
         stmt = select(Order).where(Order.id == order_id)
         return session.execute(stmt).scalars().first()
 
-    def find_open_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today() ):
-        return session.query(Order).filter(
+    def find_open_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today()):
+        stmt = select(Order).where(
             Order.vendor_id == vendor_id,
             Order.date_of_order == date,
-            Order.state_id == OrderState.COLLECT).first()
+            Order.state_id != OrderState.CLOSED)
+        return session.execute(stmt).scalars().first()
 
-    def find_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today() ):
-        return session.query(Order).filter(
+    def find_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today()):
+        stmt = select(Order).where(
             Order.vendor_id == vendor_id,
-            Order.date_of_order == date).first()
+            Order.date_of_order == date)
+        return session.execute(stmt).scalars().first()
 
     def find_order_between(date_from, date_to):
         stmt = select(Order).where(

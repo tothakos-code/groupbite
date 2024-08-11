@@ -22,19 +22,19 @@ def create_app(debug=False):
     logging.info("Initialization started")
 
     application = Flask(__name__)
-    application.config['SECRET_KEY'] = 'secret!'
+    application.config["SECRET_KEY"] = "secret!"
 
     import app.create_tables
 
     VendorFactory.load()
-    loader.load_plugins([d.path.replace('/','.') for d in scandir('plugins') if d.is_dir()])
+    loader.load_plugins([d.path.replace("/",".") for d in scandir("plugins") if d.is_dir()])
 
     from app.socketio_singleton import SocketioSingleton
     socketio = SocketioSingleton.get_instance()
     socketio.init_app(
         application,
         debug=debug,
-        async_mode='eventlet',
+        async_mode="eventlet",
         allow_unsafe_werkzeug=True)
 
     import app.controllers.main_controller

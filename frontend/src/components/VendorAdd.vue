@@ -61,12 +61,12 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { useAuth } from '@/stores/auth';
+import axios from "axios";
+import { useAuth } from "@/stores/auth";
 import { notify } from "@kyvg/vue3-notification";
 
 export default {
-    name: 'VendorAdd',
+    name: "VendorAdd",
     setup() {
       const auth = useAuth();
       return {
@@ -76,8 +76,8 @@ export default {
     data() {
       return {
         vendor: {
-          'name':"",
-          'settings':{
+          "name":"",
+          "settings":{
             "title": {
               "name": "Cím",
               "type": "STR",
@@ -121,7 +121,7 @@ export default {
               "section": "root"
             },
           },
-          'configuration':{},
+          "configuration":{},
         }
       }
     },
@@ -129,7 +129,7 @@ export default {
     },
     methods: {
       createVendor: function () {
-        axios.post(`http://${window.location.host}/api/vendor/create`, {'data':this.vendor})
+        axios.post(`http://${window.location.host}/api/vendor/create`, {"data":this.vendor})
           .then(response => {
             console.log(response.data);
             notify({

@@ -24,7 +24,7 @@ def schedule_task(task_id, hour, minute, func, *args, **kwargs):
 
         # Cancel the previous timer if it exists
         if task_id in tasks:
-            tasks[task_id]['timer'].cancel()
+            tasks[task_id]["timer"].cancel()
 
         # Schedule the function to be called after the delay
         timer = threading.Timer(delay, task_wrapper)
@@ -32,18 +32,18 @@ def schedule_task(task_id, hour, minute, func, *args, **kwargs):
 
         # Store the new timer and target time
         tasks[task_id] = {
-            'timer': timer,
-            'target_time': target_time
+            "timer": timer,
+            "target_time": target_time
         }
 
 def cancel_task(task_id):
     global tasks
     with lock:
         if task_id in tasks:
-            tasks[task_id]['timer'].cancel()
+            tasks[task_id]["timer"].cancel()
             del tasks[task_id]
 
 def get_scheduled_tasks():
     global tasks
     with lock:
-        return {task_id: task_info['target_time'] for task_id, task_info in tasks.items()}
+        return {task_id: task_info["target_time"] for task_id, task_info in tasks.items()}

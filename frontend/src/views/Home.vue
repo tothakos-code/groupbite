@@ -17,9 +17,9 @@
 </template>
 
 <script>
-import WeekSummary from '@/components/WeekSummary.vue'
+import WeekSummary from "@/components/WeekSummary.vue"
 export default {
-    name: 'HomeView',
+    name: "HomeView",
     components: {
       WeekSummary,
     }

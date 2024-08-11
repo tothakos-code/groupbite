@@ -12,14 +12,14 @@ import logging
 import re
 
 class Theme(enum.Enum):
-    LIGHT = 'light'
-    DARK = 'dark'
+    LIGHT = "light"
+    DARK = "dark"
 
     def __str__(self):
         return self.value
 
 class User(Base):
-    __tablename__ = 'user'
+    __tablename__ = "user"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, unique=True, nullable=False, default=uuid4)
     username: Mapped[str] = mapped_column(Text, unique=True)
@@ -98,7 +98,7 @@ class User(Base):
         return session.execute(stmt).scalars().first()
 
     def update_user(self, user):
-        self.username = user['username']
+        self.username = user["username"]
         session.commit()
         return self
 
@@ -115,7 +115,7 @@ class User(Base):
     @property
     def serialized(self):
         return {
-            'id': self.id,
-            'username': self.username,
-            'theme': str(self.theme)
+            "id": self.id,
+            "username": self.username,
+            "theme": str(self.theme)
         }

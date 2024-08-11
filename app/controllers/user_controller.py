@@ -14,9 +14,9 @@ from app.entities.user_basket import UserBasket
 
 socketio = SocketioSingleton.get_instance()
 
-@user_blueprint.route("/login", methods=['POST'])
+@user_blueprint.route("/login", methods=["POST"])
 def handle_user_login():
-    username = request.json['username']
+    username = request.json["username"]
     user_to_login = User.get_one_by_username(username)
 
     if not user_to_login:
@@ -27,9 +27,9 @@ def handle_user_login():
     logging.info(f"User {user_to_login.username} logged in!")
     return user_to_login.serialized
 
-@user_blueprint.route("/checkSession", methods=['POST'])
+@user_blueprint.route("/checkSession", methods=["POST"])
 def handle_user_check_session():
-    user_id = request.json['session']
+    user_id = request.json["session"]
     user_to_login = User.get_one_by_id(user_id)
 
     if not user_to_login:
@@ -40,10 +40,10 @@ def handle_user_check_session():
     logging.info(f"User {user_to_login.username} logged in!")
     return user_to_login.serialized
 
-@user_blueprint.route("/register", methods=['POST'])
+@user_blueprint.route("/register", methods=["POST"])
 def handle_user_register():
-    username = request.json['username']
-    email = request.json['email']
+    username = request.json["username"]
+    email = request.json["email"]
 
     is_username_valid, username_error = User.is_username_valid(username)
     is_email_valid, email_error = User.is_email_valid(email)
@@ -59,33 +59,33 @@ def handle_user_register():
 
     return user_to_register.serialized
 
-@user_blueprint.route("/update", methods=['POST'])
+@user_blueprint.route("/update", methods=["POST"])
 def handle_user_update():
-    user = request.json['user']
-    logging.info("Updated User: " + str(user['id']))
+    user = request.json["user"]
+    logging.info("Updated User: " + str(user["id"]))
 
-    user_to_update = User.get_one_by_id(user['id'])
+    user_to_update = User.get_one_by_id(user["id"])
 
-    if 'username' in user:
-        is_username_valid, error = User.is_username_valid(user['username'])
+    if "username" in user:
+        is_username_valid, error = User.is_username_valid(user["username"])
         if is_username_valid:
             user_to_update.update_user(user)
 
         else:
             return {"error": error}
 
-    if 'username' in user:
+    if "username" in user:
         # Updating the username in every basket(room) a user is in
-        for room_name,room in socketio.server.manager.rooms['/'].items():
-            if room_name != None and '_' in room_name:
+        for room_name,room in socketio.server.manager.rooms["/"].items():
+            if room_name != None and "_" in room_name:
                 logging.info(room_name)
                 logging.info(room)
-                vendor, date = room_name.split('_')
+                vendor, date = room_name.split("_")
                 # TODO: check if user has items in that oreder, and only update them
                 order = Order.find_order_by_date_for_a_vendor(vendor, date)
                 socketio.emit(
-                    'be_order_update', {
-                        'basket': UserBasket.get_basket_group_by_user(order.id)
+                    "be_order_update", {
+                        "basket": UserBasket.get_basket_group_by_user(order.id)
                     },
                     to=room_name
                 )

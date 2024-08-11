@@ -42,11 +42,11 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
-import { useAuth } from '@/stores/auth';
+import { ref, watch } from "vue";
+import { useAuth } from "@/stores/auth";
 
 export default {
-  name: 'BasePopup',
+  name: "BasePopup",
   props: {
     title: {
       type: String,
@@ -66,7 +66,7 @@ export default {
       default: false
     },
   },
-  emits: ['cancel', 'confirm'],
+  emits: ["cancel", "confirm"],
   setup(props) {
     const auth = useAuth();
 

@@ -1,12 +1,12 @@
 import { socket, state as vuestate  } from "@/main";
-import { defineStore } from 'pinia'
+import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
-import axios from 'axios';
+import axios from "axios";
 import { useAuth } from "@/stores/auth";
 
 
 
-export const useBasket = defineStore('basket', {
+export const useBasket = defineStore("basket", {
   state: () => ({basket: {}}),
   getters: {
     userCount(state) {
@@ -82,7 +82,7 @@ export const useBasket = defineStore('basket', {
   },
   actions: {
     clearBasket() {
-      if ( vuestate.orderState === 'closed') {
+      if ( vuestate.orderState === "closed") {
         notify({
           type: "warn",
           text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
@@ -95,7 +95,7 @@ export const useBasket = defineStore('basket', {
       })
     },
     removeItem(menuItemId, sizeId) {
-      if ( vuestate.order.state_id === 'closed') {
+      if ( vuestate.order.state_id === "closed") {
         notify({
           type: "warn",
           text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
@@ -137,15 +137,15 @@ export const useBasket = defineStore('basket', {
         });
         return;
       }
-      if (vuestate.order.state_id === 'closed') {
+      if (vuestate.order.state_id === "closed") {
         notify({
           type: "warn",
           text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
         });
         return;
       }
-      if (this.currentUserState === 'skip') {
-        socket.emit("User Daily State Change",{ 'id': auth.user.id, 'new_state':'none' });
+      if (this.currentUserState === "skip") {
+        socket.emit("User Daily State Change",{ "id": auth.user.id, "new_state":"none" });
       }
       axios.post(`http://${window.location.host}/api/order/${vuestate.order.id}/add`,{
         "user_id": auth.user.id,

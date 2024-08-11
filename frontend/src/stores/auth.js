@@ -1,10 +1,10 @@
-import axios from 'axios';
-import Cookies from 'js-cookie';
-import { defineStore } from 'pinia'
+import axios from "axios";
+import Cookies from "js-cookie";
+import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
 
 
-export const useAuth = defineStore('user', {
+export const useAuth = defineStore("user", {
   state: () => ({ user: null, isLoggedIn: false, isLoading: true}),
   getters: {
     getUserColor() {
@@ -83,7 +83,7 @@ export const useAuth = defineStore('user', {
       }
     },
     async checkSession() {
-      let session = Cookies.get('user')
+      let session = Cookies.get("user")
       if (session) {
         try {
           const response = await axios.post(

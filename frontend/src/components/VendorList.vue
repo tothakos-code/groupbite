@@ -126,11 +126,11 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { useAuth } from '@/stores/auth';
+import axios from "axios";
+import { useAuth } from "@/stores/auth";
 
 export default {
-    name: 'VendorList',
+    name: "VendorList",
     setup() {
       const auth = useAuth();
       return {
@@ -156,9 +156,9 @@ export default {
           })
       },
       toggleActivation: function (to) {
-        let command = 'activate';
+        let command = "activate";
         if (to.active) {
-          command = 'deactivate';
+          command = "deactivate";
         }
         axios.post(`http://${window.location.host}/api/vendor/${to.id}/${command}`)
           .then(() => {

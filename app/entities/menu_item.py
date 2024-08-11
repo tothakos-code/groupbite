@@ -10,7 +10,7 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
 class MenuItem(Base):
-    __tablename__ = 'menu_item'
+    __tablename__ = "menu_item"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     menu_id: Mapped[int] = mapped_column(ForeignKey("menu.id"))
@@ -73,9 +73,9 @@ class MenuItem(Base):
     @property
     def serialized(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'index': self.index,
-            'sizes': [size.serialized for size in self.sizes],
-            'category': self.category
+            "id": self.id,
+            "name": self.name,
+            "index": self.index,
+            "sizes": [size.serialized for size in self.sizes],
+            "category": self.category
         }

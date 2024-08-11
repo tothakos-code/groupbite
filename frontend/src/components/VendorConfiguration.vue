@@ -38,25 +38,25 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { useAuth } from '@/stores/auth';
+import axios from "axios";
+import { useAuth } from "@/stores/auth";
 import { notify } from "@kyvg/vue3-notification";
-import { ref } from 'vue'
-import VendorSettings from './VendorSettings.vue'
-import VendorMenuManager from './VendorMenuManager.vue'
-import VendorItemManager from './VendorItemManager.vue'
+import { ref } from "vue"
+import VendorSettings from "./VendorSettings.vue"
+import VendorMenuManager from "./VendorMenuManager.vue"
+import VendorItemManager from "./VendorItemManager.vue"
 
 // use shallowRef to avoid component being deeply observed
 
 export default {
-    name: 'VendorConfiguration',
+    name: "VendorConfiguration",
     setup() {
       const auth = useAuth();
-      const activeTab = ref('Settings')
+      const activeTab = ref("Settings")
       const allTabs = {
-        'Settings': VendorSettings,
-        'Menus': VendorMenuManager,
-        'Items': VendorItemManager,
+        "Settings": VendorSettings,
+        "Menus": VendorMenuManager,
+        "Items": VendorItemManager,
       }
       return {
         auth,
@@ -83,7 +83,7 @@ export default {
           })
       },
       saveSettings: function () {
-        axios.post(`http://${window.location.host}/api/vendor/${this.$route.params.id}/settings/save`, {'data':this.settings})
+        axios.post(`http://${window.location.host}/api/vendor/${this.$route.params.id}/settings/save`, {"data":this.settings})
           .then(response => {
             this.settings = response.data
             notify({

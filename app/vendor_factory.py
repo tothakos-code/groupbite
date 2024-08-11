@@ -47,13 +47,13 @@ class VendorFactory:
                     logging.info("Scheduled order state stepping running")
                     from app.entities.order import Order, OrderState
 
-                    order = Order.find_open_order_by_date_for_a_vendor(str(vendor_db.id), date.today().strftime('%Y-%m-%d'))
+                    order = Order.find_open_order_by_date_for_a_vendor(str(vendor_db.id), date.today().strftime("%Y-%m-%d"))
                     if order:
                         order.change_state(OrderState.ORDER, None)
 
                         socketio = SocketioSingleton.get_instance()
                         socketio.emit("be_order_update", {
-                            'order': order.serialized
+                            "order": order.serialized
                         })
                     else:
                         logging.info("State already changed")

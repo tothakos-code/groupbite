@@ -237,13 +237,13 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { useAuth } from '@/stores/auth';
-import Popup from './Popup.vue';
+import axios from "axios";
+import { useAuth } from "@/stores/auth";
+import Popup from "./Popup.vue";
 import { notify } from "@kyvg/vue3-notification";
 
 export default {
-    name: 'VendorMenuManager',
+    name: "VendorMenuManager",
     components: {
       Popup
     },
@@ -273,16 +273,16 @@ export default {
       },
       submitJsonFile: function () {
         let formData = new FormData();
-        formData.append('file', this.file);
+        formData.append("file", this.file);
         axios.post( `http://${window.location.host}/api/menu/import/${this.$route.params.id}`,
           formData,
           {
             headers: {
-                'Content-Type': 'multipart/form-data'
+                "Content-Type": "multipart/form-data"
             }
           }
         ).then(() => {
-          console.log('SUCCESS file upload!!');
+          console.log("SUCCESS file upload!!");
           this.showImportPopup=false
           this.getMenuList()
           notify({
@@ -291,7 +291,7 @@ export default {
           });
         })
         .catch(e => {
-          console.log('FAILURE in file upload!!');
+          console.log("FAILURE in file upload!!");
           console.log(e);
           notify({
             type: "error",
@@ -301,15 +301,15 @@ export default {
       },
       handleFileUpload: function (event) {
         const file = event.target.files[0];
-        if (file && file.type === 'application/json') {
+        if (file && file.type === "application/json") {
           const reader = new FileReader();
           reader.onload = (e) => {
             try {
               const json = JSON.parse(e.target.result);
-              console.log('Valid JSON:', json);
+              console.log("Valid JSON:", json);
               this.file = event.target.files[0];
             } catch (error) {
-              console.log('Invalid JSON:', error);
+              console.log("Invalid JSON:", error);
               notify({
                 type: "error",
                 text: "Helytelen JSON fájl: " + error,
@@ -318,13 +318,13 @@ export default {
           };
           reader.readAsText(file);
         } else {
-          console.log('Only .json files are allowed');
+          console.log("Only .json files are allowed");
         }
       },
       toggleActivation: function (to) {
-        let command = 'activate';
+        let command = "activate";
         if (to.active) {
-          command = 'deactivate';
+          command = "deactivate";
         }
         axios.post(`http://${window.location.host}/api/menu/${to.id}/${command}`)
           .then(() => {
@@ -352,7 +352,7 @@ export default {
           })
       },
       addMenu: function () {
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-add`, {'data':this.newMenu})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-add`, {"data":this.newMenu})
           .then(() => {
             this.getMenuList()
             notify({
@@ -379,7 +379,7 @@ export default {
       updateMenu: function (menu_id) {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-update`, {'data': menu})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-update`, {"data": menu})
           .then(() => {
             this.getMenuList()
             notify({
@@ -398,7 +398,7 @@ export default {
       deleteMenu: function (menu_id) {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-delete`, {'data': menu})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-delete`, {"data": menu})
           .then(() => {
             this.getMenuList()
             notify({
@@ -417,7 +417,7 @@ export default {
       duplicateMenu: function (menu_id) {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-duplicate`, {'data': menu})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-duplicate`, {"data": menu})
           .then(() => {
             this.getMenuList()
             notify({

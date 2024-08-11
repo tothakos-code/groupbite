@@ -12,7 +12,7 @@ from sqlalchemy.orm import relationship
 import logging
 
 class UserBasket(Base):
-    __tablename__ = 'user_basket'
+    __tablename__ = "user_basket"
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"), primary_key=True)
     menu_item_id: Mapped[int] = mapped_column(ForeignKey("menu_item.id"), primary_key=True)
@@ -52,11 +52,11 @@ class UserBasket(Base):
         for basket_entry in UserBasket.find_items_by_order(order_id):
             if str(basket_entry.user_id) not in result:
                 result[str(basket_entry.user_id)] = {
-                    'username': basket_entry.user.username,
-                    'user_id': str(basket_entry.user_id),
-                    'items': []
+                    "username": basket_entry.user.username,
+                    "user_id": str(basket_entry.user_id),
+                    "items": []
                 }
-            result[str(basket_entry.user_id)]['items'].append(basket_entry.basket_format)
+            result[str(basket_entry.user_id)]["items"].append(basket_entry.basket_format)
         return result
 
     def find_user_order_dates(user_id):
@@ -175,19 +175,19 @@ class UserBasket(Base):
     @property
     def serialized(self):
         return {
-            'user_id': str(self.user_id),
-            'menu_item_id': self.menu_item_id,
-            'order_id': self.order_id,
-            'count': self.count
+            "user_id": str(self.user_id),
+            "menu_item_id": self.menu_item_id,
+            "order_id": self.order_id,
+            "count": self.count
         }
 
     @property
     def basket_format(self):
         return {
-            'item_id': self.item.id,
-            'size_id': self.size.id,
-            'item_name': self.item.name,
-            'size_name': self.size.name,
-            'price': self.size.price,
-            'quantity': self.count,
+            "item_id": self.item.id,
+            "size_id": self.size.id,
+            "item_name": self.item.name,
+            "size_name": self.size.name,
+            "price": self.size.price,
+            "quantity": self.count,
         }

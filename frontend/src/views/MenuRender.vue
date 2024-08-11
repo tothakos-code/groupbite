@@ -6,24 +6,24 @@
 </template>
 
 <script>
-import Menu from '@/views/Menu.vue';
+import Menu from "@/views/Menu.vue";
 import { state } from "@/main";
-import { defineAsyncComponent } from 'vue';
-// import axios from 'axios';
+import { defineAsyncComponent } from "vue";
+// import axios from "axios";
 
 const PluginMenu = defineAsyncComponent({
   loader: () => import(`./../../../plugins/${state.selected_vendor.name}/frontend/App.vue`),
 })
 
 export default {
-  name: 'MenuRenderView',
+  name: "MenuRenderView",
   components: {
     Menu,
     PluginMenu
   },
   beforeRouteEnter(to) {
     state.vendors.forEach((item) => {
-      if (item.name === to.name || item.name+'-dated' === to.name) {
+      if (item.name === to.name || item.name+"-dated" === to.name) {
         state.selected_vendor = item;
       }
     });
@@ -55,7 +55,7 @@ export default {
   },
   computed:{
     activeVendor() {
-      return state.selected_vendor.type === 'basic' ? Menu : PluginMenu;
+      return state.selected_vendor.type === "basic" ? Menu : PluginMenu;
     },
     activeVendorId() {
       return state.selected_vendor.id;

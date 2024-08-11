@@ -62,18 +62,18 @@
 
 
 <script>
-import UserMenu from './components/UserMenu.vue'
-import Sidebar from './components/Sidebar.vue'
+import UserMenu from "./components/UserMenu.vue"
+import Sidebar from "./components/Sidebar.vue"
 // import { socket } from "@/main";
 import { useAuth } from "@/stores/auth";
 import { useCookies } from "vue3-cookies";
-import { provide, ref } from 'vue';
+import { provide, ref } from "vue";
 
 
 
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
     UserMenu,
     Sidebar,
@@ -86,10 +86,10 @@ export default {
     auth.checkSession();
 
     function toggleDarkMode() {
-      if (theme.value === 'dark') {
-        theme.value = 'light'
+      if (theme.value === "dark") {
+        theme.value = "light"
       } else {
-        theme.value = 'dark'
+        theme.value = "dark"
       }
       localStorage.setItem("theme", theme.value);
       location.reload();
@@ -98,10 +98,10 @@ export default {
       //     this.auth.user = user;
       //   });
       // }
-      document.documentElement.setAttribute('data-bs-theme', theme.value)
+      document.documentElement.setAttribute("data-bs-theme", theme.value)
     }
 
-    provide('theme', {
+    provide("theme", {
       theme,
       toggleDarkMode,
     })
@@ -119,7 +119,7 @@ export default {
   },
   computed: {
     isDataLoaded(){
-      return (this.auth.user !== undefined && this.auth.user.ui_color) || !this.$cookies.isKey('username')
+      return (this.auth.user !== undefined && this.auth.user.ui_color) || !this.$cookies.isKey("username")
     }
   },
   mounted() {
@@ -130,12 +130,12 @@ export default {
 
     const currentTheme = localStorage.getItem("theme");
     if (!currentTheme) {
-      this.theme = 'light'
+      this.theme = "light"
     } else {
       this.theme = currentTheme
     }
     localStorage.setItem("theme", this.theme);
-    document.documentElement.setAttribute('data-bs-theme', this.theme)
+    document.documentElement.setAttribute("data-bs-theme", this.theme)
   },
 }
 </script>

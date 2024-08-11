@@ -1,10 +1,10 @@
-import 'setimmediate'
+import "setimmediate"
 import { reactive } from "vue";
 import { io } from "socket.io-client";
-import router from './router.js';
-import { register_plugin_routes } from './loader.js';
-import { useBasket } from '@/stores/basket'
-// import { useVendor } from '@/stores/vendor'
+import router from "./router.js";
+import { register_plugin_routes } from "./loader.js";
+import { useBasket } from "@/stores/basket"
+// import { useVendor } from "@/stores/vendor"
 
 export const state = reactive({
   connected: false,
@@ -30,7 +30,7 @@ socket.on("disconnect", () => {
   state.connected = false;
 });
 
-socket.on('be_vendors_update', function(vendors) {
+socket.on("be_vendors_update", function(vendors) {
   state.vendors = JSON.parse(vendors);
   // const vendor = useVendor();
   // vendor.vendors = JSON.parse(vendors)
@@ -40,7 +40,7 @@ socket.on('be_vendors_update', function(vendors) {
   register_plugin_routes(router);
 });
 
-socket.on('be_order_update', function(data) {
+socket.on("be_order_update", function(data) {
   const basket = useBasket();
   if (data.basket) {
     basket.basket = data.basket;
@@ -50,7 +50,7 @@ socket.on('be_order_update', function(data) {
   }
 });
 
-socket.on('Refresh!', function() {
+socket.on("Refresh!", function() {
   console.log("Refresh");
   location.reload();
 });

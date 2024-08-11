@@ -94,29 +94,29 @@ import { useAuth } from "@/stores/auth";
 import { useBasket } from "@/stores/basket";
 
 export default {
-  name: 'GlobalBasketUser',
+  name: "GlobalBasketUser",
   props: {
-    'username':{
+    "username":{
       type: String,
       default: ""
     },
-    'userId':{
+    "userId":{
       type: String,
       default: ""
     },
-    'userBasket':{
+    "userBasket":{
       type: Object,
       default: new Object()
     },
-    'startCollapsed':{
+    "startCollapsed":{
       type: Boolean,
       default: false
     },
-    'collapsable':{
+    "collapsable":{
       type: Boolean,
       default: true
     },
-    'copyable':{
+    "copyable":{
       type: Boolean,
       default: true
     }
@@ -146,9 +146,9 @@ export default {
     basketTotalTitle() {
       let sumTitle = ""
       Object.values(this.userBasket).forEach((entry) => {
-          sumTitle+= entry.quantity + '*' + entry.price + ' Ft + ';
+          sumTitle+= entry.quantity + "*" + entry.price + " Ft + ";
       });
-      sumTitle+= this.basket.transportFeePerPerson + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
+      sumTitle+= this.basket.transportFeePerPerson + " Ft(Szállítási díj) = " + this.sum + " Ft";
       return sumTitle;
     },
   },

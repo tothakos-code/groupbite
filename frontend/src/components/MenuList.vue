@@ -36,15 +36,15 @@
 </template>
 
 <script>
-import Datestamp from '@/components/DateStamp.vue'
+import Datestamp from "@/components/DateStamp.vue"
 import { state, socket } from "@/main";
 import { useAuth } from "@/stores/auth";
-import axios from 'axios';
-import MenuItem from '../components/MenuItem.vue'
+import axios from "axios";
+import MenuItem from "../components/MenuItem.vue"
 
 
 export default {
-  name: 'MenuList',
+  name: "MenuList",
   components: {
     Datestamp,
     MenuItem,
@@ -58,15 +58,15 @@ export default {
   data() {
     return {
       itemlist: [],
-      others: {'0':'[]','1':'[]','2':'[]','3':'[]','4':'[]','5':'[]','6':'[]'},
+      others: {"0":"[]","1":"[]","2":"[]","3":"[]","4":"[]","5":"[]","6":"[]"},
       dayTitles: {
-        '0':'Hétfői menü',
-        '1':'Keddi menü',
-        '2':'Szerdai menü',
-        '3':'Csütörtöki menü',
-        '4':'Pénteki menü',
-        '5':'Szombati menü',
-        '6':'Vasárnapi menü'
+        "0":"Hétfői menü",
+        "1":"Keddi menü",
+        "2":"Szerdai menü",
+        "3":"Csütörtöki menü",
+        "4":"Pénteki menü",
+        "5":"Szombati menü",
+        "6":"Vasárnapi menü"
       }
     }
   },

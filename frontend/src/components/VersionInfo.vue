@@ -56,11 +56,11 @@
 <script>
 
 export default {
-  name: 'VersionInfo',
+  name: "VersionInfo",
   methods:{
     showVersion: function() {
       // eslint-disable-next-line
-      return 'v' + process.env.VUE_APP_VERSION;
+      return "v" + process.env.VUE_APP_VERSION;
     },
   }
 }

@@ -79,18 +79,18 @@
 </template>
 
 <script>
-import { useAuth } from '@/stores/auth';
+import { useAuth } from "@/stores/auth";
 
 export default {
-  name: 'DateStamp',
+  name: "DateStamp",
   props: {
-    'limitToCurrentWeek': Boolean,
-    'setDate': {
+    "limitToCurrentWeek": Boolean,
+    "setDate": {
       type: String,
       default: new Date()
     }
   },
-  emits: ['selectedDate'],
+  emits: ["selectedDate"],
   setup() {
     const auth = useAuth();
     return {
@@ -108,10 +108,10 @@ export default {
   },
   computed: {
     getShownDate() {
-      return this.currentDateSelected.toLocaleDateString('hu-HU', {month:'short',day:'numeric'});
+      return this.currentDateSelected.toLocaleDateString("hu-HU", {month:"short",day:"numeric"});
     },
     getTodayDayDate() {
-      return this.currentDateSelected.toLocaleDateString('hu-HU');
+      return this.currentDateSelected.toLocaleDateString("hu-HU");
     }
   },
   methods: {
@@ -122,7 +122,7 @@ export default {
       const newDate = new Date(this.currentDateSelected);
       newDate.setDate(newDate.getDate() + 1);
       this.currentDateSelected = newDate;
-      this.$emit('selectedDate', this.currentDateSelected);
+      this.$emit("selectedDate", this.currentDateSelected);
     },
     prevDay: function() {
       if (this.limitToCurrentWeek && this.currentDateSelected.getAdjustedDay() == 0) {
@@ -131,11 +131,11 @@ export default {
       const newDate = new Date(this.currentDateSelected);
       newDate.setDate(newDate.getDate() - 1);
       this.currentDateSelected = newDate;
-      this.$emit('selectedDate', this.currentDateSelected);
+      this.$emit("selectedDate", this.currentDateSelected);
     },
     setDay: function(day) {
       this.currentDateSelected = new Date(day);
-      this.$emit('selectedDate', this.currentDateSelected);
+      this.$emit("selectedDate", this.currentDateSelected);
     }
   }
 }

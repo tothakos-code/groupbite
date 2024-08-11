@@ -16,42 +16,42 @@
 import { state } from "@/main";
 
 export default {
-  name: 'OrderState',
+  name: "OrderState",
   computed: {
     status() {
       if (!state.order.state_id) {
-        return 'error'
+        return "error"
       }
       return state.order.state_id
     },
     statusLabel() {
       if (!state.connected) {
-        return 'Kapcsolati probléma'
+        return "Kapcsolati probléma"
       }
       switch (state.order.state_id) {
-        case 'collect':
-          return 'Rendelhetsz'
-        case 'order':
-          return 'Siess!'
-        case 'closed':
-          return 'Rendelés elküldve'
+        case "collect":
+          return "Rendelhetsz"
+        case "order":
+          return "Siess!"
+        case "closed":
+          return "Rendelés elküldve"
         default:
-          return 'Töltés...';
+          return "Töltés...";
       }
     },
     statusTitle() {
       if (!state.connected) {
-        return 'Sajnos nem sikerül csatlakozni a szerverhez.'
+        return "Sajnos nem sikerül csatlakozni a szerverhez."
       }
       switch (state.order.state_id) {
-        case 'collect':
-          return 'Rendelést még nem küldték el, nyugodtan csatlakozhatsz hozzá.'
-        case 'order':
-          return 'A rendelés éppen küldés alatt van, ha szeretnél még csatlakozni hozzá SIESS!'
-        case 'closed':
-          return 'Rendelés elküldve. Sajnos lemaradtál a rendelésről vagy, ha már rendeltél akkor bizosan jólfogsz lakni.'
+        case "collect":
+          return "Rendelést még nem küldték el, nyugodtan csatlakozhatsz hozzá."
+        case "order":
+          return "A rendelés éppen küldés alatt van, ha szeretnél még csatlakozni hozzá SIESS!"
+        case "closed":
+          return "Rendelés elküldve. Sajnos lemaradtál a rendelésről vagy, ha már rendeltél akkor bizosan jólfogsz lakni."
         default:
-          return 'Sajnos valami probléma merült fel a szerveren.';
+          return "Sajnos valami probléma merült fel a szerveren.";
       }
     }
   }

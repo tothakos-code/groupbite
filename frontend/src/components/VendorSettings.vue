@@ -30,12 +30,12 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { useAuth } from '@/stores/auth';
+import axios from "axios";
+import { useAuth } from "@/stores/auth";
 import { notify } from "@kyvg/vue3-notification";
 
 export default {
-    name: 'VendorSettings',
+    name: "VendorSettings",
     setup() {
       const auth = useAuth();
       return {
@@ -64,7 +64,7 @@ export default {
         axios.post(
           `http://${window.location.host}/api/vendor/${this.$route.params.id}/settings/save`,
           {
-            'data': this.vendor.settings,
+            "data": this.vendor.settings,
           }
         )
           .then(response => {

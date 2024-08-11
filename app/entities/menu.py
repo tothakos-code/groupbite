@@ -14,11 +14,11 @@ import datetime
 import logging
 
 class Frequency(enum.Enum):
-    FIX = 'fix'
-    DAILY = 'daily'
-    WEEKLY = 'weekly'
-    MONTHLY = 'monthly'
-    YEARLY = 'yearly'
+    FIX = "fix"
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    YEARLY = "yearly"
 
     def __str__(self):
         return self.value
@@ -26,7 +26,7 @@ class Frequency(enum.Enum):
 
 
 class Menu(Base):
-    __tablename__ = 'menu'
+    __tablename__ = "menu"
 
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -78,7 +78,7 @@ class Menu(Base):
 
         return session.execute(stmt).scalars().all()
 
-    def find_by_date(date=d.today().strftime('%Y-%m-%d')):
+    def find_by_date(date=d.today().strftime("%Y-%m-%d")):
         stmt = select(Menu).where(Menu.me_date == date)
         return session.execute(stmt).scalars().first()
 
@@ -132,7 +132,7 @@ class Menu(Base):
         for raw_menu_item in raw_item_list:
             found = False
             for item in menu.items:
-                if item.name == raw_menu_item['name']:
+                if item.name == raw_menu_item["name"]:
                     found = True
                     break
             if found:
@@ -141,10 +141,10 @@ class Menu(Base):
             session.add(
                 MenuItem(
                     menu_id=menu.id,
-                    name=raw_menu_item['name'],
-                    link=raw_menu_item['link'],
-                    size=raw_menu_item['size'],
-                    price=raw_menu_item['price']
+                    name=raw_menu_item["name"],
+                    link=raw_menu_item["link"],
+                    size=raw_menu_item["size"],
+                    price=raw_menu_item["price"]
                 )
             )
 
@@ -160,11 +160,11 @@ class Menu(Base):
     def serialized(self):
         from app.vendor_factory import VendorFactory
         return {
-            'id': self.id,
-            'name': self.name,
-            'date': str(self.date),
-            'vendor_id': str(self.vendor_id),
-            'freq': str(self.freq_id),
-            'active': self.active,
-            'items': [item.serialized for item in self.items]
+            "id": self.id,
+            "name": self.name,
+            "date": str(self.date),
+            "vendor_id": str(self.vendor_id),
+            "freq": str(self.freq_id),
+            "active": self.active,
+            "items": [item.serialized for item in self.items]
         }

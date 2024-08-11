@@ -55,7 +55,7 @@ import VersionInfo from "@/components/VersionInfo.vue"
 import { useAuth } from "@/stores/auth";
 
 export default {
-  name: 'SidebarMenu',
+  name: "SidebarMenu",
   components: {
     VersionInfo
   },
@@ -85,7 +85,7 @@ export default {
       }
 
       var h = hash % 360;
-      return 'hsl('+h+', '+s+'%, '+l+'%)';
+      return "hsl("+h+", "+s+"%, "+l+"%)";
 
     }
   }

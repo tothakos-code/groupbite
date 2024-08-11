@@ -217,21 +217,21 @@
 </template>
 
 <script>
-import GlobalBasketUser from '@/components/GlobalBasketUser.vue';
-import Popup from './Popup.vue';
-import { useAuth } from '@/stores/auth';
-import { useBasket } from '@/stores/basket';
-import axios from 'axios';
-import { ref, watch } from 'vue';
+import GlobalBasketUser from "@/components/GlobalBasketUser.vue";
+import Popup from "./Popup.vue";
+import { useAuth } from "@/stores/auth";
+import { useBasket } from "@/stores/basket";
+import axios from "axios";
+import { ref, watch } from "vue";
 import { state } from "@/main.js";
 
 export default {
-  name: 'WeekSummary',
+  name: "WeekSummary",
   components: {
     Popup,
     GlobalBasketUser,
   },
-  emits: ['close'],
+  emits: ["close"],
   setup() {
     const user_states = ref({});
     const weekdates = ref([]);
@@ -258,13 +258,13 @@ export default {
   },
   computed: {
     getCurrentMonthName() {
-      return this.currentDateSelected.toLocaleDateString('hu-HU', {month:'long'});
+      return this.currentDateSelected.toLocaleDateString("hu-HU", {month:"long"});
     },
     getTodayDayName() {
-      return this.currentDateSelected.toLocaleDateString('hu-HU', {weekday:'long'});
+      return this.currentDateSelected.toLocaleDateString("hu-HU", {weekday:"long"});
     },
     getTodayDayDate() {
-      return this.currentDateSelected.toLocaleDateString('hu-HU');
+      return this.currentDateSelected.toLocaleDateString("hu-HU");
     },
     orderCount(){
       return Object.keys(this.history).length;
@@ -302,7 +302,7 @@ export default {
         return false
       }
       for(const order of Object.values(orders)) {
-        if('ordered' in order){
+        if("ordered" in order){
             return true;
         }
       }
@@ -337,9 +337,9 @@ export default {
     getHistroy: function(from, to) {
       let url = `http://${window.location.host}/api/order/history`
       axios.post(url, {
-          'date_from': new Date(from).toISODate(),
-          'date_to': new Date(to).toISODate(),
-          'user_id': this.auth.isLoggedIn ? this.auth.user.id : undefined
+          "date_from": new Date(from).toISODate(),
+          "date_to": new Date(to).toISODate(),
+          "user_id": this.auth.isLoggedIn ? this.auth.user.id : undefined
         })
         .then((data) => {
           this.history = data.data;

@@ -206,16 +206,16 @@
 </template>
 
 <script>
-import UserProfilePopup from './UserProfilePopup.vue';
-import UserLoginPopup from './UserLoginPopup.vue';
+import UserProfilePopup from "./UserProfilePopup.vue";
+import UserLoginPopup from "./UserLoginPopup.vue";
 import { useAuth } from "@/stores/auth.js";
-import { inject } from 'vue';
-import axios from 'axios';
-import Popup from './Popup.vue';
-import GlobalBasketUser from './GlobalBasketUser.vue';
+import { inject } from "vue";
+import axios from "axios";
+import Popup from "./Popup.vue";
+import GlobalBasketUser from "./GlobalBasketUser.vue";
 
 export default {
-  name: 'UserMenu',
+  name: "UserMenu",
   components: {
     UserLoginPopup,
     UserProfilePopup,
@@ -224,7 +224,7 @@ export default {
   },
   setup() {
     const auth = useAuth();
-    const { theme, toggleDarkMode } = inject('theme')
+    const { theme, toggleDarkMode } = inject("theme")
     return {
       theme,
       toggleDarkMode,

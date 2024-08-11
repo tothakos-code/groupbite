@@ -12,14 +12,14 @@ import logging
 
 
 class VendorType(pyenum):
-    PLUGIN = 'plugin'
-    BASIC = 'basic'
+    PLUGIN = "plugin"
+    BASIC = "basic"
 
     def __str__(self):
         return self.value
 
 class Vendor(Base):
-    __tablename__ = 'vendor'
+    __tablename__ = "vendor"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, unique=True, nullable=False)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
@@ -66,13 +66,13 @@ class Vendor(Base):
                     logging.info("Scheduled order state stepping running")
                     from app.entities.order import Order, OrderState
 
-                    order = Order.find_open_order_by_date_for_a_vendor(self.id, date.today().strftime('%Y-%m-%d'))
+                    order = Order.find_open_order_by_date_for_a_vendor(self.id, date.today().strftime("%Y-%m-%d"))
                     if order:
                         order.change_state(OrderState.ORDER, None)
 
                         socketio = SocketioSingleton.get_instance()
                         socketio.emit("be_order_update", {
-                            'order': order.serialized
+                            "order": order.serialized
                         })
                     else:
                         logging.info("State already changed")
@@ -105,13 +105,13 @@ class Vendor(Base):
                     logging.info("Scheduled order state stepping running")
                     from app.entities.order import Order, OrderState
 
-                    order = Order.find_open_order_by_date_for_a_vendor(str(vendor_db.id), date.today().strftime('%Y-%m-%d'))
+                    order = Order.find_open_order_by_date_for_a_vendor(str(vendor_db.id), date.today().strftime("%Y-%m-%d"))
                     if order:
                         order.change_state(OrderState.ORDER, None)
 
                         socketio = SocketioSingleton.get_instance()
                         socketio.emit("be_order_update", {
-                            'order': order.serialized
+                            "order": order.serialized
                         })
                     else:
                         logging.info("State already changed")
@@ -127,9 +127,9 @@ class Vendor(Base):
     def serialized(self):
         from app.vendor_factory import VendorFactory
         return {
-            'id': str(self.id),
-            'name': self.name,
-            'active': self.active,
-            'type': str(self.type),
-            'settings': self.settings,
+            "id": str(self.id),
+            "name": self.name,
+            "active": self.active,
+            "type": str(self.type),
+            "settings": self.settings,
         }

@@ -55,7 +55,7 @@ class MenuItem(Base):
         if not items:
             item.index = 0
         else:
-            item.index = items[-1].index + 1
+            item.index = items[0].index + 1
         session.add(item)
         session.commit()
 

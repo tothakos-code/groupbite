@@ -6,6 +6,7 @@ from app.vendor_factory import VendorFactory
 import app.loader
 
 from app.controllers import main_blueprint
+from app.controllers import setting_blueprint
 from app.controllers import vendor_blueprint
 from app.controllers import menu_blueprint
 from app.controllers import order_blueprint
@@ -39,6 +40,8 @@ def create_app(debug=False):
 
     import app.controllers.main_controller
     application.register_blueprint(main_blueprint)
+    import app.controllers.setting_controller
+    application.register_blueprint(setting_blueprint)
     import app.controllers.vendor_controller
     application.register_blueprint(vendor_blueprint)
     import app.controllers.menu_controller

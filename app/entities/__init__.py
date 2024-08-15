@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from pathlib import Path
 from os import getenv
 
+
+
 dotenv_path = Path(".env")
 load_dotenv(dotenv_path=dotenv_path)
 
@@ -19,6 +21,7 @@ DB_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 engine = create_engine(DB_URL, pool_size=20, max_overflow=20, echo=False)
 session = Session(bind=engine)
+
 
 class Base(DeclarativeBase):
     def as_dict(self):

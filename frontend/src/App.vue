@@ -5,7 +5,7 @@
       <div class="row col-12 bg-body-secondary d-flex justify-content-between mx-0 px-0">
         <div class="col-7 justify-content-start align-items-center">
           <h3 class="text-truncate">
-            GroupBite
+            {{ app_title }}
           </h3>
         </div>
         <div class="col col-sm-3 d-flex justify-content-end align-items-center">
@@ -27,8 +27,8 @@
     </div>
     <notifications
       position="top center"
-      ignore-duplicates="true"
-      pause-on-hover="true"
+      :ignore-duplicates="true"
+      :pause-on-hover="true"
       classes="my-custom-class"
     >
       <template #body="props">
@@ -66,7 +66,7 @@
 <script>
 import UserMenu from "./components/UserMenu.vue"
 import Sidebar from "./components/Sidebar.vue"
-// import { socket } from "@/main";
+import axios from "axios";
 import { useAuth } from "@/stores/auth";
 import { useCookies } from "vue3-cookies";
 import { provide, ref } from "vue";
@@ -116,7 +116,8 @@ export default {
     return {
       showMenu: true,
       showGlobalMessage: false,
-      showHistroy: false
+      showHistroy: false,
+      app_title: ""
     }
   },
   computed: {
@@ -125,10 +126,14 @@ export default {
     }
   },
   mounted() {
-    const userDismissed = localStorage.getItem("gm-date-func-change");
-    if (!userDismissed) {
-      this.showGlobalMessage = true;
-    }
+    axios.get(`http://${window.location.host}/api/setting/get/app_title`)
+      .then(response => {
+        this.app_title = response.data.app_title;
+      })
+      .catch(e => {
+          console.log(e);
+          this.app_title = "GroupBite";
+      })
 
     const currentTheme = localStorage.getItem("theme");
     if (!currentTheme) {

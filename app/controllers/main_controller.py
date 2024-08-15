@@ -11,6 +11,7 @@ from app.socketio_singleton import SocketioSingleton
 from app.services.vendor_service import VendorService
 from app.entities.vendor import Vendor
 
+
 from dotenv import load_dotenv
 from pathlib import Path
 from os import getenv
@@ -39,6 +40,7 @@ def catch_all(path):
 def cron_new_day_refresh():
     socketio.emit("Refresh!")
     return "Refreshed", 200
+
 
 @socketio.on("connect")
 def handle_connect(auth=None):

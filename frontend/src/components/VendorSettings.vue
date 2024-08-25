@@ -4,15 +4,16 @@
       <div
         v-for="(setting, sid) in vendor.settings"
         :key="sid"
-        class="my-2"
+        class="my-2 w-25"
       >
         <label :for="setting.id">
           {{ setting.name }}:
         </label>
         <input
           v-model="setting.value"
-          type="text"
-          class="form-control w-25"
+          :type="setting.type == 'BOOL' ? 'checkbox' : setting.type == 'INT' ? 'number' : setting.type == 'STRBOX' ? 'textarea' : 'text'"
+          class="form-control"
+          :class="{'form-check-input': setting.type == 'BOOL' }"
           :name="setting.id"
         >
       </div>

@@ -59,31 +59,19 @@ class Vendor(Base):
     def update_settings(self, settings):
         if self.settings["closure_scheduler"]["value"] != settings["closure_scheduler"]["value"]:
             from app.scheduler import schedule_task, cancel_task
-            cancel_task(self.id)
-
+            cancel_task(str(self.id) + "-closure")
 
             if settings["closure_scheduler"]["value"] != "manual":
-
-                from app.socketio_singleton import SocketioSingleton
-
-                def closure_wrapper():
-                    logging.info("Scheduled order state stepping running")
-                    from app.entities.order import Order, OrderState
-
-                    order = Order.find_open_order_by_date_for_a_vendor(self.id, date.today().strftime("%Y-%m-%d"))
-                    if order:
-                        order.change_state(OrderState.ORDER, None)
-
-                        socketio = SocketioSingleton.get_instance()
-                        socketio.emit("be_order_update", {
-                            "order": order.serialized
-                        })
-                    else:
-                        logging.info("State already changed")
-
-
                 hh, mm = settings["closure_scheduler"]["value"].split(":")
-                schedule_task(str(self.id), int(hh), int(mm), closure_wrapper)
+                schedule_task(str(self.id) + "-closure", int(hh), int(mm), self.closure_wrapper)
+
+        if self.settings["closed_scheduler"]["value"] != settings["closed_scheduler"]["value"]:
+            from app.scheduler import schedule_task, cancel_task
+            cancel_task(str(self.id) + "-closed")
+
+            if settings["closed_scheduler"]["value"] != "manual":
+                hh, mm = settings["closed_scheduler"]["value"].split(":")
+                schedule_task(str(self.id) + "-closed", int(hh), int(mm), self.closed_wrapper)
 
         self.settings = settings;
         session.commit()
@@ -104,28 +92,65 @@ class Vendor(Base):
 
             if vendor_db.settings["closure_scheduler"]["value"] != "manual":
                 from app.scheduler import schedule_task, cancel_task
-                from app.socketio_singleton import SocketioSingleton
+                hh, mm = vendor_db.settings["closure_scheduler"]["value"].split(":")
+                schedule_task(str(vendor_db.id) + "-closure", int(hh), int(mm), vendor_db.closure_wrapper)
 
-                def closure_wrapper():
-                    logging.info("Scheduled order state stepping running")
-                    from app.entities.order import Order, OrderState
-
-                    order = Order.find_open_order_by_date_for_a_vendor(str(vendor_db.id), date.today().strftime("%Y-%m-%d"))
-                    if order:
-                        order.change_state(OrderState.ORDER, None)
-
-                        socketio = SocketioSingleton.get_instance()
-                        socketio.emit("be_order_update", {
-                            "order": order.serialized
-                        })
-                    else:
-                        logging.info("State already changed")
-
-
-                hh, mm = settings["closure_scheduler"]["value"].split(":")
-                schedule_task(str(vendor_db.id), int(hh), int(mm), closure_wrapper)
+            if vendor_db.settings["closed_scheduler"]["value"] != "manual":
+                from app.scheduler import schedule_task, cancel_task
+                hh, mm = vendor_db.settings["closed_scheduler"]["value"].split(":")
+                schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
 
         session.commit()
+
+    def closure_wrapper(self):
+        logging.info("Scheduled order state stepping running")
+        from app.socketio_singleton import SocketioSingleton
+        from app.entities.order import Order, OrderState
+
+        order = Order.find_open_order_by_date_for_a_vendor(self.id, date.today().strftime("%Y-%m-%d"))
+        if order:
+            order.change_state(OrderState.ORDER, None)
+
+            socketio = SocketioSingleton.get_instance()
+            socketio.emit("be_order_update", {
+                "order": order.serialized
+            })
+        else:
+            logging.info("State already changed")
+
+
+    def closed_wrapper(self):
+        logging.info("Scheduled order state stepping running")
+        from app.entities.order import Order, OrderState
+
+        order = Order.find_open_order_by_date_for_a_vendor(str(self.id), date.today().strftime("%Y-%m-%d"))
+        if order:
+            from app.socketio_singleton import SocketioSingleton
+            # order.change_state(OrderState.CLOSED, None)
+            if self.settings["auto_email_order"]["value"] == True:
+                from app.services.mail_sender_service import send_mail
+                from app.entities.user_basket import UserBasket
+                baskets = UserBasket.find_items_by_order(order.id)
+                email_body = ""
+                for basket in baskets:
+                    pattern = self.settings["order_text_template"]["value"]
+                    email_body += pattern \
+                        .replace("${quantity}", str(basket.count)) \
+                        .replace("${item_name}", basket.item.name) \
+                        .replace("${size_name}", basket.size.name) \
+                        .replace("\\n", "<br>")
+
+                email_template = self.settings["auto_email_order_template"]["value"]
+                email_template = email_template.replace("${basket}", email_body)
+                logging.info("Scheduled automatic order email sent!")
+                send_mail(self.settings["auto_email_order_to"]["value"], "Makkos rendelés", email_template)
+
+            socketio = SocketioSingleton.get_instance()
+            socketio.emit("be_order_update", {
+                "order": order.serialized
+            })
+        else:
+            logging.info("State already changed")
 
 
     @property

@@ -36,7 +36,8 @@ def send_mail(to, subject, body, settings=None):
     msg['Subject'] = subject
 
     # Attach the email body
-    msg.attach(MIMEText(body, 'html'))
+    msg.attach(MIMEText(body.replace("\r\n", "<br>"), 'html'))
+    msg.attach(MIMEText(body.replace("<br>", "\r\n"), 'plain'))
 
     # Try to log in to server and send email
     try:

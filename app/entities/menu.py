@@ -147,6 +147,7 @@ class Menu(Base):
                     price=raw_menu_item["price"]
                 )
             )
+        session.commit()
 
     def create_menu(name, vendor, date, freq):
         menu = Menu.find_vendor_menu(vendor,date)

@@ -15,6 +15,29 @@
         />
       </div>
     </div>
+    <div class="row">
+      <div
+        v-for="category, index in categories"
+        :key="index"
+        class="d-flex justify-content-center flex-fill col-6 col-sm-4 col-lg-3 col-xxl-1"
+      >
+        <input
+          :id="category"
+          type="radio"
+          name="daySelectionRadio"
+          class="btn-check"
+          role="button"
+        >
+        <label
+          :for="category"
+          class="btn btn-sm my-1 rounded rounded-5 text-nowrap d-flex align-items-center"
+          :class="['btn-outline-' + auth.getUserColor]"
+          @click="setFilter(category)"
+        >
+          {{ category }}
+        </label>
+      </div>
+    </div>
     <div class="row col list-group">
       <div class="col">
         <div class="list-group m-1">
@@ -58,16 +81,8 @@ export default {
   data() {
     return {
       itemlist: [],
-      others: {"0":"[]","1":"[]","2":"[]","3":"[]","4":"[]","5":"[]","6":"[]"},
-      dayTitles: {
-        "0":"Hétfői menü",
-        "1":"Keddi menü",
-        "2":"Szerdai menü",
-        "3":"Csütörtöki menü",
-        "4":"Pénteki menü",
-        "5":"Szombati menü",
-        "6":"Vasárnapi menü"
-      }
+      filter:[],
+      categories: new Set(["minden"])
     }
   },
   computed: {
@@ -83,11 +98,18 @@ export default {
       if (day === undefined) {
         day = new Date().toISODate()
       }
-      let url = `http://${window.location.host}/api/menu/get/${state.selected_vendor.id}/${day}`;
+      let url = `http://${window.location.host}/api/menu/get/${state.selected_vendor.id}`;
 
-      axios.get(url)
+      axios.post(url,  {
+          "date": day,
+          "filter": this.filter
+        })
         .then(response => {
           this.itemlist = response.data;
+          this.categories = new Set(["minden"])
+          for (var item of this.itemlist) {
+            this.categories.add(item.category)
+          }
         })
         .catch(error => console.error(error));
     },
@@ -129,6 +151,14 @@ export default {
       }
 
       return weekDates;
+    },
+    setFilter(category) {
+      if (category === "minden") {
+        this.filter = [];
+      } else {
+        this.filter = [category];
+      }
+      this.loadMenu(state.selectedDate.toISODate());
     }
   }
 }

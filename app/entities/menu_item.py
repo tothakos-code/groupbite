@@ -34,8 +34,11 @@ class MenuItem(Base):
 
         return session.execute(stmt).scalars().all()
 
-    def find_all_by_menu_list(menu_id_list, desc=False):
-        stmt = select(MenuItem).where(MenuItem.menu_id.in_(menu_id_list))
+    def find_all_by_menu_list(menu_id_list, filter=[], desc=False):
+        stmt = select(MenuItem).where(
+            MenuItem.menu_id.in_(menu_id_list),
+            MenuItem.category.in_(filter) if len(filter) != 0 else True
+            )
         if desc:
             stmt = stmt.order_by(MenuItem.category, MenuItem.index.desc())
         else:

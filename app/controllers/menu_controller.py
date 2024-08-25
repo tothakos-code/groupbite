@@ -73,13 +73,14 @@ def import_menu(vendor_id):
         return "Failed to parse JSON file", 400
     return "OK", 201
 
-@menu_blueprint.route("/get/<vendor_id>", defaults={"requested_date": date.today().strftime("%Y-%m-%d")})
-@menu_blueprint.route("/get/<vendor_id>/<requested_date>")
-def get_requested_menu(vendor_id, requested_date):
+@menu_blueprint.route("/get/<vendor_id>", methods=["POST"])
+def get_requested_menu(vendor_id):
+    requested_date = request.json["date"]
+    filter = request.json["filter"]
     vendor = VendorFactory.get_one_vendor_object(str(vendor_id))
     if vendor is None:
         return "No vendor found with that id", 404
-    return vendor.get_menu(requested_date)
+    return vendor.get_menu(requested_date, filter)
 
 
 @menu_blueprint.route("/get_week", defaults={"requested_date": date.today().strftime("%Y-%m-%d")})

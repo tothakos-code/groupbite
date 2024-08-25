@@ -31,11 +31,11 @@
 </template>
 
 <script>
-// import axios from 'axios';
-import { useAuth } from '@/stores/auth';
+// import axios from "axios";
+import { useAuth } from "@/stores/auth";
 
 export default {
-    name: 'AdminView',
+    name: "AdminView",
     setup() {
       const auth = useAuth();
       return {
@@ -43,7 +43,7 @@ export default {
       }
     },
     data() {
-
+      return {}
     },
     mounted() {
     },

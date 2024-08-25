@@ -19,17 +19,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-import App from './App.vue';
-import VueCookies from 'vue3-cookies';
-import VueClipboard from 'vue3-clipboard';
-import Notifications from '@kyvg/vue3-notification';
-import router from './router.js';
-import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap/dist/js/bootstrap.js';
-import './assets/scss/main.scss';
-import { socket, state } from '@/socket'
+import { createApp } from "vue";
+import { createPinia } from "pinia";
+import App from "./App.vue";
+import VueCookies from "vue3-cookies";
+import VueClipboard from "vue3-clipboard";
+import Notifications from "@kyvg/vue3-notification";
+import router from "./router.js";
+import "bootstrap/dist/css/bootstrap.css";
+import "bootstrap/dist/js/bootstrap.js";
+import "./assets/scss/main.scss";
+import { socket, state } from "@/socket"
 
 const app = createApp(App);
 const pinia = createPinia()
@@ -63,8 +63,8 @@ Date.prototype.getWeek = function() {
 }
 
 Date.prototype.toISODate = function() {
-  return this.toISOString().split('T')[0]
+  return this.toISOString().split("T")[0]
 };
-app.mount('#app');
+app.mount("#app");
 
 export { socket, state }

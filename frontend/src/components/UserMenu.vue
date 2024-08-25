@@ -38,11 +38,14 @@
       <a
         id="dropdownMenuButton1"
         type="button"
-        class="text-reset links dropdown-toggle hide-xs-arrow"
+        class="text-reset links dropdown-toggle hide-xs-arrow d-flex align-items-center"
         data-bs-toggle="dropdown"
         aria-expanded="false"
       >
-        <span class="d-none d-sm-inline pe-1">{{ auth.user.username }}</span>
+        <span
+          class="d-none d-sm-inline-block pe-1 text-truncate"
+          style="max-width: 150px;"
+        >{{ auth.user.username }}</span>
         <span class="d-inline d-sm-none">☰</span>
       </a>
       <ul
@@ -53,7 +56,10 @@
             class="dropdown-item disabled"
             aria-disabled="true"
           >
-            <span>
+            <span
+              class="d-inline-block text-truncate"
+              style="max-width: 150px;"
+            >
               {{ auth.user.username }}
             </span>
           </button>
@@ -200,16 +206,16 @@
 </template>
 
 <script>
-import UserProfilePopup from './UserProfilePopup.vue';
-import UserLoginPopup from './UserLoginPopup.vue';
+import UserProfilePopup from "./UserProfilePopup.vue";
+import UserLoginPopup from "./UserLoginPopup.vue";
 import { useAuth } from "@/stores/auth.js";
-import { inject } from 'vue';
-import axios from 'axios';
-import Popup from './Popup.vue';
-import GlobalBasketUser from './GlobalBasketUser.vue';
+import { inject } from "vue";
+import axios from "axios";
+import Popup from "./Popup.vue";
+import GlobalBasketUser from "./GlobalBasketUser.vue";
 
 export default {
-  name: 'UserMenu',
+  name: "UserMenu",
   components: {
     UserLoginPopup,
     UserProfilePopup,
@@ -218,7 +224,7 @@ export default {
   },
   setup() {
     const auth = useAuth();
-    const { theme, toggleDarkMode } = inject('theme')
+    const { theme, toggleDarkMode } = inject("theme")
     return {
       theme,
       toggleDarkMode,

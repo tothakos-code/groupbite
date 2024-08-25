@@ -3,12 +3,12 @@
     <Sidebar />
     <div class="col px-0 w-100 flex-grow-1">
       <div class="row col-12 bg-body-secondary d-flex justify-content-between mx-0 px-0">
-        <div class="col-8 justify-content-start align-items-center">
+        <div class="col-7 justify-content-start align-items-center">
           <h3 class="text-truncate">
-            GroupBite
+            {{ app_title }}
           </h3>
         </div>
-        <div class="col col-md-3 d-flex justify-content-end align-items-center">
+        <div class="col col-sm-3 d-flex justify-content-end align-items-center">
           <UserMenu />
         </div>
       </div>
@@ -27,6 +27,8 @@
     </div>
     <notifications
       position="top center"
+      :ignore-duplicates="true"
+      :pause-on-hover="true"
       classes="my-custom-class"
     >
       <template #body="props">
@@ -62,18 +64,18 @@
 
 
 <script>
-import UserMenu from './components/UserMenu.vue'
-import Sidebar from './components/Sidebar.vue'
-// import { socket } from "@/main";
+import UserMenu from "./components/UserMenu.vue"
+import Sidebar from "./components/Sidebar.vue"
+import axios from "axios";
 import { useAuth } from "@/stores/auth";
 import { useCookies } from "vue3-cookies";
-import { provide, ref } from 'vue';
+import { provide, ref } from "vue";
 
 
 
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
     UserMenu,
     Sidebar,
@@ -86,10 +88,10 @@ export default {
     auth.checkSession();
 
     function toggleDarkMode() {
-      if (theme.value === 'dark') {
-        theme.value = 'light'
+      if (theme.value === "dark") {
+        theme.value = "light"
       } else {
-        theme.value = 'dark'
+        theme.value = "dark"
       }
       localStorage.setItem("theme", theme.value);
       location.reload();
@@ -98,10 +100,10 @@ export default {
       //     this.auth.user = user;
       //   });
       // }
-      document.documentElement.setAttribute('data-bs-theme', theme.value)
+      document.documentElement.setAttribute("data-bs-theme", theme.value)
     }
 
-    provide('theme', {
+    provide("theme", {
       theme,
       toggleDarkMode,
     })
@@ -114,28 +116,33 @@ export default {
     return {
       showMenu: true,
       showGlobalMessage: false,
-      showHistroy: false
+      showHistroy: false,
+      app_title: ""
     }
   },
   computed: {
     isDataLoaded(){
-      return (this.auth.user !== undefined && this.auth.user.ui_color) || !this.$cookies.isKey('username')
+      return (this.auth.user !== undefined && this.auth.user.ui_color) || !this.$cookies.isKey("username")
     }
   },
   mounted() {
-    const userDismissed = localStorage.getItem("gm-date-func-change");
-    if (!userDismissed) {
-      this.showGlobalMessage = true;
-    }
+    axios.get(`http://${window.location.host}/api/setting/get/app_title`)
+      .then(response => {
+        this.app_title = response.data.app_title;
+      })
+      .catch(e => {
+          console.log(e);
+          this.app_title = "GroupBite";
+      })
 
     const currentTheme = localStorage.getItem("theme");
     if (!currentTheme) {
-      this.theme = 'light'
+      this.theme = "light"
     } else {
       this.theme = currentTheme
     }
     localStorage.setItem("theme", this.theme);
-    document.documentElement.setAttribute('data-bs-theme', this.theme)
+    document.documentElement.setAttribute("data-bs-theme", this.theme)
   },
 }
 </script>

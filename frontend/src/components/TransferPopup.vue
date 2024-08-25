@@ -131,16 +131,16 @@
 </template>
 
 <script>
-import Popup from './Popup.vue';
+import Popup from "./Popup.vue";
 import { state, socket } from "@/main";
 import { useAuth } from "@/stores/auth";
 import { useBasket } from "@/stores/basket";
-import { copyText } from 'vue3-clipboard';
+import { copyText } from "vue3-clipboard";
 import { notify } from "@kyvg/vue3-notification";
-import { watch } from 'vue';
+import { watch } from "vue";
 
 export default {
-  name: 'TransferPopup',
+  name: "TransferPopup",
   components: {
     Popup
   },
@@ -246,7 +246,7 @@ export default {
   },
   methods: {
     openPopup: function() {
-      if (state.order.state_id === 'closed') {
+      if (state.order.state_id === "closed") {
         notify({
           type: "warn",
           text: "A rendelést ma már elküldték",
@@ -273,10 +273,10 @@ export default {
           continue
         }
         orderText += state.selected_vendor.settings.order_text_template.value
-          .replace('${quantity}', item.quantity)
-          .replace('${item_name}', item.item_name)
-          .replace('${size_name}', item.size_name)
-          .replace('\\n', "\n");
+          .replace("${quantity}", item.quantity)
+          .replace("${item_name}", item.item_name)
+          .replace("${size_name}", item.size_name)
+          .replace("\\n", "\n");
 
         // orderText += `${item.quantity}x ${item.item_name} ${item.size_name}\n`;
         item.tick = true;

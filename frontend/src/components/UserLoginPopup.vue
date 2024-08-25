@@ -35,22 +35,36 @@
         aria-describedby="basic-addon1"
       >
     </div>
+    <div
+      v-if="!showLogin"
+      class="input-group mb-3"
+    >
+      <span class="input-group-text">Email cím</span>
+      <input
+        v-model.trim="email"
+        type="text"
+        class="form-control"
+        placeholder="Email cím"
+        aria-label="Email"
+        aria-describedby="basic-addon2"
+      >
+    </div>
   </Popup>
 </template>
 
 <script>
-import Popup from './Popup.vue';
+import Popup from "./Popup.vue";
 import { useAuth } from "@/stores/auth.js";
 
 export default {
-  name: 'UserLoginPopup',
+  name: "UserLoginPopup",
   components: {
     Popup
   },
   props: {
     show: Boolean
   },
-  emits: ['cancel', 'confirm'],
+  emits: ["cancel", "confirm"],
   setup() {
     const auth = useAuth();
     return {
@@ -60,6 +74,7 @@ export default {
   data() {
     return {
       username: "",
+      email: "",
       showLogin: true
     }
   },
@@ -71,11 +86,11 @@ export default {
   methods: {
     login: function() {
       this.auth.login(this.username);
-      this.$emit('cancel');
+      this.$emit("cancel");
     },
     register: function() {
-      this.auth.register(this.username);
-      this.$emit('cancel');
+      this.auth.register(this.username, this.email);
+      this.$emit("cancel");
     },
     change_login: function() {
       this.showLogin = !this.showLogin;
@@ -89,7 +104,7 @@ export default {
     },
     cancel: function() {
       this.showLogin = true;
-      this.$emit('cancel');
+      this.$emit("cancel");
     }
   }
 }

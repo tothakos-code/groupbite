@@ -408,12 +408,12 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { useAuth } from '@/stores/auth';
+import axios from "axios";
+import { useAuth } from "@/stores/auth";
 import { notify } from "@kyvg/vue3-notification";
 
 export default {
-    name: 'VendorItemManager',
+    name: "VendorItemManager",
     setup() {
       const auth = useAuth();
       return {
@@ -479,7 +479,7 @@ export default {
           })
       },
       addToMenu: function () {
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-add`, {'data':this.newItem, 'menu': this.selectedMenu})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-add`, {"data":this.newItem, "menu": this.selectedMenu})
           .then(() => {
             this.getItemList()
             notify({
@@ -526,7 +526,7 @@ export default {
       updateItem: function (item_id) {
         const item = this.items.get(item_id)
         this.items.set(item.id, { ...item, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-update`, {'data': item})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-update`, {"data": item})
           .then(() => {
             this.getItemList()
             notify({
@@ -545,7 +545,7 @@ export default {
       updateSize: function (itemId, sizeId) {
         const size = this.items.get(itemId).sizes.get(sizeId)
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-size-update`, {'data': size, 'item': itemId})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-size-update`, {"data": size, "item": itemId})
           .then(() => {
             this.getItemList()
             notify({
@@ -564,7 +564,7 @@ export default {
       deleteItem: function (item_id) {
         const item = this.items.get(item_id)
         this.items.set(item.id, { ...item, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-delete`, {'data': item})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-delete`, {"data": item})
           .then(() => {
             this.getItemList()
             notify({
@@ -583,7 +583,7 @@ export default {
       deleteSize: function (itemId, sizeId) {
         const size = this.items.get(itemId).sizes.get(sizeId)
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-size-delete`, {'data': size})
+        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-size-delete`, {"data": size})
           .then(() => {
             this.getItemList()
             notify({

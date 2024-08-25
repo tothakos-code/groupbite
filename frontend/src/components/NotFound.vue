@@ -19,10 +19,10 @@
 </template>
 
 <script>
-import { useAuth } from '@/stores/auth';
+import { useAuth } from "@/stores/auth";
 
 export default {
-    name: 'NotFound',
+    name: "NotFound",
     setup() {
       const auth = useAuth();
       return {

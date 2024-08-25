@@ -136,10 +136,10 @@
 <script>
 import { useAuth } from "@/stores/auth";
 import { useBasket } from "@/stores/basket";
-import { ref, watch } from 'vue';
+import { ref, watch } from "vue";
 
 export default {
-  name: 'LocalBasket',
+  name: "LocalBasket",
   setup() {
     const auth = useAuth();
     const basket = useBasket();

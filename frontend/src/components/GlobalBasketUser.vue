@@ -4,8 +4,11 @@
     :class="auth.isLoggedIn && username === auth.user.username ? 'border border-2 border-'+ auth.getUserColor : ''"
   >
     <div class="card-header row d-flex pe-0">
-      <div class="col-6">
-        <span>{{ username }}</span>
+      <div class="col-6 d-inline-block d-flex align-items-center">
+        <span
+          class=" text-truncate"
+          style="max-width: 120px;"
+        >{{ username }}</span>
         <a
           v-if="copyable && auth.isLoggedIn && username !== auth.user.username"
           class="ms-2 p-1 btn btn-sm"
@@ -91,29 +94,29 @@ import { useAuth } from "@/stores/auth";
 import { useBasket } from "@/stores/basket";
 
 export default {
-  name: 'GlobalBasketUser',
+  name: "GlobalBasketUser",
   props: {
-    'username':{
+    "username":{
       type: String,
       default: ""
     },
-    'userId':{
+    "userId":{
       type: String,
       default: ""
     },
-    'userBasket':{
+    "userBasket":{
       type: Object,
       default: new Object()
     },
-    'startCollapsed':{
+    "startCollapsed":{
       type: Boolean,
       default: false
     },
-    'collapsable':{
+    "collapsable":{
       type: Boolean,
       default: true
     },
-    'copyable':{
+    "copyable":{
       type: Boolean,
       default: true
     }
@@ -143,9 +146,9 @@ export default {
     basketTotalTitle() {
       let sumTitle = ""
       Object.values(this.userBasket).forEach((entry) => {
-          sumTitle+= entry.quantity + '*' + entry.price + ' Ft + ';
+          sumTitle+= entry.quantity + "*" + entry.price + " Ft + ";
       });
-      sumTitle+= this.basket.transportFeePerPerson + ' Ft(Szállítási díj) = ' + this.sum + ' Ft';
+      sumTitle+= this.basket.transportFeePerPerson + " Ft(Szállítási díj) = " + this.sum + " Ft";
       return sumTitle;
     },
   },

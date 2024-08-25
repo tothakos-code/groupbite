@@ -9,10 +9,10 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
 class Size(Base):
-    __tablename__ = 'size'
+    __tablename__ = "size"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    menu_item_id: Mapped[int] = mapped_column(ForeignKey("menu_item.id", ondelete='CASCADE'))
+    menu_item_id: Mapped[int] = mapped_column(ForeignKey("menu_item.id", ondelete="CASCADE"))
     name: Mapped[str]
     link: Mapped[str]
     price: Mapped[int]
@@ -65,9 +65,9 @@ class Size(Base):
     @property
     def serialized(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'price': self.price,
-            'quantity': self.quantity,
-            'index': self.index,
+            "id": self.id,
+            "name": self.name,
+            "price": self.price,
+            "quantity": self.quantity,
+            "index": self.index,
         }

@@ -39,9 +39,9 @@ import { useBasket } from "@/stores/basket";
 
 
 export default {
-  name: 'MenuItem',
+  name: "MenuItem",
   props: {
-    'item':{
+    "item":{
       type: Object,
       default: new Object()
     },

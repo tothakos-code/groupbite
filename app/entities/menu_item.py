@@ -10,7 +10,7 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
 class MenuItem(Base):
-    __tablename__ = 'menu_item'
+    __tablename__ = "menu_item"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     menu_id: Mapped[int] = mapped_column(ForeignKey("menu.id"))
@@ -34,8 +34,11 @@ class MenuItem(Base):
 
         return session.execute(stmt).scalars().all()
 
-    def find_all_by_menu_list(menu_id_list, desc=False):
-        stmt = select(MenuItem).where(MenuItem.menu_id.in_(menu_id_list))
+    def find_all_by_menu_list(menu_id_list, filter=[], desc=False):
+        stmt = select(MenuItem).where(
+            MenuItem.menu_id.in_(menu_id_list),
+            MenuItem.category.in_(filter) if len(filter) != 0 else True
+            )
         if desc:
             stmt = stmt.order_by(MenuItem.category, MenuItem.index.desc())
         else:
@@ -55,7 +58,7 @@ class MenuItem(Base):
         if not items:
             item.index = 0
         else:
-            item.index = items[-1].index + 1
+            item.index = items[0].index + 1
         session.add(item)
         session.commit()
 
@@ -73,9 +76,9 @@ class MenuItem(Base):
     @property
     def serialized(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'index': self.index,
-            'sizes': [size.serialized for size in self.sizes],
-            'category': self.category
+            "id": self.id,
+            "name": self.name,
+            "index": self.index,
+            "sizes": [size.serialized for size in self.sizes],
+            "category": self.category
         }

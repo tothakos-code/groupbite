@@ -61,11 +61,11 @@
 
 <script>
 import { state } from "@/main";
-import GlobalBasketUser from './GlobalBasketUser.vue'
+import GlobalBasketUser from "./GlobalBasketUser.vue"
 import { useBasket } from "@/stores/basket";
 
 export default {
-  name: 'GlobalBasket',
+  name: "GlobalBasket",
   components: {
     GlobalBasketUser
   },

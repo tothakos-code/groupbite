@@ -4,15 +4,16 @@
       <div
         v-for="(setting, sid) in vendor.settings"
         :key="sid"
-        class="my-2"
+        class="my-2 w-25"
       >
         <label :for="setting.id">
           {{ setting.name }}:
         </label>
         <input
           v-model="setting.value"
-          type="text"
-          class="form-control w-25"
+          :type="setting.type == 'BOOL' ? 'checkbox' : setting.type == 'INT' ? 'number' : setting.type == 'STRBOX' ? 'textarea' : 'text'"
+          class="form-control"
+          :class="{'form-check-input': setting.type == 'BOOL' }"
           :name="setting.id"
         >
       </div>
@@ -30,12 +31,12 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { useAuth } from '@/stores/auth';
+import axios from "axios";
+import { useAuth } from "@/stores/auth";
 import { notify } from "@kyvg/vue3-notification";
 
 export default {
-    name: 'VendorSettings',
+    name: "VendorSettings",
     setup() {
       const auth = useAuth();
       return {
@@ -64,7 +65,7 @@ export default {
         axios.post(
           `http://${window.location.host}/api/vendor/${this.$route.params.id}/settings/save`,
           {
-            'data': this.vendor.settings,
+            "data": this.vendor.settings,
           }
         )
           .then(response => {

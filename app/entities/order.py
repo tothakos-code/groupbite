@@ -9,16 +9,16 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
 class OrderState(enum.Enum):
-    COLLECT = 'collect'
-    ORDER = 'order'
-    CLOSED = 'closed'
+    COLLECT = "collect"
+    ORDER = "order"
+    CLOSED = "closed"
 
     def __str__(self):
         return self.value
 
 
 class Order(Base):
-    __tablename__ = 'order'
+    __tablename__ = "order"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     vendor_id: Mapped[UUID] = mapped_column(ForeignKey("vendor.id"))
@@ -45,16 +45,18 @@ class Order(Base):
         stmt = select(Order).where(Order.id == order_id)
         return session.execute(stmt).scalars().first()
 
-    def find_open_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today() ):
-        return session.query(Order).filter(
+    def find_open_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today()):
+        stmt = select(Order).where(
             Order.vendor_id == vendor_id,
             Order.date_of_order == date,
-            Order.state_id == OrderState.COLLECT).first()
+            Order.state_id != OrderState.CLOSED)
+        return session.execute(stmt).scalars().first()
 
-    def find_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today() ):
-        return session.query(Order).filter(
+    def find_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today()):
+        stmt = select(Order).where(
             Order.vendor_id == vendor_id,
-            Order.date_of_order == date).first()
+            Order.date_of_order == date)
+        return session.execute(stmt).scalars().first()
 
     def find_order_between(date_from, date_to):
         stmt = select(Order).where(
@@ -70,10 +72,10 @@ class Order(Base):
     @property
     def serialized(self):
         return {
-            'id': self.id,
-            'vendor_id': str(self.vendor_id),
-            'state_id': str(self.state_id),
-            'user_id': str(self.user_id),
-            'date_of_order': self.date_of_order.strftime('%Y-%m-%d'),
-            'order_time': self.order_time
+            "id": self.id,
+            "vendor_id": str(self.vendor_id),
+            "state_id": str(self.state_id),
+            "user_id": str(self.user_id),
+            "date_of_order": self.date_of_order.strftime("%Y-%m-%d"),
+            "order_time": self.order_time
         }

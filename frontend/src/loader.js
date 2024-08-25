@@ -2,7 +2,7 @@ import { state } from "@/main";
 
 export function register_plugin_routes(router) {
   state.vendors.forEach((item) => {
-    if (!router.hasRoute('/'+item.name)) {
+    if (!router.hasRoute("/"+item.name)) {
       let component = () => import("@/views/MenuRender.vue")
       router.addRoute("menu", {
         name: `${item.name}`,

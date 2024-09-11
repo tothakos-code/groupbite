@@ -210,12 +210,12 @@ def handle_close_order(data):
     order_date = str(data["date"])
     user_id = str(data["user_id"])
     vendor_id = str(data["vendor_id"])
-
+    logging.info(f"Order close initiated by {user_id} on vendor {vendor}")
 
     order = Order.find_open_order_by_date_for_a_vendor(vendor_id, order_date)
 
     from app.event_manager import event_manager
-    event_manager.trigger_event("beforeClose@" + order.vendor.name, request.json)
+    event_manager.trigger_event("beforeClose@" + order.vendor.name, data)
 
     order.change_state(OrderState.CLOSED, user_id)
     if "order_fee" in data:
@@ -223,8 +223,8 @@ def handle_close_order(data):
     else:
         order.set_order_fee(order.vendor.settings["transport_price"]["value"])
 
-    event_manager.trigger_event("afterClose@" + order.vendor.name, request.json)
-
+    event_manager.trigger_event("afterClose@" + order.vendor.name, data)
+    logging.info(f"Order closed succesfully")
     socketio.emit("be_order_update", {
         "order": order.serialized
     })

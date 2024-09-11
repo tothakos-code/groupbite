@@ -260,7 +260,15 @@ export default {
       }
     },
     closeOrder: function() {
-      console.log(state.selecedDate);
+      for (const item of this.orderItems) {
+        if (!item.tick) {
+          notify({
+            type: "warn",
+            text: "Minden sort kikell pipálnod mielött lezárhatod a rendelést.",
+          });
+          return
+        }
+      }
       socket.emit("fe_order_closed", {
         date: state.order.date_of_order,
         user_id: this.auth.user.id,

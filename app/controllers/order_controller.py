@@ -105,7 +105,7 @@ def handle_date_selection_change(data):
         old_date = data["old_selected_date"]
         leave_room(f"{vendor_id}_{old_date}")
 
-    join_room(f"{vendor_id}_{new_date}")
+    join_room(f"{vendor_id}@{new_date}")
 
     order = Order.find_order_by_date_for_a_vendor(vendor_id, new_date)
 

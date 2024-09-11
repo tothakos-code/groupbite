@@ -23,7 +23,7 @@ class BaseVendor(object):
     def get_menu(self, date, filter=[]):
         menus = Menu.find_vendor_all_menu(self.id, date)
         menuids = [menu.id for menu in menus]
-        logging.info(menuids)
+
         items = MenuItem.find_all_by_menu_list(menuids, filter)
         result = []
         for i in items:

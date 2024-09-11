@@ -77,10 +77,10 @@ def handle_user_update():
     if "username" in user:
         # Updating the username in every basket(room) a user is in
         for room_name,room in socketio.server.manager.rooms["/"].items():
-            if room_name != None and "_" in room_name:
-                logging.info(room_name)
-                logging.info(room)
-                vendor, date = room_name.split("_")
+            logging.info(room_name)
+            if room_name != None and "@" in room_name:
+
+                vendor, date = room_name.split("@")
                 # TODO: check if user has items in that oreder, and only update them
                 order = Order.find_order_by_date_for_a_vendor(vendor, date)
                 socketio.emit(

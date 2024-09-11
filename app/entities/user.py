@@ -73,6 +73,9 @@ class User(Base):
         if User.get_one_by_username(username):
             return False, "Ez a felhasználónév már foglalt"
 
+        if len(username) > 50:
+            return False, "Felhasználónév túl hosszú, válassz rövidebbet"
+
         return True, ""
 
     def is_email_valid(email):

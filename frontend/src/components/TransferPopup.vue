@@ -226,10 +226,12 @@ export default {
               for (const oldItem of oldMap.values()) {
                 if (oldItem.tick && !oldItem.deleted) {
                   itemMap.set(oldItem.item_id, {...oldItem, tick: false, deleted:true})
-                  notify({
-                    type: "warn",
-                    text: "Egy terméket töröltek a kosárból amit már átraktál: " + oldItem.item_name+". A lista frissült!",
-                  });
+                  if (this.showInitial) {
+                    notify({
+                      type: "warn",
+                      text: "Egy terméket töröltek a kosárból amit már átraktál: " + oldItem.item_name+". A lista frissült!",
+                    });
+                  }
                 }
                 if (oldItem.deleted && !oldItem.tick) {
                   itemMap.set(oldItem.item_id, {...oldItem, tick: false, deleted:true})

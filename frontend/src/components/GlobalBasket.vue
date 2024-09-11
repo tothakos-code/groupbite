@@ -53,6 +53,7 @@
         :username="user_entry.username"
         :user-id="user_entry.user_id"
         :user-basket="user_entry.items"
+        :order-fee="transportFee"
         :collapsable="false"
       />
     </div>
@@ -60,7 +61,6 @@
 </template>
 
 <script>
-import { state } from "@/main";
 import GlobalBasketUser from "./GlobalBasketUser.vue"
 import { useBasket } from "@/stores/basket";
 
@@ -77,7 +77,7 @@ export default {
   },
   computed: {
     transportFee() {
-      return state.selected_vendor.settings.transport_price.value
+      return this.basket.transportFeePerPerson
     },
   }
 }

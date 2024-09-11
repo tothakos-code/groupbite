@@ -177,6 +177,12 @@ class UserBasket(Base):
         session.delete(self)
         session.commit()
 
+    def user_count(order_id):
+        stmt = select(UserBasket.user_id).distinct().where(
+            UserBasket.order_id == order_id
+        )
+        return len(session.execute(stmt).all())
+
     @property
     def serialized(self):
         return {
@@ -194,5 +200,6 @@ class UserBasket(Base):
             "item_name": self.item.name,
             "size_name": self.size.name,
             "price": self.size.price,
+            "category": self.item.category,
             "quantity": self.count,
         }

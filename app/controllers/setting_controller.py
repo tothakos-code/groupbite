@@ -29,7 +29,7 @@ def get_setting(key):
 @setting_blueprint.route('/set', methods=['PUT'])
 def update_setting():
     data = request.json
-    logging.info(data)
+
     result = {"error": {}}
     for key, value in data.items():
 

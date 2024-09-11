@@ -108,6 +108,10 @@ export default {
       type: Object,
       default: new Object()
     },
+    "orderFee":{
+      type: Number,
+      default: 0
+    },
     "startCollapsed":{
       type: Boolean,
       default: false
@@ -140,7 +144,7 @@ export default {
       Object.values(this.userBasket).forEach((entry) => {
           sum+= Number(entry.quantity) * Number(entry.price);
       });
-      sum += Number(this.basket.transportFeePerPerson);
+      sum += this.orderFee;
       return sum;
     },
     basketTotalTitle() {
@@ -148,7 +152,7 @@ export default {
       Object.values(this.userBasket).forEach((entry) => {
           sumTitle+= entry.quantity + "*" + entry.price + " Ft + ";
       });
-      sumTitle+= this.basket.transportFeePerPerson + " Ft(Szállítási díj) = " + this.sum + " Ft";
+      sumTitle+= this.orderFee + " Ft(Szállítási díj) = " + this.sum + " Ft";
       return sumTitle;
     },
   },

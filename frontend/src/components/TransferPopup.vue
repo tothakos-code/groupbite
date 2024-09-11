@@ -21,6 +21,7 @@
   <Popup
     :show-modal="showInitial"
     title="Rendelés áttöltése"
+    :large="true"
     @cancel="showInitial = false"
     @confirm="closeOrder()"
   >
@@ -225,10 +226,12 @@ export default {
               for (const oldItem of oldMap.values()) {
                 if (oldItem.tick && !oldItem.deleted) {
                   itemMap.set(oldItem.item_id, {...oldItem, tick: false, deleted:true})
-                  notify({
-                    type: "warn",
-                    text: "Egy terméket töröltek a kosárból amit már átraktál: " + oldItem.item_name+". A lista frissült!",
-                  });
+                  if (this.showInitial) {
+                    notify({
+                      type: "warn",
+                      text: "Egy terméket töröltek a kosárból amit már átraktál: " + oldItem.item_name+". A lista frissült!",
+                    });
+                  }
                 }
                 if (oldItem.deleted && !oldItem.tick) {
                   itemMap.set(oldItem.item_id, {...oldItem, tick: false, deleted:true})
@@ -236,7 +239,7 @@ export default {
               }
             }
 
-            this.orderItems = Array.from(itemMap.values());
+            this.orderItems = Array.from(itemMap.values()).sort((a, b) => a.category.localeCompare(b.category));
           },
           {
              deep: true,
@@ -257,7 +260,15 @@ export default {
       }
     },
     closeOrder: function() {
-      console.log(state.selecedDate);
+      for (const item of this.orderItems) {
+        if (!item.tick) {
+          notify({
+            type: "warn",
+            text: "Minden sort kikell pipálnod mielött lezárhatod a rendelést.",
+          });
+          return
+        }
+      }
       socket.emit("fe_order_closed", {
         date: state.order.date_of_order,
         user_id: this.auth.user.id,

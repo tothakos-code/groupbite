@@ -65,13 +65,16 @@ class User(Base):
         if username in notvalid_usernames:
             return False, "Ez nem lehet a neved: " + username
 
-        notvalid_characters = ["'", '"', "=", ",", ".", "&", "@", "#", "<", ">", "(", ")","[", "]", "{", "}"]
+        notvalid_characters = ["'", '"', "=", ",", ".", "&", "@", "#", "<", ">", "(", ")","[", "]", "{", "}", "%", ";", "*", "`"]
         for char in notvalid_characters:
             if char in username:
                 return False, "Tiltott karakter a felhasználónévben: " + char
 
         if User.get_one_by_username(username):
             return False, "Ez a felhasználónév már foglalt"
+
+        if len(username) > 50:
+            return False, "Felhasználónév túl hosszú, válassz rövidebbet"
 
         return True, ""
 

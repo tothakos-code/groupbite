@@ -62,7 +62,7 @@ def handle_user_register():
 @user_blueprint.route("/update", methods=["POST"])
 def handle_user_update():
     user = request.json["user"]
-    logging.info("Updated User: " + str(user["id"]))
+
 
     user_to_update = User.get_one_by_id(user["id"])
 
@@ -70,17 +70,18 @@ def handle_user_update():
         is_username_valid, error = User.is_username_valid(user["username"])
         if is_username_valid:
             user_to_update.update_user(user)
-
+            logging.info("Updated User: " + str(user["id"]))
         else:
+            logging.info("Invalid user update: " + error)
             return {"error": error}
 
     if "username" in user:
+        logging.info("Updating username in rooms")
         # Updating the username in every basket(room) a user is in
         for room_name,room in socketio.server.manager.rooms["/"].items():
-            if room_name != None and "_" in room_name:
-                logging.info(room_name)
-                logging.info(room)
-                vendor, date = room_name.split("_")
+            if room_name != None and "@" in room_name:
+
+                vendor, date = room_name.split("@")
                 # TODO: check if user has items in that oreder, and only update them
                 order = Order.find_order_by_date_for_a_vendor(vendor, date)
                 socketio.emit(

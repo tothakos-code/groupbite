@@ -184,17 +184,12 @@
               </div>
               <div class="col text-center">
                 <span class="btn pe-none border border-secondary-subtle rounded">
-                  {{ basket.itemCount }} db doboz
-                </span>
-              </div>
-              <div class="col text-center">
-                <span class="btn pe-none border border-secondary-subtle rounded">
-                  {{ basket.transportFeePerPerson }} Ft szállítás díj/fő
+                  {{ loaded_menu.order_fee/Object.keys(loaded_menu.basket).length }} Ft szállítás díj/fő
                 </span>
               </div>
             </div>
             <div
-              v-for="(user_entry) in loaded_menu"
+              v-for="(user_entry) in loaded_menu.basket"
               :key="user_entry.user_id"
               class="row mt-1 mb-1"
             >
@@ -203,6 +198,7 @@
                   :username="user_entry.username"
                   :user-id="user_entry.user_id"
                   :user-basket="user_entry.items"
+                  :order-fee="loaded_menu.order_fee/Object.keys(loaded_menu.basket).length"
                   :start-collapsed="true"
                   :collapsable="true"
                   :copyable="false"
@@ -250,7 +246,7 @@ export default {
       selected_history: new Date(),
       currentDateSelected: new Date(),
       showOrderSummary: false,
-      loaded_menu: {},
+      loaded_menu: { basket:{}},
       sum: 0,
       user_avg: 0,
       user_avg_p_day: 0,
@@ -309,16 +305,16 @@ export default {
       return false;
     },
     openHistoryPopup: function(item){
-      axios.get(`http://${window.location.host}/api/order/${item}/get-basket`)
+      axios.get(`http://${window.location.host}/api/order/${item}/get`)
         .then(response => {
             this.loaded_menu = response.data;
+            console.log(this.loaded_menu);
             this.showOrderSummary = true;
             state.vendors.forEach((vendor) => {
               if (vendor.id === this.loaded_menu.vendor_id ) {
                 state.selected_vendor = vendor;
               }
             });
-            console.log(this.loaded_menu);
         })
     },
     async getCurrentWeekDates(date) {
@@ -359,11 +355,12 @@ export default {
     },
     calculateHistorySum: function(){
       let sum=0;
-      Object.values(this.loaded_menu).forEach((person) => {
+      Object.values(this.loaded_menu.basket).forEach((person) => {
         Object.values(person.items).forEach((entry) => {
           sum+= Number(entry.quantity) * Number(entry.price);
         })
       })
+      sum += this.loaded_menu.order_fee
       return sum;
     },
     setDay: function(day) {

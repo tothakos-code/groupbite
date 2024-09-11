@@ -182,7 +182,7 @@
       </div>
       <div class="col text-center">
         <span class="btn pe-none border border-secondary-subtle rounded">
-          Átlagosan ennyért ettél: {{ orderHistoryListSum/Object.keys(orderHistoryList).length }} Ft / rendelés
+          Átlagosan ennyért ettél: {{ Math.round(orderHistoryListSum/Object.keys(orderHistoryList).length) }} Ft / rendelés
         </span>
       </div>
     </div>
@@ -196,6 +196,7 @@
           :username="order.vendor + ' - ' + order.date"
           :user-id="date"
           :user-basket="order.items"
+          :order-fee="order.fee"
           :start-collapsed="true"
           :collapsable="true"
           :copyable="false"

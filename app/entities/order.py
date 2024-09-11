@@ -26,6 +26,7 @@ class Order(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"),nullable=True)
     date_of_order: Mapped[date]
     order_time: Mapped[datetime] = mapped_column(nullable=True)
+    order_fee: Mapped[int]
 
     items: Mapped[List["UserBasket"]] = relationship(back_populates="order")
     vendor: Mapped["Vendor"] = relationship(back_populates="orders")
@@ -69,6 +70,10 @@ class Order(Base):
         self.order_by = user_id
         session.commit()
 
+    def set_order_fee(self, fee):
+        self.order_fee = fee
+        session.commit()
+
     @property
     def serialized(self):
         return {
@@ -77,5 +82,6 @@ class Order(Base):
             "state_id": str(self.state_id),
             "user_id": str(self.user_id),
             "date_of_order": self.date_of_order.strftime("%Y-%m-%d"),
-            "order_time": self.order_time
+            "order_time": self.order_time,
+            "order_fee": self.order_fee
         }

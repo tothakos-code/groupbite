@@ -65,6 +65,7 @@ def handle_user_order_history(user_id):
         result[key_format]["items"].append(item.basket_format)
         result[key_format]["vendor"] = vendor
         result[key_format]["date"] = date
+        result[key_format]["fee"] = item.order.order_fee/UserBasket.user_count(item.order.id)
 
     return json.dumps(result)
 
@@ -77,9 +78,14 @@ def handle_get_all_order_date():
 
     return [str(order[0]) for order in order_dates]
 
-@order_blueprint.route("/<order_id>/get-basket", methods=["GET"])
+@order_blueprint.route("/<order_id>/get", methods=["GET"])
 def handle_get_basket(order_id):
-    return UserBasket.get_basket_group_by_user(order_id)
+    order = Order.get_by_id(order_id)
+    if order:
+        return_obj = order.serialized
+        return_obj["basket"] = UserBasket.get_basket_group_by_user(order.id)
+        return return_obj, 200
+    return {"error": "order not exists"}, 404
 
 # TODO: implement this, was there an order for a user
 @order_blueprint.route("/get-user-basket-between", methods=["POST"])
@@ -205,8 +211,19 @@ def handle_close_order(data):
     user_id = str(data["user_id"])
     vendor_id = str(data["vendor_id"])
 
+
     order = Order.find_open_order_by_date_for_a_vendor(vendor_id, order_date)
+
+    from app.event_manager import event_manager
+    event_manager.trigger_event("beforeClose@" + order.vendor.name, request.json)
+
     order.change_state(OrderState.CLOSED, user_id)
+    if "order_fee" in data:
+        order.set_order_fee(data["order_fee"])
+    else:
+        order.set_order_fee(order.vendor.settings["transport_price"]["value"])
+
+    event_manager.trigger_event("afterClose@" + order.vendor.name, request.json)
 
     socketio.emit("be_order_update", {
         "order": order.serialized

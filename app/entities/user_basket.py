@@ -177,6 +177,12 @@ class UserBasket(Base):
         session.delete(self)
         session.commit()
 
+    def user_count(order_id):
+        stmt = select(UserBasket.user_id).distinct().where(
+            UserBasket.order_id == order_id
+        )
+        return len(session.execute(stmt).all())
+
     @property
     def serialized(self):
         return {

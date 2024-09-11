@@ -237,7 +237,7 @@ export default {
               }
             }
 
-            this.orderItems = Array.from(itemMap.values());
+            this.orderItems = Array.from(itemMap.values()).sort((a, b) => a.category.localeCompare(b.category));
           },
           {
              deep: true,

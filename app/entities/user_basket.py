@@ -200,5 +200,6 @@ class UserBasket(Base):
             "item_name": self.item.name,
             "size_name": self.size.name,
             "price": self.size.price,
+            "category": self.item.category,
             "quantity": self.count,
         }

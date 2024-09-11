@@ -21,6 +21,7 @@
   <Popup
     :show-modal="showInitial"
     title="Rendelés áttöltése"
+    :large="true"
     @cancel="showInitial = false"
     @confirm="closeOrder()"
   >

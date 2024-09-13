@@ -6,32 +6,35 @@ import requests,json,re
 import logging
 
 from app.controllers import menu_blueprint
-from app.entities.menu import Menu
 from app.entities.menu_item import MenuItem
 from app.entities.size import Size
+from app.entities.menu import Menu, BaseMenuSchema, UpdateMenuSchema
 from app.entities import Session
 from app.services.vendor_service import VendorService
 from app.vendor_factory import VendorFactory
 from app.base_vendor import BaseVendor
-
+from app.utils.decorators import validate_data
 
 @menu_blueprint.route("/update/<vendor_id>")
 def update_menu(vendor_id):
     vendor = VendorFactory.get_one_vendor_object(str(vendor_id))
     if vendor is None:
-        return "No vendor found with that id", 404
-    vendor.scan()
-    return "Vendor scan ran for " + str(vendor.id) + " id", 201
+        return {"error": "No vendor found with that id" }, 404
+    try:
+        vendor.scan()
+    except NotImplementedError as e:
+        return { "error": "Vendor does not support automatic menu filling" }, 405
+    return { "msg": "Vendor scan ran for " + str(vendor.id)} + " id", 201
 
 @menu_blueprint.route("/import/<vendor_id>", methods=["POST"])
 def import_menu(vendor_id):
     if "file" not in request.files:
-        return jsonify({"error": "No file part in the request"}), 400
+        return { "error": "No file part in the request" }, 400
 
     json_file = request.files["file"]
 
     if json_file.filename == "":
-        return jsonify({"error": "No file selected for uploading"}), 400
+        return { "error": "No file selected for uploading" }, 400
 
     try:
         file_content = json.loads(json_file.read())
@@ -69,51 +72,47 @@ def import_menu(vendor_id):
             Menu.add(menu_db)
 
     except Exception as e:
-        logging.error(f"Failed to parse JSON file: {e}")
-        return "Failed to parse JSON file", 400
+        return { "error": "Failed to parse JSON file" }, 400
     return "OK", 201
 
 @menu_blueprint.route("/get/<vendor_id>", methods=["POST"])
 def get_requested_menu(vendor_id):
+
+    if "date" not in request.json:
+        return {"error": "Bad request"}, 400
+
     requested_date = request.json["date"]
-    filter = request.json["filter"]
+
+
+    filter = []
+
+    if "filter" in request.json and isinstance(request.json["filter"], list):
+        filter = request.json["filter"]
+
     vendor = VendorFactory.get_one_vendor_object(str(vendor_id))
     if vendor is None:
-        return "No vendor found with that id", 404
-    return vendor.get_menu(requested_date, filter)
+        return { "error": "No vendor found with that id" }, 404
+
+    return vendor.get_menu(requested_date, filter), 200
 
 
-@menu_blueprint.route("/get_week", defaults={"requested_date": date.today().strftime("%Y-%m-%d")})
-@menu_blueprint.route("/get_week/<requested_date>")
-def get_week_requested_menu(requested_date=date.today().strftime("%Y-%m-%d")):
-    # start of the week:
-    today = date.today()
-    start_date = today - timedelta(days=today.weekday())
+@menu_blueprint.route("/<menu_id>/fetch", methods=["GET"])
+def handle_menu_get_items(menu_id):
 
-    end_date = start_date + timedelta(days=6)
+    if not menu_id.isnumeric():
+        return {"error": "Bad request"}, 400
 
-    delta = timedelta(days=1)
+    if not Menu.find_by_id(menu_id):
+        logging.warning("Menu not found")
+        return {"error": "Menu not found"}, 400
 
-    result = {}
-    while (start_date <= end_date):
-        requested_menu = Menu.find_by_date(start_date.strftime("%Y-%m-%d"))
-        if requested_menu:
-            result[start_date.weekday()] = json.dumps(requested_menu.menu)
-        else:
-            result[start_date.weekday()] = {}
-        # stepping to the next day
-        start_date += delta
-    return result
-
-
-@menu_blueprint.route("/<vendor_id>/get-items/<menu_id>", methods=["GET"])
-def handle_menu_get_items(vendor_id, menu_id):
     items = MenuItem.find_all_by_menu(menu_id)
     result = []
+
     for i in items:
         result.append(i.serialized)
-    return json.dumps(result)
 
+    return json.dumps(result), 200
 
 @menu_blueprint.route("/<vendor_id>/item-add", methods=["POST"])
 def handle_menu_item_add(vendor_id):
@@ -134,7 +133,7 @@ def handle_menu_item_add(vendor_id):
     ))
 
     MenuItem.add(menu_item)
-    return "OK"
+    return {"msg": "OK"}, 201
 
 @menu_blueprint.route("/<vendor_id>/item-size-add", methods=["POST"])
 def handle_menu_item_size_add(vendor_id):
@@ -150,8 +149,8 @@ def handle_menu_item_size_add(vendor_id):
             quantity=size["quantity"],
         )
     )
-    return "OK"
 
+    return {"msg": "OK"}, 201
 
 @menu_blueprint.route("/<vendor_id>/item-update", methods=["POST"])
 def handle_menu_item_update(vendor_id):
@@ -210,36 +209,50 @@ def handle_menu_get(vendor_id):
     result = []
     for m in menus:
         result.append(m.serialized)
-    return json.dumps(result)
+    return json.dumps(result), 200
 
 
-@menu_blueprint.route("/<vendor_id>/menu-update", methods=["POST"])
-def handle_menu_update(vendor_id):
-    menu = request.json["data"]
-    menu_db = Menu.find_by_id(menu["id"]).update(menu["name"], menu["date"])
-    return json.dumps(menu_db)
+@menu_blueprint.route("/<menu_id>/update", methods=["POST"])
+@validate_data(UpdateMenuSchema())
+def handle_menu_update(data, menu_id):
+    menu_db = Menu.find_by_id(menu_id)
+    if not menu_db:
+        logging.warning("Menu not found")
+        return {"error": "Menu not found"}, 400
+
+    if not menu_db.update(data["name"], data["date"]):
+        return {"error": "Bad request"}, 400
+
+    return json.dumps(menu_db.serialized), 200
 
 
-@menu_blueprint.route("/<vendor_id>/menu-delete", methods=["POST"])
-def handle_menu_delete(vendor_id):
-    menu = request.json["data"]
-    Menu.find_by_id(menu["id"]).delete()
-    return "OK"
+@menu_blueprint.route("/<menu_id>/delete", methods=["POST"])
+@validate_data(UpdateMenuSchema())
+def handle_menu_delete(data, menu_id):
+    if not menu_id.isnumeric():
+        return {"error": "Bad request"}, 400
+
+    if not Menu.find_by_id(menu_id):
+        logging.warning("Menu not found")
+        return {"error": "Menu not found"}, 400
+
+    if not Menu.find_by_id(menu_id).delete():
+        return {"error": "IntegrityError"}, 400
+    return {"msg": "OK"}, 200
 
 
-@menu_blueprint.route("/<vendor_id>/menu-duplicate", methods=["POST"])
-def handle_menu_duplicate(vendor_id):
-    menu = request.json["data"]
-    original_menu = Menu.find_by_id(menu["id"])
+@menu_blueprint.route("/<menu_id>/duplicate", methods=["POST"])
+@validate_data(UpdateMenuSchema())
+def handle_menu_duplicate(data, menu_id):
+    original_menu = Menu.find_by_id(data["id"])
 
     menu_db = Menu(
         name=original_menu.name+"-copy",
-        vendor_id=vendor_id,
+        vendor_id=original_menu.vendor_id,
         freq_id=original_menu.freq_id,
         date=date.today().strftime("%Y-%m-%d"),
         active=False
     )
-
 
     for item in original_menu.items:
         menu_item = MenuItem(
@@ -259,29 +272,43 @@ def handle_menu_duplicate(vendor_id):
 
 
         menu_db.items.append(menu_item)
-    Menu.add(menu_db)
+    if not Menu.add(menu_db):
+        return {"error": "Bad request"}, 400
+    return {"msg": "OK"}, 200
 
-    return "OK"
+
+@menu_blueprint.route("/<menu_id>/add", methods=["POST"])
+@validate_data(BaseMenuSchema())
+def handle_menu_add(data, menu_id):
+    if not Menu.add(Menu(name=data["name"], vendor_id=data["vendor_id"], freq_id=data["freq"])):
+        return {"error": "Bad request"}, 400
+    return {"msg": "OK"}, 201
 
 
-@menu_blueprint.route("/<vendor_id>/menu-add", methods=["POST"])
-def handle_menu_add(vendor_id):
-    menu = request.json["data"]
-    Menu.add(Menu(name=menu["name"], vendor_id=vendor_id, freq_id=menu["freq"]))
-    return "OK"
-
-@menu_blueprint.route("/<menu_id>/<cmd>", methods=["POST"])
-def handle_activation(menu_id, cmd):
+@menu_blueprint.route("/<menu_id>/activate", methods=["GET"])
+def handle_activation(menu_id):
     if not menu_id:
-        return "Vendor not found", 404
+        return "Menu not found", 404
 
-    if cmd == "activate":
-        Menu.find_by_id(menu_id).activate()
-        logging.info(menu_id + " vendor got activated")
-    elif cmd == "deactivate":
-        Menu.find_by_id(menu_id).deactivate()
-        logging.info(menu_id + " vendor got deactivated")
-    else:
-        return "Command not found", 404
+    menu = Menu.find_by_id(menu_id)
+    if not menu:
+        return "Menu not found", 404
+
+    menu.activate()
+    logging.info(menu_id + " vendor got activated")
+    return "OK", 200
+
+
+@menu_blueprint.route("/<menu_id>/deactivate", methods=["GET"])
+def handle_deactivation(menu_id):
+    if not menu_id:
+        return "Menu not found", 404
+
+    menu = Menu.find_by_id(menu_id)
+    if not menu:
+        return "Menu not found", 404
+
+    menu.deactivate()
+    logging.info(menu_id + " vendor got deactivated")
 
     return "OK", 200

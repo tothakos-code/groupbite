@@ -410,14 +410,17 @@
 <script>
 import axios from "axios";
 import { useAuth } from "@/stores/auth";
+import { useMenu } from "@/stores/menu";
 import { notify } from "@kyvg/vue3-notification";
 
 export default {
     name: "VendorItemManager",
     setup() {
       const auth = useAuth();
+      const menuStore = useMenu();
       return {
-        auth
+        auth,
+        menuStore
       }
     },
     data() {
@@ -453,29 +456,26 @@ export default {
               console.log(e);
           })
       },
-      getItemList: function () {
-        axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/get-items/${this.selectedMenu}`)
-          .then(response => {
+      getItemList: async function () {
+        this.menuStore.fetch(this.selectedMenu).then(
+          response => {
+            if (response.status === 200) {
+              let menuItemsMap = new Map();
+              response.data.forEach(item => {
+                item.isEditing = false
 
-            let menuItemsMap = new Map();
-            response.data.forEach(item => {
-              item.isEditing = false
 
-
-              let sizesMap = new Map();
-              item.sizes.forEach(size => {
-                size.isEditing = false;
-                sizesMap.set(size.id, size);
+                let sizesMap = new Map();
+                item.sizes.forEach(size => {
+                  size.isEditing = false;
+                  sizesMap.set(size.id, size);
+                });
+                item.sizes = sizesMap;
+                menuItemsMap.set(item.id, item)
               });
-              item.sizes = sizesMap;
-              menuItemsMap.set(item.id, item)
-            });
 
-            this.items = menuItemsMap;
-            console.log(this.items);
-          })
-          .catch(e => {
-              console.log(e);
+              this.items = menuItemsMap;
+            }
           })
       },
       addToMenu: function () {

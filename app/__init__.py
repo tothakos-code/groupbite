@@ -10,6 +10,7 @@ from app.controllers import setting_blueprint
 from app.controllers import vendor_blueprint
 from app.controllers import menu_blueprint
 from app.controllers import item_blueprint
+from app.controllers import size_blueprint
 from app.controllers import order_blueprint
 from app.controllers import user_blueprint
 
@@ -49,6 +50,8 @@ def create_app(debug=False):
     application.register_blueprint(menu_blueprint)
     import app.controllers.item_controller
     application.register_blueprint(item_blueprint)
+    import app.controllers.size_controller
+    application.register_blueprint(size_blueprint)
     import app.controllers.order_controller
     application.register_blueprint(order_blueprint)
     import app.controllers.user_controller

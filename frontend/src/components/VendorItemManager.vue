@@ -412,7 +412,7 @@ import axios from "axios";
 import { useAuth } from "@/stores/auth";
 import { useMenu } from "@/stores/menu";
 import { useItem } from "@/stores/item";
-import { notify } from "@kyvg/vue3-notification";
+import { useSize } from "@/stores/size";
 
 export default {
     name: "VendorItemManager",
@@ -420,10 +420,12 @@ export default {
       const auth = useAuth();
       const menuStore = useMenu();
       const itemStore = useItem();
+      const sizeStore = useSize();
       return {
         auth,
         menuStore,
-        itemStore
+        itemStore,
+        sizeStore
       }
     },
     data() {
@@ -460,7 +462,7 @@ export default {
           })
       },
       getItemList: async function () {
-        this.menuStore.fetch(this.selectedMenu).then(
+        await this.menuStore.fetch(this.selectedMenu).then(
           response => {
             if (response.status === 200) {
               let menuItemsMap = new Map();
@@ -503,7 +505,6 @@ export default {
             "index": 0,
             "isEditing": true
         }
-
         this.items.get(itemId).sizes.set(-1, newSize)
       },
       edit: function (menu_id) {
@@ -539,22 +540,10 @@ export default {
         const size = this.items.get(itemId).sizes.get(sizeId)
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
         delete size["isEditing"]
-        size.menu_id = this.selectedMenu
         size.menu_item_id = itemId
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-size-update`, {"data": size})
+        this.sizeStore.update(size)
           .then(() => {
             this.getItemList()
-            notify({
-              type: "info",
-              text: "Méret frissítés sikeres!",
-            });
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Méret frissítés nem sikerült!",
-              });
           })
       },
       deleteItem: function (item_id) {
@@ -573,20 +562,11 @@ export default {
       deleteSize: function (itemId, sizeId) {
         const size = this.items.get(itemId).sizes.get(sizeId)
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-size-delete`, {"data": size})
+        delete size["isEditing"]
+        size.menu_item_id = itemId
+        this.sizeStore.delete(size)
           .then(() => {
             this.getItemList()
-            notify({
-              type: "info",
-              text: "Méret törlés sikeres!",
-            });
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Méret törlés nem sikerült!",
-              });
           })
       },
     }

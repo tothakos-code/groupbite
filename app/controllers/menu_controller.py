@@ -1,15 +1,12 @@
-from bs4 import BeautifulSoup
 from flask import Blueprint, request
 from datetime import date, timedelta, datetime
-from sqlalchemy import func, cast
-import requests,json,re
+import json
 import logging
 
 from app.controllers import menu_blueprint
+from app.entities.menu import Menu, BaseMenuSchema, UpdateMenuSchema
 from app.entities.menu_item import MenuItem
 from app.entities.size import Size
-from app.entities.menu import Menu, BaseMenuSchema, UpdateMenuSchema
-from app.entities import Session
 from app.services.vendor_service import VendorService
 from app.vendor_factory import VendorFactory
 from app.base_vendor import BaseVendor
@@ -113,59 +110,6 @@ def handle_menu_get_items(menu_id):
         result.append(i.serialized)
 
     return json.dumps(result), 200
-
-
-@menu_blueprint.route("/<vendor_id>/item-size-add", methods=["POST"])
-def handle_menu_item_size_add(vendor_id):
-    size = request.json["data"]
-    item_id = request.json["item"]
-
-    Size.add(
-        Size(
-            menu_item_id=item_id,
-            link="",
-            name=size["name"],
-            price=size["price"],
-            quantity=size["quantity"],
-        )
-    )
-
-    return {"msg": "OK"}, 201
-
-
-@menu_blueprint.route("/<vendor_id>/item-size-update", methods=["POST"])
-def handle_menu_item_size_update(vendor_id):
-    size = request.json["data"]
-    item_id = request.json["item"]
-
-    size_db = Size.find_by_id(size["id"])
-    if size_db:
-        size_db.update(
-            size["name"],
-            size["price"],
-            size["quantity"],
-            size["index"]
-        )
-    else:
-        size_db = Size(
-            menu_item_id=item_id,
-            link="",
-            name=size["name"],
-            price=size["price"],
-            quantity=size["quantity"],
-            index=size["index"]
-        )
-        Size.add(size_db)
-    return json.dumps(size_db.serialized)
-
-
-
-
-@menu_blueprint.route("/<vendor_id>/item-size-delete", methods=["POST"])
-def handle_menu_item_size_delete(vendor_id):
-    size = request.json["data"]
-    Size.find_by_id(size["id"]).delete()
-    return "OK"
 
 
 @menu_blueprint.route("/<vendor_id>/menu-get", methods=["GET"])

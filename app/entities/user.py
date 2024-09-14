@@ -92,17 +92,34 @@ class User(Base):
             logging.error(f"Error in user creation. User '{user.username}' already exist.")
             return None
         session.add(user)
-        session.commit()
 
-        stmt = select(User).where(
-            User.id == user.id
-        )
-
-        return session.execute(stmt).scalars().first()
+        try:
+            session.commit()
+            session.refresh(user)
+            return True, user
+        except exc.DataError as e:
+            logging.exception("DataError during user add")
+            session.rollback()
+            return False, None
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False, None
 
     def update_user(self, user):
         self.username = user["username"]
-        session.commit()
+        try:
+            session.commit()
+            session.refresh(self)
+            return True, user
+        except exc.DataError as e:
+            logging.exception("DataError during user update")
+            session.rollback()
+            return False, None
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False, None
         return self
 
     def get_all_orders(self):

@@ -54,10 +54,13 @@ def handle_user_register():
     if not is_email_valid:
         return {"error": email_error}
 
-    user_to_register = User.create_user(User(username=username, email=email, settings={}))
-    logging.info(f"User {user_to_register.username} created!")
+    ok, user_to_register = User.create_user(User(username=username, email=email, settings={}))
+    if ok:
+        logging.info(f"User {user_to_register.username} created!")
+        return user_to_register.serialized, 201
+    else:
+        return {"error": "Failed to register, somtinh wron with the data you provided"}, 400
 
-    return user_to_register.serialized
 
 @user_blueprint.route("/update", methods=["POST"])
 def handle_user_update():

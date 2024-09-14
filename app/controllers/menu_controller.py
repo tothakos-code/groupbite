@@ -114,26 +114,6 @@ def handle_menu_get_items(menu_id):
 
     return json.dumps(result), 200
 
-@menu_blueprint.route("/<vendor_id>/item-add", methods=["POST"])
-def handle_menu_item_add(vendor_id):
-    item = request.json["data"]
-    menu = request.json["menu"]
-
-    menu_item = MenuItem(
-        menu_id=menu,
-        name=item["name"],
-        category=item["category"]
-    )
-    menu_item.sizes.append(Size(
-        link="",
-        name=item["size"],
-        price=item["price"],
-        index=0,
-        quantity=item["quantity"]
-    ))
-
-    MenuItem.add(menu_item)
-    return {"msg": "OK"}, 201
 
 @menu_blueprint.route("/<vendor_id>/item-size-add", methods=["POST"])
 def handle_menu_item_size_add(vendor_id):
@@ -151,16 +131,6 @@ def handle_menu_item_size_add(vendor_id):
     )
 
     return {"msg": "OK"}, 201
-
-@menu_blueprint.route("/<vendor_id>/item-update", methods=["POST"])
-def handle_menu_item_update(vendor_id):
-    item = request.json["data"]
-    item_db = MenuItem.find_by_id(item["id"]).update(
-        item["name"],
-        item["index"],
-        item["category"]
-    )
-    return json.dumps(item_db)
 
 
 @menu_blueprint.route("/<vendor_id>/item-size-update", methods=["POST"])
@@ -189,11 +159,6 @@ def handle_menu_item_size_update(vendor_id):
     return json.dumps(size_db.serialized)
 
 
-@menu_blueprint.route("/<vendor_id>/item-delete", methods=["POST"])
-def handle_menu_item_delete(vendor_id):
-    item = request.json["data"]
-    MenuItem.find_by_id(item["id"]).delete()
-    return "OK"
 
 
 @menu_blueprint.route("/<vendor_id>/item-size-delete", methods=["POST"])

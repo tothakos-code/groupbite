@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text, Enum, select
+from sqlalchemy import Column, Text, Enum, select, exc
 from sqlalchemy.dialects.postgresql import JSONB
 from uuid import UUID, uuid4
 from . import Base, session
@@ -48,10 +48,13 @@ class User(Base):
 
     def get_one_by_id(id):
         # check if uuid is valid
-        try:
-            UUID(id)
-        except ValueError as e:
-            return None
+        if not type(id) == UUID:
+            try:
+                UUID(id)
+            except ValueError as e:
+                return None
+        else:
+            id  = str(id)
         return session.query(User).filter(User.id == id).first()
 
     def is_username_valid(username):

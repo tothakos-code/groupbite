@@ -1,11 +1,11 @@
-from sqlalchemy import Column, Text, Enum, select
+from sqlalchemy import Column, Text, Enum, select, exc
 from uuid import UUID
 from . import Base, session
 from .order import Order
 from .menu_item import MenuItem
 from .size import Size
 import enum
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, ForeignKeyConstraint
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -23,7 +23,11 @@ class UserBasket(Base):
     order: Mapped["Order"] = relationship(back_populates="items")
     user: Mapped["User"] = relationship(back_populates="orders")
     item: Mapped["MenuItem"] = relationship(back_populates="orders")
-    size: Mapped["Size"] = relationship(back_populates="orders")
+    size: Mapped["Size"] = relationship(back_populates="orders", foreign_keys=[size_id])
+
+    __table_args__ = (
+        ForeignKeyConstraint(['size_id', 'menu_item_id'], ['size.id', 'size.menu_item_id'], name='fk_size_item'),
+    )
 
     def __repr__(self):
         return f"UserBasket<user_id={self.user_id},menu_item_id={self.menu_item_id},order_id={self.order_id},count={self.count}>"
@@ -105,8 +109,17 @@ class UserBasket(Base):
         user_basket = session.execute(stmt).scalars().all()
         for basket_entry in user_basket:
             basket_entry.delete()
-        session.commit()
-        return True
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during removing user_basket")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     def remove_item(user_id, menu_item_id, size_id, order_id):
         stmt = select(UserBasket).where(
@@ -119,6 +132,7 @@ class UserBasket(Base):
 
         if not user_basket:
             logging.error("Cannot remove item. Item not found.")
+            return False, None
         else:
             size_stmt = select(Size).where(
                 Size.id == size_id
@@ -133,9 +147,19 @@ class UserBasket(Base):
             else:
                 user_basket.count -= 1
 
-        session.commit()
+        try:
+            session.commit()
+            session.refresh(user_basket)
+            return True, user_basket
+        except exc.DataError as e:
+            logging.exception("DataError during removing user_basket")
+            session.rollback()
+            return False, None
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False, None
 
-        return user_basket
 
     def add_item(user_id, menu_item_id, size_id, order_id):
         stmt = select(UserBasket).where(
@@ -166,16 +190,42 @@ class UserBasket(Base):
                 user_basket.count += 1
         else:
             logging.error("Item out of stock error.")
-            return None, "Item out of stock error"
+            # TODO: raise Item out of stock error?
+            return False, None
 
         session.add(user_basket)
-        session.commit()
+        try:
+            session.commit()
+            session.refresh(user_basket)
+            return True, user_basket
+        except exc.DataError as e:
+            logging.exception("DataError during removing user_basket")
+            session.rollback()
+            return False, None
+        except exc.IntegrityError as e:
+            logging.exception("IntegrityError during item add to basket")
+            session.rollback()
+            return False, None
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False, None
 
-        return user_basket, None
 
     def delete(self):
         session.delete(self)
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during removing user_basket")
+            session.rollback()
+            return False
+
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     def user_count(order_id):
         stmt = select(UserBasket.user_id).distinct().where(

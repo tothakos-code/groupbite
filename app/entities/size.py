@@ -4,7 +4,7 @@ from . import Base, session
 import enum
 import logging
 from typing import List
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -35,7 +35,11 @@ class Size(Base):
     index: Mapped[int]
 
     menu_item: Mapped["MenuItem"] = relationship(back_populates="sizes")
-    orders: Mapped["UserBasket"] = relationship(back_populates="size")
+    orders: Mapped["UserBasket"] = relationship(back_populates="size", foreign_keys="[UserBasket.size_id]")
+
+    __table_args__ = (
+        UniqueConstraint('id', 'menu_item_id', name='uq_size_item'),
+    )
 
     def __repr__(self):
         return f"Size<{self.id},menu_item_id={self.menu_item_id},name={self.name},price={self.price}>"

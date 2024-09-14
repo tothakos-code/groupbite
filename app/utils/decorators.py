@@ -16,3 +16,16 @@ def validate_data(schema):
             return f(request_data, *args, **kwargs)
         return decorated_function
     return decorator
+
+def validate_url_params(schema):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            try:
+                schema.load(kwargs)
+            except ValidationError as err:
+                logging.warning(f"Validation error: {err.messages}")
+                return {"error": err.messages}, 400
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator

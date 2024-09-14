@@ -91,7 +91,7 @@
 
 <script>
 import { useAuth } from "@/stores/auth";
-import { useBasket } from "@/stores/basket";
+import { useOrderStore } from "@/stores/order";
 
 export default {
   name: "GlobalBasketUser",
@@ -127,10 +127,10 @@ export default {
   },
   setup() {
     const auth = useAuth();
-    const basket = useBasket();
+    const orderStore = useOrderStore();
     return {
       auth,
-      basket,
+      orderStore,
     };
   },
   data() {

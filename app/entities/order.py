@@ -3,7 +3,7 @@ from typing import List
 from . import Base, session
 from uuid import UUID
 from datetime import datetime, date
-from sqlalchemy import ForeignKey, select
+from sqlalchemy import ForeignKey, select, exc
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -38,9 +38,18 @@ class Order(Base):
     def create_order(v_id: UUID, doo: date = date.today()):
         order = Order(vendor_id=v_id,date_of_order=doo)
         session.add(order)
-        session.commit()
-
-        return order
+        try:
+            session.commit()
+            session.refresh(order)
+            return True, order
+        except exc.DataError as e:
+            logging.exception("DataError during order add")
+            session.rollback()
+            return False, None
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False, None
 
     def get_by_id(order_id):
         stmt = select(Order).where(Order.id == order_id)
@@ -68,11 +77,31 @@ class Order(Base):
     def change_state(self, new_state, user_id=None):
         self.state_id = new_state
         self.order_by = user_id
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during order add")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     def set_order_fee(self, fee):
         self.order_fee = fee
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during order add")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     @property
     def serialized(self):

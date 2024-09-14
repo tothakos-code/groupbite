@@ -216,7 +216,7 @@
 import GlobalBasketUser from "@/components/GlobalBasketUser.vue";
 import Popup from "./Popup.vue";
 import { useAuth } from "@/stores/auth";
-import { useBasket } from "@/stores/basket";
+import { useOrderStore } from "@/stores/order";
 import axios from "axios";
 import { ref, watch } from "vue";
 import { state } from "@/main.js";
@@ -232,12 +232,12 @@ export default {
     const user_states = ref({});
     const weekdates = ref([]);
     const auth = useAuth();
-    const basket = useBasket();
+    const orderStore = useOrderStore();
     return {
       auth,
-      basket,
+      orderStore,
       user_states,
-      weekdates,
+      weekdates
     }
   },
   data() {
@@ -305,16 +305,17 @@ export default {
       return false;
     },
     openHistoryPopup: function(item){
-      axios.get(`http://${window.location.host}/api/order/${item}/get`)
+      this.orderStore.fetch(item)
         .then(response => {
-            this.loaded_menu = response.data;
-            console.log(this.loaded_menu);
-            this.showOrderSummary = true;
-            state.vendors.forEach((vendor) => {
-              if (vendor.id === this.loaded_menu.vendor_id ) {
-                state.selected_vendor = vendor;
-              }
-            });
+            if (response.status === 200) {
+              this.loaded_menu = response.data.data;
+              this.showOrderSummary = true;
+              state.vendors.forEach((vendor) => {
+                if (vendor.id === this.loaded_menu.vendor_id ) {
+                  state.selected_vendor = vendor;
+                }
+              });
+            }
         })
     },
     async getCurrentWeekDates(date) {

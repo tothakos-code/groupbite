@@ -3,7 +3,7 @@ import { reactive } from "vue";
 import { io } from "socket.io-client";
 import router from "./router.js";
 import { register_plugin_routes } from "./loader.js";
-import { useBasket } from "@/stores/basket"
+import { useOrderStore } from "@/stores/order"
 // import { useVendor } from "@/stores/vendor"
 
 export const state = reactive({
@@ -41,12 +41,12 @@ socket.on("be_vendors_update", function(vendors) {
 });
 
 socket.on("be_order_update", function(data) {
-  const basket = useBasket();
+  const order = useOrderStore();
   if (data.basket) {
-    basket.basket = data.basket;
+    order.basket = data.basket;
   }
   if (data.order) {
-    state.order = data.order;
+    order.order = data.order;
   }
 });
 

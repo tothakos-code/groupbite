@@ -1,13 +1,15 @@
-import { socket, state as vuestate  } from "@/main";
+import axios from "axios";
 import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
-import axios from "axios";
 import { useAuth } from "@/stores/auth";
+import {  state as vuestate  } from "@/main";
 
-
-
-export const useBasket = defineStore("basket", {
-  state: () => ({basket: {}}),
+export const useOrderStore = defineStore("order", {
+  state: () => ({
+    order: {},
+    basket: {},
+    isLoading: false
+  }),
   getters: {
     userCount(state) {
       return Object.keys(state.basket).length;
@@ -81,8 +83,21 @@ export const useBasket = defineStore("basket", {
     }
   },
   actions: {
-    clearBasket() {
-      if ( vuestate.orderState === "closed") {
+    async fetch(orderId) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/order/${orderId}`);
+        this.order = response.data.data;
+        return response
+      } catch (error) {
+        console.error("Failed to get order by ID", error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async clearBasket() {
+      if ( this.order.state_id === "closed") {
         notify({
           type: "warn",
           text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
@@ -90,12 +105,16 @@ export const useBasket = defineStore("basket", {
         return;
       }
       const auth = useAuth()
-      axios.post(`http://${window.location.host}/api/order/${vuestate.order.id}/clear`,{
-        "user_id": auth.user.id
-      })
+      try {
+        const response = await axios.delete(`/api/order/${this.order.id}/user/${auth.user.id}`)
+        return response
+      } catch (error) {
+        console.error("Failed to clear basket", error);
+        return error.response
+      }
     },
-    removeItem(menuItemId, sizeId) {
-      if ( vuestate.order.state_id === "closed") {
+    async removeItem(menuItemId, sizeId) {
+      if ( this.order.state_id === "closed") {
         notify({
           type: "warn",
           text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
@@ -103,13 +122,15 @@ export const useBasket = defineStore("basket", {
         return;
       }
       const auth = useAuth()
-      axios.post(`http://${window.location.host}/api/order/${vuestate.order.id}/remove`,{
-        "user_id": auth.user.id,
-        "menu_item_id": menuItemId,
-        "size_id": sizeId
-      })
+      try {
+        const response = axios.delete(`/api/order/${this.order.id}/user/${auth.user.id}/item/${menuItemId}/size/${sizeId}`)
+        return response
+      } catch (error) {
+        console.error("Failed to remove item", error);
+        return error.response
+      }
     },
-    copy(copy_user_id) {
+    async copy(srcUserId) {
       const auth = useAuth()
       if (!auth.isLoggedIn) {
         notify({
@@ -118,23 +139,26 @@ export const useBasket = defineStore("basket", {
         });
         return;
       }
-      if ( vuestate.order.state_id === "closed") {
+      if ( this.order.state_id === "closed") {
         notify({
           type: "warn",
           text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
         });
         return;
       }
-      axios.post(`http://${window.location.host}/api/order/${vuestate.order.id}/copy`,{
-        "user_id": auth.user.id,
-        "copy_user_id": copy_user_id
-      });
-      notify({
-        type: "info",
-        text: "Másolva",
-      });
+      try {
+        const response = axios.put(`/api/order/${this.order.id}/user/${auth.user.id}/copy-from/${srcUserId}`)
+        notify({
+          type: "info",
+          text: "Másolva",
+        });
+        return response
+      } catch (error) {
+        console.error("Failed to remove item", error);
+        return error.response
+      }
     },
-    addItem(menuItemId, sizeId) {
+    async addItem(menuItemId, sizeId) {
       const auth = useAuth()
       if (!auth.isLoggedIn) {
         notify({
@@ -143,29 +167,22 @@ export const useBasket = defineStore("basket", {
         });
         return;
       }
-      if (vuestate.order.state_id === "closed") {
+      if (this.order.state_id === "closed") {
         notify({
           type: "warn",
           text: "A rendelés már el lett küldve. Már nem módosíthatod a kosaradat.",
         });
         return;
       }
-      if (this.currentUserState === "skip") {
-        socket.emit("User Daily State Change",{ "id": auth.user.id, "new_state":"none" });
+      try {
+        axios.put(`/api/order/${this.order.id}/user/${auth.user.id}/item/${menuItemId}/size/${sizeId}`)
+        .then(response => {
+          return response
+        })
+      } catch (error) {
+        console.error("Failed to add item", error);
+        return error.response
       }
-      axios.post(`http://${window.location.host}/api/order/${vuestate.order.id}/add`,{
-        "user_id": auth.user.id,
-        "menu_item_id": menuItemId,
-        "size_id": sizeId
-      }).then(response => {
-        console.log(response);
-          if (response.data.error) {
-            notify({
-              type: "warn",
-              text: response.data.error,
-            });
-          }
-      })
     }
   }
 })

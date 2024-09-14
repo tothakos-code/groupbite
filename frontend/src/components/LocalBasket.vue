@@ -31,7 +31,7 @@
           <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
           <path d="M0 4a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V4zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V6a2 2 0 0 1-2-2H3z" />
         </svg>
-        <span title="A fizetendő összeg még változhat, a rendelést leadó személyek számától.(Szállítási díjat több fele osztjuk)">{{ basket.userBasketSum }} Ft</span>
+        <span title="A fizetendő összeg még változhat, a rendelést leadó személyek számától.(Szállítási díjat több fele osztjuk)">{{ orderStore.userBasketSum }} Ft</span>
       </div>
     </div>
     <div class="row">
@@ -50,7 +50,7 @@
               <button
                 class="btn text-nowrap"
                 :class="['btn-outline-' + auth.getUserColor ]"
-                @click="basket.clearBasket()"
+                @click="orderStore.clearBasket()"
               >
                 <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Törlés</span>
                 <svg
@@ -69,7 +69,7 @@
           </div>
         </div>
         <div
-          v-for="(item, index) in basket.userBasket"
+          v-for="(item, index) in orderStore.userBasket"
           :key="index"
           class="list-group-item d-flex justify-content-between"
         >
@@ -91,16 +91,16 @@
               type="button"
               title="Törlés"
               class="btn btn-close"
-              @click="basket.removeItem(item.item_id, item.size_id)"
+              @click="orderStore.removeItem(item.item_id, item.size_id)"
             />
           </div>
         </div>
         <div
-          v-if="basket.isUserBasketEmpty"
+          v-if="orderStore.isUserBasketEmpty"
           class="list-group-item d-flex justify-content-center"
         >
           <div class="d-inline">
-            <div v-if="!basket.isUserBasketEmpty">
+            <div v-if="!orderStore.isUserBasketEmpty">
               <span class="me-1">Sikerült választanod</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -135,23 +135,23 @@
 
 <script>
 import { useAuth } from "@/stores/auth";
-import { useBasket } from "@/stores/basket";
+import { useOrderStore } from "@/stores/order";
 import { ref, watch } from "vue";
 
 export default {
   name: "LocalBasket",
   setup() {
     const auth = useAuth();
-    const basket = useBasket();
+    const orderStore = useOrderStore();
     const itemQuantityPulse = ref(false);
 
-    watch(() => basket.basket, () => {
+    watch(() => orderStore.basket, () => {
       itemQuantityPulse.value = true;
     });
 
     return {
       auth,
-      basket,
+      orderStore,
       itemQuantityPulse
     }
 

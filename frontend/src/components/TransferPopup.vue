@@ -133,9 +133,9 @@
 
 <script>
 import Popup from "./Popup.vue";
-import { state, socket } from "@/main";
+import { state } from "@/main";
 import { useAuth } from "@/stores/auth";
-import { useBasket } from "@/stores/basket";
+import { useOrderStore } from "@/stores/order";
 import { copyText } from "vue3-clipboard";
 import { notify } from "@kyvg/vue3-notification";
 import { watch } from "vue";
@@ -147,11 +147,11 @@ export default {
   },
   setup() {
     const auth = useAuth();
-    const basket = useBasket();
+    const orderStore = useOrderStore();
 
     return {
       auth,
-      basket
+      orderStore
     }
   },
   data() {
@@ -171,7 +171,7 @@ export default {
   mounted() {
 
         watch(
-          () => this.basket.basket,
+          () => this.orderStore.basket,
           (newBasket) =>{
             let resultList = []
             for (const value of Object.values(newBasket)) {
@@ -249,7 +249,7 @@ export default {
   },
   methods: {
     openPopup: function() {
-      if (state.order.state_id === "closed") {
+      if (this.orderStore.order.state_id === "closed") {
         notify({
           type: "warn",
           text: "A rendelést ma már elküldték",
@@ -269,11 +269,8 @@ export default {
           return
         }
       }
-      socket.emit("fe_order_closed", {
-        date: state.order.date_of_order,
-        user_id: this.auth.user.id,
-        vendor_id: state.selected_vendor.id
-      });
+      this.orderStore.close()
+
       this.showInitial = false;
       this.showFinish = true;
     },

@@ -8,12 +8,15 @@
         <span
           class=" text-truncate"
           style="max-width: 120px;"
-        >{{ username }}</span>
+        >
+          {{ username }}
+        </span>
         <a
           v-if="copyable && auth.isLoggedIn && username !== auth.user.username"
-          class="ms-2 p-1 btn btn-sm"
-          :class="['btn-' + auth.getUserColor ]"
-          @click="basket.copy(userId)"
+          class="ms-2 btn btn-sm"
+          :class="['btn-outline-' + auth.getUserColor ]"
+          title="Másol"
+          @click="orderStore.copy(userId)"
         >
           Másol
           <svg
@@ -21,11 +24,13 @@
             width="16"
             height="16"
             fill="currentColor"
-            class="bi bi-clipboard2"
+            class="bi bi-copy"
             viewBox="0 0 16 16"
           >
-            <path d="M3.5 2a.5.5 0 0 0-.5.5v12a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-12a.5.5 0 0 0-.5-.5H12a.5.5 0 0 1 0-1h.5A1.5 1.5 0 0 1 14 2.5v12a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-12A1.5 1.5 0 0 1 3.5 1H4a.5.5 0 0 1 0 1h-.5Z" />
-            <path d="M10 .5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5.5.5 0 0 1-.5.5.5.5 0 0 0-.5.5V2a.5.5 0 0 0 .5.5h5A.5.5 0 0 0 11 2v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 1-.5-.5Z" />
+            <path
+              fill-rule="evenodd"
+              d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"
+            />
           </svg>
         </a>
       </div>
@@ -144,7 +149,7 @@ export default {
       Object.values(this.userBasket).forEach((entry) => {
           sum+= Number(entry.quantity) * Number(entry.price);
       });
-      sum += this.orderFee;
+      sum += Math.ceil(this.orderFee);
       return sum;
     },
     basketTotalTitle() {
@@ -152,7 +157,7 @@ export default {
       Object.values(this.userBasket).forEach((entry) => {
           sumTitle+= entry.quantity + "*" + entry.price + " Ft + ";
       });
-      sumTitle+= this.orderFee + " Ft(Szállítási díj) = " + this.sum + " Ft";
+      sumTitle+= Math.ceil(this.orderFee) + " Ft(Szállítási díj) = " + this.basketTotal + " Ft";
       return sumTitle;
     },
   },

@@ -31,7 +31,34 @@ export const useVendorStore = defineStore("vendor", {
         this.vendors = response.data.data;
         return response
       } catch (error) {
-        console.error("Failed to fetch vendors",error);
+        console.error("Failed to fetch vendors:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async fetchMenus(vendorId) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/vendor/${vendorId}/menus`);
+        return response
+      } catch (error) {
+        console.error("Failed to fetch vendors:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async fetchMenusByDate(vendorId, date, querryParams) {
+      this.isLoading = true;
+      try {
+
+        const response = await axios.get(`/api/vendor/${vendorId}/menus/date/${date}`,
+          { "params": querryParams }
+        );
+        return response
+      } catch (error) {
+        console.error("Failed to fetch vendors:", error.response.data.error);
         return error.response
       } finally {
         this.isLoading = false;
@@ -96,7 +123,34 @@ export const useVendorStore = defineStore("vendor", {
         const response = await axios.get(`/api/vendor/${vendorId}`);
         return response
       } catch (error) {
-        console.error("Failed to get vendor by ID", error);
+        console.error("Failed to get vendor by ID:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async import(vendorId, formData) {
+      this.isLoading = true;
+      try {
+        const response = await axios.post(`/api/vendor/${vendorId}/menus/import`,
+          formData,
+          {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+          }
+        );
+        notify({
+          type: "info",
+          text: "Menü importálás sikeres!",
+        });
+        return response
+      } catch (error) {
+        console.error("Failed to upload JSON:", error.response.data.error);
+        notify({
+          type: "error",
+          text: "Menü importálása nem sikerült!",
+        });
         return error.response
       } finally {
         this.isLoading = false;

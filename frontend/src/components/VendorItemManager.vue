@@ -453,12 +453,9 @@ export default {
     },
     methods: {
       getMenuList: function () {
-        axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-get`)
+        this.vendorStore.fetchMenus(this.$route.params.id)
           .then(response => {
-            this.menus = response.data
-          })
-          .catch(e => {
-              console.log(e);
+            this.menus = response.data.data
           })
       },
       getItemList: async function () {

@@ -237,11 +237,12 @@
 </template>
 
 <script>
-import axios from "axios";
 import { useAuth } from "@/stores/auth";
 import { useMenu } from "@/stores/menu";
 import Popup from "./Popup.vue";
 import { notify } from "@kyvg/vue3-notification";
+import { useVendorStore } from "@/stores/vendor";
+
 
 export default {
     name: "VendorMenuManager",
@@ -251,9 +252,11 @@ export default {
     setup() {
       const auth = useAuth();
       const menuStore = useMenu();
+      const vendorStore = useVendorStore();
       return {
         auth,
         menuStore
+        vendorStore
       }
     },
     data() {
@@ -277,30 +280,13 @@ export default {
       submitJsonFile: function () {
         let formData = new FormData();
         formData.append("file", this.file);
-        axios.post( `http://${window.location.host}/api/menu/import/${this.$route.params.id}`,
-          formData,
-          {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
+        this.vendorStore.import(this.$route.params.id, formData)
+        .then(response => {
+          if (response.status === 201) {
+            this.showImportPopup=false
+            this.getMenuList()
           }
-        ).then(() => {
-          console.log("SUCCESS file upload!!");
-          this.showImportPopup=false
-          this.getMenuList()
-          notify({
-            type: "info",
-            text: "Menü importálás sikeres!",
-          });
         })
-        .catch(e => {
-          console.log("FAILURE in file upload!!");
-          console.log(e);
-          notify({
-            type: "error",
-            text: "Menü importálása nem sikerült!",
-          });
-        });
       },
       handleFileUpload: function (event) {
         const file = event.target.files[0];
@@ -339,10 +325,10 @@ export default {
         })
       },
       getMenuList: function () {
-        axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-get`)
+        this.vendorStore.fetchMenus(this.$route.params.id)
           .then(response => {
             let newMenuList = new Map(
-              response.data.map(
+              response.data.data.map(
                 item => [item.id, item]
               )
             )

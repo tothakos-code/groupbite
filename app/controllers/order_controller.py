@@ -63,9 +63,10 @@ def handle_date_selection_change(data):
     new_date = data["new_selected_date"]
     vendor_id = data["vendor_id"]
 
+
     if "old_selected_date" in data:
         old_date = data["old_selected_date"]
-        leave_room(f"{vendor_id}_{old_date}")
+        leave_room(f"{vendor_id}@{old_date}")
 
     join_room(f"{vendor_id}@{new_date}")
 
@@ -96,9 +97,14 @@ def handle_copy_basket(order_id, user_id, src_user_id):
         for i in range(0,item.count):
             UserBasket.add_item(user_id, str(item.menu_item_id), item.size_id, order_id)
 
+    order = Order.get_by_id(order_id)
+
+
     socketio.emit("be_order_update", {
-        "basket": UserBasket.get_basket_group_by_user(order_id)
-    })
+        "basket": UserBasket.get_basket_group_by_user(order_id),
+        },
+        to=f"{order.vendor_id}@{order.date_of_order}"
+        )
     return { "msg": "OK" }, 201
 
 
@@ -128,7 +134,9 @@ def handle_add_to_basket(order_id, user_id, item_id, size_id):
     if ok:
         socketio.emit("be_order_update", {
             "basket": UserBasket.get_basket_group_by_user(order_id)
-        })
+        },
+        to=f"{order.vendor_id}@{order.date_of_order}"
+        )
         return { "msg": "OK" }, 201
     else:
         return { "error":"Item out of stock" }, 400
@@ -161,7 +169,9 @@ def handle_remove_from_basket(order_id, user_id, item_id, size_id):
     if ok:
         socketio.emit("be_order_update", {
             "basket": UserBasket.get_basket_group_by_user(order_id)
-        })
+        },
+        to=f"{order.vendor_id}@{order.date_of_order}"
+        )
         return { "msg": "OK" }, 204
     return { "error": "something went wrong." }, 500
 
@@ -170,9 +180,12 @@ def handle_remove_from_basket(order_id, user_id, item_id, size_id):
 @validate_url_params(IDSchema())
 def handle_clear_user_basket(order_id, user_id):
     if UserBasket.clear_items(user_id, order_id):
+        order = Order.get_by_id(order_id)
         socketio.emit("be_order_update", {
             "basket": UserBasket.get_basket_group_by_user(order_id)
-        })
+        },
+        to=f"{order.vendor_id}@{order.date_of_order}"
+        )
         return { "msg": "OK" }, 204
     return { "error": "Order or User not found" }, 404
 
@@ -203,5 +216,7 @@ def handle_close_order(order_id):
     logging.info(f"Order closed succesfully")
     socketio.emit("be_order_update", {
         "order": order.serialized
-    })
+        },
+        to=f"{order.vendor_id}@{order.date_of_order}"
+        )
     return { "msg": "OK" }, 200

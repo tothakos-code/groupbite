@@ -1,6 +1,7 @@
 import enum, json
 from typing import List
 from . import Base, session
+from .vendor import Vendor
 from uuid import UUID
 from datetime import datetime, date
 from sqlalchemy import ForeignKey, select, exc
@@ -26,7 +27,7 @@ class Order(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"),nullable=True)
     date_of_order: Mapped[date]
     order_time: Mapped[datetime] = mapped_column(nullable=True)
-    order_fee: Mapped[int]
+    order_fee: Mapped[int] = mapped_column(default=0)
 
     items: Mapped[List["UserBasket"]] = relationship(back_populates="order")
     vendor: Mapped["Vendor"] = relationship(back_populates="orders")
@@ -36,7 +37,8 @@ class Order(Base):
         return f"Order<id={self.id},order_time={self.order_time},vendor_id={self.vendor_id},state_id={str(self.state_id)},user_id={self.user_id},date_of_order={self.date_of_order},order_time={self.order_time}>"
 
     def create_order(v_id: UUID, doo: date = date.today()):
-        order = Order(vendor_id=v_id,date_of_order=doo)
+        vendor = Vendor.find_by_id(v_id)
+        order = Order(vendor_id=v_id, date_of_order=doo, order_fee=vendor.settings["transport_price"]["value"])
         session.add(order)
         try:
             session.commit()

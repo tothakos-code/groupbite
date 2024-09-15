@@ -126,15 +126,17 @@
 </template>
 
 <script>
-import axios from "axios";
 import { useAuth } from "@/stores/auth";
+import { useVendorStore } from "@/stores/vendor";
 
 export default {
     name: "VendorList",
     setup() {
       const auth = useAuth();
+      const vendorStore = useVendorStore();
       return {
-        auth
+        auth,
+        vendorStore
       }
     },
     data() {
@@ -147,28 +149,25 @@ export default {
     },
     methods: {
       refreshVendorList: function () {
-        axios.get(`http://${window.location.host}/api/vendor/find-all`)
+        this.vendorStore.fetch()
           .then(response => {
-            this.allVendorList = response.data
+            console.log(response);
+            this.allVendorList = response.data.data
           })
           .catch(e => {
               console.log(e);
           })
       },
       toggleActivation: function (to) {
-        let command = "activate";
         if (to.active) {
-          command = "deactivate";
-        }
-        axios.post(`http://${window.location.host}/api/vendor/${to.id}/${command}`)
-          .then(() => {
+          this.vendorStore.deactivate(to.id).then(() => {
             this.refreshVendorList();
           })
-          .catch(e => {
-            console.log(e);
+        } else {
+          this.vendorStore.activate(to.id).then(() => {
+            this.refreshVendorList();
           })
-
-
+        }
       },
       openVendorConfiguration: function (id) {
         this.$router.push({ path:`/admin/${id}/config`})

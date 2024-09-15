@@ -10,6 +10,12 @@ import NotFound from "./components/NotFound.vue";
 
 const routes = [
   {
+    path: '/api/:pathMatch(.*)*',
+    beforeEnter: () => {
+      window.location.href = window.location.pathname
+    }
+  },
+  {
     name: "home",
     path: "/home",
     component: HomeView,

@@ -61,16 +61,18 @@
 </template>
 
 <script>
-import axios from "axios";
 import { useAuth } from "@/stores/auth";
+import { useVendorStore } from "@/stores/vendor";
 import { notify } from "@kyvg/vue3-notification";
 
 export default {
     name: "VendorAdd",
     setup() {
       const auth = useAuth();
+      const vendorStore = useVendorStore();
       return {
-        auth
+        auth,
+        vendorStore
       }
     },
     data() {
@@ -129,9 +131,8 @@ export default {
     },
     methods: {
       createVendor: function () {
-        axios.post(`http://${window.location.host}/api/vendor/create`, {"data":this.vendor})
-          .then(response => {
-            console.log(response.data);
+        this.vendorStore.add(this.vendor)
+          .then(() => {
             notify({
               type: "info",
               text: "Üzlet hozzáadása sikeres!",

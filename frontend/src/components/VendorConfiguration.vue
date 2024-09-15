@@ -38,9 +38,6 @@
 </template>
 
 <script>
-import axios from "axios";
-import { useAuth } from "@/stores/auth";
-import { notify } from "@kyvg/vue3-notification";
 import { ref } from "vue"
 import VendorSettings from "./VendorSettings.vue"
 import VendorMenuManager from "./VendorMenuManager.vue"
@@ -51,7 +48,6 @@ import VendorItemManager from "./VendorItemManager.vue"
 export default {
     name: "VendorConfiguration",
     setup() {
-      const auth = useAuth();
       const activeTab = ref("Settings")
       const allTabs = {
         "Settings": VendorSettings,
@@ -59,47 +55,10 @@ export default {
         "Items": VendorItemManager,
       }
       return {
-        auth,
         activeTab,
         allTabs
       }
     },
-    data() {
-      return {
-        vendor: {}
-      }
-    },
-    mounted() {
-      this.getSettings()
-    },
-    methods: {
-      getSettings: function () {
-        axios.get(`http://${window.location.host}/api/vendor/${this.$route.params.id}/get`)
-          .then(response => {
-            this.vendor = response.data
-          })
-          .catch(e => {
-              console.log(e);
-          })
-      },
-      saveSettings: function () {
-        axios.post(`http://${window.location.host}/api/vendor/${this.$route.params.id}/settings/save`, {"data":this.settings})
-          .then(response => {
-            this.settings = response.data
-            notify({
-              type: "info",
-              text: "Beállítások mentése sikeres!",
-            });
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Beállítások mentése nem sikerült!",
-              });
-          })
-      },
-    }
 };
 </script>
 

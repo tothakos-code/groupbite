@@ -2,6 +2,7 @@ from app.entities.order import Order
 from app.entities.user import User
 from app.entities.menu_item import MenuItem
 from app.entities.size import Size
+from app.entities.vendor import Vendor
 from marshmallow import Schema, fields, ValidationError
 
 
@@ -25,10 +26,16 @@ def validate_size_id(size_id):
     if not exists:
         raise ValidationError(f"Size with ID {size_id} does not exist.")
 
+def validate_vendor_id(vendor_id):
+    exists = Vendor.find_by_id((str(vendor_id))) is not None
+    if not exists:
+        raise ValidationError(f"Vendor with ID {vendor_id} does not exist.")
+
 
 class IDSchema(Schema):
     order_id = fields.Integer(validate=validate_order_id)
     user_id = fields.UUID(validate=validate_user_id)
     src_user_id = fields.UUID(validate=validate_user_id)
+    vendor_id = fields.UUID(validate=validate_vendor_id)
     item_id = fields.Integer(validate=validate_item_id)
     size_id = fields.Integer(validate=validate_size_id)

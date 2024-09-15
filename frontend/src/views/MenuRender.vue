@@ -9,7 +9,8 @@
 import Menu from "@/views/Menu.vue";
 import { state } from "@/main";
 import { defineAsyncComponent } from "vue";
-// import axios from "axios";
+import { useVendorStore } from "@/stores/vendor";
+
 
 const PluginMenu = defineAsyncComponent({
   loader: () => import(`./../../../plugins/${state.selected_vendor.name}/frontend/App.vue`),
@@ -22,7 +23,7 @@ export default {
     PluginMenu
   },
   beforeRouteEnter(to) {
-    state.vendors.forEach((item) => {
+    useVendorStore().vendors.forEach((item) => {
       if (item.name === to.name || item.name+"-dated" === to.name) {
         state.selected_vendor = item;
       }
@@ -49,8 +50,10 @@ export default {
     history.pushState({}, "", `${to.path}/${state.selectedDate.toISODate()}`)
   },
   setup() {
+    const vendorStore = useVendorStore();
     return {
-      PluginMenu
+      PluginMenu,
+      vendorStore
     }
   },
   computed:{

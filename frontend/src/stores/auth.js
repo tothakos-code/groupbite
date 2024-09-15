@@ -23,8 +23,7 @@ export const useAuth = defineStore("user", {
   actions: {
     async login(username) {
       try {
-        const response = await axios.post(
-          `http://${window.location.host}/api/user/login`, {
+        const response = await axios.post(`/api/user/login`, {
             "username": username
         });
         if (response.data.error) {
@@ -35,7 +34,7 @@ export const useAuth = defineStore("user", {
           return;
         }
 
-        this.user = response.data;
+        this.user = response.data.data;
         Cookies.set("user", this.user.id, { expires: 365});
         this.isLoading = false;
         this.isLoggedIn = true;
@@ -56,8 +55,7 @@ export const useAuth = defineStore("user", {
     },
     async register(username, email) {
       try {
-        const response = await axios.post(
-          `http://${window.location.host}/api/user/register`, {
+        const response = await axios.post(`/api/user/register`, {
             "username": username,
             "email": email
           });
@@ -68,7 +66,7 @@ export const useAuth = defineStore("user", {
           });
           return;
         }
-        this.user = response.data
+        this.user = response.data.data
         Cookies.set("user", this.user.id, { expires: 365});
         notify({
           type: "info",
@@ -86,15 +84,14 @@ export const useAuth = defineStore("user", {
       let session = Cookies.get("user")
       if (session) {
         try {
-          const response = await axios.post(
-            `http://${window.location.host}/api/user/checkSession`, {
+          const response = await axios.post(`/api/user/checkSession`, {
               "session": session
           });
           if (response.data.error) {
             return;
           }
 
-          this.user = response.data;
+          this.user = response.data.data;
           Cookies.set("user", this.user.id, { expires: 365});
           this.isLoading = false;
           this.isLoggedIn = true;
@@ -104,6 +101,34 @@ export const useAuth = defineStore("user", {
 
         }
       } else {
+        this.isLoading = false;
+      }
+    },
+    async orders() {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/user/${this.user.id}/orders`);
+        return response
+      } catch (error) {
+        console.error("Failed to get orders", error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async update(data) {
+      this.isLoading = true;
+      try {
+        const response = await axios.put(`/api/user/${this.user.id}`, { "data": data });
+        return response
+      } catch (error) {
+        console.error("Failed to get orders", error);
+        notify({
+          type: "warn",
+          text: error.response.error,
+        });
+        return error.response
+      } finally {
         this.isLoading = false;
       }
     }

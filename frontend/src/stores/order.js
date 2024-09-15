@@ -96,6 +96,32 @@ export const useOrderStore = defineStore("order", {
         this.isLoading = false;
       }
     },
+    async fetchHistory(data) {
+      this.isLoading = true;
+      try {
+        const response = await axios.post(`/api/order/history`, data);
+        return response
+      } catch (error) {
+        console.error("Failed to get history", error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async close() {
+      this.isLoading = true;
+      try {
+        const response = await axios.put(`/api/order/${this.order.id}/state`,{
+          "state": "closed"
+        });
+        return response
+      } catch (error) {
+        console.error("Failed to close order", error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async clearBasket() {
       if ( this.order.state_id === "closed") {
         notify({

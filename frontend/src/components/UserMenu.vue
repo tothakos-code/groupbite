@@ -211,7 +211,6 @@ import UserProfilePopup from "./UserProfilePopup.vue";
 import UserLoginPopup from "./UserLoginPopup.vue";
 import { useAuth } from "@/stores/auth.js";
 import { inject } from "vue";
-import axios from "axios";
 import Popup from "./Popup.vue";
 import GlobalBasketUser from "./GlobalBasketUser.vue";
 
@@ -254,10 +253,9 @@ export default {
   },
   methods: {
     openUserHistory: function(){
-      axios.get(`http://${window.location.host}/api/order/history/${this.auth.user.id}`)
+      this.auth.orders()
         .then(response => {
-            this.orderHistoryList = response.data;
-            console.log(this.orderHistoryList);
+            this.orderHistoryList = response.data.data;
             this.showOrderHistory = true
         })
     },

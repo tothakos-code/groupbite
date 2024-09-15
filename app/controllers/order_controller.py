@@ -10,7 +10,7 @@ from app.entities.order import Order, OrderState
 from app.entities.user_basket import UserBasket
 from app.entities import Session
 from app.utils.decorators import validate_url_params
-from app.utils.validators import IDSchema, validate_order_id, validate_user_id, validate_item_id, validate_size_id
+from app.utils.validators import IDSchema
 
 
 socketio = SocketioSingleton.get_instance()
@@ -45,30 +45,8 @@ def handle_order_history():
             order_id = value[0]
             result[date][order_id]["ordered"] = True
 
-    return json.dumps(result), 200
+    return {"data": json.dumps(result)}, 200
 
-# TODO: add a limit and a pager option, move to user controller
-@order_blueprint.route("/history/<user_id>", methods=["GET"])
-@validate_url_params(IDSchema())
-def handle_user_order_history(user_id):
-
-    result = {}
-    for item in UserBasket.find_user_orders(user_id):
-        date = item.order.date_of_order.strftime("%Y-%m-%d")
-        vendor = item.order.vendor.name
-        key_format = f"{vendor}-{date}"
-        if key_format not in result:
-            result[key_format] = {}
-
-        if "items" not in result[key_format]:
-            result[key_format]["items"] = []
-
-        result[key_format]["items"].append(item.basket_format)
-        result[key_format]["vendor"] = vendor
-        result[key_format]["date"] = date
-        result[key_format]["fee"] = item.order.order_fee/UserBasket.user_count(item.order.id)
-
-    return json.dumps(result), 200
 
 @order_blueprint.route("/<order_id>", methods=["GET"])
 @validate_url_params(IDSchema())
@@ -121,7 +99,6 @@ def handle_copy_basket(order_id, user_id, src_user_id):
         "basket": UserBasket.get_basket_group_by_user(order_id)
     })
     return {"msg": "OK"}, 201
-
 
 
 @order_blueprint.route("/<order_id>/user/<user_id>/item/<item_id>/size/<size_id>", methods=["PUT"])

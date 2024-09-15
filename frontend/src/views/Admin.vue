@@ -31,7 +31,6 @@
 </template>
 
 <script>
-// import axios from "axios";
 import { useAuth } from "@/stores/auth";
 
 export default {

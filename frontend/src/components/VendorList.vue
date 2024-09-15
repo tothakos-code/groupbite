@@ -151,11 +151,7 @@ export default {
       refreshVendorList: function () {
         this.vendorStore.fetch()
           .then(response => {
-            console.log(response);
             this.allVendorList = response.data.data
-          })
-          .catch(e => {
-              console.log(e);
           })
       },
       toggleActivation: function (to) {

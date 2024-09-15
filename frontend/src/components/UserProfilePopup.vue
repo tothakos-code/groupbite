@@ -137,18 +137,6 @@ export default {
       });
     },
     onCancel: function() {
-      fetch(`http://${window.location.host}/api/user/get/${this.auth.user.id}`,{
-        method: "get",
-        headers: {
-          "Content-Type": "application/json",
-        }
-      })
-        .then(response => response.json())
-          .then(data => {
-            this.auth.user.ui_color = data.ui_color;
-            this.ui_color = data.ui_color;
-          })
-          .catch(error => console.error(error))
       this.$emit("cancel")
     },
     onColorChange: function() {

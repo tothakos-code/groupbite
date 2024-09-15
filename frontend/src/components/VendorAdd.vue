@@ -63,7 +63,6 @@
 <script>
 import { useAuth } from "@/stores/auth";
 import { useVendorStore } from "@/stores/vendor";
-import { notify } from "@kyvg/vue3-notification";
 
 export default {
     name: "VendorAdd",
@@ -122,8 +121,7 @@ export default {
               "value": "${quantity}x ${item_name} ${size_name}\\n",
               "section": "root"
             },
-          },
-          "configuration":{},
+          }
         }
       }
     },
@@ -133,18 +131,8 @@ export default {
       createVendor: function () {
         this.vendorStore.add(this.vendor)
           .then(() => {
-            notify({
-              type: "info",
-              text: "Üzlet hozzáadása sikeres!",
-            });
+
             this.$router.push("/admin")
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Üzlet hozzáadása nem sikerült!",
-              });
           })
       },
     }

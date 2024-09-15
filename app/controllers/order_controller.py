@@ -15,7 +15,7 @@ from app.utils.validators import IDSchema
 
 socketio = SocketioSingleton.get_instance()
 
-
+# TODO: chage to GET and use query params
 @order_blueprint.route("/history", methods=["POST"])
 def handle_order_history():
     DATE_FROM = request.json["date_from"]
@@ -45,18 +45,16 @@ def handle_order_history():
             order_id = value[0]
             result[date][order_id]["ordered"] = True
 
-    return {"data": json.dumps(result)}, 200
+    return { "data": result }, 200
 
 
 @order_blueprint.route("/<order_id>", methods=["GET"])
 @validate_url_params(IDSchema())
 def handle_get_basket(order_id):
     order = Order.get_by_id(order_id)
-    if order:
-        return_obj = order.serialized
-        return_obj["basket"] = UserBasket.get_basket_group_by_user(order.id)
-        return {"data": return_obj}, 200
-    return {"error": "order not exists"}, 404
+    return_obj = order.serialized
+    return_obj["basket"] = UserBasket.get_basket_group_by_user(order.id)
+    return { "data": return_obj }, 200
 
 
 # TODO: Upgrade this
@@ -74,7 +72,10 @@ def handle_date_selection_change(data):
     order = Order.find_order_by_date_for_a_vendor(vendor_id, new_date)
 
     if not order:
-        Order.create_order(vendor_id, new_date)
+        ok, order = Order.create_order(vendor_id, new_date)
+        if not ok:
+            logging.error("Cannot create order")
+            return
 
 
     socketio.emit(
@@ -98,19 +99,19 @@ def handle_copy_basket(order_id, user_id, src_user_id):
     socketio.emit("be_order_update", {
         "basket": UserBasket.get_basket_group_by_user(order_id)
     })
-    return {"msg": "OK"}, 201
+    return { "msg": "OK" }, 201
 
 
 @order_blueprint.route("/<order_id>/user/<user_id>/item/<item_id>/size/<size_id>", methods=["PUT"])
 @validate_url_params(IDSchema())
 def handle_add_to_basket(order_id, user_id, item_id, size_id):
-    # TODO:
     order = Order.get_by_id(order_id)
-    data = {}
-    data["order_id"] = order_id
-    data["user_id"] = user_id
-    data["menu_item_id"] = item_id
-    data["size_id"] = size_id
+    data = {
+        "order_id": order_id,
+        "user_id": user_id,
+        "menu_item_id": item_id,
+        "size_id": size_id
+    }
 
     from app.event_manager import event_manager
     event_manager.trigger_event("beforeAdd@" + order.vendor.name, data)
@@ -128,10 +129,11 @@ def handle_add_to_basket(order_id, user_id, item_id, size_id):
         socketio.emit("be_order_update", {
             "basket": UserBasket.get_basket_group_by_user(order_id)
         })
-        return {"msg": "OK"}, 201
+        return { "msg": "OK" }, 201
     else:
-        return {"error":"Item out of stock"}, 400
-    return {"error": "something went wrong."}, 500
+        return { "error":"Item out of stock" }, 400
+
+    return { "error": "something went wrong." }, 500
 
 
 @order_blueprint.route("/<order_id>/user/<user_id>/item/<item_id>/size/<size_id>", methods=["DELETE"])
@@ -160,8 +162,8 @@ def handle_remove_from_basket(order_id, user_id, item_id, size_id):
         socketio.emit("be_order_update", {
             "basket": UserBasket.get_basket_group_by_user(order_id)
         })
-        return {"msg": "OK"}, 204
-    return {"error": "something went wrong."}, 500
+        return { "msg": "OK" }, 204
+    return { "error": "something went wrong." }, 500
 
 
 @order_blueprint.route("/<order_id>/user/<user_id>", methods=["DELETE"])
@@ -171,8 +173,8 @@ def handle_clear_user_basket(order_id, user_id):
         socketio.emit("be_order_update", {
             "basket": UserBasket.get_basket_group_by_user(order_id)
         })
-        return {"msg": "OK"}, 204
-    return {"error": "Order or User not found"}, 404
+        return { "msg": "OK" }, 204
+    return { "error": "Order or User not found" }, 404
 
 
 @order_blueprint.route("/<order_id>/state", methods=["PUT"])
@@ -202,4 +204,4 @@ def handle_close_order(order_id):
     socketio.emit("be_order_update", {
         "order": order.serialized
     })
-    return {"msg": "OK"}, 200
+    return { "msg": "OK" }, 200

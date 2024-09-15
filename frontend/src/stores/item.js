@@ -2,7 +2,7 @@ import axios from "axios";
 import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
 
-export const useItem = defineStore("item", {
+export const useItemStore = defineStore("item", {
   state: () => ({
     isLoading: false
   }),
@@ -10,17 +10,17 @@ export const useItem = defineStore("item", {
 
   },
   actions: {
-    async update(data) {
+    async update(itemId, data) {
       this.isLoading = true;
       try {
-        const response = await axios.post(`/api/item/update`, {"data":data});
+        const response = await axios.put(`/api/item/${itemId}`, { "data":data });
         notify({
           type: "info",
           text: "Étel frissítés sikeres!",
         });
         return response
       } catch (error) {
-        console.error("Failed to update menu",error);
+        console.error("Failed to update item:", error.response.data.error);
         notify({
           type: "error",
           text: "Étel frissítés nem sikerült!",
@@ -30,17 +30,17 @@ export const useItem = defineStore("item", {
         this.isLoading = false;
       }
     },
-    async delete(data) {
+    async delete(itemId) {
       this.isLoading = true;
       try {
-        const response = await axios.post(`/api/item/delete`, {"data":data});
+        const response = await axios.delete(`/api/item/${itemId}`);
         notify({
           type: "info",
           text: "Étel törlés sikeres!",
         });
         return response
       } catch (error) {
-        console.error("Failed to delete menu",error);
+        console.error("Failed to delete item:", error.response.data.error);
         notify({
           type: "error",
           text: "Étel törlés nem sikerült!",
@@ -53,7 +53,7 @@ export const useItem = defineStore("item", {
     async add(data) {
       this.isLoading = true;
       try {
-        const response = await axios.post(`/api/item/add`, {"data":data});
+        const response = await axios.post(`/api/item`, { "data":data });
         notify({
           type: "info",
           text: "Étel hozzáadása sikeres!",
@@ -61,7 +61,7 @@ export const useItem = defineStore("item", {
         return response
 
       } catch (error) {
-        console.error("Failed to add menu",error);
+        console.error("Failed to add item:", error.response.data.error);
         notify({
           type: "error",
           text: "Étel hozzáadása nem sikerült!",

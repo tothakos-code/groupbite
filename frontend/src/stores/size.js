@@ -2,7 +2,7 @@ import axios from "axios";
 import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
 
-export const useSize = defineStore("size", {
+export const useSizeStore = defineStore("size", {
   state: () => ({
     isLoading: false
   }),
@@ -10,17 +10,17 @@ export const useSize = defineStore("size", {
 
   },
   actions: {
-    async update(data) {
+    async update(sizeId, data) {
       this.isLoading = true;
       try {
-        const response = await axios.post(`/api/size/update`, {"data":data});
+        const response = await axios.put(`/api/size/${sizeId}`, { "data":data });
         notify({
           type: "info",
           text: "Méret frissítés sikeres!",
         });
         return response
       } catch (error) {
-        console.error("Failed to update size",error);
+        console.error("Failed to update size:", error.response.data.error);
         notify({
           type: "error",
           text: "Méret frissítés nem sikerült!",
@@ -30,17 +30,17 @@ export const useSize = defineStore("size", {
         this.isLoading = false;
       }
     },
-    async delete(data) {
+    async delete(sizeId) {
       this.isLoading = true;
       try {
-        const response = await axios.post(`/api/size/delete`, {"data":data});
+        const response = await axios.delete(`/api/size/${sizeId}`);
         notify({
           type: "info",
           text: "Méret törlés sikeres!",
         });
         return response
       } catch (error) {
-        console.error("Failed to delete size",error);
+        console.error("Failed to delete size:", error.response.data.error);
         notify({
           type: "error",
           text: "Méret törlés nem sikerült!",
@@ -53,7 +53,7 @@ export const useSize = defineStore("size", {
     async add(data) {
       this.isLoading = true;
       try {
-        const response = await axios.post(`/api/size/add`, {"data":data});
+        const response = await axios.post(`/api/size`, { "data":data });
         notify({
           type: "info",
           text: "Méret hozzáadása sikeres!",
@@ -61,7 +61,7 @@ export const useSize = defineStore("size", {
         return response
 
       } catch (error) {
-        console.error("Failed to add size",error);
+        console.error("Failed to add size:", error.response.data.error);
         notify({
           type: "error",
           text: "Méret hozzáadása nem sikerült!",

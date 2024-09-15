@@ -9,7 +9,12 @@ from sqlalchemy.orm import relationship
 from uuid import UUID, uuid4
 from typing import List
 import logging
+from marshmallow import Schema, fields
 
+class BaseVendorSchema(Schema):
+    name = fields.Str(required=True)
+    active = fields.Bool()
+    settings = fields.Dict(required=True)
 
 class VendorType(pyenum):
     PLUGIN = "plugin"

@@ -238,7 +238,7 @@
 
 <script>
 import { useAuth } from "@/stores/auth";
-import { useMenu } from "@/stores/menu";
+import { useMenuStore } from "@/stores/menu";
 import Popup from "./Popup.vue";
 import { notify } from "@kyvg/vue3-notification";
 import { useVendorStore } from "@/stores/vendor";
@@ -251,11 +251,11 @@ export default {
     },
     setup() {
       const auth = useAuth();
-      const menuStore = useMenu();
+      const menuStore = useMenuStore();
       const vendorStore = useVendorStore();
       return {
         auth,
-        menuStore
+        menuStore,
         vendorStore
       }
     },
@@ -343,7 +343,7 @@ export default {
       },
       addMenu: function () {
         this.newMenu.vendor_id = this.$route.params.id
-        this.menuStore.add(this.$route.params.id, {"data":this.newMenu} )
+        this.menuStore.add(this.newMenu)
           .then(response => {
             if (response.status === 201) {
               this.getMenuList()
@@ -362,7 +362,7 @@ export default {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
         delete menu["isEditing"];
-        this.menuStore.update(menu_id, {"data": menu} )
+        this.menuStore.update(menu_id, menu )
           .then(response => {
             if (response.status === 200) {
               this.getMenuList()
@@ -373,7 +373,7 @@ export default {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
         delete menu["isEditing"];
-        this.menuStore.delete(menu_id, {"data": menu} )
+        this.menuStore.delete(menu_id)
           .then(response => {
             if (response.status === 200) {
               this.getMenuList()
@@ -384,7 +384,7 @@ export default {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
         delete menu["isEditing"];
-        this.menuStore.duplicate(menu_id, {"data": menu} )
+        this.menuStore.duplicate(menu_id, menu )
           .then(response => {
             if (response.status === 200) {
               this.getMenuList()

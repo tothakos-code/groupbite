@@ -90,7 +90,7 @@ export const useOrderStore = defineStore("order", {
         this.order = response.data.data;
         return response
       } catch (error) {
-        console.error("Failed to get order by ID", error);
+        console.error("Failed to get order by ID:", error.response.data.error);
         return error.response
       } finally {
         this.isLoading = false;
@@ -102,7 +102,7 @@ export const useOrderStore = defineStore("order", {
         const response = await axios.post(`/api/order/history`, data);
         return response
       } catch (error) {
-        console.error("Failed to get history", error);
+        console.error("Failed to get history:", error.response.data.error);
         return error.response
       } finally {
         this.isLoading = false;
@@ -116,7 +116,7 @@ export const useOrderStore = defineStore("order", {
         });
         return response
       } catch (error) {
-        console.error("Failed to close order", error);
+        console.error("Failed to close order:", error.response.data.error);
         return error.response
       } finally {
         this.isLoading = false;
@@ -135,7 +135,7 @@ export const useOrderStore = defineStore("order", {
         const response = await axios.delete(`/api/order/${this.order.id}/user/${auth.user.id}`)
         return response
       } catch (error) {
-        console.error("Failed to clear basket", error);
+        console.error("Failed to clear basket:", error.response.data.error);
         return error.response
       }
     },
@@ -152,7 +152,7 @@ export const useOrderStore = defineStore("order", {
         const response = axios.delete(`/api/order/${this.order.id}/user/${auth.user.id}/item/${menuItemId}/size/${sizeId}`)
         return response
       } catch (error) {
-        console.error("Failed to remove item", error);
+        console.error("Failed to remove item:", error.response.data.error);
         return error.response
       }
     },
@@ -180,7 +180,7 @@ export const useOrderStore = defineStore("order", {
         });
         return response
       } catch (error) {
-        console.error("Failed to remove item", error);
+        console.error("Failed to remove item:", error.response.data.error);
         return error.response
       }
     },
@@ -201,12 +201,10 @@ export const useOrderStore = defineStore("order", {
         return;
       }
       try {
-        axios.put(`/api/order/${this.order.id}/user/${auth.user.id}/item/${menuItemId}/size/${sizeId}`)
-        .then(response => {
-          return response
-        })
+        const response = axios.put(`/api/order/${this.order.id}/user/${auth.user.id}/item/${menuItemId}/size/${sizeId}`)
+        return response
       } catch (error) {
-        console.error("Failed to add item", error);
+        console.error("Failed to add item:", error.response.data.error);
         return error.response
       }
     }

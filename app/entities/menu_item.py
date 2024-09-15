@@ -64,7 +64,6 @@ class MenuItem(Base):
         stmt = select(MenuItem).where(
             MenuItem.id == id
         )
-
         return session.execute(stmt).scalars().first()
 
     def add(item):

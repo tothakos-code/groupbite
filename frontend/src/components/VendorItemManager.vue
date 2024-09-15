@@ -408,24 +408,26 @@
 </template>
 
 <script>
-import axios from "axios";
 import { useAuth } from "@/stores/auth";
-import { useMenu } from "@/stores/menu";
-import { useItem } from "@/stores/item";
-import { useSize } from "@/stores/size";
+import { useMenuStore } from "@/stores/menu";
+import { useItemStore } from "@/stores/item";
+import { useSizeStore } from "@/stores/size";
+import { useVendorStore } from "@/stores/vendor";
 
 export default {
     name: "VendorItemManager",
     setup() {
       const auth = useAuth();
-      const menuStore = useMenu();
-      const itemStore = useItem();
-      const sizeStore = useSize();
+      const menuStore = useMenuStore();
+      const itemStore = useItemStore();
+      const sizeStore = useSizeStore();
+      const vendorStore = useVendorStore();
       return {
         auth,
         menuStore,
         itemStore,
-        sizeStore
+        sizeStore,
+        vendorStore
       }
     },
     data() {
@@ -463,7 +465,7 @@ export default {
           response => {
             if (response.status === 200) {
               let menuItemsMap = new Map();
-              response.data.forEach(item => {
+              response.data.data.forEach(item => {
                 item.isEditing = false
 
 
@@ -487,7 +489,7 @@ export default {
             if (response.status === 201) {
               this.getItemList().then(
                 () => {
-                  this.newSize(response.data.item.id)
+                  this.newSize(response.data.data.id)
                 }
               )
             }
@@ -526,7 +528,7 @@ export default {
         delete item["isEditing"]
         delete item["sizes"]
         item.menu_id = this.selectedMenu
-        this.itemStore.update(item)
+        this.itemStore.update(item.id, item)
           .then(response => {
             if (response.status === 200) {
               this.getItemList()
@@ -538,18 +540,24 @@ export default {
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
         delete size["isEditing"]
         size.menu_item_id = itemId
-        this.sizeStore.update(size)
+        if (size.id === -1) {
+          delete size["id"]
+          this.sizeStore.add(size)
           .then(() => {
             this.getItemList()
           })
+        } else {
+          this.sizeStore.update(size.id, size)
+          .then(() => {
+            this.getItemList()
+          })
+
+        }
       },
       deleteItem: function (item_id) {
         const item = this.items.get(item_id)
         this.items.set(item.id, { ...item, isEditing: false})
-        delete item["isEditing"]
-        delete item["sizes"]
-        item.menu_id = this.selectedMenu
-        this.itemStore.delete(item)
+        this.itemStore.delete(item.id)
           .then(response => {
             if (response.status === 200) {
               this.getItemList()
@@ -559,9 +567,7 @@ export default {
       deleteSize: function (itemId, sizeId) {
         const size = this.items.get(itemId).sizes.get(sizeId)
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
-        delete size["isEditing"]
-        size.menu_item_id = itemId
-        this.sizeStore.delete(size)
+        this.sizeStore.delete(size.id)
           .then(() => {
             this.getItemList()
           })

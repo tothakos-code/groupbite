@@ -18,7 +18,7 @@ export const useVendorStore = defineStore("vendor", {
         const response = await axios.get(`/api/vendor`);
         return response
       } catch (error) {
-        console.error("Failed to fetch vendors",error);
+        console.error("Failed to fetch vendors:", error.response.data.error);
         return error.response
       } finally {
         this.isLoading = false;
@@ -67,18 +67,18 @@ export const useVendorStore = defineStore("vendor", {
     async add(data) {
       this.isLoading = true;
       try {
-        const response = await axios.post(`/api/vendor`, {"data":data});
+        const response = await axios.post(`/api/vendor`, { "data": data });
         notify({
           type: "info",
-          text: "Méret hozzáadása sikeres!",
+          text: "Üzlet hozzáadása sikeres!",
         });
         return response
 
       } catch (error) {
-        console.error("Failed to add size",error);
+        console.error("Failed to add size:", error.response.data.error);
         notify({
           type: "error",
-          text: "Méret hozzáadása nem sikerült!",
+          text: "Üzlet hozzáadása nem sikerült!",
         });
         return error.response
       } finally {
@@ -91,7 +91,7 @@ export const useVendorStore = defineStore("vendor", {
         const response = await axios.put(`/api/vendor/${vendorId}/activate`);
         return response
       } catch (error) {
-        console.error("Failed to activate vendor", error);
+        console.error("Failed to activate vendor:", error.response.data.error);
         notify({
           type: "error",
           text: "Vendor aktiválás nem sikerült!",
@@ -107,7 +107,7 @@ export const useVendorStore = defineStore("vendor", {
         const response = await axios.put(`/api/vendor/${vendorId}/deactivate`);
         return response
       } catch (error) {
-        console.error("Failed to deactivate vendor", error);
+        console.error("Failed to deactivate vendor:", error.response.data.error);
         notify({
           type: "error",
           text: "Vendor deaktiválás nem sikerült!",
@@ -159,14 +159,14 @@ export const useVendorStore = defineStore("vendor", {
     async saveSettings(vendorId, data) {
       this.isLoading = true;
       try {
-        const response = await axios.put(`/api/vendor/${vendorId}/settings`, { "data": data});
+        const response = await axios.put(`/api/vendor/${vendorId}/settings`, { "data": data });
         notify({
           type: "info",
           text: "Beállítások mentése sikeres!",
         });
         return response
       } catch (error) {
-        console.error("Failed to update vendor settings", error);
+        console.error("Failed to update vendor settings:", error.response.data.error);
         notify({
           type: "error",
           text: "Beállítások mentése nem sikerült!",

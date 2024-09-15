@@ -3,14 +3,12 @@ import { reactive } from "vue";
 import { io } from "socket.io-client";
 import router from "./router.js";
 import { register_plugin_routes } from "./loader.js";
-import { useBasket } from "@/stores/basket"
-// import { useVendor } from "@/stores/vendor"
+import { useOrderStore } from "@/stores/order"
+import { useVendorStore } from "@/stores/vendor"
 
 export const state = reactive({
   connected: false,
-  order: {},
   selectedDate: new Date(), // TODO: This will be urlencoded
-  vendors: [],
   selected_vendor: undefined,
 });
 
@@ -31,22 +29,17 @@ socket.on("disconnect", () => {
 });
 
 socket.on("be_vendors_update", function(vendors) {
-  state.vendors = JSON.parse(vendors);
-  // const vendor = useVendor();
-  // vendor.vendors = JSON.parse(vendors)
-  // state.vendors.forEach((item) => {
-  //   item.component = import("@/../../plugins/"+item.name+"/frontend/App.vue");
-  // });
+  useVendorStore().vendors = JSON.parse(vendors);
   register_plugin_routes(router);
 });
 
 socket.on("be_order_update", function(data) {
-  const basket = useBasket();
+  const order = useOrderStore();
   if (data.basket) {
-    basket.basket = data.basket;
+    order.basket = data.basket;
   }
   if (data.order) {
-    state.order = data.order;
+    order.order = data.order;
   }
 });
 

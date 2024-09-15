@@ -216,8 +216,8 @@
 import GlobalBasketUser from "@/components/GlobalBasketUser.vue";
 import Popup from "./Popup.vue";
 import { useAuth } from "@/stores/auth";
-import { useBasket } from "@/stores/basket";
-import axios from "axios";
+import { useOrderStore } from "@/stores/order";
+import { useVendorStore } from "@/stores/vendor";
 import { ref, watch } from "vue";
 import { state } from "@/main.js";
 
@@ -232,12 +232,14 @@ export default {
     const user_states = ref({});
     const weekdates = ref([]);
     const auth = useAuth();
-    const basket = useBasket();
+    const orderStore = useOrderStore();
+    const vendorStore = useVendorStore();
     return {
       auth,
-      basket,
+      orderStore,
+      vendorStore,
       user_states,
-      weekdates,
+      weekdates
     }
   },
   data() {
@@ -305,16 +307,17 @@ export default {
       return false;
     },
     openHistoryPopup: function(item){
-      axios.get(`http://${window.location.host}/api/order/${item}/get`)
+      this.orderStore.fetch(item)
         .then(response => {
-            this.loaded_menu = response.data;
-            console.log(this.loaded_menu);
-            this.showOrderSummary = true;
-            state.vendors.forEach((vendor) => {
-              if (vendor.id === this.loaded_menu.vendor_id ) {
-                state.selected_vendor = vendor;
-              }
-            });
+            if (response.status === 200) {
+              this.loaded_menu = response.data.data;
+              this.showOrderSummary = true;
+              this.vendorStore.vendors.forEach((vendor) => {
+                if (vendor.id === this.loaded_menu.vendor_id ) {
+                  state.selected_vendor = vendor;
+                }
+              });
+            }
         })
     },
     async getCurrentWeekDates(date) {
@@ -331,18 +334,14 @@ export default {
       return weekDates;
     },
     getHistroy: function(from, to) {
-      let url = `http://${window.location.host}/api/order/history`
-      axios.post(url, {
+      this.orderStore.fetchHistory({
           "date_from": new Date(from).toISODate(),
           "date_to": new Date(to).toISODate(),
           "user_id": this.auth.isLoggedIn ? this.auth.user.id : undefined
         })
-        .then((data) => {
-          this.history = data.data;
+        .then(response => {
+          this.history = response.data.data;
           this.calculateStats();
-        })
-        .catch(e => {
-          console.log(e);
         })
     },
     calculateStats: function() {

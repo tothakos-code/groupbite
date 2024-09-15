@@ -3,11 +3,25 @@ from uuid import UUID
 from . import Base, session
 from .size import Size
 import enum
+import logging
 from typing import List
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, exc
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+from marshmallow import Schema, fields
+
+class BaseItemSchema(Schema):
+    menu_id = fields.Int(required=True)
+    name = fields.Str(required=True)
+    category = fields.Str(required=True)
+    index = fields.Int(required=True)
+
+
+class UpdateItemSchema(BaseItemSchema):
+    id = fields.Int(required=True)
+
+
 
 class MenuItem(Base):
     __tablename__ = "menu_item"
@@ -50,7 +64,6 @@ class MenuItem(Base):
         stmt = select(MenuItem).where(
             MenuItem.id == id
         )
-
         return session.execute(stmt).scalars().first()
 
     def add(item):
@@ -59,18 +72,55 @@ class MenuItem(Base):
             item.index = 0
         else:
             item.index = items[0].index + 1
+
         session.add(item)
-        session.commit()
+        try:
+            session.commit()
+            session.refresh(item)
+            return True, item
+        except exc.DataError as e:
+            logging.exception("DataError during menuitem add")
+            session.rollback()
+            return False, None
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False, None
 
     def update(self, name, index, category):
         self.name = name
         self.index = index
         self.category = category
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during menuitem update")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
+
 
     def delete(self):
         session.delete(self)
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during menuitem update")
+            session.rollback()
+            return False
+        except exc.IntegrityError as e:
+            logging.exception("IntegrityError during Menu delete")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
 
     @property

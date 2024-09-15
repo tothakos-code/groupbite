@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text, Enum, select
+from sqlalchemy import Column, Text, Enum, select, exc
 from sqlalchemy.dialects.postgresql import JSONB
 from uuid import UUID, uuid4
 from . import Base, session
@@ -48,10 +48,13 @@ class User(Base):
 
     def get_one_by_id(id):
         # check if uuid is valid
-        try:
-            UUID(id)
-        except ValueError as e:
-            return None
+        if not type(id) == UUID:
+            try:
+                UUID(id)
+            except ValueError as e:
+                return None
+        else:
+            id  = str(id)
         return session.query(User).filter(User.id == id).first()
 
     def is_username_valid(username):
@@ -92,17 +95,34 @@ class User(Base):
             logging.error(f"Error in user creation. User '{user.username}' already exist.")
             return None
         session.add(user)
-        session.commit()
 
-        stmt = select(User).where(
-            User.id == user.id
-        )
-
-        return session.execute(stmt).scalars().first()
+        try:
+            session.commit()
+            session.refresh(user)
+            return True, user
+        except exc.DataError as e:
+            logging.exception("DataError during user add")
+            session.rollback()
+            return False, None
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False, None
 
     def update_user(self, user):
         self.username = user["username"]
-        session.commit()
+        try:
+            session.commit()
+            session.refresh(self)
+            return True, user
+        except exc.DataError as e:
+            logging.exception("DataError during user update")
+            session.rollback()
+            return False, None
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False, None
         return self
 
     def get_all_orders(self):

@@ -1,15 +1,16 @@
-from sqlalchemy import Column, ForeignKey, String, Integer, DateTime, JSON, func, Sequence, Boolean, select, or_, and_
+from sqlalchemy import Column, ForeignKey, String, Integer, DateTime, JSON, func, Sequence, Boolean, select, or_, and_, exc
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.sql import extract
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from datetime import date as d
-import enum
+from marshmallow import Schema, fields
 from typing import List
-from . import Base, session
 from uuid import UUID
+from . import Base, session
 from .vendor import Vendor
+import enum
 import datetime
 import logging
 
@@ -23,6 +24,17 @@ class Frequency(enum.Enum):
     def __str__(self):
         return self.value
 
+class BaseMenuSchema(Schema):
+    name = fields.Str(required=True)
+    vendor_id = fields.UUID(required=True)
+    freq = fields.Str(required=True)
+
+    items = fields.List(fields.Dict())
+
+class UpdateMenuSchema(BaseMenuSchema):
+    id = fields.Int(required=True)
+    active = fields.Bool(required=True)
+    date = fields.Date(required=True)
 
 
 class Menu(Base):
@@ -79,7 +91,7 @@ class Menu(Base):
         return session.execute(stmt).scalars().all()
 
     def find_by_date(date=d.today().strftime("%Y-%m-%d")):
-        stmt = select(Menu).where(Menu.me_date == date)
+        stmt = select(Menu).where(Menu.date == date)
         return session.execute(stmt).scalars().first()
 
     def find_by_id(menu_id):
@@ -97,24 +109,78 @@ class Menu(Base):
 
     def add(menu):
         session.add(menu)
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during Menu add")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     def activate(self):
         self.active = True;
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during Menu activation")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     def deactivate(self):
         self.active = False;
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during Menu deactivation")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     def update(self, name, date):
         self.name = name
         self.date = date
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during Menu update")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     def delete(self):
         session.delete(self)
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during Menu delete")
+            session.rollback()
+            return False
+        except exc.IntegrityError as e:
+            logging.exception("IntegrityError during Menu delete")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     def fill_menu(vendor_id, date_to_fill, raw_item_list):
         """Creates MenuItem's from a raw json list of items.
@@ -147,15 +213,36 @@ class Menu(Base):
                     price=raw_menu_item["price"]
                 )
             )
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during Menu update")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
+# TODO: Is this replaceable with Menu.add()?
     def create_menu(name, vendor, date, freq):
         menu = Menu.find_vendor_menu(vendor,date)
         # TODO: Need to check that date corresponed to the frequency. This currently only works for daily types
         if menu is not None:
             return
         session.add(Menu(name=name, vendor_id=vendor, date=date, freq_id=freq))
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during Menu create")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     @property
     def serialized(self):

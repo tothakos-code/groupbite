@@ -53,7 +53,7 @@
               >
             </div>
 
-            <div class="col-2">
+            <!-- <div class="col-2">
               <label for="itemSize">
                 Méret:
               </label>
@@ -63,7 +63,7 @@
                 name="itemSize"
                 class="form-control"
               >
-            </div>
+            </div> -->
             <div class="col-2">
               <label for="itemCategory">
                 Kategória:
@@ -75,7 +75,7 @@
                 class="form-control"
               >
             </div>
-            <div class="col-1">
+            <!-- <div class="col-1">
               <label for="itemPrice">
                 Ár:
               </label>
@@ -85,8 +85,8 @@
                 name="itemPrice"
                 class="form-control"
               >
-            </div>
-            <div class="col-1">
+            </div> -->
+            <!-- <div class="col-1">
               <label
                 for="itemQuantity"
                 title="Végtelen mennyiséghez adj megy egy negatív számot"
@@ -99,7 +99,7 @@
                 name="itemQuantity"
                 class="form-control"
               >
-            </div>
+            </div> -->
             <button
               class="btn col-auto"
               :class="['btn-' + auth.getUserColor ]"
@@ -408,16 +408,26 @@
 </template>
 
 <script>
-import axios from "axios";
 import { useAuth } from "@/stores/auth";
-import { notify } from "@kyvg/vue3-notification";
+import { useMenuStore } from "@/stores/menu";
+import { useItemStore } from "@/stores/item";
+import { useSizeStore } from "@/stores/size";
+import { useVendorStore } from "@/stores/vendor";
 
 export default {
     name: "VendorItemManager",
     setup() {
       const auth = useAuth();
+      const menuStore = useMenuStore();
+      const itemStore = useItemStore();
+      const sizeStore = useSizeStore();
+      const vendorStore = useVendorStore();
       return {
-        auth
+        auth,
+        menuStore,
+        itemStore,
+        sizeStore,
+        vendorStore
       }
     },
     data() {
@@ -426,10 +436,10 @@ export default {
         selectedMenu: "",
         newItem: {
           name: "",
-          size: "",
+          // size: "",
           category: "",
-          price: 0,
-          quantity: -1,
+          // price: 0,
+          // quantity: -1,
           index: 0,
         },
         items: []
@@ -445,54 +455,44 @@ export default {
     },
     methods: {
       getMenuList: function () {
-        axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-get`)
+        this.vendorStore.fetchMenus(this.$route.params.id)
           .then(response => {
-            this.menus = response.data
-          })
-          .catch(e => {
-              console.log(e);
+            this.menus = response.data.data
           })
       },
-      getItemList: function () {
-        axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/get-items/${this.selectedMenu}`)
-          .then(response => {
+      getItemList: async function () {
+        await this.menuStore.fetch(this.selectedMenu).then(
+          response => {
+            if (response.status === 200) {
+              let menuItemsMap = new Map();
+              response.data.data.forEach(item => {
+                item.isEditing = false
 
-            let menuItemsMap = new Map();
-            response.data.forEach(item => {
-              item.isEditing = false
 
-
-              let sizesMap = new Map();
-              item.sizes.forEach(size => {
-                size.isEditing = false;
-                sizesMap.set(size.id, size);
+                let sizesMap = new Map();
+                item.sizes.forEach(size => {
+                  size.isEditing = false;
+                  sizesMap.set(size.id, size);
+                });
+                item.sizes = sizesMap;
+                menuItemsMap.set(item.id, item)
               });
-              item.sizes = sizesMap;
-              menuItemsMap.set(item.id, item)
-            });
 
-            this.items = menuItemsMap;
-            console.log(this.items);
-          })
-          .catch(e => {
-              console.log(e);
+              this.items = menuItemsMap;
+            }
           })
       },
       addToMenu: function () {
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-add`, {"data":this.newItem, "menu": this.selectedMenu})
-          .then(() => {
-            this.getItemList()
-            notify({
-              type: "info",
-              text: "MenuItem hozzáadása sikeres!",
-            });
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "MenuItem hozzáadása nem sikerült!",
-              });
+        this.newItem.menu_id = this.selectedMenu
+        this.itemStore.add(this.newItem)
+          .then(response => {
+            if (response.status === 201) {
+              this.getItemList().then(
+                () => {
+                  this.newSize(response.data.data.id)
+                }
+              )
+            }
           })
       },
       newSize: function (itemId) {
@@ -504,7 +504,6 @@ export default {
             "index": 0,
             "isEditing": true
         }
-
         this.items.get(itemId).sizes.set(-1, newSize)
       },
       edit: function (menu_id) {
@@ -526,77 +525,51 @@ export default {
       updateItem: function (item_id) {
         const item = this.items.get(item_id)
         this.items.set(item.id, { ...item, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-update`, {"data": item})
-          .then(() => {
-            this.getItemList()
-            notify({
-              type: "info",
-              text: "Étel frissítés sikeres!",
-            });
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Étel frissítés nem sikerült!",
-              });
+        delete item["isEditing"]
+        delete item["sizes"]
+        item.menu_id = this.selectedMenu
+        this.itemStore.update(item.id, item)
+          .then(response => {
+            if (response.status === 200) {
+              this.getItemList()
+            }
           })
       },
       updateSize: function (itemId, sizeId) {
         const size = this.items.get(itemId).sizes.get(sizeId)
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-size-update`, {"data": size, "item": itemId})
+        delete size["isEditing"]
+        size.menu_item_id = itemId
+        if (size.id === -1) {
+          delete size["id"]
+          this.sizeStore.add(size)
           .then(() => {
             this.getItemList()
-            notify({
-              type: "info",
-              text: "Méret frissítés sikeres!",
-            });
           })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Méret frissítés nem sikerült!",
-              });
+        } else {
+          this.sizeStore.update(size.id, size)
+          .then(() => {
+            this.getItemList()
           })
+
+        }
       },
       deleteItem: function (item_id) {
         const item = this.items.get(item_id)
         this.items.set(item.id, { ...item, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-delete`, {"data": item})
-          .then(() => {
-            this.getItemList()
-            notify({
-              type: "info",
-              text: "Étel törlés sikeres!",
-            });
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Étel törlés nem sikerült!",
-              });
+        this.itemStore.delete(item.id)
+          .then(response => {
+            if (response.status === 200) {
+              this.getItemList()
+            }
           })
       },
       deleteSize: function (itemId, sizeId) {
         const size = this.items.get(itemId).sizes.get(sizeId)
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/item-size-delete`, {"data": size})
+        this.sizeStore.delete(size.id)
           .then(() => {
             this.getItemList()
-            notify({
-              type: "info",
-              text: "Méret törlés sikeres!",
-            });
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Méret törlés nem sikerült!",
-              });
           })
       },
     }

@@ -1,7 +1,8 @@
-import { state } from "@/main";
+import { useVendorStore } from "@/stores/vendor";
+
 
 export function register_plugin_routes(router) {
-  state.vendors.forEach((item) => {
+  useVendorStore().vendors.forEach((item) => {
     if (!router.hasRoute("/"+item.name)) {
       let component = () => import("@/views/MenuRender.vue")
       router.addRoute("menu", {

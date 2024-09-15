@@ -2,14 +2,19 @@ from enum import Enum as pyenum
 from sqlalchemy.dialects.postgresql import JSONB
 from . import Base, session
 from datetime import date
-from sqlalchemy import Boolean, select
+from sqlalchemy import Boolean, select, exc
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from uuid import UUID, uuid4
 from typing import List
 import logging
+from marshmallow import Schema, fields
 
+class BaseVendorSchema(Schema):
+    name = fields.Str(required=True)
+    active = fields.Bool()
+    settings = fields.Dict(required=True)
 
 class VendorType(pyenum):
     PLUGIN = "plugin"
@@ -74,7 +79,17 @@ class Vendor(Base):
                 schedule_task(str(self.id) + "-closed", int(hh), int(mm), self.closed_wrapper)
 
         self.settings = settings;
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during vendor update")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     def add_vendor(vendor_obj):
         stmt = select(Vendor).where(Vendor.name == vendor_obj.name)
@@ -100,7 +115,17 @@ class Vendor(Base):
                 hh, mm = vendor_db.settings["closed_scheduler"]["value"].split(":")
                 schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
 
-        session.commit()
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during vendor update")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
 
     def closure_wrapper(self):
         logging.info("Scheduled order state stepping running")
@@ -109,7 +134,9 @@ class Vendor(Base):
 
         order = Order.find_open_order_by_date_for_a_vendor(self.id, date.today().strftime("%Y-%m-%d"))
         if order:
-            order.change_state(OrderState.ORDER, None)
+            ok = order.change_state(OrderState.ORDER, None)
+            if not ok:
+                logging.error("Error during order close")
 
             socketio = SocketioSingleton.get_instance()
             socketio.emit("be_order_update", {

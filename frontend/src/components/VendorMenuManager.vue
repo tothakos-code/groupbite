@@ -237,10 +237,12 @@
 </template>
 
 <script>
-import axios from "axios";
 import { useAuth } from "@/stores/auth";
+import { useMenuStore } from "@/stores/menu";
 import Popup from "./Popup.vue";
 import { notify } from "@kyvg/vue3-notification";
+import { useVendorStore } from "@/stores/vendor";
+
 
 export default {
     name: "VendorMenuManager",
@@ -249,8 +251,12 @@ export default {
     },
     setup() {
       const auth = useAuth();
+      const menuStore = useMenuStore();
+      const vendorStore = useVendorStore();
       return {
-        auth
+        auth,
+        menuStore,
+        vendorStore
       }
     },
     data() {
@@ -274,30 +280,13 @@ export default {
       submitJsonFile: function () {
         let formData = new FormData();
         formData.append("file", this.file);
-        axios.post( `http://${window.location.host}/api/menu/import/${this.$route.params.id}`,
-          formData,
-          {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
+        this.vendorStore.import(this.$route.params.id, formData)
+        .then(response => {
+          if (response.status === 201) {
+            this.showImportPopup=false
+            this.getMenuList()
           }
-        ).then(() => {
-          console.log("SUCCESS file upload!!");
-          this.showImportPopup=false
-          this.getMenuList()
-          notify({
-            type: "info",
-            text: "Menü importálás sikeres!",
-          });
         })
-        .catch(e => {
-          console.log("FAILURE in file upload!!");
-          console.log(e);
-          notify({
-            type: "error",
-            text: "Menü importálása nem sikerült!",
-          });
-        });
       },
       handleFileUpload: function (event) {
         const file = event.target.files[0];
@@ -322,23 +311,24 @@ export default {
         }
       },
       toggleActivation: function (to) {
-        let command = "activate";
+        let result;
         if (to.active) {
-          command = "deactivate";
+          result = this.menuStore.deactivate(to.id)
+        } else {
+          result = this.menuStore.activate(to.id)
         }
-        axios.post(`http://${window.location.host}/api/menu/${to.id}/${command}`)
-          .then(() => {
-            this.getMenuList();
-          })
-          .catch(e => {
-            console.log(e);
-          })
+
+        result.then(response => {
+          if (response.status === 200) {
+            this.getMenuList()
+          }
+        })
       },
       getMenuList: function () {
-        axios.get(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-get`)
+        this.vendorStore.fetchMenus(this.$route.params.id)
           .then(response => {
             let newMenuList = new Map(
-              response.data.map(
+              response.data.data.map(
                 item => [item.id, item]
               )
             )
@@ -352,20 +342,12 @@ export default {
           })
       },
       addMenu: function () {
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-add`, {"data":this.newMenu})
-          .then(() => {
-            this.getMenuList()
-            notify({
-              type: "info",
-              text: "Menü hozzáadása sikeres!",
-            });
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Menü hozzáadása nem sikerült!",
-              });
+        this.newMenu.vendor_id = this.$route.params.id
+        this.menuStore.add(this.newMenu)
+          .then(response => {
+            if (response.status === 201) {
+              this.getMenuList()
+            }
           })
       },
       edit: function (menu_id) {
@@ -379,58 +361,34 @@ export default {
       updateMenu: function (menu_id) {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-update`, {"data": menu})
-          .then(() => {
-            this.getMenuList()
-            notify({
-              type: "info",
-              text: "Menü frissítés sikeres!",
-            });
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Menü frissítés nem sikerült!",
-              });
+        delete menu["isEditing"];
+        this.menuStore.update(menu_id, menu )
+          .then(response => {
+            if (response.status === 200) {
+              this.getMenuList()
+            }
           })
       },
       deleteMenu: function (menu_id) {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-delete`, {"data": menu})
-          .then(() => {
-            this.getMenuList()
-            notify({
-              type: "info",
-              text: "Menü törlés sikeres!",
-            });
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Menü törlés nem sikerült!",
-              });
+        delete menu["isEditing"];
+        this.menuStore.delete(menu_id)
+          .then(response => {
+            if (response.status === 200) {
+              this.getMenuList()
+            }
           })
       },
       duplicateMenu: function (menu_id) {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
-        axios.post(`http://${window.location.host}/api/menu/${this.$route.params.id}/menu-duplicate`, {"data": menu})
-          .then(() => {
-            this.getMenuList()
-            notify({
-              type: "info",
-              text: "Menü duplikálva!",
-            });
-          })
-          .catch(e => {
-              console.log(e);
-              notify({
-                type: "error",
-                text: "Menü duplikáció nem sikerült!",
-              });
+        delete menu["isEditing"];
+        this.menuStore.duplicate(menu_id, menu )
+          .then(response => {
+            if (response.status === 200) {
+              this.getMenuList()
+            }
           })
       },
     }

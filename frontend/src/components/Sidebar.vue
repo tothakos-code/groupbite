@@ -53,6 +53,7 @@
 import { state } from "@/main";
 import VersionInfo from "@/components/VersionInfo.vue"
 import { useAuth } from "@/stores/auth";
+import { useVendorStore } from "@/stores/vendor";
 
 export default {
   name: "SidebarMenu",
@@ -61,13 +62,15 @@ export default {
   },
   setup(){
     const auth = useAuth()
+    const vendorStore = useVendorStore()
     return {
-      auth
+      auth,
+      vendorStore
     }
   },
   computed: {
     vendors() {
-      return state.vendors;
+      return this.vendorStore.vendors;
     },
     selectedVendor() {
       return state.selected_vendor;

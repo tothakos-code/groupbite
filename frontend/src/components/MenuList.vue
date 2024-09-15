@@ -62,7 +62,7 @@
 import Datestamp from "@/components/DateStamp.vue"
 import { state, socket } from "@/main";
 import { useAuth } from "@/stores/auth";
-import axios from "axios";
+import { useVendorStore } from "@/stores/vendor";
 import MenuItem from "../components/MenuItem.vue"
 
 
@@ -74,8 +74,10 @@ export default {
   },
   setup() {
     const auth = useAuth();
+    const vendorStore = useVendorStore();
     return {
-      auth
+      auth,
+      vendorStore
     }
   },
   data() {
@@ -98,15 +100,12 @@ export default {
       if (day === undefined) {
         day = new Date().toISODate()
       }
-      let url = `http://${window.location.host}/api/menu/get/${state.selected_vendor.id}`;
-
-      axios.post(url,  {
-          "date": day,
+      this.vendorStore.fetchMenusByDate(state.selected_vendor.id, day, {
           "filter": this.filter
         })
         .then(response => {
-          this.itemlist = response.data;
-          this.categories = new Set(["minden"])
+          this.itemlist = response.data.data;
+          // this.categories = new Set(["minden"])
           for (var item of this.itemlist) {
             this.categories.add(item.category)
           }

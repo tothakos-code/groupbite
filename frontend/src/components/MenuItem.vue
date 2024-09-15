@@ -16,7 +16,7 @@
             v-if="size.quantity !== 0"
             class="btn btn-sm w-100 h-100"
             :class="['btn-' + auth.getUserColor ]"
-            @click="basket.addItem(item.id, size.id)"
+            @click="order.addItem(item.id, size.id)"
           >
             <span class="text-nowrap me-1">{{ size.name }}</span>
             <span class="text-nowrap">{{ size.price }} Ft</span>
@@ -35,7 +35,7 @@
 
 <script>
 import { useAuth } from "@/stores/auth";
-import { useBasket } from "@/stores/basket";
+import { useOrderStore } from "@/stores/order";
 
 
 export default {
@@ -48,10 +48,10 @@ export default {
   },
   setup() {
     const auth = useAuth();
-    const basket = useBasket();
+    const order = useOrderStore();
     return {
       auth,
-      basket
+      order
     }
   },
 }

@@ -9,6 +9,8 @@ from app.controllers import main_blueprint
 from app.controllers import setting_blueprint
 from app.controllers import vendor_blueprint
 from app.controllers import menu_blueprint
+from app.controllers import item_blueprint
+from app.controllers import size_blueprint
 from app.controllers import order_blueprint
 from app.controllers import user_blueprint
 
@@ -38,18 +40,9 @@ def create_app(debug=False):
         async_mode="eventlet",
         allow_unsafe_werkzeug=True)
 
-    import app.controllers.main_controller
-    application.register_blueprint(main_blueprint)
-    import app.controllers.setting_controller
-    application.register_blueprint(setting_blueprint)
-    import app.controllers.vendor_controller
-    application.register_blueprint(vendor_blueprint)
-    import app.controllers.menu_controller
-    application.register_blueprint(menu_blueprint)
-    import app.controllers.order_controller
-    application.register_blueprint(order_blueprint)
-    import app.controllers.user_controller
-    application.register_blueprint(user_blueprint)
+    from app.controllers import register_blueprints
+
+    register_blueprints(application)
 
     logging.info("Initialization finished")
     return application

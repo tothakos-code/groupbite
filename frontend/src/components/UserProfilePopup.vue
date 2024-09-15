@@ -89,7 +89,6 @@
 import Popup from "./Popup.vue";
 import { notify } from "@kyvg/vue3-notification";
 import { useAuth } from "@/stores/auth";
-import axios from "axios";
 
 export default {
   name: "UserProfilePopup",
@@ -121,10 +120,10 @@ export default {
       }
 
       user_update_obj.ui_color = this.ui_color
-
-      axios.post(`http://${window.location.host}/api/user/update`, {"user": user_update_obj }).then(response => {
-        let user= response.data;
-        if (user.error === undefined) {
+      this.auth.update(user_update_obj)
+        .then(response => {
+        let user = response.data.data;
+        if (response.data.error === undefined) {
           this.auth.$patch({
             user: user
           });
@@ -132,24 +131,12 @@ export default {
         } else {
           notify({
             type: "warn",
-            text: user.error,
+            text: response.data.error,
           });
         }
       });
     },
     onCancel: function() {
-      fetch(`http://${window.location.host}/api/user/get/${this.auth.user.id}`,{
-        method: "get",
-        headers: {
-          "Content-Type": "application/json",
-        }
-      })
-        .then(response => response.json())
-          .then(data => {
-            this.auth.user.ui_color = data.ui_color;
-            this.ui_color = data.ui_color;
-          })
-          .catch(error => console.error(error))
       this.$emit("cancel")
     },
     onColorChange: function() {

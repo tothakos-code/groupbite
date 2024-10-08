@@ -184,7 +184,7 @@
               </div>
               <div class="col text-center">
                 <span class="btn pe-none border border-secondary-subtle rounded">
-                  {{ loaded_menu.order_fee/Object.keys(loaded_menu.basket).length }} Ft szállítás díj/fő
+                  {{ Math.ceil(loaded_menu.order_fee/Object.keys(loaded_menu.basket).length) }} Ft szállítás díj/fő
                 </span>
               </div>
             </div>
@@ -265,7 +265,11 @@ export default {
       return this.currentDateSelected.toLocaleDateString("hu-HU");
     },
     orderCount(){
-      return Object.keys(this.history).length;
+      let sum = 0;
+      for (const date in this.history) {
+        sum += Object.keys(this.history[date]).length;
+      }
+      return sum;
     }
   },
   mounted() {

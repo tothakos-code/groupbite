@@ -60,7 +60,7 @@ export default {
   methods:{
     showVersion: function() {
       // eslint-disable-next-line
-      return "v" + process.env.VUE_APP_VERSION;
+      return process.env.VUE_APP_VERSION;
     },
   }
 }

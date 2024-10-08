@@ -37,6 +37,7 @@ def handle_order_history():
         sum = 0
         for item in order.items:
             sum += item.size.price * item.count
+        sum += order.order_fee
         result[date][value[0]]["sum"] = sum
 
     if USER_ID != None:

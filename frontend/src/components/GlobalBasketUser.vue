@@ -8,6 +8,7 @@
         <span
           class=" text-truncate"
           style="max-width: 120px;"
+          :title="username"
         >
           {{ username }}
         </span>

@@ -53,17 +53,17 @@
               >
             </div>
 
-            <!-- <div class="col-2">
-              <label for="itemSize">
-                Méret:
+            <div class="col-2">
+              <label for="itemDesc">
+                Leírás:
               </label>
               <input
-                v-model="newItem.size"
+                v-model="newItem.description"
                 type="text"
-                name="itemSize"
+                name="itemDesc"
                 class="form-control"
               >
-            </div> -->
+            </div>
             <div class="col-2">
               <label for="itemCategory">
                 Kategória:
@@ -132,6 +132,12 @@
                 scope="col"
                 class="col-auto"
               >
+                Leírás
+              </th>
+              <th
+                scope="col"
+                class="col-auto"
+              >
                 Kategória
               </th>
               <th
@@ -169,6 +175,17 @@
                   >
                   <span v-else>
                     {{ menuItem.name }}
+                  </span>
+                </td>
+                <td>
+                  <input
+                    v-if="menuItem.isEditing"
+                    v-model="menuItem.description"
+                    class="form-control"
+                    type="text"
+                  >
+                  <span v-else>
+                    {{ menuItem.description }}
                   </span>
                 </td>
                 <td>
@@ -436,7 +453,7 @@ export default {
         selectedMenu: "",
         newItem: {
           name: "",
-          // size: "",
+          description: "",
           category: "",
           // price: 0,
           // quantity: -1,

@@ -83,7 +83,8 @@
             </span>
           </div>
           <div class="col-8">
-            <span>{{ item.item_name }} ({{ item.size_name }})</span>
+            <span>{{ item.item_name }}</span>
+            <span v-if="item.size_name"> ({{ item.size_name }})</span>
           </div>
           <div class="col-2 d-flex justify-content-end">
             <span class="text-nowrap pe-0">{{ item.price }} Ft</span>

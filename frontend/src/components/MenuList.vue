@@ -38,7 +38,7 @@
         </label>
       </div>
     </div>
-    <div class="row col list-group">
+    <div class="row col list-group border-0">
       <div class="col">
         <div class="list-group m-1">
           <MenuItem

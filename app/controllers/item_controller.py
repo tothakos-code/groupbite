@@ -19,6 +19,7 @@ def handle_menu_item_add(data):
     ok, item = MenuItem.add(MenuItem(
         menu_id  = data["menu_id"],
         name     = data["name"],
+        description     = data["description"],
         category = data["category"]))
 
     if not ok:
@@ -35,6 +36,7 @@ def handle_menu_item_update(data, item_id):
 
     if not menu_item.update(
         data["name"],
+        data["description"],
         data["index"],
         data["category"]):
         return { "error": "Bad request" }, 400

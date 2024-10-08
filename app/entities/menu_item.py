@@ -14,6 +14,7 @@ from marshmallow import Schema, fields
 class BaseItemSchema(Schema):
     menu_id = fields.Int(required=True)
     name = fields.Str(required=True)
+    description = fields.Str(allow_none=True)
     category = fields.Str(required=True)
     index = fields.Int(required=True)
 
@@ -29,6 +30,7 @@ class MenuItem(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     menu_id: Mapped[int] = mapped_column(ForeignKey("menu.id"))
     name: Mapped[str]
+    description: Mapped[str]
     index: Mapped[int]
     category: Mapped[str]
 
@@ -87,8 +89,9 @@ class MenuItem(Base):
             session.rollback()
             return False, None
 
-    def update(self, name, index, category):
+    def update(self, name, description, index, category):
         self.name = name
+        self.description = description
         self.index = index
         self.category = category
         try:
@@ -128,6 +131,7 @@ class MenuItem(Base):
         return {
             "id": self.id,
             "name": self.name,
+            "description": self.description,
             "index": self.index,
             "sizes": [size.serialized for size in self.sizes],
             "category": self.category

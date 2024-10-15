@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, session
 from flask_socketio import rooms
 from sqlalchemy import func, cast, update
 from datetime import datetime
@@ -18,29 +18,34 @@ socketio = SocketioSingleton.get_instance()
 
 @user_blueprint.route("/login", methods=["POST"])
 def handle_user_login():
+    user_id = session.get('user_id')
+    if user_id:
+        user_to_login = User.get_one_by_id(user_id)
+        logging.info(f"User already {user_to_login.username} logged in!")
+        return { "data": user_to_login.serialized }, 200
+
     username = request.json["username"]
     user_to_login = User.get_one_by_username(username)
-
     if not user_to_login:
         logging.error(f"Error during login: {username} user does not excist, cannot log in.")
         return { "error": f"{username} felhasználó nem létezik!" }
+
+    session["user_id"] = user_to_login.id
+    session.permanent = True
 
     logging.info(f"User {user_to_login.username} logged in!")
     return { "data": user_to_login.serialized }, 200
 
 
-@user_blueprint.route("/checkSession", methods=["POST"])
+@user_blueprint.route("/checkSession", methods=["GET"])
 def handle_user_check_session():
-    user_id = request.json["session"]
-    user_to_login = User.get_one_by_id(user_id)
-
-    if not user_to_login:
-        # user not found error
-        logging.error(f"Error during login: {user_id} user id does not excist, cannot log in.")
-        return { "error": f"{user_id} felhasználó nem létezik!" }
-
-    logging.info(f"User {user_to_login.username} logged in!")
-    return { "data":user_to_login.serialized }, 200
+    user_id = session.get('user_id')
+    if user_id:
+        user_to_login = User.get_one_by_id(user_id)
+        logging.info(f"User already {user_to_login.username} got a session!")
+        return { "data": user_to_login.serialized }, 200
+    else:
+        return { "error": f"{user_id} nincs bejelentkezve!" }, 200
 
 
 @user_blueprint.route("/register", methods=["POST"])
@@ -60,6 +65,10 @@ def handle_user_register():
     ok, user_to_register = User.create_user(User(username=username, email=email, settings={}))
     if ok:
         logging.info(f"User {user_to_register.username} created!")
+
+        session["user_id"] = user_to_login.id
+        session.permanent = True
+
         return { "data": user_to_register.serialized }, 201
     else:
         return { "error": "Failed to register, something wrong with the data you provided" }, 400

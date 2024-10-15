@@ -35,7 +35,6 @@ export const useAuth = defineStore("user", {
         }
 
         this.user = response.data.data;
-        Cookies.set("user", this.user.id, { expires: 365});
         this.isLoading = false;
         this.isLoggedIn = true;
         notify({
@@ -51,7 +50,7 @@ export const useAuth = defineStore("user", {
     logout() {
       this.user = null;
       this.isLoggedIn = false;
-      Cookies.remove("user");
+      Cookies.remove("session");
     },
     async register(username, email) {
       try {
@@ -67,7 +66,6 @@ export const useAuth = defineStore("user", {
           return;
         }
         this.user = response.data.data
-        Cookies.set("user", this.user.id, { expires: 365});
         notify({
           type: "info",
           text: "Felhasználói fiók létrehozva és bejelentkeztetve.",
@@ -81,27 +79,21 @@ export const useAuth = defineStore("user", {
       }
     },
     async checkSession() {
-      let session = Cookies.get("user")
-      if (session) {
-        try {
-          const response = await axios.post(`/api/user/checkSession`, {
-              "session": session
-          });
-          if (response.data.error) {
-            return;
-          }
-
-          this.user = response.data.data;
-          Cookies.set("user", this.user.id, { expires: 365});
-          this.isLoading = false;
-          this.isLoggedIn = true;
-        } catch (error) {
-          console.log("Error during session check:" + error);
-          this.isLoading = false;
-
+      try {
+        const response = await axios.get(`/api/user/checkSession`);
+        console.log();
+        if (response.data.error) {
+          console.log(response.data.error);
+          return;
         }
-      } else {
+
+        this.user = response.data.data;
         this.isLoading = false;
+        this.isLoggedIn = true;
+      } catch (error) {
+        console.log("Error during session check:" + error);
+        this.isLoading = false;
+
       }
     },
     async orders() {

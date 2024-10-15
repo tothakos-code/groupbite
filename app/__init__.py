@@ -1,5 +1,8 @@
 from flask import Flask
+from flask_session import Session
+from flask_sqlalchemy import SQLAlchemy
 import logging
+from datetime import timedelta
 
 from app.services.vendor_service import VendorService
 from app.vendor_factory import VendorFactory
@@ -16,6 +19,20 @@ from app.controllers import user_blueprint
 
 from os import scandir
 
+from dotenv import load_dotenv
+from pathlib import Path
+from os import getenv
+dotenv_path = Path(".env")
+load_dotenv(dotenv_path=dotenv_path)
+
+DB_USER = getenv("POSTGRES_USER")
+DB_PASSWORD = getenv("POSTGRES_PASSWORD")
+DB_HOST = getenv("POSTGRES_HOST")
+DB_PORT = getenv("POSTGRES_PORT")
+DB_NAME = getenv("POSTGRES_DB_NAME")
+
+DB_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
 
 def create_app(debug=False):
     logging.basicConfig(
@@ -26,6 +43,17 @@ def create_app(debug=False):
 
     application = Flask(__name__)
     application.config["SECRET_KEY"] = "secret!"
+    application.config["SQLALCHEMY_DATABASE_URI"] = DB_URL
+    application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    application.config["SESSION_TYPE"] = "sqlalchemy"
+    application.config["SESSION_SQLALCHEMY"] = SQLAlchemy(application)
+    application.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=336)
+
+    application.config['SESSION_COOKIE_HTTPONLY'] = True
+    # application.config['SESSION_COOKIE_SECURE'] = True
+    application.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    Session(application)
 
     import app.create_tables
 

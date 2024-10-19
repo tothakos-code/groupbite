@@ -33,6 +33,16 @@ DB_NAME = getenv("POSTGRES_DB_NAME")
 
 DB_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
+def create_migration():
+    logging.basicConfig(
+        level=logging.NOTSET,
+        format="%(asctime)s:%(levelname)s:%(message)s"
+        )
+    application = Flask(__name__)
+    application.config["SQLALCHEMY_DATABASE_URI"] = DB_URL
+    application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    from app.create_tables import create_database_migration
+    create_database_migration(application)
 
 def create_app(debug=False):
     logging.basicConfig(
@@ -53,9 +63,12 @@ def create_app(debug=False):
     application.config['SESSION_COOKIE_HTTPONLY'] = True
     # application.config['SESSION_COOKIE_SECURE'] = True
     application.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+    from app.create_tables import migrate_database
+    migrate_database(application)
     Session(application)
 
-    import app.create_tables
+
 
     VendorFactory.load()
     loader.load_plugins([d.path.replace("/",".") for d in scandir("plugins") if d.is_dir()])

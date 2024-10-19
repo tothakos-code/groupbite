@@ -74,7 +74,7 @@ To quickly get started with the project, follow these steps:
 6. Start the backend in another terminal
 
     ```bash
-    python run.py
+    python groupbite.py run
     ```
 
 You can make changes to the frontend files and it will reload the frontend on save. Same is true for the backend.

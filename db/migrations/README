@@ -1,0 +1,8 @@
+Single-database configuration for Flask.
+
+To create a new migration script run:
+```console
+python3 groupbite.py migrate
+```
+Please review the generated miration because alembic cannot detect some changes:
+https://alembic.sqlalchemy.org/en/latest/autogenerate.html#what-does-autogenerate-detect-and-what-does-it-not-detect

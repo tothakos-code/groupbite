@@ -3,7 +3,7 @@ from typing import List
 from . import Base, session
 from uuid import UUID
 from datetime import datetime, date
-from sqlalchemy import event, ForeignKey, select
+from sqlalchemy import event, ForeignKey, select, exc
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -45,15 +45,6 @@ class Setting(Base):
             session.commit()
             return True
         return False
-
-    def insert_data(target, connection, **kw):
-        session.add(Setting(key="smtp_address", value="", category="smtp"))
-        session.add(Setting(key="smtp_port", value="", category="smtp"))
-        session.add(Setting(key="smtp_user", value="", category="smtp"))
-        session.add(Setting(key="smtp_password", value="", category="smtp"))
-        session.add(Setting(key="smtp_sender_email", value="", category="smtp"))
-        session.add(Setting(key="app_title", value="", category="application"))
-        session.commit()
 
 
     @property

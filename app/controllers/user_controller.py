@@ -10,7 +10,7 @@ from app.entities import Session
 from app.entities.user import User
 from app.entities.order import Order
 from app.entities.user_basket import UserBasket
-from app.utils.decorators import validate_url_params
+from app.utils.decorators import validate_url_params, require_auth
 from app.utils.validators import IDSchema
 
 
@@ -62,11 +62,11 @@ def handle_user_register():
     if not is_email_valid:
         return { "error": email_error }
 
-    ok, user_to_register = User.create_user(User(username=username, email=email, settings={}))
+    ok, user_to_register = User.create_user(User(username=username, email=email, settings={}, password=""))
     if ok:
         logging.info(f"User {user_to_register.username} created!")
 
-        session["user_id"] = user_to_login.id
+        session["user_id"] = user_to_register.id
         session.permanent = True
 
         return { "data": user_to_register.serialized }, 201
@@ -76,6 +76,7 @@ def handle_user_register():
 
 @user_blueprint.route("/<user_id>", methods=["PUT"])
 @validate_url_params(IDSchema())
+@require_auth
 def handle_user_update(user_id):
     user = request.json["data"]
 

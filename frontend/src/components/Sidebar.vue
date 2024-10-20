@@ -50,7 +50,6 @@
   </div>
 </template>
 <script>
-import { state } from "@/main";
 import VersionInfo from "@/components/VersionInfo.vue"
 import { useAuth } from "@/stores/auth";
 import { useVendorStore } from "@/stores/vendor";
@@ -73,7 +72,7 @@ export default {
       return this.vendorStore.vendors;
     },
     selectedVendor() {
-      return state.selected_vendor;
+      return this.vendorStore.selectedVendor;
     },
   },
   methods: {

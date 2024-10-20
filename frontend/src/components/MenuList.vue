@@ -100,7 +100,7 @@ export default {
       if (day === undefined) {
         day = new Date().toISODate()
       }
-      this.vendorStore.fetchMenusByDate(state.selected_vendor.id, day, {
+      this.vendorStore.fetchMenusByDate(this.vendorStore.selectedVendor.id, day, {
           "filter": this.filter
         })
         .then(response => {
@@ -124,10 +124,10 @@ export default {
       socket.emit("fe_date_selection", {
         "old_selected_date": state.selectedDate.toISODate(),
         "new_selected_date": formated_day,
-        "vendor_id": state.selected_vendor.id
+        "vendor_id": this.vendorStore.selectedVendor.id
       })
       state.selectedDate = new Date(day);
-      history.pushState({}, "", `/menu/${state.selected_vendor.name}/${state.selectedDate.toISODate()}`)
+      history.pushState({}, "", `/menu/${this.vendorStore.selectedVendor.name}/${state.selectedDate.toISODate()}`)
       this.loadMenu(formated_day);
     },
     getCurrentWeekDates() {

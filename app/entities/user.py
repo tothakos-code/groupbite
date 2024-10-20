@@ -30,6 +30,7 @@ class User(Base):
 
     orders: Mapped[List["UserBasket"]] = relationship(back_populates="user")
     placed_orders: Mapped[List["Order"]] = relationship(back_populates="ordered_by")
+    notifications: Mapped[List["Notification"]] = relationship(back_populates="user")
 
     def __repr__(self):
         return f"User<id={self.id},username={self.username}>"
@@ -138,7 +139,8 @@ class User(Base):
     @property
     def serialized(self):
         return {
-            "id": self.id,
+            "id": str(self.id),
             "username": self.username,
-            "theme": str(self.theme)
+            "theme": str(self.theme),
+            "notifications": [notification.serialized for notification in self.notifications]
         }

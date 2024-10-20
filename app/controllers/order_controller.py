@@ -9,7 +9,7 @@ from app.socketio_singleton import SocketioSingleton
 from app.entities.order import Order, OrderState
 from app.entities.user_basket import UserBasket
 from app.entities import Session
-from app.utils.decorators import validate_url_params
+from app.utils.decorators import validate_url_params, require_auth
 from app.utils.validators import IDSchema
 
 
@@ -91,6 +91,7 @@ def handle_date_selection_change(data):
 
 @order_blueprint.route("/<order_id>/user/<user_id>/copy-from/<src_user_id>", methods=["PUT"])
 @validate_url_params(IDSchema())
+@require_auth
 def handle_copy_basket(order_id, user_id, src_user_id):
 
     UserBasket.clear_items(user_id, order_id)
@@ -111,6 +112,7 @@ def handle_copy_basket(order_id, user_id, src_user_id):
 
 @order_blueprint.route("/<order_id>/user/<user_id>/item/<item_id>/size/<size_id>", methods=["PUT"])
 @validate_url_params(IDSchema())
+@require_auth
 def handle_add_to_basket(order_id, user_id, item_id, size_id):
     order = Order.get_by_id(order_id)
     data = {
@@ -147,6 +149,7 @@ def handle_add_to_basket(order_id, user_id, item_id, size_id):
 
 @order_blueprint.route("/<order_id>/user/<user_id>/item/<item_id>/size/<size_id>", methods=["DELETE"])
 @validate_url_params(IDSchema())
+@require_auth
 def handle_remove_from_basket(order_id, user_id, item_id, size_id):
     order = Order.get_by_id(order_id)
     data = {}
@@ -179,6 +182,7 @@ def handle_remove_from_basket(order_id, user_id, item_id, size_id):
 
 @order_blueprint.route("/<order_id>/user/<user_id>", methods=["DELETE"])
 @validate_url_params(IDSchema())
+@require_auth
 def handle_clear_user_basket(order_id, user_id):
     if UserBasket.clear_items(user_id, order_id):
         order = Order.get_by_id(order_id)

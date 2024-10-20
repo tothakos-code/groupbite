@@ -4,7 +4,8 @@ from app.entities.menu_item import MenuItem
 from app.entities.size import Size
 from app.entities.vendor import Vendor
 from app.entities.menu import Menu
-from marshmallow import Schema, fields, ValidationError
+from app.entities.notification import NotificationType
+from marshmallow import Schema, fields, ValidationError, validate
 
 
 def validate_order_id(order_id):
@@ -47,3 +48,4 @@ class IDSchema(Schema):
     size_id = fields.Integer(validate=validate_size_id)
     menu_id = fields.Integer(validate=validate_menu_id)
     menu_date = fields.Date()
+    notification_type = fields.Str(validate=validate.OneOf([nt.value for nt in NotificationType]))

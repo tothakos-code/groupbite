@@ -1,5 +1,5 @@
 from datetime import date
-from flask import Blueprint, request
+from flask import Blueprint, request, session
 import logging
 import json
 import requests
@@ -14,7 +14,9 @@ from app.socketio_singleton import SocketioSingleton
 from app.services.vendor_service import VendorService
 from app.entities.vendor import Vendor, BaseVendorSchema
 from app.entities.menu import Menu
-from app.utils.decorators import validate_data, validate_url_params
+from app.entities.user import User
+from app.entities.notification import Notification, NotificationType
+from app.utils.decorators import validate_data, validate_url_params, require_auth
 from app.utils.validators import IDSchema
 
 socketio = SocketioSingleton.get_instance()
@@ -43,6 +45,65 @@ def handle_deactivation(vendor_id):
 
     socketio.emit("be_vendors_update", VendorService.find_all_active())
     return { "msg": "OK" }, 200
+
+@vendor_blueprint.route("/<vendor_id>/notifications/<notification_type>/subscribe", methods=["POST"])
+@validate_url_params(IDSchema())
+@require_auth
+def handle_notification_subscribe(vendor_id, notification_type):
+    user_id = session.get('user_id')
+    notification_json = request.json["data"]
+    Notification.add(Notification(
+        vendor_id=vendor_id,
+        user_id=user_id,
+        notification_type=NotificationType(notification_type),
+        endpoint=notification_json["endpoint"],
+        p256dh=notification_json["keys"]["p256dh"],
+        auth=notification_json["keys"]["auth"]
+
+    ))
+    socketio.emit("be_user_update", User.get_one_by_id(user_id).serialized)
+
+    return { "msg": "OK" }, 200
+
+@vendor_blueprint.route("/<vendor_id>/notifications/<notification_type>/unsubscribe", methods=["DELETE"])
+@validate_url_params(IDSchema())
+@require_auth
+def handle_notification_unsubscribe(vendor_id, notification_type):
+    user_id = session.get('user_id')
+    notifications = Notification.find_by_vendor_id_user_id(vendor_id, user_id, NotificationType(notification_type))
+    for noti in notifications:
+        if noti.delete():
+            socketio.emit("be_user_update", User.get_one_by_id(user_id).serialized)
+            return { "msg": "OK" }, 200
+        else:
+            return { "error": "Someting went wrong" }, 500
+
+
+@vendor_blueprint.route("/<vendor_id>/notifications/<notification_type>", methods=["GET"])
+@validate_url_params(IDSchema())
+def handle_notification_status(vendor_id, notification_type):
+    user_id = session.get('user_id')
+    if not user_id:
+        return {
+            "data": {
+                 "status": False
+            }
+        }, 200
+    notification = Notification.find_by_pk(vendor_id, user_id, notification_type)
+    if notification:
+        return {
+            "data": {
+                 "status": True
+            }
+        }, 200
+    else:
+        return {
+            "data": {
+                 "status": False
+            }
+        }, 200
+
+
 
 
 @vendor_blueprint.route("", methods=["POST"])

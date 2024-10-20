@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 from typing import List
 import logging
 from marshmallow import Schema, fields
+from .notification import NotificationType
 
 class BaseVendorSchema(Schema):
     name = fields.Str(required=True)
@@ -131,6 +132,7 @@ class Vendor(Base):
         logging.info("Scheduled order state stepping running")
         from app.socketio_singleton import SocketioSingleton
         from app.entities.order import Order, OrderState
+        from app.services.notification_service import NotificationService
 
         order = Order.find_open_order_by_date_for_a_vendor(self.id, date.today().strftime("%Y-%m-%d"))
         if order:
@@ -142,6 +144,7 @@ class Vendor(Base):
             socketio.emit("be_order_update", {
                 "order": order.serialized
             })
+            NotificationService.send_vendor_notification(self, order, NotificationType.REMINDER)
         else:
             logging.info("State already changed")
 

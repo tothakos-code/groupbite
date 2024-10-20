@@ -133,9 +133,9 @@
 
 <script>
 import Popup from "./Popup.vue";
-import { state } from "@/main";
 import { useAuth } from "@/stores/auth";
 import { useOrderStore } from "@/stores/order";
+import { useVendorStore } from "@/stores/vendor";
 import { copyText } from "vue3-clipboard";
 import { notify } from "@kyvg/vue3-notification";
 import { watch } from "vue";
@@ -148,10 +148,12 @@ export default {
   setup() {
     const auth = useAuth();
     const orderStore = useOrderStore();
+    const vendorStore = useVendorStore();
 
     return {
       auth,
-      orderStore
+      orderStore,
+      vendorStore
     }
   },
   data() {
@@ -165,7 +167,7 @@ export default {
   },
   computed: {
     orderDesc() {
-      return state.selected_vendor.settings.comment_example.value
+      return this.vendorStore.selectedVendor.settings.comment_example.value
     },
   },
   mounted() {
@@ -280,7 +282,7 @@ export default {
         if (item.deleted) {
           continue
         }
-        orderText += state.selected_vendor.settings.order_text_template.value
+        orderText += this.vendorStore.selectedVendor.settings.order_text_template.value
           .replace("${quantity}", item.quantity)
           .replace("${item_name}", item.item_name)
           .replace("${size_name}", item.size_name)

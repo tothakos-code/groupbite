@@ -26,6 +26,7 @@ import VueCookies from "vue3-cookies";
 import VueClipboard from "vue3-clipboard";
 import Notifications from "@kyvg/vue3-notification";
 import router from "./router.js";
+import { regWorker } from "../public/service-worker.js";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap/dist/js/bootstrap.js";
 import "./assets/scss/main.scss";
@@ -42,6 +43,21 @@ app.use(VueClipboard, {
   autoSetContainer: true,
   appendToBody: true,
 });
+
+
+export async function requestNotificationPermission() {
+  if (Notification.permission === "default") {
+      Notification.requestPermission().then(() => {
+        if (Notification.permission === "granted") {
+          regWorker().catch(err => console.error(err));
+        }
+      });
+    }
+
+    else if (Notification.permission === "granted") {
+      regWorker().catch(err => console.error(err));
+    }
+}
 
 
 Date.prototype.getAdjustedDay = function() {

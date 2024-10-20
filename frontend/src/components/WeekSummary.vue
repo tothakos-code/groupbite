@@ -219,7 +219,6 @@ import { useAuth } from "@/stores/auth";
 import { useOrderStore } from "@/stores/order";
 import { useVendorStore } from "@/stores/vendor";
 import { ref, watch } from "vue";
-import { state } from "@/main.js";
 
 export default {
   name: "WeekSummary",
@@ -318,7 +317,7 @@ export default {
               this.showOrderSummary = true;
               this.vendorStore.vendors.forEach((vendor) => {
                 if (vendor.id === this.loaded_menu.vendor_id ) {
-                  state.selected_vendor = vendor;
+                  this.vendorStore.selectedVendor = vendor;
                 }
               });
             }

@@ -13,7 +13,7 @@ import { useVendorStore } from "@/stores/vendor";
 
 
 const PluginMenu = defineAsyncComponent({
-  loader: () => import(`./../../../plugins/${state.selected_vendor.name}/frontend/App.vue`),
+  loader: () => import(`./../../../plugins/${useVendorStore().selectedVendor.name}/frontend/App.vue`),
 })
 
 export default {
@@ -25,7 +25,7 @@ export default {
   beforeRouteEnter(to) {
     useVendorStore().vendors.forEach((item) => {
       if (item.name === to.name || item.name+"-dated" === to.name) {
-        state.selected_vendor = item;
+        useVendorStore().selectedVendor = item;
       }
     });
     let today = new Date()
@@ -58,10 +58,10 @@ export default {
   },
   computed:{
     activeVendor() {
-      return state.selected_vendor.type === "basic" ? Menu : PluginMenu;
+      return state.selectedVendor?.type === "plugin" ? PluginMenu : Menu;
     },
     activeVendorId() {
-      return state.selected_vendor.id;
+      return state.selectedVendor?.id;
     },
   },
 };

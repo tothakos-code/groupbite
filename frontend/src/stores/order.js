@@ -2,7 +2,7 @@ import axios from "axios";
 import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
 import { useAuth } from "@/stores/auth";
-import {  state as vuestate  } from "@/main";
+import { useVendorStore } from "@/stores/vendor";
 
 export const useOrderStore = defineStore("order", {
   state: () => ({
@@ -76,10 +76,11 @@ export const useOrderStore = defineStore("order", {
       return state.basket[auth.user.id].items.length == 0;
     },
     transportFee() {
-      if (vuestate.selected_vendor.settings === undefined) {
+      const vendorStore = useVendorStore();
+      if (vendorStore.selectedVendor.settings === undefined) {
         return 0;
       }
-      return Number(vuestate.selected_vendor.settings.transport_price.value)
+      return Number(vendorStore.selectedVendor.settings.transport_price.value)
     }
   },
   actions: {

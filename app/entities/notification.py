@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 from . import Base, session
 from uuid import UUID
 import logging
+from app.services.encrypted_type import Encrypted
 
 class NotificationType(enum.Enum):
     CLOSING = "closing" # sent when the order is closed
@@ -21,8 +22,8 @@ class Notification(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"), primary_key=True)
     notification_type: Mapped[NotificationType]
     endpoint: Mapped[str] = mapped_column(primary_key=True)
-    p256dh: Mapped[str]
-    auth: Mapped[str]
+    p256dh: Mapped[str] = mapped_column(Encrypted())
+    auth: Mapped[str] = mapped_column(Encrypted())
 
     user: Mapped["User"] = relationship(back_populates="notifications")
 

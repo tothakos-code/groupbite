@@ -18,12 +18,14 @@
           </div>
           <div class="modal-footer">
             <button
+              v-if="cancelBtn === true"
               class="btn btn-secondary"
               @click="$emit('cancel')"
             >
               {{ cancelText }}
             </button>
             <button
+              v-if="confirmBtn === true"
               class="btn"
               :class="['btn-' + auth.getUserColor ]"
               @click="$emit('confirm')"
@@ -60,6 +62,14 @@ export default {
     confirmText: {
       type: String,
       default: "Folytat"
+    },
+    cancelBtn: {
+      type: Boolean,
+      default: true
+    },
+    confirmBtn: {
+      type: Boolean,
+      default: true
     },
     large: {
       type: Boolean,

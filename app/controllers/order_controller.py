@@ -57,6 +57,22 @@ def handle_get_basket(order_id):
     return_obj["basket"] = UserBasket.get_basket_group_by_user(order.id)
     return { "data": return_obj }, 200
 
+@order_blueprint.route("/<order_id>/order_fee", methods=["PUT"])
+@require_auth
+@validate_url_params(IDSchema())
+def handle_update_order_fee(order_id):
+    order = Order.get_by_id(order_id)
+    if order.set_order_fee(request.json["data"]["order_fee"]):
+        socketio.emit(
+            "be_order_update", {
+                "order": order.serialized,
+            }
+            )
+        return { "msg": "OK" }, 200
+    else:
+        return { "error": "Someting went wrong" }, 500
+
+
 
 # TODO: Upgrade this
 @socketio.on("fe_date_selection")

@@ -75,12 +75,12 @@ export const useOrderStore = defineStore("order", {
       if (state.basket[auth.user.id] === undefined) return true;
       return state.basket[auth.user.id].items.length == 0;
     },
-    transportFee() {
+    transportFee(state) {
       const vendorStore = useVendorStore();
       if (vendorStore.selectedVendor.settings === undefined) {
         return 0;
       }
-      return Number(vendorStore.selectedVendor.settings.transport_price.value)
+      return Number(state.order.order_fee)
     }
   },
   actions: {
@@ -206,6 +206,17 @@ export const useOrderStore = defineStore("order", {
         return response
       } catch (error) {
         console.error("Failed to add item:", error.response.data.error);
+        return error.response
+      }
+    },
+    async changeTransportPrice(newTransportPrice) {
+      try {
+        const response = axios.put(`/api/order/${this.order.id}/order_fee`, { "data": {
+          "order_fee": newTransportPrice
+        } })
+        return response
+      } catch (error) {
+        console.error("Failed to change order_fee:", error.response.data.error);
         return error.response
       }
     }

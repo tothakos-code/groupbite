@@ -95,8 +95,9 @@
   <Popup
     :show-modal="showFinish"
     title="Rendelés befejezése"
-    @cancel="showFinish = false"
-    @confirm="showFinish = false;"
+    :cancel-btn="false"
+    confirm-text="Befejez"
+    @confirm="changeTransportPrice();"
   >
     <p>Rendelés lezárva, további kosármódosítás letiltva.</p>
     <p>
@@ -127,6 +128,28 @@
       </button>
     </div>
     <br>
+    <div class="">
+      <p>
+        Ha a  szállítási díj eltérhet az alapértelmezetten megadottól (pl.: eltér a tényleges szállítás díj, rendszerhasználati díj felszámításra került) itt megtudod változtatni.
+      </p>
+      <p>
+        A különböző extra díjak összegét írd be valuta nélkül
+      </p>
+      <p>
+        Az alapértelmezett beállított díj: {{ vendorStore.selectedVendor.settings.transport_price.value }}
+      </p>
+      <div class="input-group mb-3">
+        <span class="input-group-text">A jelenlegi díj</span>
+        <input
+          v-model.trim="transport_price"
+          type="number"
+          class="form-control"
+          :placeholder="transport_price"
+          aria-label="A jelenleg beállított díj"
+          aria-describedby="basic-addon1"
+        >
+      </div>
+    </div>
     <p>Köszönjük az ebédet!</p>
   </Popup>
 </template>
@@ -138,7 +161,7 @@ import { useOrderStore } from "@/stores/order";
 import { useVendorStore } from "@/stores/vendor";
 import { copyText } from "vue3-clipboard";
 import { notify } from "@kyvg/vue3-notification";
-import { watch } from "vue";
+import { watch, unref } from "vue";
 
 export default {
   name: "TransferPopup",
@@ -160,9 +183,10 @@ export default {
     return {
       showInitial: false,
       showSpinner: false,
-      showFinish: false,
+      showFinish: true,
       orderItems: [],
-      psid: ""
+      psid: "",
+      transport_price: unref(useVendorStore().selectedVendor.settings.transport_price.value)
     }
   },
   computed: {
@@ -262,6 +286,13 @@ export default {
       }
     },
     closeOrder: function() {
+      if (this.orderItems.length === 0) {
+        notify({
+          type: "warn",
+          text: "Nincs mit megrendelni.",
+        });
+        return
+      }
       for (const item of this.orderItems) {
         if (!item.tick) {
           notify({
@@ -323,6 +354,12 @@ export default {
            console.log(event)
          }
       });
+    },
+    changeTransportPrice: function() {
+      if (this.transport_price !== this.orderStore.transportFee) {
+        this.orderStore.changeTransportPrice(this.transport_price)
+      }
+      this.showFinish = false;
     }
   }
 }

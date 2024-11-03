@@ -156,12 +156,30 @@ def handle_save_settings(vendor_id):
 @vendor_blueprint.route("/<vendor_id>/menus", methods=["GET"])
 @validate_url_params(IDSchema())
 def handle_menu_get(vendor_id):
-    menus = Menu.find_all_by_vendor(vendor_id)
+    try:
+        limit = int(request.args.get('limit'))
+        page = int(request.args.get('page'))
+    except ValueError as e:
+        limit = 10
+        page = 1
+    except TypeError as e:
+        limit = 10
+        page = 1
+    offset = 0 if page is None else limit * (page - 1)
+    logging.info(page)
+    menus = Menu.find_all_by_vendor(vendor_id, limit, offset)
+    total_count = Menu.count_by_vendor_id(vendor_id)
     result = []
     for m in menus:
         result.append(m.serialized)
 
-    return { "data": result }, 200
+    return { "data": {
+        "menus": result,
+        "page": page,
+        "limit": limit,
+        "total_count": total_count
+        }
+    }, 200
 
 @vendor_blueprint.route("/<vendor_id>/menus/date/<menu_date>", methods=["GET"])
 @validate_url_params(IDSchema())

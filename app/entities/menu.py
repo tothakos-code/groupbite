@@ -101,11 +101,17 @@ class Menu(Base):
 
         return session.execute(stmt).scalars().first()
 
-    def find_all_by_vendor(vendor_id):
+    def find_all_by_vendor(vendor_id, limit=10, offset=0):
         stmt = select(Menu).where(
             Menu.vendor_id == vendor_id
-        ).order_by(Menu.date.desc())
+        ).order_by(Menu.date.desc()).limit(limit).offset(offset)
         return session.execute(stmt).scalars().all()
+
+    def count_by_vendor_id(vendor_id):
+        stmt = select(func.count(Menu.id)).where(
+            Menu.vendor_id == vendor_id
+        )
+        return session.execute(stmt).scalars().first()
 
     def add(menu):
         session.add(menu)

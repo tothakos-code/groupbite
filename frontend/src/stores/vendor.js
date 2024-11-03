@@ -39,10 +39,12 @@ export const useVendorStore = defineStore("vendor", {
         this.isLoading = false;
       }
     },
-    async fetchMenus(vendorId) {
+    async fetchMenus(vendorId, querryParams) {
       this.isLoading = true;
       try {
-        const response = await axios.get(`/api/vendor/${vendorId}/menus`);
+        const response = await axios.get(`/api/vendor/${vendorId}/menus`,
+          { "params": querryParams }
+        );
         return response
       } catch (error) {
         console.error("Failed to fetch vendors:", error.response.data.error);

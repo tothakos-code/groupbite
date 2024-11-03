@@ -5,7 +5,7 @@ from .size import Size
 import enum
 import logging
 from typing import List
-from sqlalchemy import ForeignKey, exc
+from sqlalchemy import ForeignKey, exc, func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -41,14 +41,22 @@ class MenuItem(Base):
     def __repr__(self):
         return f"MenuItem<{self.id},menu_id={self.menu_id},index={self.index},category={self.category}>"
 
-    def find_all_by_menu(menu_id, desc=False):
+    def find_all_by_menu(menu_id, limit=10, offset=0, desc=False):
         stmt = select(MenuItem).where(MenuItem.menu_id == menu_id)
         if desc:
             stmt = stmt.order_by(MenuItem.category, MenuItem.index.desc())
         else:
             stmt = stmt.order_by(MenuItem.category, MenuItem.index)
+        stmt = stmt.limit(limit).offset(offset)
 
         return session.execute(stmt).scalars().all()
+
+
+    def count_by_menu_id(menu_id):
+        stmt = select(func.count(MenuItem.id)).where(
+            MenuItem.menu_id == menu_id
+        )
+        return session.execute(stmt).scalars().first()
 
     def find_all_by_menu_list(menu_id_list, filter=[], desc=False):
         stmt = select(MenuItem).where(

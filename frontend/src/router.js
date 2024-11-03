@@ -5,6 +5,7 @@ import MenuView from "./views/MenuRender.vue";
 import Settings from "./views/Settings.vue";
 import VendorConfiguration from "./components/VendorConfiguration.vue";
 import VendorList from "./components/VendorList.vue";
+import VendorItemManager from "./components/VendorItemManager.vue";
 import VendorAdd from "./components/VendorAdd.vue";
 import NotFound from "./components/NotFound.vue";
 
@@ -43,7 +44,11 @@ const routes = [
       {
         path: ":id/config",
         component: VendorConfiguration,
-        // props: true
+      },
+      {
+        name:"vendorItems",
+        path: ":id/config/:menuId",
+        component: VendorItemManager
       },
       {
         path: "add",

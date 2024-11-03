@@ -1,41 +1,13 @@
 <template>
   <div class="">
     <div
-      v-if="menus.length == 0"
-      class="mt-2"
-    >
-      <span class="h4">
-        Hozz létre egy menüt, hogy feltudd tölteni
-      </span>
-    </div>
-    <div
-      v-else
       class=""
     >
       <div class="row ms-2">
         <div
           class="row my-2"
         >
-          <div class="col-auto">
-            <label for="itemName">
-              Válassz egy Menüt:
-            </label>
-            <select
-              v-model="selectedMenu"
-              name="itemMenu"
-              class="form-control"
-            >
-              <option
-                v-for="m in menus"
-                :key="m.id"
-                :value="m.id"
-              >
-                {{ m.name }} - {{ m.date }} - {{ m.freq }}
-              </option>
-            </select>
-          </div>
           <div
-            v-if="selectedMenu"
             class="row mt-2"
           >
             <span class="row ms-1 h4">
@@ -154,7 +126,10 @@
               </th>
             </tr>
           </thead>
-          <tbody class="table-group-divider">
+          <tbody
+            v-if="!isLoading"
+            class="table-group-divider"
+          >
             <template
               v-for="[id, menuItem] in items"
               :key="id"
@@ -418,7 +393,24 @@
               </tr>
             </template>
           </tbody>
+          <div
+            v-else
+            class="row text-center"
+          >
+            <div
+              class="spinner-border"
+              role="status"
+            >
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
         </table>
+        <Paginator
+          :total-pages="Math.ceil(totalCount/limit)"
+          :current-page="currentPage"
+          :range="5"
+          @page-change="handlePageChange"
+        />
       </div>
     </div>
   </div>
@@ -430,9 +422,13 @@ import { useMenuStore } from "@/stores/menu";
 import { useItemStore } from "@/stores/item";
 import { useSizeStore } from "@/stores/size";
 import { useVendorStore } from "@/stores/vendor";
+import Paginator from "./Paginator.vue";
 
 export default {
     name: "VendorItemManager",
+    components: {
+      Paginator
+    },
     setup() {
       const auth = useAuth();
       const menuStore = useMenuStore();
@@ -449,8 +445,6 @@ export default {
     },
     data() {
       return {
-        menus: [],
-        selectedMenu: "",
         newItem: {
           name: "",
           description: "",
@@ -459,31 +453,31 @@ export default {
           // quantity: -1,
           index: 0,
         },
-        items: []
-      }
-    },
-    watch: {
-      selectedMenu() {
-        this.getItemList()
+        items: [],
+        isLoading: true,
+        limit: 10,
+        currentPage: 1,
+        totalCount: 0
       }
     },
     mounted() {
-      this.getMenuList()
+      this.getItemList()
     },
     methods: {
-      getMenuList: function () {
-        this.vendorStore.fetchMenus(this.$route.params.id)
-          .then(response => {
-            this.menus = response.data.data
-          })
+      handlePageChange(page) {
+        this.currentPage = page;
+        this.getItemList()
       },
       getItemList: async function () {
-        await this.menuStore.fetch(this.selectedMenu).then(
+        await this.menuStore.fetch(this.$route.params.menuId,{
+            "limit": this.limit,
+            "page": this.currentPage
+          }).then(
           response => {
             if (response.status === 200) {
               let menuItemsMap = new Map();
-              response.data.data.forEach(item => {
-                item.isEditing = false
+              response.data.data.items.forEach(item => {
+                item.isEditing = false;
 
 
                 let sizesMap = new Map();
@@ -492,15 +486,18 @@ export default {
                   sizesMap.set(size.id, size);
                 });
                 item.sizes = sizesMap;
-                menuItemsMap.set(item.id, item)
+                menuItemsMap.set(item.id, item);
               });
-
+              this.currentPage = response.data.data.page;
+              this.limit = response.data.data.limit;
+              this.totalCount = response.data.data.total_count;
               this.items = menuItemsMap;
+              this.isLoading = false;
             }
           })
       },
       addToMenu: function () {
-        this.newItem.menu_id = this.selectedMenu
+        this.newItem.menu_id = this.$route.params.menuId
         this.itemStore.add(this.newItem)
           .then(response => {
             if (response.status === 201) {
@@ -544,7 +541,7 @@ export default {
         this.items.set(item.id, { ...item, isEditing: false})
         delete item["isEditing"]
         delete item["sizes"]
-        item.menu_id = this.selectedMenu
+        item.menu_id = this.$route.params.menuId
         this.itemStore.update(item.id, item)
           .then(response => {
             if (response.status === 200) {

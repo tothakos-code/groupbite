@@ -315,7 +315,7 @@
                 class="btn"
                 title="Items"
                 :class="['btn-outline-' + auth.getUserColor ]"
-                @click="duplicateMenu(menu.id)"
+                @click="openItemManger(menu.id)"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -325,8 +325,7 @@
                   class="bi bi-menu-button-wide"
                   viewBox="0 0 16 16"
                 >
-                  <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v2A1.5 1.5 0 0 1 14.5 5h-13A1.5 1.5 0 0 1 0 3.5zM1.5 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5z" />
-                  <path d="M2 2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5m10.823.323-.396-.396A.25.25 0 0 1 12.604 2h.792a.25.25 0 0 1 .177.427l-.396.396a.25.25 0 0 1-.354 0M0 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm1 3v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2zm14-1V8a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v2zM2 8.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0 4a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5" />
+                  <path d="M2 12a.5.5 0 00.5.5h6a.5.5 0 000-1h-6a.5.5 0 00-.5.5Zm0-5a.5.5 0 00.5.5h9a.5.5 0 000-1h-9A.5.5 0 002 7M1 4V2A1 1 0 012 1H14a1 1 0 011 1V4Zm14 6v3a1 1 0 01-1 1H2A1 1 0 011 13V10M1 5H15V9H1ZM0 13a2 2 0 002 2H14a2 2 0 002-2V2A2 2 0 0014 0H2A2 2 0 000 2ZM2 2.5a.5.5 0 00.5.5h5.5a.5.5 0 000-1h-5.5A.5.5 0 002 2.5" />
                 </svg>
               </button>
             </div>
@@ -486,15 +485,15 @@ export default {
               response.data.data.menus.map(
                 item => [item.id, item]
               )
-            )
+            );
             newMenuList.forEach((item) => {
-              item.isEditing = false
+              item.isEditing = false;
             });
-            this.currentPage = response.data.data.page
-            this.limit = response.data.data.limit
-            this.totalCount = response.data.data.total_count
-            this.menulist = newMenuList
-            this.isLoading = false
+            this.currentPage = response.data.data.page;
+            this.limit = response.data.data.limit;
+            this.totalCount = response.data.data.total_count;
+            this.menulist = newMenuList;
+            this.isLoading = false;
           })
           .catch(e => {
               console.log(e);
@@ -550,6 +549,9 @@ export default {
             }
           })
       },
+      openItemManger: function (menu_id) {
+        this.$router.push({ path:`/admin/${this.$route.params.id}/config/${menu_id}`})
+      }
     }
 };
 </script>

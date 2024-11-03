@@ -17,13 +17,30 @@ from app.utils.validators import IDSchema
 @menu_blueprint.route("/<menu_id>", methods=["GET"])
 @validate_url_params(IDSchema())
 def handle_menu_get_items(menu_id):
-    items = MenuItem.find_all_by_menu(menu_id)
+    try:
+        limit = int(request.args.get('limit'))
+        page = int(request.args.get('page'))
+    except ValueError as e:
+        limit = 10
+        page = 1
+    except TypeError as e:
+        limit = 10
+        page = 1
+    offset = 0 if page is None else limit * (page - 1)
+    items = MenuItem.find_all_by_menu(menu_id, limit, offset)
+    total_count = MenuItem.count_by_menu_id(menu_id)
     result = []
 
     for i in items:
         result.append(i.serialized)
 
-    return { "data": result }, 200
+    return { "data": {
+        "items": result,
+        "page": page,
+        "limit": limit,
+        "total_count": total_count
+        }
+    }, 200
 
 
 @menu_blueprint.route("/<menu_id>", methods=["PUT"])
@@ -63,6 +80,7 @@ def handle_menu_duplicate(menu_id):
         menu_item = MenuItem(
             name=item.name,
             category=item.category,
+            description=item.description,
             index=item.index
         )
 

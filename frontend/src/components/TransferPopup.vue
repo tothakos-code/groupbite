@@ -183,7 +183,7 @@ export default {
     return {
       showInitial: false,
       showSpinner: false,
-      showFinish: true,
+      showFinish: false,
       orderItems: [],
       psid: "",
       transport_price: unref(useVendorStore().selectedVendor.settings.transport_price.value)

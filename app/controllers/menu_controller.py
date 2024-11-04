@@ -27,7 +27,8 @@ def handle_menu_get_items(menu_id):
         limit = 10
         page = 1
     offset = 0 if page is None else limit * (page - 1)
-    items = MenuItem.find_all_by_menu(menu_id, limit, offset)
+    search = request.args.get('search')
+    items = MenuItem.find_all_by_menu(menu_id, search, limit, offset)
     total_count = MenuItem.count_by_menu_id(menu_id)
     result = []
 

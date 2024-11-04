@@ -64,6 +64,30 @@
         Importálás
       </button>
     </div>
+    <div
+      class="row mt-2"
+    >
+      <div class="col-2">
+        <label for="itemName">
+          Keresés:
+        </label>
+        <input
+          v-model.trim="searchString"
+          type="text"
+          name="itemName"
+          class="form-control"
+        >
+      </div>
+      <button
+        class="btn col-auto"
+        :class="['btn-' + auth.getUserColor ]"
+        type="button"
+        name="save"
+        @click="search()"
+      >
+        keresés
+      </button>
+    </div>
   </div>
   <div class="">
     <table class="table table-striped table-hover ">
@@ -411,6 +435,7 @@ export default {
         },
         isLoading: true,
         showImportPopup: false,
+        searchString: "",
         json_file: "",
         limit: 10,
         currentPage: 1,
@@ -425,10 +450,13 @@ export default {
         this.currentPage = page;
         this.getMenuList()
       },
-      openImportPopup: function () {
+      search() {
+        this.getMenuList()
+      },
+      openImportPopup() {
         this.showImportPopup = true;
       },
-      submitJsonFile: function () {
+      submitJsonFile() {
         let formData = new FormData();
         formData.append("file", this.file);
         this.vendorStore.import(this.$route.params.id, formData)
@@ -439,7 +467,7 @@ export default {
           }
         })
       },
-      handleFileUpload: function (event) {
+      handleFileUpload(event) {
         const file = event.target.files[0];
         if (file && file.type === "application/json") {
           const reader = new FileReader();
@@ -461,7 +489,7 @@ export default {
           console.log("Only .json files are allowed");
         }
       },
-      toggleActivation: function (to) {
+      toggleActivation(to) {
         let result;
         if (to.active) {
           result = this.menuStore.deactivate(to.id)
@@ -475,8 +503,9 @@ export default {
           }
         })
       },
-      getMenuList: function () {
+      getMenuList() {
         this.vendorStore.fetchMenus(this.$route.params.id,{
+            "search": this.searchString,
             "limit": this.limit,
             "page": this.currentPage
           })
@@ -499,7 +528,7 @@ export default {
               console.log(e);
           })
       },
-      addMenu: function () {
+      addMenu() {
         this.newMenu.vendor_id = this.$route.params.id
         this.menuStore.add(this.newMenu)
           .then(response => {
@@ -508,15 +537,15 @@ export default {
             }
           })
       },
-      edit: function (menu_id) {
+      edit(menu_id) {
         const item = this.menulist.get(menu_id)
         this.menulist.set(item.id, { ...item, isEditing: true})
       },
-      cancelEdit: function (menu_id) {
+      cancelEdit(menu_id) {
         const item = this.menulist.get(menu_id)
         this.menulist.set(item.id, { ...item, isEditing: false})
       },
-      updateMenu: function (menu_id) {
+      updateMenu(menu_id) {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
         delete menu["isEditing"];
@@ -527,7 +556,7 @@ export default {
             }
           })
       },
-      deleteMenu: function (menu_id) {
+      deleteMenu(menu_id) {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
         delete menu["isEditing"];
@@ -538,7 +567,7 @@ export default {
             }
           })
       },
-      duplicateMenu: function (menu_id) {
+      duplicateMenu(menu_id) {
         const menu = this.menulist.get(menu_id)
         this.menulist.set(menu.id, { ...menu, isEditing: false})
         delete menu["isEditing"];
@@ -549,7 +578,7 @@ export default {
             }
           })
       },
-      openItemManger: function (menu_id) {
+      openItemManger(menu_id) {
         this.$router.push({ path:`/admin/${this.$route.params.id}/config/${menu_id}`})
       }
     }

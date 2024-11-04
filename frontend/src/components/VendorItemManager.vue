@@ -47,31 +47,6 @@
                 class="form-control"
               >
             </div>
-            <!-- <div class="col-1">
-              <label for="itemPrice">
-                Ár:
-              </label>
-              <input
-                v-model="newItem.price"
-                type="number"
-                name="itemPrice"
-                class="form-control"
-              >
-            </div> -->
-            <!-- <div class="col-1">
-              <label
-                for="itemQuantity"
-                title="Végtelen mennyiséghez adj megy egy negatív számot"
-              >
-                Mennyiség:
-              </label>
-              <input
-                v-model="newItem.quantity"
-                type="number"
-                name="itemQuantity"
-                class="form-control"
-              >
-            </div> -->
             <button
               class="btn col-auto"
               :class="['btn-' + auth.getUserColor ]"
@@ -80,6 +55,30 @@
               @click="addToMenu()"
             >
               Menühöz adás
+            </button>
+          </div>
+          <div
+            class="row mt-2"
+          >
+            <div class="col-2">
+              <label for="itemName">
+                Keresés:
+              </label>
+              <input
+                v-model.trim="searchString"
+                type="text"
+                name="itemName"
+                class="form-control"
+              >
+            </div>
+            <button
+              class="btn col-auto"
+              :class="['btn-' + auth.getUserColor ]"
+              type="button"
+              name="save"
+              @click="search()"
+            >
+              keresés
             </button>
           </div>
         </div>
@@ -454,6 +453,7 @@ export default {
           index: 0,
         },
         items: [],
+        searchString: "",
         isLoading: true,
         limit: 10,
         currentPage: 1,
@@ -468,8 +468,9 @@ export default {
         this.currentPage = page;
         this.getItemList()
       },
-      getItemList: async function () {
-        await this.menuStore.fetch(this.$route.params.menuId,{
+      getItemList() {
+        this.menuStore.fetch(this.$route.params.menuId,{
+            "search": this.searchString,
             "limit": this.limit,
             "page": this.currentPage
           }).then(
@@ -509,7 +510,10 @@ export default {
             }
           })
       },
-      newSize: function (itemId) {
+      search() {
+        this.getItemList()
+      },
+      newSize(itemId) {
         let newSize = {
             "id": -1,
             "name": "",
@@ -520,23 +524,23 @@ export default {
         }
         this.items.get(itemId).sizes.set(-1, newSize)
       },
-      edit: function (menu_id) {
+      edit(menu_id) {
         const item = this.items.get(menu_id)
         this.items.set(item.id, { ...item, isEditing: true})
       },
-      editSize: function (itemId, sizeId) {
+      editSize(itemId, sizeId) {
         const size = this.items.get(itemId).sizes.get(sizeId)
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: true})
       },
-      cancelEdit: function (itemId) {
+      cancelEdit(itemId) {
         const item = this.items.get(itemId)
         this.items.set(item.id, { ...item, isEditing: false})
       },
-      cancelSizeEdit: function (itemId, sizeId) {
+      cancelSizeEdit(itemId, sizeId) {
         const size = this.items.get(itemId).sizes.get(sizeId)
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
       },
-      updateItem: function (item_id) {
+      updateItem(item_id) {
         const item = this.items.get(item_id)
         this.items.set(item.id, { ...item, isEditing: false})
         delete item["isEditing"]
@@ -549,7 +553,7 @@ export default {
             }
           })
       },
-      updateSize: function (itemId, sizeId) {
+      updateSize(itemId, sizeId) {
         const size = this.items.get(itemId).sizes.get(sizeId)
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
         delete size["isEditing"]
@@ -568,7 +572,7 @@ export default {
 
         }
       },
-      deleteItem: function (item_id) {
+      deleteItem(item_id) {
         const item = this.items.get(item_id)
         this.items.set(item.id, { ...item, isEditing: false})
         this.itemStore.delete(item.id)
@@ -578,7 +582,7 @@ export default {
             }
           })
       },
-      deleteSize: function (itemId, sizeId) {
+      deleteSize(itemId, sizeId) {
         const size = this.items.get(itemId).sizes.get(sizeId)
         this.items.get(itemId).sizes.set(size.id, { ...size, isEditing: false})
         this.sizeStore.delete(size.id)

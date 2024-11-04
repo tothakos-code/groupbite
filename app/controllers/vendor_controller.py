@@ -166,8 +166,8 @@ def handle_menu_get(vendor_id):
         limit = 10
         page = 1
     offset = 0 if page is None else limit * (page - 1)
-    logging.info(page)
-    menus = Menu.find_all_by_vendor(vendor_id, limit, offset)
+    search = request.args.get('search')
+    menus = Menu.find_all_by_vendor(vendor_id, search, limit, offset)
     total_count = Menu.count_by_vendor_id(vendor_id)
     result = []
     for m in menus:

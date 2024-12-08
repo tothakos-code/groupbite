@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from flask import Blueprint, request, session
 import logging
 import json
@@ -126,9 +126,19 @@ def handle_create(data):
 @vendor_blueprint.route("/<vendor_id>/scan", methods=["GET"])
 @validate_url_params(IDSchema())
 def handle_run_scan(vendor_id):
+    menu_date = request.args.get('menu_date')
+    try:
+        datetime.strptime(menu_date, '%Y-%m-%d')
+    except ValueError as e:
+        menu_date = None
+    logging.info(menu_date)
+
     vendor = VendorFactory.get_one_vendor_object(vendor_id)
     try:
-        vendor.scan()
+        if menu_date != None:
+            vendor.scan(menu_date=menu_date)
+        else:
+            vendor.scan()
     except NotImplementedError as e:
         return { "error": f"Vendor {vendor_id} does not support automatic menu filling" }, 405
     return { "msg": f"Vendor scan ran for {vendor_id} id" }, 201

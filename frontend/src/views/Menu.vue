@@ -78,9 +78,7 @@
         </div>
       </div>
       <div class="row p-2">
-        <MenuList
-          key="0"
-        />
+        <MenuList :key="vendorId" />
         <GlobalBasket class="mt-2 d-md-none" />
       </div>
     </div>
@@ -127,6 +125,9 @@ export default {
     };
   },
   computed: {
+    vendorId() {
+      return this.vendorStore.selectedVendor.id
+    },
     vendorTitle() {
       return this.vendorStore.selectedVendor.settings.title.value
     },

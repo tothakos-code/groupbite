@@ -15,7 +15,10 @@
         />
       </div>
     </div>
-    <div class="row">
+    <div
+      v-if="itemlist.length !== 0 && categories.length > 1"
+      class="row"
+    >
       <div
         v-for="category, index in categories"
         :key="index"
@@ -47,10 +50,21 @@
             :item="item"
           />
           <div
-            v-if="itemlist.length === 0"
+            v-if="itemlist.length === 0 && isLoading === false"
             class="d-flex justify-content-center"
           >
             <span>Erre a napra nincsen mit betöltenem</span>
+          </div>
+          <div
+            v-if="isLoading === true"
+            class="d-flex justify-content-center"
+          >
+            <div
+              class="spinner-border"
+              role="status"
+            >
+              <span class="visually-hidden">Loading...</span>
+            </div>
           </div>
         </div>
       </div>
@@ -84,7 +98,8 @@ export default {
     return {
       itemlist: [],
       filter:[],
-      categories: new Set(["minden"])
+      categories: new Set(["minden"]),
+      isLoading: true
     }
   },
   computed: {
@@ -107,8 +122,11 @@ export default {
           this.itemlist = response.data.data;
           // this.categories = new Set(["minden"])
           for (var item of this.itemlist) {
-            this.categories.add(item.category)
+            if (item.category !== "") {
+              this.categories.add(item.category)
+            }
           }
+          this.isLoading = false
         })
         .catch(error => console.error(error));
     },

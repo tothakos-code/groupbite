@@ -151,8 +151,7 @@ class UserBasket(Base):
 
         try:
             session.commit()
-            session.refresh(user_basket)
-            return True, user_basket
+            return True, None
         except exc.DataError as e:
             logging.exception("DataError during removing user_basket")
             session.rollback()

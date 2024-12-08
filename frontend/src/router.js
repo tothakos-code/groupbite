@@ -5,6 +5,7 @@ import MenuView from "./views/MenuRender.vue";
 import AdminSettingsView from "./views/AdminSettings.vue";
 import VendorConfiguration from "./components/VendorConfiguration.vue";
 import AdminVendorsView from "./views/AdminVendors.vue";
+import AdminOrdersView from "./views/AdminOrders.vue";
 import VendorItemManager from "./components/VendorItemManager.vue";
 import VendorAdd from "./components/VendorAdd.vue";
 import NotFound from "./components/NotFound.vue";
@@ -35,6 +36,11 @@ const routes = [
         name:"settings",
         path: "settings",
         component: AdminSettingsView
+      },
+      {
+        name:"orders",
+        path: "orders",
+        component: AdminOrdersView
       },
       {
         name:"vendorlist",

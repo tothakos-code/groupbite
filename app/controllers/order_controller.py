@@ -57,6 +57,33 @@ def handle_get_basket(order_id):
     return_obj["basket"] = UserBasket.get_basket_group_by_user(order.id)
     return { "data": return_obj }, 200
 
+
+@order_blueprint.route("/", methods=["GET"])
+def handle_get_orders():
+    orders = Order.find_all()
+    try:
+        limit = int(request.args.get('limit'))
+        page = int(request.args.get('page'))
+    except ValueError as e:
+        limit = 10
+        page = 1
+    except TypeError as e:
+        limit = 10
+        page = 1
+    offset = 0 if page is None else limit * (page - 1)
+    orders = Order.find_all(limit, offset)
+    total_count = len(Order.find_all())
+    result = []
+    for order in orders:
+        result.append(order.serialized)
+    return { "data": {
+                "items": result,
+                "page": page,
+                "limit": limit,
+                "total_count": total_count
+            }
+        }, 200
+
 @order_blueprint.route("/<order_id>/order_fee", methods=["PUT"])
 @require_auth
 @validate_url_params(IDSchema())

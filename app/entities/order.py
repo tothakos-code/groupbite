@@ -57,6 +57,13 @@ class Order(Base):
         stmt = select(Order).where(Order.id == order_id)
         return session.execute(stmt).scalars().first()
 
+
+    def find_all(limit=None, offset=0):
+        stmt = select(Order).order_by(Order.date_of_order.desc())
+        if limit is not None:
+            stmt = stmt.limit(limit).offset(offset)
+        return session.execute(stmt).scalars().all()
+
     def find_open_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today()):
         stmt = select(Order).where(
             Order.vendor_id == vendor_id,

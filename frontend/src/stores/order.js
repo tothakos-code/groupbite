@@ -97,6 +97,18 @@ export const useOrderStore = defineStore("order", {
         this.isLoading = false;
       }
     },
+    async fetchAll(querryParams) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/order/`, { "params": querryParams });
+        return response
+      } catch (error) {
+        console.error("Failed to get orders:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async fetchHistory(data) {
       this.isLoading = true;
       try {

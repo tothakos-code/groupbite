@@ -50,7 +50,7 @@
       <div class="col">
         <div
           class="card"
-          @click="openAdminHome()"
+          @click="openAdminOrders()"
         >
           <div class="card-body">
             Rendelések
@@ -91,6 +91,9 @@ export default {
     methods: {
       openAdminHome: function () {
         this.$router.push({ path:`/admin`})
+      },
+      openAdminOrders: function () {
+        this.$router.push({ path:`/admin/orders`})
       },
       openAdminUsers: function () {
         this.$router.push({ path:`/admin`})

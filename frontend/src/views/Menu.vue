@@ -136,6 +136,9 @@ export default {
     },
     notificationStatus() {
       let response = false;
+      if (!this.auth.isLoggedIn) {
+        return response;
+      }
       Object.values(this.auth.user.notifications).forEach(notification => {
         if(notification.vendor_id == this.vendorStore.selectedVendor.id) {
           response = true;

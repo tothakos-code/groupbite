@@ -96,10 +96,12 @@ export const useAuth = defineStore("user", {
 
       }
     },
-    async orders() {
+    async orders(querryParams) {
       this.isLoading = true;
       try {
-        const response = await axios.get(`/api/user/${this.user.id}/orders`);
+        const response = await axios.get(`/api/user/${this.user.id}/orders`,
+          { "params": querryParams }
+        );
         return response
       } catch (error) {
         console.error("Failed to get orders", error);

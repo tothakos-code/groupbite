@@ -109,13 +109,34 @@ def handle_user_update(user_id):
 
     return { "data": user_to_update.serialized }, 200
 
-# TODO: add a limit and a pager option, move to user controller
+
 @user_blueprint.route("/<user_id>/orders", methods=["GET"])
 @validate_url_params(IDSchema())
 def handle_user_order_history(user_id):
-
     result = {}
-    for item in UserBasket.find_user_orders(user_id):
+    try:
+        limit = int(request.args.get('limit'))
+        page = int(request.args.get('page'))
+    except ValueError as e:
+        limit = 10
+        page = 1
+    except TypeError as e:
+        limit = 10
+        page = 1
+
+    offset = 0 if page is None else limit * (page - 1)
+    items = UserBasket.find_user_orders(user_id, limit, offset)
+    all_items = UserBasket.find_user_orders(user_id)
+    total_count = len(all_items)
+    total_sum = 0
+    set = []
+    for item in all_items:
+        total_sum += item.size.price * item.count
+        if item.order not in set:
+            total_sum += item.order.order_fee/len(Order.find_order_participants(item.order.id))
+            set.append(item.order)
+
+    for item in items:
         date = item.order.date_of_order.strftime("%Y-%m-%d")
         vendor = item.order.vendor.name
         key_format = f"{vendor}-{date}"
@@ -130,4 +151,11 @@ def handle_user_order_history(user_id):
         result[key_format]["date"] = date
         result[key_format]["fee"] = item.order.order_fee/UserBasket.user_count(item.order.id)
 
-    return { "data": result }, 200
+    return { "data": {
+        "items": result,
+        "page": page,
+        "limit": limit,
+        "total_count": total_count,
+        "total_sum": total_sum
+        }
+    }, 200

@@ -163,7 +163,7 @@
   />
   <Popup
     :show-modal="showOrderHistory"
-    title="Rendelés összesítő"
+    title="Rendelés történet"
     confirm-text="Ok"
     :large="true"
     @cancel="showOrderHistory = false"
@@ -172,17 +172,17 @@
     <div class="row d-flex align-items-strech">
       <div class="col text-center align-center">
         <span class="btn pe-none border border-secondary-subtle rounded">
-          Összesen {{ Object.keys(orderHistoryList).length }} redelésed volt.
+          Összesen {{ totalCount }} redelésed volt.
         </span>
       </div>
       <div class="col text-center">
         <span class="btn pe-none border border-secondary-subtle rounded">
-          Ennyi pénzt költöttél ebédre összesen: {{ orderHistoryListSum }} Ft
+          Ennyi pénzt költöttél ebédre összesen: {{ totalSum }} Ft
         </span>
       </div>
       <div class="col text-center">
         <span class="btn pe-none border border-secondary-subtle rounded">
-          Átlagosan ennyért ettél: {{ Math.round(orderHistoryListSum/Object.keys(orderHistoryList).length) }} Ft / rendelés
+          Átlagosan ennyért ettél: {{ Math.round(totalSum/totalCount) }} Ft / rendelés
         </span>
       </div>
     </div>
@@ -191,7 +191,10 @@
       :key="date"
       class="row mt-1 mb-1"
     >
-      <div class="list-group-item row m-0">
+      <div
+        v-if="!isLoading"
+        class="list-group-item row m-0"
+      >
         <GlobalBasketUser
           :username="order.vendor + ' - ' + order.date"
           :user-id="date"
@@ -202,7 +205,24 @@
           :copyable="false"
         />
       </div>
+      <div
+        v-else
+        class="row text-center"
+      >
+        <div
+          class="spinner-border"
+          role="status"
+        >
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
     </div>
+    <Paginator
+      :total-pages="Math.ceil(totalCount/limit)"
+      :current-page="currentPage"
+      :range="5"
+      @page-change="handlePageChange"
+    />
   </Popup>
 </template>
 
@@ -213,14 +233,17 @@ import { useAuth } from "@/stores/auth.js";
 import { inject } from "vue";
 import Popup from "./Popup.vue";
 import GlobalBasketUser from "./GlobalBasketUser.vue";
+import Paginator from "./Paginator.vue";
 
 export default {
   name: "UserMenu",
+
   components: {
     UserLoginPopup,
     UserProfilePopup,
     Popup,
-    GlobalBasketUser
+    GlobalBasketUser,
+    Paginator
   },
   setup() {
     const auth = useAuth();
@@ -236,26 +259,33 @@ export default {
       showProfile: false,
       showLogin: false,
       showOrderHistory: false,
-      orderHistoryList: {}
+      orderHistoryList: {},
+      isLoading: true,
+      limit: 10,
+      currentPage: 1,
+      totalCount: 0,
+      totalSum: 0
     }
   },
   computed: {
-    orderHistoryListSum() {
-      let sum = 0;
-      Object.values(this.orderHistoryList).forEach((basket) => {
-        for (const item of basket.items) {
-          sum += item.price * item.quantity
-        }
-      });
-
-      return sum;
-    }
   },
   methods: {
+    handlePageChange(page) {
+       this.currentPage = page;
+       this.openUserHistory()
+    },
     openUserHistory: function(){
-      this.auth.orders()
+      this.auth.orders({
+            "limit": this.limit,
+            "page": this.currentPage
+          })
         .then(response => {
-            this.orderHistoryList = response.data.data;
+            this.orderHistoryList = response.data.data.items;
+            this.currentPage = response.data.data.page;
+            this.limit = response.data.data.limit;
+            this.totalCount = response.data.data.total_count;
+            this.totalSum = response.data.data.total_sum;
+            this.isLoading = false;
             this.showOrderHistory = true
         })
     },

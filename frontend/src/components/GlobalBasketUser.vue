@@ -7,7 +7,7 @@
       <div class="col-6 d-inline-block d-flex align-items-center">
         <span
           class=" text-truncate"
-          style="max-width: 120px;"
+          style="max-width: 180px;"
           :title="username"
         >
           {{ username }}

@@ -1,10 +1,10 @@
 <template>
   <div class="row ms-2 mt-2">
-    <div class="">
-      <h1 class="col d-flex justify-content-start">
-        Beállítások
-      </h1>
-    </div>
+    <h1 class="col d-flex justify-content-start">
+      Alkalmazás beállítások
+    </h1>
+  </div>
+  <div class="row ms-2 mt-2">
     <div
       v-if="!isLoading"
       class=""
@@ -210,10 +210,8 @@ import { notify } from "@kyvg/vue3-notification";
 import useVuelidate from '@vuelidate/core'
 import { required, email} from '@vuelidate/validators'
 
-
-
 export default {
-    name: "SettingsView",
+    name: "AdminSettingsView",
     setup() {
       const auth = useAuth();
       return {
@@ -329,15 +327,9 @@ export default {
       }
 
     }
+
 };
 </script>
 
 <style scoped>
-.was-validated .form-control:invalid {
-  border-color: #dc3545;
-}
-
-.was-validated .form-control:valid {
-  border-color: #28a745;
-}
 </style>

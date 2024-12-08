@@ -106,15 +106,20 @@ class Vendor(Base):
             vendor_obj.id = str(vendor_db.id)
             logging.info(vendor_db.settings)
 
-            if vendor_db.settings["closure_scheduler"]["value"] != "manual":
-                from app.scheduler import schedule_task, cancel_task
-                hh, mm = vendor_db.settings["closure_scheduler"]["value"].split(":")
-                schedule_task(str(vendor_db.id) + "-closure", int(hh), int(mm), vendor_db.closure_wrapper)
-
-            if vendor_db.settings["closed_scheduler"]["value"] != "manual":
-                from app.scheduler import schedule_task, cancel_task
-                hh, mm = vendor_db.settings["closed_scheduler"]["value"].split(":")
-                schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
+            try:
+                if vendor_db.settings["closure_scheduler"]["value"] != "manual":
+                    from app.scheduler import schedule_task, cancel_task
+                    hh, mm = vendor_db.settings["closure_scheduler"]["value"].split(":")
+                    schedule_task(str(vendor_db.id) + "-closure", int(hh), int(mm), vendor_db.closure_wrapper)
+            except KeyError as e:
+                logging.error("Task scheduling error, 'closure_scheduler' is undefined in settings")
+            try:
+                if vendor_db.settings["closed_scheduler"]["value"] != "manual":
+                    from app.scheduler import schedule_task, cancel_task
+                    hh, mm = vendor_db.settings["closed_scheduler"]["value"].split(":")
+                    schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
+            except KeyError as e:
+                logging.error("Task scheduling error, 'closed_scheduler' is undefined in settings")
 
         try:
             session.commit()
@@ -185,7 +190,7 @@ class Vendor(Base):
 
     @property
     def serialized(self):
-        from app.vendor_factory import VendorFactory
+        # from app.vendor_factory import VendorFactory
         return {
             "id": str(self.id),
             "name": self.name,

@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "./views/Home.vue";
-import AdminView from "./views/Admin.vue";
+import AdminHomeView from "./views/AdminHome.vue";
 import MenuView from "./views/MenuRender.vue";
-import Settings from "./views/Settings.vue";
+import AdminSettingsView from "./views/AdminSettings.vue";
 import VendorConfiguration from "./components/VendorConfiguration.vue";
-import VendorList from "./components/VendorList.vue";
+import AdminVendorsView from "./views/AdminVendors.vue";
 import VendorItemManager from "./components/VendorItemManager.vue";
 import VendorAdd from "./components/VendorAdd.vue";
 import NotFound from "./components/NotFound.vue";
@@ -29,17 +29,17 @@ const routes = [
   {
     name: "admin",
     path: "/admin",
-    component: AdminView,
+    component: AdminHomeView,
     children: [
       {
         name:"settings",
         path: "settings",
-        component: Settings
+        component: AdminSettingsView
       },
       {
         name:"vendorlist",
-        path: "",
-        component: VendorList
+        path: "vendors",
+        component: AdminVendorsView
       },
       {
         path: ":id/config",

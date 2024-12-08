@@ -502,11 +502,8 @@ export default {
         this.itemStore.add(this.newItem)
           .then(response => {
             if (response.status === 201) {
-              this.getItemList().then(
-                () => {
-                  this.newSize(response.data.data.id)
-                }
-              )
+              this.getItemList()
+              // this.newSize(response.data.data.id)
             }
           })
       },

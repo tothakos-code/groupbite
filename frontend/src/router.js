@@ -1,14 +1,14 @@
 import { createRouter, createWebHistory } from "vue-router";
-import HomeView from "./views/Home.vue";
-import AdminHomeView from "./views/AdminHome.vue";
-import MenuView from "./views/MenuRender.vue";
-import AdminSettingsView from "./views/AdminSettings.vue";
-import VendorConfiguration from "./components/VendorConfiguration.vue";
-import AdminVendorsView from "./views/AdminVendors.vue";
-import AdminOrdersView from "./views/AdminOrders.vue";
-import VendorItemManager from "./components/VendorItemManager.vue";
-import VendorAdd from "./components/VendorAdd.vue";
-import NotFound from "./components/NotFound.vue";
+const HomeView = () => import("./views/Home.vue");
+const AdminHomeView = () => import( "./views/AdminHome.vue");
+const MenuView = () => import( "./views/MenuRender.vue");
+const AdminSettingsView = () => import( "./views/AdminSettings.vue");
+const VendorConfiguration = () => import( "./components/VendorConfiguration.vue");
+const AdminVendorsView = () => import( "./views/AdminVendors.vue");
+const AdminOrdersView = () => import( "./views/AdminOrders.vue");
+const VendorItemManager = () => import( "./components/VendorItemManager.vue");
+const VendorAdd = () => import( "./components/VendorAdd.vue");
+const NotFound = () => import( "./components/NotFound.vue");
 
 const routes = [
   {

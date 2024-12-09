@@ -1,5 +1,8 @@
 <template>
-  <div class="card">
+  <div
+    v-if="!isLoading"
+    class="card"
+  >
     <div class="card-header d-flex justify-content-center">
       <div class="col-12 row px-0">
         <div class="col-12 d-flex justify-content-center col-sm-6 col-md-4 justify-content-md-start">
@@ -213,8 +216,9 @@
 </template>
 
 <script>
-import GlobalBasketUser from "@/components/GlobalBasketUser.vue";
-import Popup from "./Popup.vue";
+import { defineAsyncComponent } from 'vue'
+const GlobalBasketUser = defineAsyncComponent(() => import("@/components/GlobalBasketUser.vue"));
+const Popup = defineAsyncComponent(() => import("./Popup.vue"));
 import { useAuth } from "@/stores/auth";
 import { useOrderStore } from "@/stores/order";
 import { useVendorStore } from "@/stores/vendor";
@@ -251,6 +255,7 @@ export default {
       sum: 0,
       user_avg: 0,
       user_avg_p_day: 0,
+      isLoading: true
     }
   },
   computed: {
@@ -344,6 +349,7 @@ export default {
         })
         .then(response => {
           this.history = response.data.data;
+          this.isLoading = false;
           this.calculateStats();
         })
     },

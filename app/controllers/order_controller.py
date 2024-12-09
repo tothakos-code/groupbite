@@ -58,6 +58,24 @@ def handle_get_basket(order_id):
     return { "data": return_obj }, 200
 
 
+@order_blueprint.route("/statistics", methods=["GET"])
+def handle_get_statistics():
+    year_result, year_labels = Order.last_12_month_statistics()
+    week_result, week_labels = Order.last_7_days_statistics()
+    return {
+        "data": {
+            "year_data": {
+                "data": year_result,
+                "labels": year_labels
+            },
+            "week_data": {
+                "data": week_result,
+                "labels": week_labels
+            }
+        }
+    }, 200
+
+
 @order_blueprint.route("/", methods=["GET"])
 def handle_get_orders():
     orders = Order.find_all()

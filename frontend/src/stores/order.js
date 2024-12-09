@@ -121,6 +121,18 @@ export const useOrderStore = defineStore("order", {
         this.isLoading = false;
       }
     },
+    async stats() {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/order/statistics`);
+        return response
+      } catch (error) {
+        console.error("Failed to get stats:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async close() {
       this.isLoading = true;
       try {

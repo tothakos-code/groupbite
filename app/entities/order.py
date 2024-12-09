@@ -4,7 +4,8 @@ from . import Base, session
 from .vendor import Vendor
 from uuid import UUID
 from datetime import datetime, date
-from sqlalchemy import ForeignKey, select, exc
+from dateutil.relativedelta import relativedelta
+from sqlalchemy import ForeignKey, select, exc, extract
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -56,6 +57,74 @@ class Order(Base):
     def get_by_id(order_id):
         stmt = select(Order).where(Order.id == order_id)
         return session.execute(stmt).scalars().first()
+
+
+    def last_7_days_statistics():
+        result = {}
+        last_7_days = [(date.today() - relativedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+        last_7_days.reverse()
+        for vendor in Vendor.find_all_active():
+            for day in last_7_days:
+                result[vendor.name] = {
+                "data": []
+                }
+                parsed_date = datetime.strptime(day, "%Y-%m-%d")
+                result[vendor.name]["data"].append(Order.day_sum_by_vendor(vendor.id, parsed_date.year, parsed_date.month, parsed_date.day))
+
+
+        return result, last_7_days
+
+
+    def last_12_month_statistics():
+        result = {}
+        last_12_months = [(date.today() - relativedelta(months=i)).strftime("%Y-%m") for i in range(12)]
+        last_12_months.reverse()
+        for vendor in Vendor.find_all_active():
+            result[vendor.name] = {
+                "data": []
+            }
+            for month in last_12_months:
+                parsed_date = datetime.strptime(month, "%Y-%m")
+                result[vendor.name]["data"].append(Order.month_sum_by_vendor(vendor.id, parsed_date.year, parsed_date.month))
+
+
+        return result, last_12_months
+
+
+    def month_sum_by_vendor(vendor_id, year, month):
+        stmt = select(Order).where(
+            Order.vendor_id == vendor_id,
+            extract("year", Order.date_of_order) == year,
+            extract("month", Order.date_of_order) == month
+        )
+
+        orders = session.execute(stmt).scalars()
+        sum = 0
+        for order in orders:
+            for basket_entry in order.items:
+                sum += basket_entry.count * basket_entry.size.price
+            sum += order.order_fee
+
+
+        return sum
+
+    def day_sum_by_vendor(vendor_id, year, month, day):
+        stmt = select(Order).where(
+            Order.vendor_id == vendor_id,
+            extract("year", Order.date_of_order) == year,
+            extract("month", Order.date_of_order) == month,
+            extract("day", Order.date_of_order) == day
+        )
+
+        orders = session.execute(stmt).scalars()
+        sum = 0
+        for order in orders:
+            for basket_entry in order.items:
+                sum += basket_entry.count * basket_entry.size.price
+            sum += order.order_fee
+
+
+        return sum
 
 
     def find_all(limit=None, offset=0):

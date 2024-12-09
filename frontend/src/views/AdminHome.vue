@@ -96,7 +96,7 @@ export default {
         this.$router.push({ path:`/admin/orders`})
       },
       openAdminUsers: function () {
-        this.$router.push({ path:`/admin`})
+        this.$router.push({ path:`/admin/users`})
       },
       openAdminVendors: function () {
         this.$router.push({ path:`/admin/vendors`})

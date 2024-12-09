@@ -159,3 +159,29 @@ def handle_user_order_history(user_id):
         "total_sum": total_sum
         }
     }, 200
+
+
+@user_blueprint.route("/", methods=["GET"])
+def handle_get_users():
+    try:
+        limit = int(request.args.get('limit'))
+        page = int(request.args.get('page'))
+    except ValueError as e:
+        limit = 10
+        page = 1
+    except TypeError as e:
+        limit = 10
+        page = 1
+    offset = 0 if page is None else limit * (page - 1)
+    users = User.find_all(limit, offset)
+    total_count = len(User.find_all())
+    result = []
+    for user in users:
+        result.append(user.serialized)
+    return { "data": {
+                "items": result,
+                "page": page,
+                "limit": limit,
+                "total_count": total_count
+            }
+        }, 200

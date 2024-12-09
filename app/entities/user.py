@@ -35,17 +35,27 @@ class User(Base):
     def __repr__(self):
         return f"User<id={self.id},username={self.username}>"
 
+
     def get_one_by_username(username):
         stmt = select(User).where(
             User.username == username
         )
         return session.execute(stmt).scalars().first()
 
+
+    def find_all(limit=None, offset=0):
+        stmt = select(User)
+        if limit is not None:
+            stmt = stmt.limit(limit).offset(offset)
+        return session.execute(stmt).scalars().all()
+
+
     def get_one_by_email(email):
         stmt = select(User).where(
             User.email == email
         )
         return session.execute(stmt).scalars().first()
+
 
     def get_one_by_id(id):
         # check if uuid is valid
@@ -57,6 +67,7 @@ class User(Base):
         else:
             id  = str(id)
         return session.query(User).filter(User.id == id).first()
+
 
     def is_username_valid(username):
         notvalid_usernames = [
@@ -82,6 +93,7 @@ class User(Base):
 
         return True, ""
 
+
     def is_email_valid(email):
         if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
             return False, "Helytelen email formátum"
@@ -90,6 +102,7 @@ class User(Base):
             return False, "Ez az email cím már foglalt"
 
         return True, ""
+
 
     def create_user(user):
         if session.query(User).filter(User.username == user.username).first():
@@ -110,6 +123,7 @@ class User(Base):
             session.rollback()
             return False, None
 
+
     def update_user(self, user):
         self.username = user["username"]
         try:
@@ -126,8 +140,10 @@ class User(Base):
             return False, None
         return self
 
+
     def get_all_orders(self):
         return self.orders
+
 
     def get_all_orders_between(self, start, end):
         stmt = select(User).where(
@@ -136,11 +152,13 @@ class User(Base):
         )
         return session.execute(stmt).all()
 
+
     @property
     def serialized(self):
         return {
             "id": str(self.id),
             "username": self.username,
+            "email": self.email,
             "theme": str(self.theme),
             "notifications": [notification.serialized for notification in self.notifications]
         }

@@ -6,6 +6,7 @@ const AdminSettingsView = () => import( "./views/AdminSettings.vue");
 const VendorConfiguration = () => import( "./components/VendorConfiguration.vue");
 const AdminVendorsView = () => import( "./views/AdminVendors.vue");
 const AdminOrdersView = () => import( "./views/AdminOrders.vue");
+const AdminUsersView = () => import( "./views/AdminUsers.vue");
 const VendorItemManager = () => import( "./components/VendorItemManager.vue");
 const VendorAdd = () => import( "./components/VendorAdd.vue");
 const NotFound = () => import( "./components/NotFound.vue");
@@ -41,6 +42,11 @@ const routes = [
         name:"orders",
         path: "orders",
         component: AdminOrdersView
+      },
+      {
+        name:"users",
+        path: "users",
+        component: AdminUsersView
       },
       {
         name:"vendorlist",

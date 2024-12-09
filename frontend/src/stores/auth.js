@@ -110,13 +110,25 @@ export const useAuth = defineStore("user", {
         this.isLoading = false;
       }
     },
+    async fetchAll(querryParams) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/user/`, { "params": querryParams });
+        return response
+      } catch (error) {
+        console.error("Failed to get users:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async update(data) {
       this.isLoading = true;
       try {
         const response = await axios.put(`/api/user/${this.user.id}`, { "data": data });
         return response
       } catch (error) {
-        console.error("Failed to get orders", error);
+        console.error("Failed to update user", error);
         notify({
           type: "warn",
           text: error.response.error,

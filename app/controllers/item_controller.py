@@ -35,6 +35,7 @@ def handle_menu_item_update(data, item_id):
     menu_item = MenuItem.find_by_id(item_id)
 
     if not menu_item.update(
+        data["menu_id"],
         data["name"],
         data["description"],
         data["index"],

@@ -21,6 +21,7 @@ class BaseItemSchema(Schema):
 
 class UpdateItemSchema(BaseItemSchema):
     id = fields.Int(required=True)
+    menu_id = fields.Int(required=True)
 
 
 
@@ -107,8 +108,9 @@ class MenuItem(Base):
             session.rollback()
             return False, None
 
-    def update(self, name, description, index, category):
+    def update(self, menu_id, name, description, index, category):
         self.name = name
+        self.menu_id = menu_id
         self.description = description
         self.index = index
         self.category = category
@@ -148,6 +150,7 @@ class MenuItem(Base):
     def serialized(self):
         return {
             "id": self.id,
+            "menu_id": self.menu_id,
             "name": self.name,
             "description": self.description,
             "index": self.index,

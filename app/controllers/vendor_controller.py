@@ -16,12 +16,14 @@ from app.entities.vendor import Vendor, BaseVendorSchema
 from app.entities.menu import Menu
 from app.entities.user import User
 from app.entities.notification import Notification, NotificationType
-from app.utils.decorators import validate_data, validate_url_params, require_auth
+from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
 from app.utils.validators import IDSchema
 
 socketio = SocketioSingleton.get_instance()
 
 @vendor_blueprint.route("", methods=["GET"])
+@require_auth
+@require_admin
 def handle_get_all_vendors():
     result = []
     for a in Vendor.find_all():
@@ -30,6 +32,8 @@ def handle_get_all_vendors():
 
 @vendor_blueprint.route("/<vendor_id>/activate", methods=["PUT"])
 @validate_url_params(IDSchema())
+@require_auth
+@require_admin
 def handle_activation(vendor_id):
     Vendor.find_by_id(vendor_id).activate()
     logging.info(vendor_id + " vendor got activated")
@@ -39,6 +43,8 @@ def handle_activation(vendor_id):
 
 @vendor_blueprint.route("/<vendor_id>/deactivate", methods=["PUT"])
 @validate_url_params(IDSchema())
+@require_auth
+@require_admin
 def handle_deactivation(vendor_id):
     Vendor.find_by_id(vendor_id).deactivate()
     logging.info(vendor_id + " vendor got deactivated")
@@ -108,6 +114,8 @@ def handle_notification_status(vendor_id, notification_type):
 
 @vendor_blueprint.route("", methods=["POST"])
 @validate_data(BaseVendorSchema())
+@require_auth
+@require_admin
 def handle_create(data):
     vendor_json = request.json["data"]
     logging.debug(vendor_json)
@@ -151,9 +159,11 @@ def handle_get_settings(vendor_id):
 
     return { "data": vendor.serialized }, 200
 
-# TODO: data validation
+
 @vendor_blueprint.route("/<vendor_id>/settings", methods=["PUT"])
 @validate_url_params(IDSchema())
+@require_auth
+@require_admin
 def handle_save_settings(vendor_id):
     settings = request.json["data"]
     vendor = Vendor.find_by_id(vendor_id)
@@ -165,6 +175,8 @@ def handle_save_settings(vendor_id):
 
 @vendor_blueprint.route("/<vendor_id>/menus", methods=["GET"])
 @validate_url_params(IDSchema())
+@require_auth
+@require_admin
 def handle_menu_get(vendor_id):
     try:
         limit = int(request.args.get('limit'))

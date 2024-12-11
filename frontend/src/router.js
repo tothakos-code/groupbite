@@ -10,6 +10,7 @@ const AdminUsersView = () => import( "./views/AdminUsers.vue");
 const VendorItemManager = () => import( "./components/VendorItemManager.vue");
 const VendorAdd = () => import( "./components/VendorAdd.vue");
 const NotFound = () => import( "./components/NotFound.vue");
+import { useAuth } from "@/stores/auth.js";
 
 const routes = [
   {
@@ -32,6 +33,13 @@ const routes = [
     name: "admin",
     path: "/admin",
     component: AdminHomeView,
+    beforeEnter: () => {
+      if (!useAuth().user?.admin) {
+        // TODO: This runs sooner than the session check and it retruns false. I am not sure how to handle this yet.
+        console.log("Nono, you can't do that");
+        return false
+      }
+    },
     children: [
       {
         name:"settings",

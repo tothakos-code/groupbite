@@ -77,7 +77,7 @@ export const useOrderStore = defineStore("order", {
     },
     transportFee(state) {
       const vendorStore = useVendorStore();
-      if (vendorStore.selectedVendor.settings === undefined) {
+      if (vendorStore.selectedVendor?.settings === undefined) {
         return 0;
       }
       return Number(state.order.order_fee)

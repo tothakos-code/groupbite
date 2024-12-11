@@ -131,7 +131,7 @@ export const useAuth = defineStore("user", {
         console.error("Failed to update user", error);
         notify({
           type: "warn",
-          text: error.response.error,
+          text: error.response.data.error,
         });
         return error.response
       } finally {

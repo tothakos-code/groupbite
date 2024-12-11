@@ -10,7 +10,7 @@ from app.entities import Session
 from app.entities.user import User
 from app.entities.order import Order
 from app.entities.user_basket import UserBasket
-from app.utils.decorators import validate_url_params, require_auth
+from app.utils.decorators import validate_url_params, require_auth, require_admin
 from app.utils.validators import IDSchema
 
 
@@ -162,6 +162,8 @@ def handle_user_order_history(user_id):
 
 
 @user_blueprint.route("/", methods=["GET"])
+@require_auth
+@require_admin
 def handle_get_users():
     try:
         limit = int(request.args.get('limit'))

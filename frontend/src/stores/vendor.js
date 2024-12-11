@@ -26,19 +26,6 @@ export const useVendorStore = defineStore("vendor", {
         this.isLoading = false;
       }
     },
-    async fetchActive() {
-      this.isLoading = true;
-      try {
-        const response = await axios.get(`/api/vendor/active`);
-        this.vendors = response.data.data;
-        return response
-      } catch (error) {
-        console.error("Failed to fetch vendors:", error.response.data.error);
-        return error.response
-      } finally {
-        this.isLoading = false;
-      }
-    },
     async fetchMenus(vendorId, querryParams) {
       this.isLoading = true;
       try {

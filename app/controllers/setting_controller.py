@@ -10,12 +10,15 @@ from app.controllers import setting_blueprint
 from app.services.mail_sender_service import send_mail
 from app.entities.setting import Setting
 from app.entities.user import User
+from app.utils.decorators import require_auth, require_admin
 from dotenv import load_dotenv
 from pathlib import Path
 from os import getenv
 
 
 @setting_blueprint.route('/get-all', methods=['GET'])
+@require_auth
+@require_admin
 def get_all_settings():
     return Setting.get_all_settings_as_kv()
 
@@ -27,6 +30,8 @@ def get_setting(key):
     return {"error": "Setting not found"}, 404
 
 @setting_blueprint.route('/set', methods=['PUT'])
+@require_auth
+@require_admin
 def update_setting():
     data = request.json
 
@@ -41,6 +46,8 @@ def update_setting():
 
 
 @setting_blueprint.route("/mail/send-test", methods=['POST'])
+@require_auth
+@require_admin
 def send_test_mail():
     test_email = request.json["test-email"]
     if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", test_email):

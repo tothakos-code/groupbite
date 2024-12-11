@@ -4,7 +4,10 @@
       Felhasználók
     </h1>
   </div>
-  <div class="row ms-2">
+  <div
+    v-if="!isLoading"
+    class="row ms-2"
+  >
     <table class="table table-striped table-hover">
       <thead>
         <tr>
@@ -128,10 +131,13 @@ export default {
             "page": this.currentPage
           })
           .then(response => {
-            this.users = response.data.data.items
-            this.currentPage = response.data.data.page;
-            this.limit = response.data.data.limit;
-            this.totalCount = response.data.data.total_count;
+            if (response.status === 200) {
+              this.users = response.data.data.items;
+              this.currentPage = response.data.data.page;
+              this.limit = response.data.data.limit;
+              this.totalCount = response.data.data.total_count;
+            }
+            this.isLoading = false;
           })
       },
     }

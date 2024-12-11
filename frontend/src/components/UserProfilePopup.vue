@@ -87,7 +87,6 @@
 
 <script>
 import Popup from "./Popup.vue";
-import { notify } from "@kyvg/vue3-notification";
 import { useAuth } from "@/stores/auth";
 
 export default {
@@ -128,11 +127,6 @@ export default {
             user: user
           });
           this.$emit("cancel");
-        } else {
-          notify({
-            type: "warn",
-            text: response.data.error,
-          });
         }
       });
     },

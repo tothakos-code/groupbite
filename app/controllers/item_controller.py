@@ -5,12 +5,14 @@ import logging
 from app.entities.menu_item import MenuItem, BaseItemSchema, UpdateItemSchema
 from app.entities.menu import Menu
 from app.controllers import item_blueprint
-from app.utils.decorators import validate_data, validate_url_params
+from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
 from app.utils.validators import IDSchema
 
 
 @item_blueprint.route("", methods=["POST"])
 @validate_data(BaseItemSchema())
+@require_auth
+@require_admin
 def handle_menu_item_add(data):
     if not Menu.find_by_id(data["menu_id"]):
         logging.warning("Menu not found")
@@ -31,6 +33,8 @@ def handle_menu_item_add(data):
 @item_blueprint.route("/<item_id>", methods=["PUT"])
 @validate_url_params(IDSchema())
 @validate_data(UpdateItemSchema())
+@require_auth
+@require_admin
 def handle_menu_item_update(data, item_id):
     menu_item = MenuItem.find_by_id(item_id)
 
@@ -47,6 +51,8 @@ def handle_menu_item_update(data, item_id):
 
 @item_blueprint.route("/<item_id>", methods=["DELETE"])
 @validate_url_params(IDSchema())
+@require_auth
+@require_admin
 def handle_menu_item_delete(item_id):
     if not MenuItem.find_by_id(item_id).delete():
         return { "error": "IntegrityError" }, 400

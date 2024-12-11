@@ -9,7 +9,7 @@ from app.socketio_singleton import SocketioSingleton
 from app.entities.order import Order, OrderState
 from app.entities.user_basket import UserBasket
 from app.entities import Session
-from app.utils.decorators import validate_url_params, require_auth
+from app.utils.decorators import validate_url_params, require_auth, require_admin
 from app.utils.validators import IDSchema
 
 
@@ -77,6 +77,8 @@ def handle_get_statistics():
 
 
 @order_blueprint.route("/", methods=["GET"])
+@require_auth
+@require_admin
 def handle_get_orders():
     orders = Order.find_all()
     try:
@@ -258,6 +260,7 @@ def handle_clear_user_basket(order_id, user_id):
 
 @order_blueprint.route("/<order_id>/state", methods=["PUT"])
 @validate_url_params(IDSchema())
+@require_auth
 def handle_close_order(order_id):
     order = Order.get_by_id(order_id)
     data = {

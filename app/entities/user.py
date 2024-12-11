@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text, Enum, select, exc
+from sqlalchemy import Column, Text, Enum, select, exc, Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 from uuid import UUID, uuid4
 from . import Base, session
@@ -25,6 +25,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(Text, unique=True)
     email: Mapped[str] = mapped_column(Text, unique=True)
     password: Mapped[str] = mapped_column(Text)
+    admin: Mapped[Boolean] = mapped_column(Boolean, nullable=False, default=False)
     settings: Mapped[dict] = mapped_column(JSONB)
     theme: Mapped[Theme] = mapped_column(default=Theme.LIGHT)
 
@@ -68,6 +69,11 @@ class User(Base):
             id  = str(id)
         return session.query(User).filter(User.id == id).first()
 
+    def is_admin(user_id):
+        stmt = select(User).where(
+            User.id == user_id
+        )
+        return session.execute(stmt).scalars().first().admin
 
     def is_username_valid(username):
         notvalid_usernames = [
@@ -159,6 +165,7 @@ class User(Base):
             "id": str(self.id),
             "username": self.username,
             "email": self.email,
+            "admin": self.admin,
             "theme": str(self.theme),
             "notifications": [notification.serialized for notification in self.notifications]
         }

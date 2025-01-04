@@ -1,4 +1,4 @@
-from flask import Blueprint, request, session
+from flask import Blueprint, request, session, current_app
 from flask_socketio import rooms
 from sqlalchemy import func, cast, update
 from datetime import datetime
@@ -21,6 +21,8 @@ def handle_user_login():
     user_id = session.get('user_id')
     if user_id:
         user_to_login = User.get_one_by_id(user_id)
+        current_app.session_interface.regenerate(session)
+        session.modified = True
         logging.info(f"User already {user_to_login.username} logged in!")
         return { "data": user_to_login.serialized }, 200
 
@@ -30,8 +32,8 @@ def handle_user_login():
         logging.error(f"Error during login: {username} user does not excist, cannot log in.")
         return { "error": f"{username} felhasználó nem létezik!" }
 
+
     session["user_id"] = user_to_login.id
-    session.permanent = True
 
     logging.info(f"User {user_to_login.username} logged in!")
     return { "data": user_to_login.serialized }, 200
@@ -42,6 +44,8 @@ def handle_user_check_session():
     user_id = session.get('user_id')
     if user_id:
         user_to_login = User.get_one_by_id(user_id)
+        current_app.session_interface.regenerate(session)
+        session.modified = True
         logging.info(f"User already {user_to_login.username} got a session!")
         return { "data": user_to_login.serialized }, 200
     else:

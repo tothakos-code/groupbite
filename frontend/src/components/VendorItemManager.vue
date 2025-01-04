@@ -47,15 +47,14 @@
                 class="form-control"
               >
             </div>
-            <button
-              class="btn col-auto"
-              :class="['btn-' + auth.getUserColor ]"
+            <v-btn
+              class="bg-primary col-auto align-self-end"
               type="button"
               name="save"
               @click="addToMenu()"
             >
               Menühöz adás
-            </button>
+            </v-btn>
           </div>
           <div
             class="row mt-2"
@@ -71,15 +70,14 @@
                 class="form-control"
               >
             </div>
-            <button
-              class="btn col-auto"
-              :class="['btn-' + auth.getUserColor ]"
+            <v-btn
+              class="bg-primary col-auto align-self-end"
               type="button"
               name="save"
               @click="search()"
             >
               keresés
-            </button>
+            </v-btn>
           </div>
         </div>
       </div>
@@ -186,13 +184,17 @@
                   </span>
                 </td>
                 <td>
-                  <button
+                  <v-btn
                     v-if="!menuItem.isEditing"
                     type="button"
                     name="button"
-                    class="btn"
+                    class="bg-background text-primary me-1 mt-1"
+                    icon
+                    size="small"
+                    border="primary thin"
+                    varian="text"
+                    rounded
                     title="Szerkesztés"
-                    :class="['btn-outline-' + auth.getUserColor ]"
                     @click="edit(menuItem.id)"
                   >
                     <svg
@@ -205,14 +207,18 @@
                     >
                       <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z" />
                     </svg>
-                  </button>
+                  </v-btn>
                   <div v-else>
-                    <button
+                    <v-btn
                       type="button"
                       name="button"
-                      class="btn"
+                      class="bg-background text-primary me-1 mt-1"
+                      icon
+                      size="small"
+                      border="primary thin"
+                      rounded
+                      varian="text"
                       title="Mentés"
-                      :class="['btn-outline-' + auth.getUserColor ]"
                       @click="updateItem(menuItem.id)"
                     >
                       <svg
@@ -226,13 +232,17 @@
                         <path d="M11 2H9v3h2z" />
                         <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z" />
                       </svg>
-                    </button>
-                    <button
+                    </v-btn>
+                    <v-btn
                       type="button"
                       name="button"
-                      class="btn"
                       title="Mégse"
-                      :class="['btn-outline-' + auth.getUserColor ]"
+                      class="bg-background text-primary me-1 mt-1"
+                      icon
+                      size="small"
+                      border="primary thin"
+                      rounded
+                      varian="text"
                       @click="cancelEdit(menuItem.id)"
                     >
                       <svg
@@ -245,14 +255,18 @@
                       >
                         <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
                       </svg>
-                    </button>
+                    </v-btn>
                   </div>
-                  <button
+                  <v-btn
                     type="button"
                     name="button"
-                    class="btn"
                     title="Törlés"
-                    :class="['btn-outline-' + auth.getUserColor ]"
+                    class="bg-background text-primary me-1 mt-1"
+                    icon
+                    size="small"
+                    border="primary thin"
+                    rounded
+                    varian="text"
                     @click="newSize(menuItem.id)"
                   >
                     <svg
@@ -266,13 +280,17 @@
                       <path d="M8.5 6a.5.5 0 0 0-1 0v1.5H6a.5.5 0 0 0 0 1h1.5V10a.5.5 0 0 0 1 0V8.5H10a.5.5 0 0 0 0-1H8.5z" />
                       <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1" />
                     </svg>
-                  </button>
-                  <button
+                  </v-btn>
+                  <v-btn
                     type="button"
                     name="button"
-                    class="btn"
                     title="Áthelyezés"
-                    :class="['btn-outline-' + auth.getUserColor ]"
+                    class="bg-background text-primary me-1 mt-1"
+                    icon
+                    size="small"
+                    border="primary thin"
+                    rounded
+                    varian="text"
                     @click="showMovePopup = true; selectedItem = menuItem"
                   >
                     <svg
@@ -292,13 +310,17 @@
                         d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"
                       />
                     </svg>
-                  </button>
-                  <button
+                  </v-btn>
+                  <v-btn
                     type="button"
                     name="button"
-                    class="btn"
                     title="Másolás"
-                    :class="['btn-outline-' + auth.getUserColor ]"
+                    class="bg-background text-primary me-1 mt-1"
+                    icon
+                    size="small"
+                    border="primary thin"
+                    rounded
+                    varian="text"
                     @click="showCopyPopup = true; selectedItem = menuItem"
                   >
                     <svg
@@ -314,13 +336,17 @@
                         d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"
                       />
                     </svg>
-                  </button>
-                  <button
+                  </v-btn>
+                  <v-btn
                     type="button"
                     name="button"
-                    class="btn"
                     title="Törlés"
-                    :class="['btn-outline-' + auth.getUserColor ]"
+                    class="bg-background text-primary me-1 mt-1"
+                    icon
+                    size="small"
+                    border="primary thin"
+                    rounded
+                    varian="text"
                     @click="deleteItem(menuItem.id)"
                   >
                     <svg
@@ -334,7 +360,7 @@
                       <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
                       <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
                     </svg>
-                  </button>
+                  </v-btn>
                 </td>
               </tr>
               <tr>
@@ -437,13 +463,17 @@
                           </span>
                         </td>
                         <td>
-                          <button
+                          <v-btn
                             v-if="!size.isEditing"
                             type="button"
                             name="button"
-                            class="btn"
                             title="Szerkesztés"
-                            :class="['btn-outline-' + auth.getUserColor ]"
+                            class="bg-background text-primary me-1 mt-1"
+                            icon
+                            size="small"
+                            border="primary thin"
+                            rounded
+                            varian="text"
                             @click="editSize(menuItem.id, size.id)"
                           >
                             <svg
@@ -456,14 +486,18 @@
                             >
                               <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z" />
                             </svg>
-                          </button>
+                          </v-btn>
                           <div v-else>
-                            <button
+                            <v-btn
                               type="button"
                               name="button"
-                              class="btn"
                               title="Mentés"
-                              :class="['btn-outline-' + auth.getUserColor ]"
+                              class="bg-background text-primary me-1 mt-1"
+                              icon
+                              size="small"
+                              border="primary thin"
+                              rounded
+                              varian="text"
                               @click="updateSize(menuItem.id, size.id)"
                             >
                               <svg
@@ -477,13 +511,17 @@
                                 <path d="M11 2H9v3h2z" />
                                 <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z" />
                               </svg>
-                            </button>
-                            <button
+                            </v-btn>
+                            <v-btn
                               type="button"
                               name="button"
-                              class="btn"
                               title="Mégse"
-                              :class="['btn-outline-' + auth.getUserColor ]"
+                              class="bg-background text-primary me-1"
+                              icon
+                              size="small"
+                              border="primary thin"
+                              rounded
+                              varian="text"
                               @click="cancelSizeEdit(menuItem.id, size.id)"
                             >
                               <svg
@@ -496,14 +534,18 @@
                               >
                                 <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
                               </svg>
-                            </button>
+                            </v-btn>
                           </div>
-                          <button
+                          <v-btn
                             type="button"
                             name="button"
-                            class="btn"
                             title="Törlés"
-                            :class="['btn-outline-' + auth.getUserColor ]"
+                            class="bg-background text-primary me-1 mt-1"
+                            icon
+                            size="small"
+                            border="primary thin"
+                            rounded
+                            varian="text"
                             @click="deleteSize(menuItem.id, size.id)"
                           >
                             <svg
@@ -517,7 +559,7 @@
                               <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
                               <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
                             </svg>
-                          </button>
+                          </v-btn>
                         </td>
                       </tr>
                     </thead>

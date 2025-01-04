@@ -17,21 +17,20 @@
             <slot />
           </div>
           <div class="modal-footer">
-            <button
+            <v-btn
               v-if="cancelBtn === true"
-              class="btn btn-secondary"
+              class="bg-background"
               @click="$emit('cancel')"
             >
               {{ cancelText }}
-            </button>
-            <button
+            </v-btn>
+            <v-btn
               v-if="confirmBtn === true"
-              class="btn"
-              :class="['btn-' + auth.getUserColor ]"
+              class="bg-primary"
               @click="$emit('confirm')"
             >
               {{ confirmText }}
-            </button>
+            </v-btn>
           </div>
         </div>
       </div>

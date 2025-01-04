@@ -19,8 +19,7 @@
             >
           </div>
           <button
-            class="btn col-auto"
-            :class="['btn-' + auth.getUserColor ]"
+            class="btn btn-primary col-auto"
             type="button"
             name="save"
             @click="search()"

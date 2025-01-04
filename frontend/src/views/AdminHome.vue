@@ -1,9 +1,9 @@
 <template>
   <div class="row ms-2 mt-2">
     <div class="col-auto ">
-      <div
-        class="btn"
-        :class="['btn-outline-' + auth.getUserColor ]"
+      <v-btn
+        class="text-primary bg-secondary my-auto"
+        border="primary thin"
         @click="openAdminHome()"
       >
         vissza
@@ -21,7 +21,7 @@
           />
           <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
         </svg>
-      </div>
+      </v-btn>
     </div>
     <h1 class="col d-flex justify-content-start">
       Adminisztráció

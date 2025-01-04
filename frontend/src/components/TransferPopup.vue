@@ -1,11 +1,12 @@
 <template>
   <v-tooltip location="bottom">
     <template #activator="{ props }">
-      <button
+      <v-btn
         id="transferBasketButton"
         v-bind="props"
-        class="btn my-1"
-        :class="['btn-outline-' + auth.getUserColor ]"
+        varian="text"
+        class="my-1 text-primary bg-background"
+        border="primary thin"
         @click="openPopup()"
       >
         Rendelés
@@ -19,7 +20,7 @@
         >
           <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-3.998-.085A1.5 1.5 0 0 1 0 10.5v-7zm1.294 7.456A1.999 1.999 0 0 1 4.732 11h5.536a2.01 2.01 0 0 1 .732-.732V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .294.456zM12 10a2 2 0 0 1 1.732 1h.768a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12v4zm-9 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
         </svg>
-      </button>
+      </v-btn>
     </template>
     <span>Rendelése leadás megkezdése</span>
   </v-tooltip>
@@ -35,19 +36,20 @@
         <p>A lista automatikusan frissül, ha valaki változtat a kosarán. Pipáld ki ha átraktad VAGY másold a teljes rendelést szövegként</p>
       </div>
       <div class="col-3 text-end">
-        <button
+        <v-btn
           type="button"
           name="button"
           title="Copy to clipboard"
-          class="btn btn-sm ms-0"
-          :class="['btn-outline-' + auth.getUserColor ]"
+          varian="text"
+          class="ms-0 text-primary bg-background"
+          border="primary thin"
           @click="doCopyOrder()"
         >
           Másol
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="28"
-            height="28"
+            width="24"
+            height="24"
             fill="currentColor"
             class="bi bi-clipboard2"
             viewBox="0 0 16 16"
@@ -55,7 +57,7 @@
             <path d="M3.5 2a.5.5 0 0 0-.5.5v12a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-12a.5.5 0 0 0-.5-.5H12a.5.5 0 0 1 0-1h.5A1.5 1.5 0 0 1 14 2.5v12a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-12A1.5 1.5 0 0 1 3.5 1H4a.5.5 0 0 1 0 1h-.5Z" />
             <path d="M10 .5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5.5.5 0 0 1-.5.5.5.5 0 0 0-.5.5V2a.5.5 0 0 0 .5.5h5A.5.5 0 0 0 11 2v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 1-.5-.5Z" />
           </svg>
-        </button>
+        </v-btn>
       </div>
     </div>
 

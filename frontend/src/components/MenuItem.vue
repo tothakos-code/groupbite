@@ -18,15 +18,16 @@
         xl="2"
         xxl="2"
       >
-        <button
+        <v-btn
           v-if="size.quantity !== 0"
-          class="btn btn-sm w-100 h-100"
-          :class="['btn-' + auth.getUserColor ]"
+          class="bg-primary "
+          variant="elevated"
+          block
           @click="order.addItem(item.id, size.id)"
         >
           <span class="text-nowrap me-1">{{ size.name }}</span>
           <span class="text-nowrap">{{ size.price }} Ft</span>
-        </button>
+        </v-btn>
         <span
           v-else
           class="btn pe-none btn-outline-danger btn-sm"

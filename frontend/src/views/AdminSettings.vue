@@ -169,15 +169,16 @@
                 :class="{'align-items-center mt-1': v$.testEmail.$invalid && v$.testEmail.$dirty}"
               >
                 <div class="">
-                  <button
+                  <v-btn
                     type="submit"
                     name="button"
-                    class="btn"
-                    :class="['btn-outline-' + auth.getUserColor ]"
+                    varian="text"
+                    class="text-primary bg-background"
+                    border="primary thin"
                     @click="sendTestEmail()"
                   >
                     Teszt Email küldése
-                  </button>
+                  </v-btn>
                 </div>
               </div>
             </div>
@@ -186,15 +187,16 @@
       </form>
       <hr>
       <div class="mt-3">
-        <button
+        <v-btn
           type="submit"
           name="button"
-          class="btn"
-          :class="['btn-outline-' + auth.getUserColor ]"
+          varian="text"
+          class="text-primary bg-background"
+          border="primary thin"
           @click="saveSettings()"
         >
           Mentés
-        </button>
+        </v-btn>
       </div>
     </div>
     <div v-if="isError">

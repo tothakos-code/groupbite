@@ -1,6 +1,6 @@
 <template>
   <v-card class="border-sm">
-    <v-card-title class="bg-brown-lighten-5 border-b-sm  px-2">
+    <v-card-title class="bg-secondary border-b-sm  px-2">
       <v-row justify="space-between">
         <v-col class="col-0 d-none d-sm-inline col-sm-6 col-lg-8 my-auto">
           <h2 class="text-nowrap">
@@ -17,32 +17,25 @@
         </v-col>
       </v-row>
     </v-card-title>
-    <v-row
-      v-if="itemlist.length !== 0 && categories.length > 1"
-      class="row"
+    <v-chip-group
+      v-if="itemlist.length !== 0 && categories.size > 1"
     >
-      <div
-        v-for="category, index in categories"
-        :key="index"
-        class="d-flex justify-content-center flex-fill col-6 col-sm-4 col-lg-3 col-xxl-1"
+      <v-row
+        class="m-0 border-b-sm"
       >
-        <input
-          :id="category"
-          type="radio"
-          name="daySelectionRadio"
-          class="btn-check"
-          role="button"
-        >
-        <label
-          :for="category"
-          class="btn btn-sm my-1 rounded rounded-5 text-nowrap d-flex align-items-center"
-          :class="['btn-outline-' + auth.getUserColor]"
-          @click="setFilter(category)"
-        >
-          {{ category }}
-        </label>
-      </div>
-    </v-row>
+        <v-col class="d-flex justify-space-around">
+          <v-chip
+            v-for="category, index in categories"
+            :key="index"
+            variant="outlined"
+            selected-class="bg-primary"
+            @click="setFilter(category)"
+          >
+            {{ category }}
+          </v-chip>
+        </v-col>
+      </v-row>
+    </v-chip-group>
     <v-card-text class="p-0">
       <v-row>
         <v-col>
@@ -55,7 +48,7 @@
                 <MenuItem
                   :key="'item-'+i"
                   :item="item"
-                  :class="isHovering ? 'bg-teal-lighten-5' : undefined"
+                  :class="isHovering ? 'bg-secondary' : undefined"
                   v-bind="props"
                 />
               </v-hover>
@@ -157,6 +150,7 @@ export default {
         "vendor_id": this.vendorStore.selectedVendor.id
       })
       state.selectedDate = new Date(day);
+      this.setFilter("minden");
       history.pushState({}, "", `/menu/${this.vendorStore.selectedVendor.name}/${state.selectedDate.toISODate()}`)
       this.loadMenu(formated_day);
     },

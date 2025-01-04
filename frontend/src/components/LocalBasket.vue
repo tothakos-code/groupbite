@@ -1,6 +1,6 @@
 <template>
   <v-card class="border-sm">
-    <v-card-title class="bg-brown-lighten-5 border-b-sm p-1">
+    <v-card-title class="bg-secondary border-b-sm p-1">
       <v-row justify="space-between">
         <v-col
           cols="2"
@@ -68,10 +68,11 @@
               <div class="col-12 d-flex justify-content-evenly">
                 <v-tooltip text="Töröl mindent a kosaradból">
                   <template #activator="{ props }">
-                    <button
+                    <v-btn
+                      variant="text"
                       v-bind="props"
-                      class="btn text-nowrap"
-                      :class="['btn-outline-' + auth.getUserColor ]"
+                      border="primary thin"
+                      class=" text-nowrap text-primary"
                       @click="orderStore.clearBasket()"
                     >
                       <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Törlés</span>
@@ -86,7 +87,7 @@
                         <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z" />
                         <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z" />
                       </svg>
-                    </button>
+                    </v-btn>
                   </template>
                 </v-tooltip>
               </div>
@@ -98,17 +99,20 @@
               <v-hover v-slot="{ isHovering, props }">
                 <v-list-item
 
-                  :class="isHovering ? 'bg-teal-lighten-5' : undefined"
+                  :class="isHovering ? 'bg-secondary' : undefined"
                   class="p-0 pe-2"
                   v-bind="props"
                 >
                   <v-row
                     class="m-0 "
                   >
-                    <v-col cols="auto">
+                    <v-col
+                      cols="auto"
+                      class="d-flex justify-start"
+                    >
                       <span
-                        class="badge rounded-pill border"
-                        :class="['bg-' + auth.getUserColor, 'border-' + auth.getUserColor, {pulse: itemQuantityPulse}]"
+                        class="badge rounded-pill border bg-primary border-error align-self-center"
+                        :class="[{pulse: itemQuantityPulse}]"
                         @animationend="itemQuantityPulse = false"
                       >{{ item.quantity }} x</span>
                     </v-col>

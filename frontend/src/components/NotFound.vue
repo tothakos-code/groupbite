@@ -5,8 +5,7 @@
         A keresett útvonal nem található
       </h1>
       <button
-        class="btn "
-        :class="['btn-' + auth.getUserColor ]"
+        class="btn bg-primary"
         title="Home"
         @click="openHome()"
       >

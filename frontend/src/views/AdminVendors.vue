@@ -4,9 +4,13 @@
       Üzlet kezelő
     </h1>
     <div class="">
-      <div
-        class="btn"
-        :class="['btn-' + auth.getUserColor ]"
+      <v-btn
+        class="bg-secondary text-primary me-1 "
+        icon
+        size="small"
+        border="primary thin"
+        rounded
+        varian="text"
         @click="refreshVendorList()"
       >
         <svg
@@ -23,10 +27,14 @@
           />
           <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
         </svg>
-      </div>
-      <div
-        class="btn"
-        :class="['btn-' + auth.getUserColor ]"
+      </v-btn>
+      <v-btn
+        class="bg-secondary text-primary me-1 "
+        icon
+        size="small"
+        border="primary thin"
+        rounded
+        varian="text"
         @click="addVendor()"
       >
         <svg
@@ -41,7 +49,7 @@
           <path d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6.5a.5.5 0 0 1-1 0V1H3v14h3v-2.5a.5.5 0 0 1 .5-.5H8v4H3a1 1 0 0 1-1-1z" />
           <path d="M4.5 2a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" />
         </svg>
-      </div>
+      </v-btn>
     </div>
     <div class="row ms-2">
       <table class="table table-striped table-hover">
@@ -77,8 +85,7 @@
             </td>
             <td>
               <div
-                class="btn"
-                :class="['text-' + auth.getUserColor ]"
+                class="btn text-primary"
                 title="Üzlet elérhetőség ki/be kapcsolása"
                 @click="toggleActivation(vendor)"
               >
@@ -106,8 +113,7 @@
                 </svg>
               </div>
               <div
-                class="btn"
-                :class="['text-' + auth.getUserColor ]"
+                class="btn text-primary"
                 title="Üzlet beállítások"
                 @click="openVendorConfiguration(vendor.id)"
               >

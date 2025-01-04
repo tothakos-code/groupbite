@@ -1,6 +1,6 @@
 <template>
   <v-card class="border-sm">
-    <v-card-title class="align-items-center bg-brown-lighten-5 border-b-sm p-1">
+    <v-card-title class="align-items-center bg-secondary border-b-sm p-1">
       <v-row
         align-content="center"
         justify="space-between"
@@ -62,7 +62,7 @@
     <div
       v-for="(user_entry) in orderStore.basket"
       :key="user_entry.id"
-      class="row mt-1 mb-1"
+      class="mt-1 mb-1"
     >
       <GlobalBasketUser
         :username="user_entry.username"

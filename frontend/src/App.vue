@@ -1,70 +1,72 @@
 <template>
   <v-app id="inspire">
-    <v-navigation-drawer
-      :class="['bg-' + auth.getUserColor ]"
-      rail
-      mobile-breakpoint="sm"
-    >
-      <Sidebar />
-      <template #append>
-        <VersionInfo class=" d-flex flex-fill p-0 align-items-end justify-content-center mb-2" />
-      </template>
-    </v-navigation-drawer>
-    <v-main>
-      <v-app-bar
-        height="45"
-        scroll-behavior="hide"
+    <v-theme-provider>
+      <v-navigation-drawer
+        class="bg-primary"
+        rail
+        mobile-breakpoint="sm"
       >
-        <v-app-bar-title>{{ app_title }}</v-app-bar-title>
-        <v-spacer />
-        <UserMenu />
-      </v-app-bar>
-      <router-view
-        v-slot="{ Component }"
-      >
-        <Transition
-          mode="out-in"
-        >
-          <component
-            :is="Component"
-          />
-        </Transition>
-      </router-view>
-      <notifications
-        position="top center"
-        :ignore-duplicates="true"
-        :pause-on-hover="true"
-        classes="my-custom-class"
-      >
-        <template #body="props">
-          <div class="my-notification">
-            <div
-              class="toast d-flex align-items-center"
-              :class="{
-                'bg-warning':props.item.type === 'warn',
-                'bg-danger':props.item.type === 'error',
-                'bg-info-subtle':props.item.type === 'info',
-                'bg-warning-subtle':props.item.type === 'warn' && theme === 'dark',
-                'bg-danger-subtle':props.item.type === 'error' && theme === 'dark',
-              }"
-            >
-              <p class="title toast-body">
-                {{ props.item.title }}
-              </p>
-              <div>
-                {{ props.item.text }}
-              </div>
-              <button
-                type="button"
-                class="btn-close me-2 m-auto"
-                aria-label="Close"
-                @click="props.close"
-              />
-            </div>
-          </div>
+        <Sidebar />
+        <template #append>
+          <VersionInfo class=" d-flex flex-fill p-0 align-items-end justify-content-center mb-2" />
         </template>
-      </notifications>
-    </v-main>
+      </v-navigation-drawer>
+      <v-main>
+        <v-app-bar
+          height="45"
+          scroll-behavior="hide"
+        >
+          <v-app-bar-title>{{ app_title }}</v-app-bar-title>
+          <v-spacer />
+          <UserMenu />
+        </v-app-bar>
+        <router-view
+          v-slot="{ Component }"
+        >
+          <Transition
+            mode="out-in"
+          >
+            <component
+              :is="Component"
+            />
+          </Transition>
+        </router-view>
+        <notifications
+          position="top center"
+          :ignore-duplicates="true"
+          :pause-on-hover="true"
+          classes="my-custom-class"
+        >
+          <template #body="props">
+            <div class="my-notification">
+              <div
+                class="toast d-flex align-items-center"
+                :class="{
+                  'bg-warning':props.item.type === 'warn',
+                  'bg-danger':props.item.type === 'error',
+                  'bg-info-subtle':props.item.type === 'info',
+                  'bg-warning-subtle':props.item.type === 'warn' && theme === 'dark',
+                  'bg-danger-subtle':props.item.type === 'error' && theme === 'dark',
+                }"
+              >
+                <p class="title toast-body">
+                  {{ props.item.title }}
+                </p>
+                <div>
+                  {{ props.item.text }}
+                </div>
+                <button
+                  type="button"
+                  class="btn-close me-2 m-auto"
+                  aria-label="Close"
+                  @click="props.close"
+                />
+              </div>
+            </div>
+          </template>
+        </notifications>
+      </v-main>
+    </v-theme-provider>
   </v-app>
 </template>
 
@@ -103,12 +105,6 @@ export default {
         Vtheme.global.name.value = 'dark'
       }
       localStorage.setItem("theme", theme.value);
-      // location.reload();
-      // if (this.auth.isLoggedIn) {
-      //   socket.emit("User Update", {"id": this.auth.user.id, "ui_theme":this.theme}, function(user) {
-      //     this.auth.user = user;
-      //   });
-      // }
       document.documentElement.setAttribute("data-bs-theme", theme.value)
     }
 

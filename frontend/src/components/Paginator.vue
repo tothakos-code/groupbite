@@ -7,8 +7,7 @@
         :class="{ disabled: currentPage === 1 }"
       >
         <a
-          class="page-link"
-          :class="['text-' + auth.getUserColor, 'focus-ring focus-ring-' + auth.getUserColor]"
+          class="page-link text-primary focus-ring focus-ring-primary"
           href="#"
           aria-label="Previous"
           @click.prevent="changePage(currentPage - 1)"
@@ -17,14 +16,12 @@
         </a>
       </li>
 
-      <!-- Show first page and ellipsis if necessary -->
       <li
         v-if="shouldShowStartEllipsis"
         class="page-item"
       >
         <a
-          class="page-link"
-          :class="['text-' + auth.getUserColor]"
+          class="page-link text-primary"
           href="#"
           @click.prevent="changePage(1)"
         >
@@ -35,27 +32,25 @@
         v-if="shouldShowStartEllipsis"
         class="page-item disabled"
       >
-        <span class="page-link">...</span>
+        <span class="page-link text-primary">...</span>
       </li>
 
-      <!-- Dynamic Page Numbers -->
       <li
         v-for="page in pages"
         :key="page"
         class="page-item"
-        :class="[{ active: page === currentPage }, 'text-' + auth.getUserColor ]"
+        :class="[{ active: page === currentPage }, 'text-primary']"
       >
         <a
-          class="page-link"
+          class="page-link "
           href="#"
-          :class="[(page === currentPage ? ' bg-' + auth.getUserColor+ ' border-' + auth.getUserColor : 'text-' + auth.getUserColor), 'focus-ring focus-ring-' + auth.getUserColor]"
+          :class="[(page === currentPage ? ' bg-primary border-' + auth.getUserColor : 'text-primary'), 'focus-ring focus-ring-' + auth.getUserColor]"
           @click.prevent="changePage(page)"
         >
           {{ page }}
         </a>
       </li>
 
-      <!-- Show last page and ellipsis if necessary -->
       <li
         v-if="shouldShowEndEllipsis"
         class="page-item disabled"
@@ -67,8 +62,8 @@
         class="page-item"
       >
         <a
-          class="page-link"
-          :class="['text-' + auth.getUserColor, 'focus-ring focus-ring-' + auth.getUserColor]"
+          class="page-link text-primary"
+          :class="['focus-ring focus-ring-' + auth.getUserColor]"
           href="#"
           @click.prevent="changePage(totalPages)"
         >
@@ -76,14 +71,13 @@
         </a>
       </li>
 
-      <!-- Next Button -->
       <li
         class="page-item"
         :class="{ disabled: currentPage === totalPages }"
       >
         <a
-          class="page-link"
-          :class="['text-' + auth.getUserColor, 'focus-ring focus-ring-' + auth.getUserColor]"
+          class="page-link text-primary"
+          :class="['focus-ring focus-ring-' + auth.getUserColor]"
           href="#"
           aria-label="Next"
           @click.prevent="changePage(currentPage + 1)"

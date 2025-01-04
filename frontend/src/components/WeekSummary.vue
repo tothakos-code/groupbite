@@ -20,9 +20,8 @@
             <a
               type="button"
               name="button"
-              class="btn btn-link py-0 px-2 "
-              :class="['text-' + auth.getUserColor ]"
-              title="Ugrás a következő hétre"
+              class="btn btn-link text-primary py-0 px-2 "
+              title="Ugrás a előző hétre"
               @click="prevWeek()"
             >
               <svg
@@ -38,25 +37,25 @@
             </a>
           </div>
           <div class="col-4 d-flex align-items-center justify-content-center">
-            <button
+            <v-btn
               v-if="new Date().getDate() !== currentDateSelected.getDate()"
               type="button"
               name="button"
-              class="btn btn-sm py-0 px-2"
-              :class="['btn-outline-' + auth.getUserColor ]"
+              varian="text"
+              class="text-primary bg-background py-0 px-2"
+              border="primary thin"
               title="Ugrás vissza a mai napra"
               @click="setDay(new Date())"
             >
               Ma
-            </button>
+            </v-btn>
           </div>
           <div class="col-4 d-flex align-items-center justify-content-center">
             <a
               type="button"
               name="button"
-              class="btn btn-link py-0 px-2"
-              :class="['text-' + auth.getUserColor ]"
-              title="Ugrás az előző hétre"
+              class="btn btn-link text-primary py-0 px-2"
+              title="Ugrás az következő hétre"
               @click="nextWeek()"
             >
               <svg
@@ -95,7 +94,7 @@
                 <div class="col-8">
                   <span
                     class="fs-5"
-                    :class="[onSameDay(day, new Date()) ? `text-${auth.getUserColor}` : '']"
+                    :class="[onSameDay(day, new Date()) ? `text-primary` : '']"
                   >
                     {{ new Date(day).toLocaleDateString('hu-HU', {day:'numeric'}) }}.
                     {{ new Date(day).toLocaleDateString('hu-HU', {weekday:'short'}) }}
@@ -133,8 +132,7 @@
                 >
                   <span
 
-                    class=" badge rounder-pill p-2 py-1 fs-6"
-                    :class="['bg-' + auth.getUserColor ]"
+                    class=" badge rounder-pill p-2 py-1 fs-6 bg-primary"
                     :title="order.vendor + ' rendelés lett leadva ezen a napon'"
                   >
                     @{{ order.vendor }}

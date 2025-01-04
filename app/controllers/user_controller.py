@@ -38,6 +38,17 @@ def handle_user_login():
     logging.info(f"User {user_to_login.username} logged in!")
     return { "data": user_to_login.serialized }, 200
 
+@require_auth
+@user_blueprint.route("/logout", methods=["POST"])
+def handle_user_logout():
+    user_id = session.get('user_id')
+    if user_id:
+        session.clear()
+        return { "msg": "Logged out successfully" }, 200
+    else:
+        logging.warning("Logout attempt without a user logged in.")
+        return { "error": "No user is logged in." }, 400
+
 
 @user_blueprint.route("/checkSession", methods=["GET"])
 def handle_user_check_session():

@@ -1,5 +1,4 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
 
@@ -47,10 +46,28 @@ export const useAuth = defineStore("user", {
 
       }
     },
-    logout() {
-      this.user = null;
-      this.isLoggedIn = false;
-      Cookies.remove("session");
+    async logout() {
+      try {
+        const response = await axios.post(`/api/user/logout`);
+        if (response.data.error) {
+          notify({
+            type: "warn",
+            text: response.data.error,
+          });
+          return;
+        }
+
+        this.user = null;
+        this.isLoggedIn = false;
+        notify({
+          type: "info",
+          text: "Sikeresen kijelentkeztél.",
+        });
+      } catch (error) {
+        console.log("Error during logout:" + error);
+        this.isLoading = false;
+
+      }
     },
     async register(username, email) {
       try {

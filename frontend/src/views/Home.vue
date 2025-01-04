@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex p-2">
+  <div class="row col d-flex pt-2">
     <div class="row-12 mb-2">
       <WeekSummary />
     </div>

@@ -11,7 +11,7 @@
     </div>
     <div class="card-body">
       <div class="row">
-        <div class="col-6 px-5">
+        <div class="col-12 col-md-10 col-lg-6 px-lg-5">
           <p class="row justify-content-center">
             Utolsó év rendeléseinek összesítése havi bontásban
           </p>
@@ -23,7 +23,7 @@
             :data="yearChartData"
           />
         </div>
-        <div class="col-6 px-5">
+        <div class="col-12 col-md-10 col-lg-6 px-lg-5">
           <p class="row justify-content-center">
             Utolsó hét rendelésinek összesítése napi bontásban
           </p>

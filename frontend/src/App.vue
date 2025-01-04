@@ -1,20 +1,26 @@
 <template>
-  <div class="row col d-flex min-vh-100 h-auto">
-    <Sidebar />
-    <div class="col px-0 w-100 flex-grow-1">
-      <div class="row col-12 bg-body-secondary d-flex justify-content-between mx-0 px-0">
-        <div class="col-7 justify-content-start align-items-center">
-          <h3 class="text-truncate">
-            {{ app_title }}
-          </h3>
-        </div>
-        <div class="col col-sm-3 d-flex justify-content-end align-items-center">
-          <UserMenu />
-        </div>
-      </div>
+  <v-app id="inspire">
+    <v-navigation-drawer
+      :class="['bg-' + auth.getUserColor ]"
+      rail
+      mobile-breakpoint="sm"
+    >
+      <Sidebar />
+      <template #append>
+        <VersionInfo class=" d-flex flex-fill p-0 align-items-end justify-content-center mb-2" />
+      </template>
+    </v-navigation-drawer>
+    <v-main>
+      <v-app-bar
+        height="45"
+        scroll-behavior="hide"
+      >
+        <v-app-bar-title>{{ app_title }}</v-app-bar-title>
+        <v-spacer />
+        <UserMenu />
+      </v-app-bar>
       <router-view
         v-slot="{ Component }"
-        class="row ps-2 me-0"
       >
         <Transition
           mode="out-in"
@@ -24,77 +30,80 @@
           />
         </Transition>
       </router-view>
-    </div>
-    <notifications
-      position="top center"
-      :ignore-duplicates="true"
-      :pause-on-hover="true"
-      classes="my-custom-class"
-    >
-      <template #body="props">
-        <div class="my-notification">
-          <div
-            class="toast d-flex align-items-center"
-            :class="{
-              'bg-warning':props.item.type === 'warn',
-              'bg-danger':props.item.type === 'error',
-              'bg-info-subtle':props.item.type === 'info',
-              'bg-warning-subtle':props.item.type === 'warn' && theme === 'dark',
-              'bg-danger-subtle':props.item.type === 'error' && theme === 'dark',
-            }"
-          >
-            <p class="title toast-body">
-              {{ props.item.title }}
-            </p>
-            <div>
-              {{ props.item.text }}
+      <notifications
+        position="top center"
+        :ignore-duplicates="true"
+        :pause-on-hover="true"
+        classes="my-custom-class"
+      >
+        <template #body="props">
+          <div class="my-notification">
+            <div
+              class="toast d-flex align-items-center"
+              :class="{
+                'bg-warning':props.item.type === 'warn',
+                'bg-danger':props.item.type === 'error',
+                'bg-info-subtle':props.item.type === 'info',
+                'bg-warning-subtle':props.item.type === 'warn' && theme === 'dark',
+                'bg-danger-subtle':props.item.type === 'error' && theme === 'dark',
+              }"
+            >
+              <p class="title toast-body">
+                {{ props.item.title }}
+              </p>
+              <div>
+                {{ props.item.text }}
+              </div>
+              <button
+                type="button"
+                class="btn-close me-2 m-auto"
+                aria-label="Close"
+                @click="props.close"
+              />
             </div>
-            <button
-              type="button"
-              class="btn-close me-2 m-auto"
-              aria-label="Close"
-              @click="props.close"
-            />
           </div>
-        </div>
-      </template>
-    </notifications>
-  </div>
+        </template>
+      </notifications>
+    </v-main>
+  </v-app>
 </template>
 
 
 <script>
 import UserMenu from "./components/UserMenu.vue"
 import Sidebar from "./components/Sidebar.vue"
+import VersionInfo from "@/components/VersionInfo.vue"
 import axios from "axios";
 import { useAuth } from "@/stores/auth";
 import { useCookies } from "vue3-cookies";
 import { provide, ref } from "vue";
-
-
-
+import { useTheme } from 'vuetify'
 
 export default {
   name: "App",
   components: {
     UserMenu,
     Sidebar,
+    VersionInfo
   },
   setup() {
     const { cookies } = useCookies();
     const auth = useAuth();
     const theme = ref(localStorage.getItem("theme"));
-
+    const Vtheme = useTheme()
+    Vtheme.global.name.value = theme.value
     auth.checkSession();
 
     function toggleDarkMode() {
       if (theme.value === "dark") {
         theme.value = "light"
+        Vtheme.global.name.value = 'light'
       } else {
         theme.value = "dark"
+        Vtheme.global.name.value = 'dark'
       }
       localStorage.setItem("theme", theme.value);
-      location.reload();
+      // location.reload();
       // if (this.auth.isLoggedIn) {
       //   socket.emit("User Update", {"id": this.auth.user.id, "ui_theme":this.theme}, function(user) {
       //     this.auth.user = user;
@@ -109,7 +118,8 @@ export default {
     })
     return {
       cookies,
-      theme
+      theme,
+      auth
     };
   },
   data() {

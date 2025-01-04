@@ -1,21 +1,23 @@
 <template>
-  <div class="card">
-    <div class="card-header row col px-2">
-      <div class="col-0 d-none d-sm-inline col-sm-6 col-lg-8 my-auto">
-        <h2 class="text-nowrap">
-          Étlap - {{ selectedDate.toLocaleDateString('hu-HU', {weekday:'long'}) }}
-        </h2>
-      </div>
-      <div class="col-12 d-flex justify-content-center col-sm-6 col-lg-4 px-0">
-        <Datestamp
-          ref="dateSelector"
-          :limit-to-current-week="true"
-          :set-date="selectedDate.toISODate()"
-          @selected-date="(day) => getMenu(day)"
-        />
-      </div>
-    </div>
-    <div
+  <v-card class="border-sm">
+    <v-card-title class="bg-brown-lighten-5 border-b-sm  px-2">
+      <v-row justify="space-between">
+        <v-col class="col-0 d-none d-sm-inline col-sm-6 col-lg-8 my-auto">
+          <h2 class="text-nowrap">
+            Étlap - {{ selectedDate.toLocaleDateString('hu-HU', {weekday:'long'}) }}
+          </h2>
+        </v-col>
+        <v-col class="col-12 d-flex justify-content-center col-sm-6 col-lg-4 px-0">
+          <Datestamp
+            ref="dateSelector"
+            :limit-to-current-week="true"
+            :set-date="selectedDate.toISODate()"
+            @selected-date="(day) => getMenu(day)"
+          />
+        </v-col>
+      </v-row>
+    </v-card-title>
+    <v-row
       v-if="itemlist.length !== 0 && categories.length > 1"
       class="row"
     >
@@ -40,36 +42,46 @@
           {{ category }}
         </label>
       </div>
-    </div>
-    <div class="row col list-group border-0">
-      <div class="col">
-        <div class="list-group m-1">
-          <MenuItem
-            v-for="(item, i) in itemlist"
-            :key="'item-'+i"
-            :item="item"
-          />
-          <div
-            v-if="itemlist.length === 0 && isLoading === false"
-            class="d-flex justify-content-center"
-          >
-            <span>Erre a napra nincsen mit betöltenem</span>
-          </div>
-          <div
-            v-if="isLoading === true"
-            class="d-flex justify-content-center"
-          >
-            <div
-              class="spinner-border"
-              role="status"
+    </v-row>
+    <v-card-text class="p-0">
+      <v-row>
+        <v-col>
+          <v-list>
+            <template
+              v-for="(item, i) in itemlist"
+              :key="'item-'+i"
             >
-              <span class="visually-hidden">Loading...</span>
+              <v-hover v-slot="{ isHovering, props }">
+                <MenuItem
+                  :key="'item-'+i"
+                  :item="item"
+                  :class="isHovering ? 'bg-teal-lighten-5' : undefined"
+                  v-bind="props"
+                />
+              </v-hover>
+            </template>
+            <div
+              v-if="itemlist.length === 0 && isLoading === false"
+              class="d-flex justify-content-center"
+            >
+              <span>Erre a napra nincsen mit betöltenem</span>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+            <div
+              v-if="isLoading === true"
+              class="d-flex justify-content-center"
+            >
+              <div
+                class="spinner-border"
+                role="status"
+              >
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </v-list>
+        </v-col>
+      </v-row>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>
@@ -182,10 +194,10 @@ export default {
 </script>
 
 <style>
-[data-bs-theme=light] .list-group-item:hover {
+/* [data-bs-theme=light] .list-group-item:hover {
   background-color: lightgray;
 }
 [data-bs-theme=dark] .list-group-item:hover {
   background-color: #3c3c3c;
-}
+} */
 </style>

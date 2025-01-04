@@ -275,9 +275,10 @@ export default {
 
         }
         if (
-          this.v$.settings.smtp_address.$invalid ||
+          !!this.settings.smtp_address &&
+          (this.v$.settings.smtp_address.$invalid ||
           this.v$.settings.smtp_port.$invalid ||
-          this.v$.settings.smtp_sender_email.$invalid
+          this.v$.settings.smtp_sender_email.$invalid)
           ) {
           console.log(this.v$);
           return

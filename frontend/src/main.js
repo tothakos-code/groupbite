@@ -27,16 +27,18 @@ import VueClipboard from "vue3-clipboard";
 import Notifications from "@kyvg/vue3-notification";
 import router from "./router.js";
 import { regWorker } from "../public/service-worker.js";
-import "bootstrap/dist/css/bootstrap.css";
-import "bootstrap/dist/js/bootstrap.js";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.min.js";
 import "./assets/scss/main.scss";
 import { socket, state } from "@/socket"
+import vuetify from '@/plugins/vuetify'
 
 const app = createApp(App);
 const pinia = createPinia()
 
 app.use(router);
 app.use(pinia);
+app.use(vuetify);
 app.use(VueCookies);
 app.use(Notifications);
 app.use(VueClipboard, {

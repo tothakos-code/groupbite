@@ -4,10 +4,17 @@ from . import Base, session
 from .vendor import Vendor
 from uuid import UUID
 from datetime import datetime, date
-from sqlalchemy import ForeignKey, select, exc
+from dateutil.relativedelta import relativedelta
+from sqlalchemy import ForeignKey, select, exc, extract
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+from marshmallow import Schema, fields
+import logging
+
+class BaseOrderSchema(Schema):
+    state_id = fields.Str(required=True)
+    order_fee = fields.Int(required=True)
 
 class OrderState(enum.Enum):
     COLLECT = "collect"
@@ -57,6 +64,82 @@ class Order(Base):
         stmt = select(Order).where(Order.id == order_id)
         return session.execute(stmt).scalars().first()
 
+
+    def last_7_days_statistics():
+        result = {}
+        last_7_days = [(date.today() - relativedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+        last_7_days.reverse()
+        for vendor in Vendor.find_all_active():
+            result[vendor.name] = {
+            "data": []
+            }
+            for day in last_7_days:
+                parsed_date = datetime.strptime(day, "%Y-%m-%d")
+                result[vendor.name]["data"].append(Order.day_sum_by_vendor(vendor.id, parsed_date.year, parsed_date.month, parsed_date.day))
+
+        return result, last_7_days
+
+
+    def last_12_month_statistics():
+        result = {}
+        last_12_months = [(date.today() - relativedelta(months=i)).strftime("%Y-%m") for i in range(12)]
+        last_12_months.reverse()
+        for vendor in Vendor.find_all_active():
+            result[vendor.name] = {
+                "data": []
+            }
+            for month in last_12_months:
+                parsed_date = datetime.strptime(month, "%Y-%m")
+                result[vendor.name]["data"].append(Order.month_sum_by_vendor(vendor.id, parsed_date.year, parsed_date.month))
+
+
+        return result, last_12_months
+
+
+    def month_sum_by_vendor(vendor_id, year, month):
+        stmt = select(Order).where(
+            Order.vendor_id == vendor_id,
+            extract("year", Order.date_of_order) == year,
+            extract("month", Order.date_of_order) == month
+        )
+
+        orders = session.execute(stmt).scalars()
+        sum = 0
+        for order in orders:
+            for basket_entry in order.items:
+                sum += basket_entry.count * basket_entry.size.price
+            if len(order.items) != 0:
+                sum += order.order_fee
+
+
+        return sum
+
+    def day_sum_by_vendor(vendor_id, year, month, day):
+        stmt = select(Order).where(
+            Order.vendor_id == vendor_id,
+            extract("year", Order.date_of_order) == year,
+            extract("month", Order.date_of_order) == month,
+            extract("day", Order.date_of_order) == day
+        )
+
+        orders = session.execute(stmt).scalars()
+        sum = 0
+        for order in orders:
+            for basket_entry in order.items:
+                sum += basket_entry.count * basket_entry.size.price
+            if len(order.items) != 0:
+                sum += order.order_fee
+
+
+        return sum
+
+
+    def find_all(limit=None, offset=0):
+        stmt = select(Order).order_by(Order.date_of_order.desc())
+        if limit is not None:
+            stmt = stmt.limit(limit).offset(offset)
+        return session.execute(stmt).scalars().all()
+
     def find_open_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today()):
         stmt = select(Order).where(
             Order.vendor_id == vendor_id,
@@ -74,6 +157,16 @@ class Order(Base):
         stmt = select(Order).where(
             Order.date_of_order.between(date_from, date_to)
         )
+        return session.execute(stmt).all()
+
+    def find_order_participants(order_id):
+        from .user import User
+        from .user_basket import UserBasket
+        stmt = select(User).distinct().join(
+                UserBasket, User.id == UserBasket.user_id
+            ).where(
+                UserBasket.order_id == order_id
+            )
         return session.execute(stmt).all()
 
     def change_state(self, new_state, user_id=None):
@@ -110,6 +203,7 @@ class Order(Base):
         return {
             "id": self.id,
             "vendor_id": str(self.vendor_id),
+            "vendor": str(self.vendor.name),
             "state_id": str(self.state_id),
             "user_id": str(self.user_id),
             "date_of_order": self.date_of_order.strftime("%Y-%m-%d"),

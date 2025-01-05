@@ -13,10 +13,12 @@ export const useMenuStore = defineStore("menu", {
     }
   },
   actions: {
-    async fetch(menuId) {
+    async fetch(menuId, querryParams) {
       this.isLoading = true;
       try {
-        const response = await axios.get(`/api/menu/${menuId}`);
+        const response = await axios.get(`/api/menu/${menuId}`,
+          { "params": querryParams }
+        );
         return response
       } catch (error) {
         console.error("Failed to fetch menu by ID:", error.response.data.error);

@@ -1,5 +1,4 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
 
@@ -12,12 +11,7 @@ export const useAuth = defineStore("user", {
       // if (state.isLoggedIn) {
       //   return this.auth.user.ui_color;
       // }
-      const theme  = localStorage.getItem("theme")
-      if (theme === "light") {
-        return "groupbite"
-      } else {
-        return "groupbite-dark"
-      }
+      return "primary"
     },
   },
   actions: {
@@ -31,27 +25,46 @@ export const useAuth = defineStore("user", {
             type: "warn",
             text: response.data.error,
           });
-          return;
+          return response;
         }
 
         this.user = response.data.data;
-        Cookies.set("user", this.user.id, { expires: 365});
         this.isLoading = false;
         this.isLoggedIn = true;
         notify({
           type: "info",
           text: "Sikeresen bejelentkeztél.",
         });
+        return response
       } catch (error) {
         console.log("Error during login:" + error);
         this.isLoading = false;
+        return error.response
 
       }
     },
-    logout() {
-      this.user = null;
-      this.isLoggedIn = false;
-      Cookies.remove("user");
+    async logout() {
+      try {
+        const response = await axios.post(`/api/user/logout`);
+        if (response.data.error) {
+          notify({
+            type: "warn",
+            text: response.data.error,
+          });
+          return;
+        }
+
+        this.user = null;
+        this.isLoggedIn = false;
+        notify({
+          type: "info",
+          text: "Sikeresen kijelentkeztél.",
+        });
+      } catch (error) {
+        console.log("Error during logout:" + error);
+        this.isLoading = false;
+
+      }
     },
     async register(username, email) {
       try {
@@ -67,7 +80,6 @@ export const useAuth = defineStore("user", {
           return;
         }
         this.user = response.data.data
-        Cookies.set("user", this.user.id, { expires: 365});
         notify({
           type: "info",
           text: "Felhasználói fiók létrehozva és bejelentkeztetve.",
@@ -81,36 +93,44 @@ export const useAuth = defineStore("user", {
       }
     },
     async checkSession() {
-      let session = Cookies.get("user")
-      if (session) {
-        try {
-          const response = await axios.post(`/api/user/checkSession`, {
-              "session": session
-          });
-          if (response.data.error) {
-            return;
-          }
-
-          this.user = response.data.data;
-          Cookies.set("user", this.user.id, { expires: 365});
-          this.isLoading = false;
-          this.isLoggedIn = true;
-        } catch (error) {
-          console.log("Error during session check:" + error);
-          this.isLoading = false;
-
+      try {
+        const response = await axios.get(`/api/user/checkSession`);
+        console.log();
+        if (response.data.error) {
+          console.log(response.data.error);
+          return;
         }
-      } else {
+
+        this.user = response.data.data;
         this.isLoading = false;
+        this.isLoggedIn = true;
+      } catch (error) {
+        console.log("Error during session check:" + error);
+        this.isLoading = false;
+
       }
     },
-    async orders() {
+    async orders(querryParams) {
       this.isLoading = true;
       try {
-        const response = await axios.get(`/api/user/${this.user.id}/orders`);
+        const response = await axios.get(`/api/user/${this.user.id}/orders`,
+          { "params": querryParams }
+        );
         return response
       } catch (error) {
         console.error("Failed to get orders", error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async fetchAll(querryParams) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/user/`, { "params": querryParams });
+        return response
+      } catch (error) {
+        console.error("Failed to get users:", error.response.data.error);
         return error.response
       } finally {
         this.isLoading = false;
@@ -122,10 +142,10 @@ export const useAuth = defineStore("user", {
         const response = await axios.put(`/api/user/${this.user.id}`, { "data": data });
         return response
       } catch (error) {
-        console.error("Failed to get orders", error);
+        console.error("Failed to update user", error);
         notify({
           type: "warn",
-          text: error.response.error,
+          text: error.response.data.error,
         });
         return error.response
       } finally {

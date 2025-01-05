@@ -1,15 +1,15 @@
 <template>
   <div class="row ms-2 mt-2">
-    <div class="">
-      <h1 class="col d-flex justify-content-start">
-        Beállítások
-      </h1>
-    </div>
+    <h1 class="col d-flex justify-content-start">
+      Alkalmazás beállítások
+    </h1>
+  </div>
+  <div class="row ms-2 mt-2">
     <div
       v-if="!isLoading"
       class=""
     >
-      <h5 class="text-secondary">
+      <h5 class="">
         Álltalános beállítások
       </h5>
       <hr class="mt-1">
@@ -26,7 +26,7 @@
           >
         </div>
       </div>
-      <h5 class="text-secondary mt-5">
+      <h5 class="mt-5">
         Email küldés beállítások
       </h5>
       <hr class="mt-1">
@@ -114,7 +114,20 @@
                 id="smtp-password-warning"
                 class="form-text text-break text-wrap col-6"
               >
-                Warning! Using SMPT servers with a password authentication is not a good security practice! The SMTP password you enter here will be stored in plain text to allow the server to authenticate with your SMTP server. Alternative more secure auth methods adviced: IP whitelisting, OAuth2, App-specific Password, Certificate-Based Auth. Use at your own risk in production!
+                Warning! Using SMPT servers with password authentication is not a good security practice! More secure authentication methods are strongly recommended: SMTP relay, IP whitelisting, OAuth2, App-specific Password, Certificate-Based Auth.
+              </div>
+            </div>
+            <div class="row mt-2">
+              <div class="col-3">
+                <v-select
+                  id="smtp_security"
+                  v-model="settings.smtp_security"
+                  :items="smtpSecuritys"
+                  item-title="title"
+                  item-value="value"
+                  label="SMTP connection type"
+                  variant="outlined"
+                />
               </div>
             </div>
             <div class="row mb-2">
@@ -169,15 +182,16 @@
                 :class="{'align-items-center mt-1': v$.testEmail.$invalid && v$.testEmail.$dirty}"
               >
                 <div class="">
-                  <button
+                  <v-btn
                     type="submit"
                     name="button"
-                    class="btn"
-                    :class="['btn-outline-' + auth.getUserColor ]"
+                    varian="text"
+                    class="bg-primary"
+                    border="primary thin"
                     @click="sendTestEmail()"
                   >
                     Teszt Email küldése
-                  </button>
+                  </v-btn>
                 </div>
               </div>
             </div>
@@ -185,16 +199,17 @@
         </div>
       </form>
       <hr>
-      <div class="mt-3">
-        <button
+      <div class="my-3">
+        <v-btn
           type="submit"
           name="button"
-          class="btn"
-          :class="['btn-outline-' + auth.getUserColor ]"
+          varian="text"
+          class="bg-primary"
+          border="primary thin"
           @click="saveSettings()"
         >
           Mentés
-        </button>
+        </v-btn>
       </div>
     </div>
     <div v-if="isError">
@@ -210,10 +225,8 @@ import { notify } from "@kyvg/vue3-notification";
 import useVuelidate from '@vuelidate/core'
 import { required, email} from '@vuelidate/validators'
 
-
-
 export default {
-    name: "SettingsView",
+    name: "AdminSettingsView",
     setup() {
       const auth = useAuth();
       return {
@@ -227,7 +240,13 @@ export default {
           smtp_address: "",
           smtp_port: "",
           smtp_sender_email: "",
+          smtp_security: "plain",
         },
+        smtpSecuritys: [
+          {title:"Plain", value:"plain"},
+          {title:"SSL", value:"ssl"},
+          {title:"TLS", value:"tls"},
+        ],
         testEmail: "",
         isLoading: true,
         isError: false,
@@ -275,9 +294,10 @@ export default {
 
         }
         if (
-          this.v$.settings.smtp_address.$invalid ||
+          !!this.settings.smtp_address &&
+          (this.v$.settings.smtp_address.$invalid ||
           this.v$.settings.smtp_port.$invalid ||
-          this.v$.settings.smtp_sender_email.$invalid
+          this.v$.settings.smtp_sender_email.$invalid)
           ) {
           console.log(this.v$);
           return
@@ -308,7 +328,8 @@ export default {
             "smtp_port": this.settings.smtp_port,
             "smtp_user": this.settings.smtp_user,
             "smtp_password": this.settings.smtp_password,
-            "smtp_sender_email": this.settings.smtp_sender_email
+            "smtp_sender_email": this.settings.smtp_sender_email,
+            "smtp_security": this.settings.smtp_security,
           })
           .then(() => {
             notify({
@@ -329,15 +350,9 @@ export default {
       }
 
     }
+
 };
 </script>
 
 <style scoped>
-.was-validated .form-control:invalid {
-  border-color: #dc3545;
-}
-
-.was-validated .form-control:valid {
-  border-color: #28a745;
-}
 </style>

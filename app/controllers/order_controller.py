@@ -6,10 +6,10 @@ from datetime import date, timedelta, datetime
 
 from app.controllers import order_blueprint
 from app.socketio_singleton import SocketioSingleton
-from app.entities.order import Order, OrderState
+from app.entities.order import Order, OrderState, BaseOrderSchema
 from app.entities.user_basket import UserBasket
 from app.entities import Session
-from app.utils.decorators import validate_url_params
+from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
 from app.utils.validators import IDSchema
 
 
@@ -37,6 +37,7 @@ def handle_order_history():
         sum = 0
         for item in order.items:
             sum += item.size.price * item.count
+        sum += order.order_fee
         result[date][value[0]]["sum"] = sum
 
     if USER_ID != None:
@@ -55,6 +56,101 @@ def handle_get_basket(order_id):
     return_obj = order.serialized
     return_obj["basket"] = UserBasket.get_basket_group_by_user(order.id)
     return { "data": return_obj }, 200
+
+
+@order_blueprint.route("/<order_id>", methods=["PUT"])
+@validate_data(BaseOrderSchema())
+@validate_url_params(IDSchema())
+@require_auth
+@require_admin
+def handle_order_update(data, order_id):
+    order = Order.get_by_id(order_id)
+
+    try:
+        new_state = OrderState(data["state_id"])
+    except ValueError:
+        return { "error": "Bad request" }, 400
+
+    if not order.change_state(new_state):
+        return { "error": "Bad request" }, 400
+
+    socketio.emit("be_order_update", {
+        "order": order.serialized
+        },
+        to=f"{order.vendor_id}@{order.date_of_order}"
+    )
+
+    if not order.set_order_fee(data["order_fee"]):
+        return { "error": "Bad request" }, 400
+    socketio.emit(
+        "be_order_update", {
+            "order": order.serialized,
+        }
+    )
+    return { "data": order.serialized }, 200
+
+
+@order_blueprint.route("/statistics", methods=["GET"])
+def handle_get_statistics():
+    year_result, year_labels = Order.last_12_month_statistics()
+    week_result, week_labels = Order.last_7_days_statistics()
+    return {
+        "data": {
+            "year_data": {
+                "data": year_result,
+                "labels": year_labels
+            },
+            "week_data": {
+                "data": week_result,
+                "labels": week_labels
+            }
+        }
+    }, 200
+
+
+@order_blueprint.route("/", methods=["GET"])
+@require_auth
+@require_admin
+def handle_get_orders():
+    orders = Order.find_all()
+    try:
+        limit = int(request.args.get('limit'))
+        page = int(request.args.get('page'))
+    except ValueError as e:
+        limit = 10
+        page = 1
+    except TypeError as e:
+        limit = 10
+        page = 1
+    offset = 0 if page is None else limit * (page - 1)
+    orders = Order.find_all(limit, offset)
+    total_count = len(Order.find_all())
+    result = []
+    for order in orders:
+        result.append(order.serialized)
+    return { "data": {
+                "items": result,
+                "page": page,
+                "limit": limit,
+                "total_count": total_count
+            }
+        }, 200
+
+@order_blueprint.route("/<order_id>/order_fee", methods=["PUT"])
+@require_auth
+@validate_url_params(IDSchema())
+def handle_update_order_fee(order_id):
+    order = Order.get_by_id(order_id)
+    if order.set_order_fee(request.json["data"]["order_fee"]):
+        socketio.emit(
+            "be_order_update", {
+                "order": order.serialized,
+            }
+            )
+        return { "msg": "OK" }, 200
+    else:
+        return { "error": "Someting went wrong" }, 500
+
 
 
 # TODO: Upgrade this
@@ -90,6 +186,7 @@ def handle_date_selection_change(data):
 
 @order_blueprint.route("/<order_id>/user/<user_id>/copy-from/<src_user_id>", methods=["PUT"])
 @validate_url_params(IDSchema())
+@require_auth
 def handle_copy_basket(order_id, user_id, src_user_id):
 
     UserBasket.clear_items(user_id, order_id)
@@ -110,6 +207,7 @@ def handle_copy_basket(order_id, user_id, src_user_id):
 
 @order_blueprint.route("/<order_id>/user/<user_id>/item/<item_id>/size/<size_id>", methods=["PUT"])
 @validate_url_params(IDSchema())
+@require_auth
 def handle_add_to_basket(order_id, user_id, item_id, size_id):
     order = Order.get_by_id(order_id)
     data = {
@@ -146,6 +244,7 @@ def handle_add_to_basket(order_id, user_id, item_id, size_id):
 
 @order_blueprint.route("/<order_id>/user/<user_id>/item/<item_id>/size/<size_id>", methods=["DELETE"])
 @validate_url_params(IDSchema())
+@require_auth
 def handle_remove_from_basket(order_id, user_id, item_id, size_id):
     order = Order.get_by_id(order_id)
     data = {}
@@ -178,6 +277,7 @@ def handle_remove_from_basket(order_id, user_id, item_id, size_id):
 
 @order_blueprint.route("/<order_id>/user/<user_id>", methods=["DELETE"])
 @validate_url_params(IDSchema())
+@require_auth
 def handle_clear_user_basket(order_id, user_id):
     if UserBasket.clear_items(user_id, order_id):
         order = Order.get_by_id(order_id)
@@ -192,6 +292,7 @@ def handle_clear_user_basket(order_id, user_id):
 
 @order_blueprint.route("/<order_id>/state", methods=["PUT"])
 @validate_url_params(IDSchema())
+@require_auth
 def handle_close_order(order_id):
     order = Order.get_by_id(order_id)
     data = {

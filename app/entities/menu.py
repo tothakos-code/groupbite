@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, String, Integer, DateTime, JSON, func, Sequence, Boolean, select, or_, and_, exc
+from sqlalchemy import Column, ForeignKey, String, Integer, DateTime, JSON, func, Sequence, Boolean, select, or_, and_, exc, cast
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.sql import extract
 from sqlalchemy.orm import Mapped
@@ -101,11 +101,25 @@ class Menu(Base):
 
         return session.execute(stmt).scalars().first()
 
-    def find_all_by_vendor(vendor_id):
+    def find_all_by_vendor(vendor_id, search, limit=10, offset=0):
         stmt = select(Menu).where(
             Menu.vendor_id == vendor_id
-        ).order_by(Menu.date.desc())
+        ).order_by(Menu.date.desc(), Menu.name).limit(limit).offset(offset)
+        if search:
+            stmt = stmt.where(
+                or_(
+                    Menu.name.ilike(f"%{search}%"),
+                    cast(Menu.date, String).ilike(f"%{search}%"),
+                    cast(Menu.freq_id, String).ilike(f"%{search}%")
+                )
+            )
         return session.execute(stmt).scalars().all()
+
+    def count_by_vendor_id(vendor_id):
+        stmt = select(func.count(Menu.id)).where(
+            Menu.vendor_id == vendor_id
+        )
+        return session.execute(stmt).scalars().first()
 
     def add(menu):
         session.add(menu)

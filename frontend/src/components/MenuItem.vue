@@ -1,36 +1,42 @@
 <template>
-  <div class="list-group-item row d-flex ">
-    <div class="col-12 col-lg-6 p-0 text-wrap">
-      <span>
-        {{ item.name }}
-      </span>
-    </div>
-    <div class="col-12 col-lg-6 p-0">
-      <div class="row d-flex flex justify-content-end px-0 mx-0">
-        <div
-          v-for="size in item.sizes"
-          :key="size.id"
-          class="row col-6 col-sm-4 col-lg-6 col-xl-4 ms-2 mb-2"
+  <v-list-item
+    :title="item.name"
+    :subtitle="item.description"
+    class="py-0 border-b-sm"
+  >
+    <v-row
+      cols="12"
+      class="row m-0 pe-0"
+      justify="end"
+    >
+      <v-col
+        v-for="size in item.sizes"
+        :key="size.id"
+        cols="6"
+        sm="4"
+        lg="3"
+        xl="2"
+        xxl="2"
+      >
+        <v-btn
+          v-if="size.quantity !== 0"
+          class="bg-primary "
+          variant="elevated"
+          block
+          @click="order.addItem(item.id, size.id)"
         >
-          <button
-            v-if="size.quantity !== 0"
-            class="btn btn-sm w-100 h-100"
-            :class="['btn-' + auth.getUserColor ]"
-            @click="order.addItem(item.id, size.id)"
-          >
-            <span class="text-nowrap me-1">{{ size.name }}</span>
-            <span class="text-nowrap">{{ size.price }} Ft</span>
-          </button>
-          <span
-            v-else
-            class="btn pe-none btn-outline-danger btn-sm"
-          >
-            Elfogyott
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
+          <span class="text-nowrap me-1">{{ size.name }}</span>
+          <span class="text-nowrap">{{ size.price }} Ft</span>
+        </v-btn>
+        <span
+          v-else
+          class="btn pe-none btn-outline-danger btn-sm"
+        >
+          Elfogyott
+        </span>
+      </v-col>
+    </v-row>
+  </v-list-item>
 </template>
 
 <script>

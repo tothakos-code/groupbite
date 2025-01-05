@@ -47,15 +47,14 @@
           class="form-control"
         >
       </div>
-      <button
-        class="btn mt-2"
-        :class="['btn-' + auth.getUserColor ]"
+      <v-btn
+        class="btn mt-2 bg-primary"
         type="button"
         name="save"
         @click="createVendor()"
       >
         Mentés
-      </button>
+      </v-btn>
     </div>
   </div>
 </template>

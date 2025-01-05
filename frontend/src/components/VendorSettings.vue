@@ -17,15 +17,14 @@
           :name="setting.id"
         >
       </div>
-      <button
-        class="btn mt-1"
-        :class="['btn-' + auth.getUserColor ]"
+      <v-btn
+        class="bg-primary mt-1"
         type="button"
         name="save"
         @click="saveSettings()"
       >
         Mentés
-      </button>
+      </v-btn>
     </div>
   </div>
 </template>

@@ -5,7 +5,7 @@ from .size import Size
 import enum
 import logging
 from typing import List
-from sqlalchemy import ForeignKey, exc
+from sqlalchemy import ForeignKey, exc, func, or_
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -14,12 +14,14 @@ from marshmallow import Schema, fields
 class BaseItemSchema(Schema):
     menu_id = fields.Int(required=True)
     name = fields.Str(required=True)
+    description = fields.Str(allow_none=True)
     category = fields.Str(required=True)
     index = fields.Int(required=True)
 
 
 class UpdateItemSchema(BaseItemSchema):
     id = fields.Int(required=True)
+    menu_id = fields.Int(required=True)
 
 
 
@@ -29,6 +31,7 @@ class MenuItem(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     menu_id: Mapped[int] = mapped_column(ForeignKey("menu.id"))
     name: Mapped[str]
+    description: Mapped[str]
     index: Mapped[int]
     category: Mapped[str]
 
@@ -39,14 +42,32 @@ class MenuItem(Base):
     def __repr__(self):
         return f"MenuItem<{self.id},menu_id={self.menu_id},index={self.index},category={self.category}>"
 
-    def find_all_by_menu(menu_id, desc=False):
+    def find_all_by_menu(menu_id, search=None, limit=10, offset=0, desc=False):
         stmt = select(MenuItem).where(MenuItem.menu_id == menu_id)
         if desc:
             stmt = stmt.order_by(MenuItem.category, MenuItem.index.desc())
         else:
             stmt = stmt.order_by(MenuItem.category, MenuItem.index)
 
+        if search:
+            stmt = stmt.where(
+                or_(
+                    MenuItem.category.ilike(f"%{search}%"),
+                    MenuItem.name.ilike(f"%{search}%"),
+                    MenuItem.description.ilike(f"%{search}%")
+                )
+            )
+
+        stmt = stmt.limit(limit).offset(offset)
+
         return session.execute(stmt).scalars().all()
+
+
+    def count_by_menu_id(menu_id):
+        stmt = select(func.count(MenuItem.id)).where(
+            MenuItem.menu_id == menu_id
+        )
+        return session.execute(stmt).scalars().first()
 
     def find_all_by_menu_list(menu_id_list, filter=[], desc=False):
         stmt = select(MenuItem).where(
@@ -87,8 +108,10 @@ class MenuItem(Base):
             session.rollback()
             return False, None
 
-    def update(self, name, index, category):
+    def update(self, menu_id, name, description, index, category):
         self.name = name
+        self.menu_id = menu_id
+        self.description = description
         self.index = index
         self.category = category
         try:
@@ -127,7 +150,9 @@ class MenuItem(Base):
     def serialized(self):
         return {
             "id": self.id,
+            "menu_id": self.menu_id,
             "name": self.name,
+            "description": self.description,
             "index": self.index,
             "sizes": [size.serialized for size in self.sizes],
             "category": self.category

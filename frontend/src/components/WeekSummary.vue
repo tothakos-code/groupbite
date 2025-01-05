@@ -1,5 +1,8 @@
 <template>
-  <div class="card">
+  <div
+    v-if="!isLoading"
+    class="card"
+  >
     <div class="card-header d-flex justify-content-center">
       <div class="col-12 row px-0">
         <div class="col-12 d-flex justify-content-center col-sm-6 col-md-4 justify-content-md-start">
@@ -17,9 +20,8 @@
             <a
               type="button"
               name="button"
-              class="btn btn-link py-0 px-2 "
-              :class="['text-' + auth.getUserColor ]"
-              title="Ugrás a következő hétre"
+              class="btn btn-link text-primary py-0 px-2 "
+              title="Ugrás a előző hétre"
               @click="prevWeek()"
             >
               <svg
@@ -35,25 +37,25 @@
             </a>
           </div>
           <div class="col-4 d-flex align-items-center justify-content-center">
-            <button
+            <v-btn
               v-if="new Date().getDate() !== currentDateSelected.getDate()"
               type="button"
               name="button"
-              class="btn btn-sm py-0 px-2"
-              :class="['btn-outline-' + auth.getUserColor ]"
+              varian="text"
+              class="text-primary bg-secondary py-0 px-2"
+              border="primary thin"
               title="Ugrás vissza a mai napra"
               @click="setDay(new Date())"
             >
               Ma
-            </button>
+            </v-btn>
           </div>
           <div class="col-4 d-flex align-items-center justify-content-center">
             <a
               type="button"
               name="button"
-              class="btn btn-link py-0 px-2"
-              :class="['text-' + auth.getUserColor ]"
-              title="Ugrás az előző hétre"
+              class="btn btn-link text-primary py-0 px-2"
+              title="Ugrás az következő hétre"
               @click="nextWeek()"
             >
               <svg
@@ -92,7 +94,7 @@
                 <div class="col-8">
                   <span
                     class="fs-5"
-                    :class="[onSameDay(day, new Date()) ? `text-${auth.getUserColor}` : '']"
+                    :class="[onSameDay(day, new Date()) ? `text-primary` : '']"
                   >
                     {{ new Date(day).toLocaleDateString('hu-HU', {day:'numeric'}) }}.
                     {{ new Date(day).toLocaleDateString('hu-HU', {weekday:'short'}) }}
@@ -130,8 +132,7 @@
                 >
                   <span
 
-                    class=" badge rounder-pill p-2 py-1 fs-6"
-                    :class="['bg-' + auth.getUserColor ]"
+                    class=" badge rounder-pill p-2 py-1 fs-6 bg-primary"
                     :title="order.vendor + ' rendelés lett leadva ezen a napon'"
                   >
                     @{{ order.vendor }}
@@ -184,7 +185,7 @@
               </div>
               <div class="col text-center">
                 <span class="btn pe-none border border-secondary-subtle rounded">
-                  {{ loaded_menu.order_fee/Object.keys(loaded_menu.basket).length }} Ft szállítás díj/fő
+                  {{ Math.ceil(loaded_menu.order_fee/Object.keys(loaded_menu.basket).length) }} Ft szállítás díj/fő
                 </span>
               </div>
             </div>
@@ -213,13 +214,13 @@
 </template>
 
 <script>
-import GlobalBasketUser from "@/components/GlobalBasketUser.vue";
-import Popup from "./Popup.vue";
+import { defineAsyncComponent } from 'vue'
+const GlobalBasketUser = defineAsyncComponent(() => import("@/components/GlobalBasketUser.vue"));
+const Popup = defineAsyncComponent(() => import("./Popup.vue"));
 import { useAuth } from "@/stores/auth";
 import { useOrderStore } from "@/stores/order";
 import { useVendorStore } from "@/stores/vendor";
 import { ref, watch } from "vue";
-import { state } from "@/main.js";
 
 export default {
   name: "WeekSummary",
@@ -252,6 +253,7 @@ export default {
       sum: 0,
       user_avg: 0,
       user_avg_p_day: 0,
+      isLoading: true
     }
   },
   computed: {
@@ -265,7 +267,11 @@ export default {
       return this.currentDateSelected.toLocaleDateString("hu-HU");
     },
     orderCount(){
-      return Object.keys(this.history).length;
+      let sum = 0;
+      for (const date in this.history) {
+        sum += Object.keys(this.history[date]).length;
+      }
+      return sum;
     }
   },
   mounted() {
@@ -314,7 +320,7 @@ export default {
               this.showOrderSummary = true;
               this.vendorStore.vendors.forEach((vendor) => {
                 if (vendor.id === this.loaded_menu.vendor_id ) {
-                  state.selected_vendor = vendor;
+                  this.vendorStore.selectedVendor = vendor;
                 }
               });
             }
@@ -341,6 +347,7 @@ export default {
         })
         .then(response => {
           this.history = response.data.data;
+          this.isLoading = false;
           this.calculateStats();
         })
     },

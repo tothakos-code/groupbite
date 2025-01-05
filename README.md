@@ -2,6 +2,8 @@
 
 GroupBite is an open-source food ordering application to help summarize ordering for a team or for your friends who order regularly. You can create multiple vendors and manage their menus and prices manually, or you can extend the applications vie its plugin architecture so no manual management is necessary.
 
+__Currently 2.0 is in beta__
+
 ## Features
 
  * Vendor/Restaurant menu manual management
@@ -74,7 +76,7 @@ To quickly get started with the project, follow these steps:
 6. Start the backend in another terminal
 
     ```bash
-    python run.py
+    python groupbite.py run
     ```
 
 You can make changes to the frontend files and it will reload the frontend on save. Same is true for the backend.

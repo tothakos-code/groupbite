@@ -1,23 +1,29 @@
 <template>
-  <button
-    id="transferBasketButton"
-    class="btn my-1"
-    :class="['btn-outline-' + auth.getUserColor ]"
-    @click="openPopup()"
-  >
-    Rendelés
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      fill="currentColor"
-      class="bi bi-truck"
-      viewBox="0 0 16 16"
-    >
-      <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-3.998-.085A1.5 1.5 0 0 1 0 10.5v-7zm1.294 7.456A1.999 1.999 0 0 1 4.732 11h5.536a2.01 2.01 0 0 1 .732-.732V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .294.456zM12 10a2 2 0 0 1 1.732 1h.768a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12v4zm-9 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
-    </svg>
-  </button>
-
+  <v-tooltip location="bottom">
+    <template #activator="{ props }">
+      <v-btn
+        id="transferBasketButton"
+        v-bind="props"
+        varian="text"
+        class="my-1 bg-primary"
+        border="primary thin"
+        @click="openPopup()"
+      >
+        Rendelés
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="currentColor"
+          class="bi bi-truck"
+          viewBox="0 0 16 16"
+        >
+          <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-3.998-.085A1.5 1.5 0 0 1 0 10.5v-7zm1.294 7.456A1.999 1.999 0 0 1 4.732 11h5.536a2.01 2.01 0 0 1 .732-.732V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .294.456zM12 10a2 2 0 0 1 1.732 1h.768a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12v4zm-9 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
+        </svg>
+      </v-btn>
+    </template>
+    <span>Rendelése leadás megkezdése</span>
+  </v-tooltip>
   <Popup
     :show-modal="showInitial"
     title="Rendelés áttöltése"
@@ -30,19 +36,20 @@
         <p>A lista automatikusan frissül, ha valaki változtat a kosarán. Pipáld ki ha átraktad VAGY másold a teljes rendelést szövegként</p>
       </div>
       <div class="col-3 text-end">
-        <button
+        <v-btn
           type="button"
           name="button"
           title="Copy to clipboard"
-          class="btn btn-sm ms-0"
-          :class="['btn-outline-' + auth.getUserColor ]"
+          varian="text"
+          class="ms-0  bg-secondary"
+          border="primary thin"
           @click="doCopyOrder()"
         >
           Másol
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="28"
-            height="28"
+            width="24"
+            height="24"
             fill="currentColor"
             class="bi bi-clipboard2"
             viewBox="0 0 16 16"
@@ -50,7 +57,7 @@
             <path d="M3.5 2a.5.5 0 0 0-.5.5v12a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-12a.5.5 0 0 0-.5-.5H12a.5.5 0 0 1 0-1h.5A1.5 1.5 0 0 1 14 2.5v12a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-12A1.5 1.5 0 0 1 3.5 1H4a.5.5 0 0 1 0 1h-.5Z" />
             <path d="M10 .5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5.5.5 0 0 1-.5.5.5.5 0 0 0-.5.5V2a.5.5 0 0 0 .5.5h5A.5.5 0 0 0 11 2v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 1-.5-.5Z" />
           </svg>
-        </button>
+        </v-btn>
       </div>
     </div>
 
@@ -95,8 +102,9 @@
   <Popup
     :show-modal="showFinish"
     title="Rendelés befejezése"
-    @cancel="showFinish = false"
-    @confirm="showFinish = false;"
+    :cancel-btn="false"
+    confirm-text="Befejez"
+    @confirm="changeTransportPrice();"
   >
     <p>Rendelés lezárva, további kosármódosítás letiltva.</p>
     <p>
@@ -127,18 +135,40 @@
       </button>
     </div>
     <br>
+    <div class="">
+      <p>
+        Ha a  szállítási díj eltérhet az alapértelmezetten megadottól (pl.: eltér a tényleges szállítás díj, rendszerhasználati díj felszámításra került) itt megtudod változtatni.
+      </p>
+      <p>
+        A különböző extra díjak összegét írd be valuta nélkül
+      </p>
+      <p>
+        Az alapértelmezett beállított díj: {{ vendorStore.selectedVendor.settings.transport_price.value }}
+      </p>
+      <div class="input-group mb-3">
+        <span class="input-group-text">A jelenlegi díj</span>
+        <input
+          v-model.trim="transport_price"
+          type="number"
+          class="form-control"
+          :placeholder="transport_price"
+          aria-label="A jelenleg beállított díj"
+          aria-describedby="basic-addon1"
+        >
+      </div>
+    </div>
     <p>Köszönjük az ebédet!</p>
   </Popup>
 </template>
 
 <script>
 import Popup from "./Popup.vue";
-import { state } from "@/main";
 import { useAuth } from "@/stores/auth";
 import { useOrderStore } from "@/stores/order";
+import { useVendorStore } from "@/stores/vendor";
 import { copyText } from "vue3-clipboard";
 import { notify } from "@kyvg/vue3-notification";
-import { watch } from "vue";
+import { watch, unref } from "vue";
 
 export default {
   name: "TransferPopup",
@@ -148,10 +178,12 @@ export default {
   setup() {
     const auth = useAuth();
     const orderStore = useOrderStore();
+    const vendorStore = useVendorStore();
 
     return {
       auth,
-      orderStore
+      orderStore,
+      vendorStore
     }
   },
   data() {
@@ -160,12 +192,13 @@ export default {
       showSpinner: false,
       showFinish: false,
       orderItems: [],
-      psid: ""
+      psid: "",
+      transport_price: unref(useVendorStore().selectedVendor.settings.transport_price.value)
     }
   },
   computed: {
     orderDesc() {
-      return state.selected_vendor.settings.comment_example.value
+      return this.vendorStore.selectedVendor.settings.comment_example.value
     },
   },
   mounted() {
@@ -260,6 +293,13 @@ export default {
       }
     },
     closeOrder: function() {
+      if (this.orderItems.length === 0) {
+        notify({
+          type: "warn",
+          text: "Nincs mit megrendelni.",
+        });
+        return
+      }
       for (const item of this.orderItems) {
         if (!item.tick) {
           notify({
@@ -280,7 +320,7 @@ export default {
         if (item.deleted) {
           continue
         }
-        orderText += state.selected_vendor.settings.order_text_template.value
+        orderText += this.vendorStore.selectedVendor.settings.order_text_template.value
           .replace("${quantity}", item.quantity)
           .replace("${item_name}", item.item_name)
           .replace("${size_name}", item.size_name)
@@ -321,6 +361,12 @@ export default {
            console.log(event)
          }
       });
+    },
+    changeTransportPrice: function() {
+      if (this.transport_price !== this.orderStore.transportFee) {
+        this.orderStore.changeTransportPrice(this.transport_price)
+      }
+      this.showFinish = false;
     }
   }
 }

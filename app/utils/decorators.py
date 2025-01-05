@@ -1,6 +1,6 @@
 from functools import wraps
 from marshmallow import ValidationError
-from flask import request
+from flask import request, session
 import logging
 
 
@@ -29,3 +29,23 @@ def validate_url_params(schema):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+def require_auth(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            logging.warning("User not authenticated")
+            return { "error": "Unauthorized" }, 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def require_admin(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        from app.entities.user import User
+        if not User.is_admin(session['user_id']):
+            logging.warning("User unauthorized")
+            return { "error": "Unauthorized" }, 401
+        return f(*args, **kwargs)
+    return decorated_function

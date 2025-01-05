@@ -17,19 +17,20 @@
             <slot />
           </div>
           <div class="modal-footer">
-            <button
-              class="btn btn-secondary"
+            <v-btn
+              v-if="cancelBtn === true"
+              class="bg-secondary"
               @click="$emit('cancel')"
             >
               {{ cancelText }}
-            </button>
-            <button
-              class="btn"
-              :class="['btn-' + auth.getUserColor ]"
+            </v-btn>
+            <v-btn
+              v-if="confirmBtn === true"
+              class="bg-primary"
               @click="$emit('confirm')"
             >
               {{ confirmText }}
-            </button>
+            </v-btn>
           </div>
         </div>
       </div>
@@ -60,6 +61,14 @@ export default {
     confirmText: {
       type: String,
       default: "Folytat"
+    },
+    cancelBtn: {
+      type: Boolean,
+      default: true
+    },
+    confirmBtn: {
+      type: Boolean,
+      default: true
     },
     large: {
       type: Boolean,

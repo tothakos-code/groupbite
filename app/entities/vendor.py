@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 from typing import List
 import logging
 from marshmallow import Schema, fields
+from .notification import NotificationType
 
 class BaseVendorSchema(Schema):
     name = fields.Str(required=True)
@@ -100,20 +101,25 @@ class Vendor(Base):
             vendor_id = uuid4()
             session.add(Vendor(id=vendor_id, name=vendor_obj.name, type=vendor_obj.type, settings=vendor_obj.settings))
             vendor_obj.id = str(vendor_id)
-            logging.info("Vendor registered in database: {0}".format(vendor_obj.name))
+            logging.info("New Vendor registered in database: {0}".format(vendor_obj.name))
         else:
             vendor_obj.id = str(vendor_db.id)
-            logging.info(vendor_db.settings)
+            logging.info("Vendor already registered, loaded from database: {0}".format(vendor_obj.name))
 
-            if vendor_db.settings["closure_scheduler"]["value"] != "manual":
-                from app.scheduler import schedule_task, cancel_task
-                hh, mm = vendor_db.settings["closure_scheduler"]["value"].split(":")
-                schedule_task(str(vendor_db.id) + "-closure", int(hh), int(mm), vendor_db.closure_wrapper)
-
-            if vendor_db.settings["closed_scheduler"]["value"] != "manual":
-                from app.scheduler import schedule_task, cancel_task
-                hh, mm = vendor_db.settings["closed_scheduler"]["value"].split(":")
-                schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
+            try:
+                if vendor_db.settings["closure_scheduler"]["value"] != "manual":
+                    from app.scheduler import schedule_task, cancel_task
+                    hh, mm = vendor_db.settings["closure_scheduler"]["value"].split(":")
+                    schedule_task(str(vendor_db.id) + "-closure", int(hh), int(mm), vendor_db.closure_wrapper)
+            except KeyError as e:
+                logging.error("Task scheduling error, 'closure_scheduler' is undefined in settings")
+            try:
+                if vendor_db.settings["closed_scheduler"]["value"] != "manual":
+                    from app.scheduler import schedule_task, cancel_task
+                    hh, mm = vendor_db.settings["closed_scheduler"]["value"].split(":")
+                    schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
+            except KeyError as e:
+                logging.error("Task scheduling error, 'closed_scheduler' is undefined in settings")
 
         try:
             session.commit()
@@ -131,6 +137,7 @@ class Vendor(Base):
         logging.info("Scheduled order state stepping running")
         from app.socketio_singleton import SocketioSingleton
         from app.entities.order import Order, OrderState
+        from app.services.notification_service import NotificationService
 
         order = Order.find_open_order_by_date_for_a_vendor(self.id, date.today().strftime("%Y-%m-%d"))
         if order:
@@ -142,6 +149,7 @@ class Vendor(Base):
             socketio.emit("be_order_update", {
                 "order": order.serialized
             })
+            NotificationService.send_vendor_notification(self, order, NotificationType.REMINDER)
         else:
             logging.info("State already changed")
 
@@ -182,7 +190,7 @@ class Vendor(Base):
 
     @property
     def serialized(self):
-        from app.vendor_factory import VendorFactory
+        # from app.vendor_factory import VendorFactory
         return {
             "id": str(self.id),
             "name": self.name,

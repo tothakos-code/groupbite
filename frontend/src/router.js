@@ -1,12 +1,16 @@
 import { createRouter, createWebHistory } from "vue-router";
-import HomeView from "./views/Home.vue";
-import AdminView from "./views/Admin.vue";
-import MenuView from "./views/MenuRender.vue";
-import Settings from "./views/Settings.vue";
-import VendorConfiguration from "./components/VendorConfiguration.vue";
-import VendorList from "./components/VendorList.vue";
-import VendorAdd from "./components/VendorAdd.vue";
-import NotFound from "./components/NotFound.vue";
+const HomeView = () => import("./views/Home.vue");
+const AdminHomeView = () => import( "./views/AdminHome.vue");
+const MenuView = () => import( "./views/MenuRender.vue");
+const AdminSettingsView = () => import( "./views/AdminSettings.vue");
+const VendorConfiguration = () => import( "./components/VendorConfiguration.vue");
+const AdminVendorsView = () => import( "./views/AdminVendors.vue");
+const AdminOrdersView = () => import( "./views/AdminOrders.vue");
+const AdminUsersView = () => import( "./views/AdminUsers.vue");
+const VendorItemManager = () => import( "./components/VendorItemManager.vue");
+const VendorAdd = () => import( "./components/VendorAdd.vue");
+const NotFound = () => import( "./components/NotFound.vue");
+import { useAuth } from "@/stores/auth.js";
 
 const routes = [
   {
@@ -28,22 +32,43 @@ const routes = [
   {
     name: "admin",
     path: "/admin",
-    component: AdminView,
+    component: AdminHomeView,
+    beforeEnter: () => {
+      if (!useAuth().user?.admin) {
+        // TODO: This runs sooner than the session check and it retruns false. I am not sure how to handle this yet.
+        console.log("Nono, you can't do that");
+        return false
+      }
+    },
     children: [
       {
         name:"settings",
         path: "settings",
-        component: Settings
+        component: AdminSettingsView
+      },
+      {
+        name:"orders",
+        path: "orders",
+        component: AdminOrdersView
+      },
+      {
+        name:"users",
+        path: "users",
+        component: AdminUsersView
       },
       {
         name:"vendorlist",
-        path: "",
-        component: VendorList
+        path: "vendors",
+        component: AdminVendorsView
       },
       {
         path: ":id/config",
         component: VendorConfiguration,
-        // props: true
+      },
+      {
+        name:"vendorItems",
+        path: ":id/config/:menuId",
+        component: VendorItemManager
       },
       {
         path: "add",

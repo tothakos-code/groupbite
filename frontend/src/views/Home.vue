@@ -1,27 +1,24 @@
 <template>
-  <div class="d-flex p-2">
+  <div class="row col d-flex m-2 pt-2">
     <div class="row-12 mb-2">
       <WeekSummary />
     </div>
     <div class="row-12 mb-2">
-      <!-- <div class="card">
-        <div class="card-header">
-          asd
-        </div>
-        <div class="card-body">
-          ad
-        </div>
-      </div> -->
+      <WeekGraph />
     </div>
   </div>
 </template>
 
 <script>
-import WeekSummary from "@/components/WeekSummary.vue"
+import { defineAsyncComponent } from 'vue'
+const WeekSummary = defineAsyncComponent(() => import("@/components/WeekSummary.vue"));
+const WeekGraph = defineAsyncComponent(() => import("@/components/WeekGraph.vue"));
+
 export default {
     name: "HomeView",
     components: {
       WeekSummary,
+      WeekGraph
     }
 };
 </script>

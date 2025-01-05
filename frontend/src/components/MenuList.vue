@@ -1,61 +1,81 @@
 <template>
-  <div class="card">
-    <div class="card-header row col px-2">
-      <div class="col-0 d-none d-sm-inline col-sm-6 col-lg-8 my-auto">
-        <h2 class="text-nowrap">
-          Étlap - {{ selectedDate.toLocaleDateString('hu-HU', {weekday:'long'}) }}
-        </h2>
-      </div>
-      <div class="col-12 d-flex justify-content-center col-sm-6 col-lg-4 px-0">
-        <Datestamp
-          ref="dateSelector"
-          :limit-to-current-week="true"
-          :set-date="selectedDate.toISODate()"
-          @selected-date="(day) => getMenu(day)"
-        />
-      </div>
-    </div>
-    <div class="row">
-      <div
-        v-for="category, index in categories"
-        :key="index"
-        class="d-flex justify-content-center flex-fill col-6 col-sm-4 col-lg-3 col-xxl-1"
-      >
-        <input
-          :id="category"
-          type="radio"
-          name="daySelectionRadio"
-          class="btn-check"
-          role="button"
-        >
-        <label
-          :for="category"
-          class="btn btn-sm my-1 rounded rounded-5 text-nowrap d-flex align-items-center"
-          :class="['btn-outline-' + auth.getUserColor]"
-          @click="setFilter(category)"
-        >
-          {{ category }}
-        </label>
-      </div>
-    </div>
-    <div class="row col list-group">
-      <div class="col">
-        <div class="list-group m-1">
-          <MenuItem
-            v-for="(item, i) in itemlist"
-            :key="'item-'+i"
-            :item="item"
+  <v-card class="border-sm">
+    <v-card-title class="bg-header border-b-sm  px-2">
+      <v-row justify="space-between">
+        <v-col class="col-0 d-none d-sm-inline col-sm-6 col-lg-8 my-auto">
+          <h2 class="text-nowrap">
+            Étlap - {{ selectedDate.toLocaleDateString('hu-HU', {weekday:'long'}) }}
+          </h2>
+        </v-col>
+        <v-col class="col-12 d-flex justify-content-center col-sm-6 col-lg-4 px-0">
+          <Datestamp
+            ref="dateSelector"
+            :limit-to-current-week="true"
+            :set-date="selectedDate.toISODate()"
+            @selected-date="(day) => getMenu(day)"
           />
-          <div
-            v-if="itemlist.length === 0"
-            class="d-flex justify-content-center"
+        </v-col>
+      </v-row>
+    </v-card-title>
+    <v-chip-group
+      v-if="itemlist.length !== 0 && categories.size > 1"
+    >
+      <v-row
+        class="mx-0 mb-0 border-b-md"
+      >
+        <v-col class="d-flex justify-space-around">
+          <v-chip
+            v-for="category, index in categories"
+            :key="index"
+            variant="outlined"
+            selected-class="bg-secondary"
+            class="text-primary"
+            @click="setFilter(category)"
           >
-            <span>Erre a napra nincsen mit betöltenem</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+            {{ category }}
+          </v-chip>
+        </v-col>
+      </v-row>
+    </v-chip-group>
+    <v-card-text class="p-0">
+      <v-row>
+        <v-col>
+          <v-list>
+            <template
+              v-for="(item, i) in itemlist"
+              :key="'item-'+i"
+            >
+              <v-hover v-slot="{ isHovering, props }">
+                <MenuItem
+                  :key="'item-'+i"
+                  :item="item"
+                  :class="isHovering ? 'bg-secondary' : undefined"
+                  v-bind="props"
+                />
+              </v-hover>
+            </template>
+            <div
+              v-if="itemlist.length === 0 && isLoading === false"
+              class="d-flex justify-content-center"
+            >
+              <span>Erre a napra nincsen mit betöltenem</span>
+            </div>
+            <div
+              v-if="isLoading === true"
+              class="d-flex justify-content-center"
+            >
+              <div
+                class="spinner-border"
+                role="status"
+              >
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </v-list>
+        </v-col>
+      </v-row>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>
@@ -84,7 +104,8 @@ export default {
     return {
       itemlist: [],
       filter:[],
-      categories: new Set(["minden"])
+      categories: new Set(["minden"]),
+      isLoading: true
     }
   },
   computed: {
@@ -100,15 +121,18 @@ export default {
       if (day === undefined) {
         day = new Date().toISODate()
       }
-      this.vendorStore.fetchMenusByDate(state.selected_vendor.id, day, {
+      this.vendorStore.fetchMenusByDate(this.vendorStore.selectedVendor.id, day, {
           "filter": this.filter
         })
         .then(response => {
           this.itemlist = response.data.data;
           // this.categories = new Set(["minden"])
           for (var item of this.itemlist) {
-            this.categories.add(item.category)
+            if (item.category !== "") {
+              this.categories.add(item.category)
+            }
           }
+          this.isLoading = false
         })
         .catch(error => console.error(error));
     },
@@ -124,10 +148,11 @@ export default {
       socket.emit("fe_date_selection", {
         "old_selected_date": state.selectedDate.toISODate(),
         "new_selected_date": formated_day,
-        "vendor_id": state.selected_vendor.id
+        "vendor_id": this.vendorStore.selectedVendor.id
       })
       state.selectedDate = new Date(day);
-      history.pushState({}, "", `/menu/${state.selected_vendor.name}/${state.selectedDate.toISODate()}`)
+      this.setFilter("minden");
+      history.pushState({}, "", `/menu/${this.vendorStore.selectedVendor.name}/${state.selectedDate.toISODate()}`)
       this.loadMenu(formated_day);
     },
     getCurrentWeekDates() {
@@ -164,10 +189,10 @@ export default {
 </script>
 
 <style>
-[data-bs-theme=light] .list-group-item:hover {
+/* [data-bs-theme=light] .list-group-item:hover {
   background-color: lightgray;
 }
 [data-bs-theme=dark] .list-group-item:hover {
   background-color: #3c3c3c;
-}
+} */
 </style>

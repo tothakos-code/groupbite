@@ -2,7 +2,7 @@ import axios from "axios";
 import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
 import { useAuth } from "@/stores/auth";
-import {  state as vuestate  } from "@/main";
+import { useVendorStore } from "@/stores/vendor";
 
 export const useOrderStore = defineStore("order", {
   state: () => ({
@@ -75,11 +75,12 @@ export const useOrderStore = defineStore("order", {
       if (state.basket[auth.user.id] === undefined) return true;
       return state.basket[auth.user.id].items.length == 0;
     },
-    transportFee() {
-      if (vuestate.selected_vendor.settings === undefined) {
+    transportFee(state) {
+      const vendorStore = useVendorStore();
+      if (vendorStore.selectedVendor?.settings === undefined) {
         return 0;
       }
-      return Number(vuestate.selected_vendor.settings.transport_price.value)
+      return Number(state.order.order_fee)
     }
   },
   actions: {
@@ -91,6 +92,18 @@ export const useOrderStore = defineStore("order", {
         return response
       } catch (error) {
         console.error("Failed to get order by ID:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async fetchAll(querryParams) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/order/`, { "params": querryParams });
+        return response
+      } catch (error) {
+        console.error("Failed to get orders:", error.response.data.error);
         return error.response
       } finally {
         this.isLoading = false;
@@ -108,6 +121,18 @@ export const useOrderStore = defineStore("order", {
         this.isLoading = false;
       }
     },
+    async stats() {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/order/statistics`);
+        return response
+      } catch (error) {
+        console.error("Failed to get stats:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async close() {
       this.isLoading = true;
       try {
@@ -117,6 +142,26 @@ export const useOrderStore = defineStore("order", {
         return response
       } catch (error) {
         console.error("Failed to close order:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async update(orderId, data) {
+      this.isLoading = true;
+      try {
+        const response = await axios.put(`/api/order/${orderId}`,{ "data": data });
+        notify({
+          type: "info",
+          text: "Rendelés frissítés sikeres!",
+        });
+        return response
+      } catch (error) {
+        console.error("Failed to update order:", error.response.data.error);
+        notify({
+          type: "error",
+          text: "Rendelés frissítés nem sikerült!",
+        });
         return error.response
       } finally {
         this.isLoading = false;
@@ -205,6 +250,17 @@ export const useOrderStore = defineStore("order", {
         return response
       } catch (error) {
         console.error("Failed to add item:", error.response.data.error);
+        return error.response
+      }
+    },
+    async changeTransportPrice(newTransportPrice) {
+      try {
+        const response = axios.put(`/api/order/${this.order.id}/order_fee`, { "data": {
+          "order_fee": newTransportPrice
+        } })
+        return response
+      } catch (error) {
+        console.error("Failed to change order_fee:", error.response.data.error);
         return error.response
       }
     }

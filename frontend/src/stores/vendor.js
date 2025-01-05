@@ -1,6 +1,8 @@
 import axios from "axios";
 import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
+import { requestNotificationPermission } from "@/main";
+import { useAuth } from "@/stores/auth";
 
 export const useVendorStore = defineStore("vendor", {
   state: () => ({
@@ -24,23 +26,12 @@ export const useVendorStore = defineStore("vendor", {
         this.isLoading = false;
       }
     },
-    async fetchActive() {
+    async fetchMenus(vendorId, querryParams) {
       this.isLoading = true;
       try {
-        const response = await axios.get(`/api/vendor/active`);
-        this.vendors = response.data.data;
-        return response
-      } catch (error) {
-        console.error("Failed to fetch vendors:", error.response.data.error);
-        return error.response
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    async fetchMenus(vendorId) {
-      this.isLoading = true;
-      try {
-        const response = await axios.get(`/api/vendor/${vendorId}/menus`);
+        const response = await axios.get(`/api/vendor/${vendorId}/menus`,
+          { "params": querryParams }
+        );
         return response
       } catch (error) {
         console.error("Failed to fetch vendors:", error.response.data.error);
@@ -170,6 +161,81 @@ export const useVendorStore = defineStore("vendor", {
         notify({
           type: "error",
           text: "Beállítások mentése nem sikerült!",
+        });
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async subscribe(){
+      const auth = useAuth()
+      if (!auth.isLoggedIn) {
+        notify({
+          type: "warn",
+          text: "Jelentkezz be a rendeléshez!",
+        });
+        return;
+      }
+      requestNotificationPermission();
+      try {
+        const publicKey = await axios.get("/vapid_public_key")
+        navigator.serviceWorker.ready
+        .then(reg => {
+          reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: publicKey.data
+          }).then(
+            sub => {
+              axios.post(`/api/vendor/${this.selectedVendor.id}/notifications/reminder/subscribe`, { "data": sub })
+              .then(() => {
+                notify({
+                  type: "info",
+                  text: `Bekapcsoltad a(z) ${this.selectedVendor.name} értesítést!`,
+                });
+              })
+              .catch(err => {
+                notify({
+                  type: "error",
+                  text: err.response.data.error,
+                });
+              });
+            },
+
+            err => console.error(err)
+          );
+        });
+      } catch (error) {
+        console.error("Failed to subscribe to notification:", error.response.data.error);
+        notify({
+          type: "error",
+          text: "Értesítés beállítása nem sikerült!",
+        });
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async unsubscribe() {
+      const auth = useAuth()
+      if (!auth.isLoggedIn) {
+        notify({
+          type: "warn",
+          text: "Jelentkezz be a rendeléshez!",
+        });
+        return;
+      }
+      try {
+        const response = await axios.delete(`/api/vendor/${this.selectedVendor.id}/notifications/reminder/unsubscribe`)
+        notify({
+          type: "info",
+          text: `Kikapcsoltad a(z) ${this.selectedVendor.name} értesítést!`,
+        });
+        return response
+      } catch (error) {
+        console.error("Failed to unsubscribe from notification:", error.response.data.error);
+        notify({
+          type: "error",
+          text: "Értesítés kikapcsolás nem sikerült!",
         });
         return error.response
       } finally {

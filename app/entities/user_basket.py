@@ -36,8 +36,10 @@ class UserBasket(Base):
         stmt = select(UserBasket).where(UserBasket.order_id == order_id)
         return session.execute(stmt).scalars().all()
 
-    def find_user_orders(user_id):
+    def find_user_orders(user_id, limit=None, offset=0):
         stmt = select(UserBasket).where(UserBasket.user_id == user_id)
+        if limit is not None:
+            stmt = stmt.limit(limit).offset(offset)
         return session.execute(stmt).scalars().all()
 
     def find_user_basket(user_id, order_id):
@@ -149,8 +151,7 @@ class UserBasket(Base):
 
         try:
             session.commit()
-            session.refresh(user_basket)
-            return True, user_basket
+            return True, None
         except exc.DataError as e:
             logging.exception("DataError during removing user_basket")
             session.rollback()

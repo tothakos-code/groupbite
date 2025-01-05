@@ -11,12 +11,7 @@ export const useAuth = defineStore("user", {
       // if (state.isLoggedIn) {
       //   return this.auth.user.ui_color;
       // }
-      const theme  = localStorage.getItem("theme")
-      if (theme === "light") {
-        return "groupbite"
-      } else {
-        return "groupbite-dark"
-      }
+      return "primary"
     },
   },
   actions: {

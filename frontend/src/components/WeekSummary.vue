@@ -42,7 +42,7 @@
               type="button"
               name="button"
               varian="text"
-              class="text-primary bg-background py-0 px-2"
+              class="text-primary bg-secondary py-0 px-2"
               border="primary thin"
               title="Ugrás vissza a mai napra"
               @click="setDay(new Date())"

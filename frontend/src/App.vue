@@ -112,6 +112,9 @@ export default {
     const theme = ref(localStorage.getItem("theme"));
     const Vtheme = useTheme()
     const { smAndUp } = useDisplay();
+    if (!theme.value) {
+      theme.value = "light"
+    }
     Vtheme.global.name.value = theme.value
     auth.checkSession();
 

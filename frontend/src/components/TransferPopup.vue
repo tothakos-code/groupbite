@@ -41,7 +41,7 @@
           name="button"
           title="Copy to clipboard"
           varian="text"
-          class="ms-0 text-primary bg-background"
+          class="ms-0  bg-secondary"
           border="primary thin"
           @click="doCopyOrder()"
         >

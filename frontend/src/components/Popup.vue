@@ -19,7 +19,7 @@
           <div class="modal-footer">
             <v-btn
               v-if="cancelBtn === true"
-              class="bg-background"
+              class="bg-secondary"
               @click="$emit('cancel')"
             >
               {{ cancelText }}

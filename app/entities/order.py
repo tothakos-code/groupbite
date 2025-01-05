@@ -9,6 +9,7 @@ from sqlalchemy import ForeignKey, select, exc, extract
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+import logging
 
 class OrderState(enum.Enum):
     COLLECT = "collect"
@@ -64,13 +65,12 @@ class Order(Base):
         last_7_days = [(date.today() - relativedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
         last_7_days.reverse()
         for vendor in Vendor.find_all_active():
+            result[vendor.name] = {
+            "data": []
+            }
             for day in last_7_days:
-                result[vendor.name] = {
-                "data": []
-                }
                 parsed_date = datetime.strptime(day, "%Y-%m-%d")
                 result[vendor.name]["data"].append(Order.day_sum_by_vendor(vendor.id, parsed_date.year, parsed_date.month, parsed_date.day))
-
 
         return result, last_7_days
 
@@ -103,7 +103,8 @@ class Order(Base):
         for order in orders:
             for basket_entry in order.items:
                 sum += basket_entry.count * basket_entry.size.price
-            sum += order.order_fee
+            if len(order.items) != 0:
+                sum += order.order_fee
 
 
         return sum
@@ -121,7 +122,8 @@ class Order(Base):
         for order in orders:
             for basket_entry in order.items:
                 sum += basket_entry.count * basket_entry.size.price
-            sum += order.order_fee
+            if len(order.items) != 0:
+                sum += order.order_fee
 
 
         return sum

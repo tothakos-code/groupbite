@@ -9,7 +9,12 @@ from sqlalchemy import ForeignKey, select, exc, extract
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+from marshmallow import Schema, fields
 import logging
+
+class BaseOrderSchema(Schema):
+    state_id = fields.Str(required=True)
+    order_fee = fields.Int(required=True)
 
 class OrderState(enum.Enum):
     COLLECT = "collect"
@@ -198,6 +203,7 @@ class Order(Base):
         return {
             "id": self.id,
             "vendor_id": str(self.vendor_id),
+            "vendor": str(self.vendor.name),
             "state_id": str(self.state_id),
             "user_id": str(self.user_id),
             "date_of_order": self.date_of_order.strftime("%Y-%m-%d"),

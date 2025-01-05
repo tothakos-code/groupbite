@@ -147,6 +147,26 @@ export const useOrderStore = defineStore("order", {
         this.isLoading = false;
       }
     },
+    async update(orderId, data) {
+      this.isLoading = true;
+      try {
+        const response = await axios.put(`/api/order/${orderId}`,{ "data": data });
+        notify({
+          type: "info",
+          text: "Rendelés frissítés sikeres!",
+        });
+        return response
+      } catch (error) {
+        console.error("Failed to update order:", error.response.data.error);
+        notify({
+          type: "error",
+          text: "Rendelés frissítés nem sikerült!",
+        });
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async clearBasket() {
       if ( this.order.state_id === "closed") {
         notify({

@@ -6,10 +6,10 @@ from datetime import date, timedelta, datetime
 
 from app.controllers import order_blueprint
 from app.socketio_singleton import SocketioSingleton
-from app.entities.order import Order, OrderState
+from app.entities.order import Order, OrderState, BaseOrderSchema
 from app.entities.user_basket import UserBasket
 from app.entities import Session
-from app.utils.decorators import validate_url_params, require_auth, require_admin
+from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
 from app.utils.validators import IDSchema
 
 
@@ -56,6 +56,38 @@ def handle_get_basket(order_id):
     return_obj = order.serialized
     return_obj["basket"] = UserBasket.get_basket_group_by_user(order.id)
     return { "data": return_obj }, 200
+
+
+@order_blueprint.route("/<order_id>", methods=["PUT"])
+@validate_data(BaseOrderSchema())
+@validate_url_params(IDSchema())
+@require_auth
+@require_admin
+def handle_order_update(data, order_id):
+    order = Order.get_by_id(order_id)
+
+    try:
+        new_state = OrderState(data["state_id"])
+    except ValueError:
+        return { "error": "Bad request" }, 400
+
+    if not order.change_state(new_state):
+        return { "error": "Bad request" }, 400
+
+    socketio.emit("be_order_update", {
+        "order": order.serialized
+        },
+        to=f"{order.vendor_id}@{order.date_of_order}"
+    )
+
+    if not order.set_order_fee(data["order_fee"]):
+        return { "error": "Bad request" }, 400
+    socketio.emit(
+        "be_order_update", {
+            "order": order.serialized,
+        }
+    )
+    return { "data": order.serialized }, 200
 
 
 @order_blueprint.route("/statistics", methods=["GET"])

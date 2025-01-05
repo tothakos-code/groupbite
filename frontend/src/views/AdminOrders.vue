@@ -43,18 +43,53 @@
             {{ order.id }}
           </th>
           <td>
-            {{ order.vendor_id }}
+            {{ order.vendor }}
           </td>
           <td>
-            <span
-              class="badge"
-              :class="{
-                'bg-success': order.state_id === 'collect',
-                'bg-warning': order.state_id === 'order',
-                'bg-danger': order.state_id === 'closed'}"
+            <v-select
+              v-if="editing && order.id === editing"
+              v-model="order.state_id"
+              :items="orderStates"
             >
-              {{ order.state_id }}
-            </span>
+              <template #selection="{ item }">
+                <v-chip
+                  :class="item.value === 'collect' ? 'bg-success' :
+                    item.title === 'order' ? 'bg-warning' :
+                    item.title === 'closed' ? 'bg-error' : ''"
+                  border="sm"
+                  flat
+                >
+                  <span>{{ item.title }}</span>
+                </v-chip>
+              </template>
+              <template #item="{ props, item }">
+                <v-list-item
+                  v-bind="props"
+                  title=""
+                >
+                  <v-chip
+
+                    :class="item.value === 'collect' ? 'bg-success' :
+                      item.title === 'order' ? 'bg-warning' :
+                      item.title === 'closed' ? 'bg-error' : ''"
+                    border="sm"
+                    flat
+                  >
+                    <span>{{ item.title }}</span>
+                  </v-chip>
+                </v-list-item>
+              </template>
+            </v-select>
+            <v-chip
+              v-else
+              :class="order.state_id === 'collect' ? 'bg-success' :
+                order.state_id === 'order' ? 'bg-warning' :
+                order.state_id === 'closed' ? 'bg-error' : ''"
+              border="sm"
+              flat
+            >
+              <span>{{ order.state_id }}</span>
+            </v-chip>
           </td>
           <td>
             {{ order.user_id }}
@@ -63,55 +98,100 @@
             {{ order.date_of_order }}
           </td>
           <td>
-            {{ order.order_fee }}
+            <VNumberInput
+              v-if="editing && order.id === editing"
+              v-model="order.order_fee"
+              :step="50"
+              control-variant="split"
+            />
+            <span v-else>{{ order.order_fee }}</span>
           </td>
           <td>
-            <!-- <div
-              class="btn"
-              :class="['text-' + auth.getUserColor ]"
-              title="Üzlet elérhetőség ki/be kapcsolása"
-              @click="toggleActivation(vendor)"
+            <div
+              v-if="order.id != editing"
+              class="col-auto"
             >
-              <svg
-                v-if="order.active"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                class="bi bi-toggle-on"
-                viewBox="0 0 16 16"
+              <v-btn
+                type="button"
+                name="button"
+                title="Szerkesztés"
+                class="bg-primary me-1 mt-1"
+                icon
+                size="small"
+                border="primary thin"
+                rounded
+                varian="text"
+                @click="edit(order.id)"
               >
-                <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-              </svg>
-              <svg
-                v-else
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                class="bi bi-toggle-off"
-                viewBox="0 0 16 16"
-              >
-                <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-              </svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  class="bi bi-pen"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z" />
+                </svg>
+              </v-btn>
             </div>
             <div
-              class="btn"
-              :class="['text-' + auth.getUserColor ]"
-              title="Üzlet beállítások"
-              @click="openVendorConfiguration(vendor.id)"
+              v-if="editing && order.id === editing"
+              class="col-auto"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                class="bi bi-gear-fill"
-                viewBox="0 0 16 16"
+              <v-btn
+                type="button"
+                name="button"
+                title="Mentés"
+                class="bg-primary me-1 mt-1"
+                icon
+                size="small"
+                border="primary thin"
+                rounded
+                varian="text"
+                @click="updateOrder(order)"
               >
-                <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z" />
-              </svg>
-            </div> -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  class="bi bi-floppy"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M11 2H9v3h2z" />
+                  <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z" />
+                </svg>
+              </v-btn>
+            </div>
+            <div
+              v-if="editing && order.id === editing"
+              class="col-auto"
+            >
+              <v-btn
+                type="button"
+                name="button"
+                title="Mégse"
+                class="bg-primary me-1 mt-1"
+                icon
+                size="small"
+                border="primary thin"
+                rounded
+                varian="text"
+                @click="cancelEdit()"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  class="bi bi-x"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
+                </svg>
+              </v-btn>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -129,11 +209,13 @@
 import { useAuth } from "@/stores/auth";
 import { useOrderStore } from "@/stores/order";
 import Paginator from "@/components/Paginator.vue";
+import { VNumberInput } from 'vuetify/labs/VNumberInput'
 
 export default {
     name: "AdminOrdesView",
     components: {
-      Paginator
+      Paginator,
+      VNumberInput
     },
     setup() {
       const auth = useAuth();
@@ -149,7 +231,10 @@ export default {
         isLoading: true,
         limit: 10,
         currentPage: 1,
-        totalCount: 0
+        totalCount: 0,
+        editing: false,
+        editOriginal: null,
+        orderStates: ["collect","order","closed",]
       }
     },
     mounted() {
@@ -175,6 +260,25 @@ export default {
             this.isLoading = false;
           })
       },
+      edit(order_id) {
+        this.editing = order_id
+      },
+      cancelEdit() {
+        this.editing = false;
+        this.refreshOrdersList()
+      },
+      updateOrder(order){
+        this.orderStore.update(order.id, {
+          "state_id": order.state_id,
+          "order_fee": order.order_fee
+        } )
+          .then(response => {
+            if (response.status === 200) {
+              this.editing = false;
+              this.refreshOrdersList()
+            }
+          })
+      }
     }
 };
 </script>

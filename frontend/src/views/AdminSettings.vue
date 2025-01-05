@@ -9,7 +9,7 @@
       v-if="!isLoading"
       class=""
     >
-      <h5 class="text-secondary">
+      <h5 class="">
         Álltalános beállítások
       </h5>
       <hr class="mt-1">
@@ -26,7 +26,7 @@
           >
         </div>
       </div>
-      <h5 class="text-secondary mt-5">
+      <h5 class="mt-5">
         Email küldés beállítások
       </h5>
       <hr class="mt-1">
@@ -114,7 +114,27 @@
                 id="smtp-password-warning"
                 class="form-text text-break text-wrap col-6"
               >
-                Warning! Using SMPT servers with a password authentication is not a good security practice! The SMTP password you enter here will be stored in plain text to allow the server to authenticate with your SMTP server. Alternative more secure auth methods adviced: IP whitelisting, OAuth2, App-specific Password, Certificate-Based Auth. Use at your own risk in production!
+                Warning! Using SMPT servers with password authentication is not a good security practice! More secure authentication methods are strongly recommended: SMTP relay, IP whitelisting, OAuth2, App-specific Password, Certificate-Based Auth.
+              </div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-auto">
+                <label
+                  class="form-label"
+                  for="smtp_security"
+                >
+                  SMTP connection:
+                </label>
+
+                <v-select
+                  id="smtp_security"
+                  v-model="settings.smtp_security"
+                  :items="smtpSecuritys"
+                  item-title="title"
+                  item-value="value"
+                  label="SMTP connection type"
+                  variant="outlined"
+                />
               </div>
             </div>
             <div class="row mb-2">
@@ -227,7 +247,13 @@ export default {
           smtp_address: "",
           smtp_port: "",
           smtp_sender_email: "",
+          smtp_security: "plain",
         },
+        smtpSecuritys: [
+          {title:"Plain", value:"plain"},
+          {title:"SSL", value:"ssl"},
+          {title:"TLS", value:"tls"},
+        ],
         testEmail: "",
         isLoading: true,
         isError: false,
@@ -309,7 +335,8 @@ export default {
             "smtp_port": this.settings.smtp_port,
             "smtp_user": this.settings.smtp_user,
             "smtp_password": this.settings.smtp_password,
-            "smtp_sender_email": this.settings.smtp_sender_email
+            "smtp_sender_email": this.settings.smtp_sender_email,
+            "smtp_security": this.settings.smtp_security,
           })
           .then(() => {
             notify({

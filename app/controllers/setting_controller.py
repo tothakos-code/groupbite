@@ -26,7 +26,10 @@ def get_all_settings():
 def get_setting(key):
     setting = Setting.get_setting_by_key(key)
     if setting:
-        return {setting.key: setting.value}
+        if setting.category != "application":
+            return {"error": "Access denied"}, 403
+        else:
+            return {setting.key: setting.value}
     return {"error": "Setting not found"}, 404
 
 @setting_blueprint.route('/set', methods=['PUT'])
@@ -34,7 +37,7 @@ def get_setting(key):
 @require_admin
 def update_setting():
     data = request.json
-
+    logging.info(data)
     result = {"error": {}}
     for key, value in data.items():
 
@@ -53,6 +56,6 @@ def send_test_mail():
     if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", test_email):
         return {"error": "Not a valid email address."}, 415
 
-    if not send_mail(test_email, "A message from GroupBite","<h1>This is a message from GroupBite</h1> <br><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>"):
+    if not send_mail(test_email, "A message from GroupBite", "<h1>This is a message from GroupBite</h1> <br><p>Hurray you succesfully sent an email from groupbite!</p>", request.json):
         return {"error": "Error during email sending"}, 500
     return "Mail sent", 200

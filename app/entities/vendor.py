@@ -101,10 +101,10 @@ class Vendor(Base):
             vendor_id = uuid4()
             session.add(Vendor(id=vendor_id, name=vendor_obj.name, type=vendor_obj.type, settings=vendor_obj.settings))
             vendor_obj.id = str(vendor_id)
-            logging.info("Vendor registered in database: {0}".format(vendor_obj.name))
+            logging.info("New Vendor registered in database: {0}".format(vendor_obj.name))
         else:
             vendor_obj.id = str(vendor_db.id)
-            logging.info(vendor_db.settings)
+            logging.info("Vendor already registered, loaded from database: {0}".format(vendor_obj.name))
 
             try:
                 if vendor_db.settings["closure_scheduler"]["value"] != "manual":

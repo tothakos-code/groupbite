@@ -2,6 +2,7 @@
   <v-app id="inspire">
     <v-theme-provider>
       <v-navigation-drawer
+        v-model="drawer"
         class="bg-primary"
         rail
         mobile-breakpoint="sm"
@@ -16,6 +17,22 @@
           height="45"
           scroll-behavior="hide"
         >
+          <v-app-bar-nav-icon
+            v-show="!smAndUp"
+            variant="text"
+            @click.stop="drawer = !drawer"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              class="bi bi-layout-sidebar"
+              viewBox="0 0 16 16"
+            >
+              <path d="M0 3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5-1v12h9a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zM4 2H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h2z" />
+            </svg>
+          </v-app-bar-nav-icon>
           <v-app-bar-title>{{ app_title }}</v-app-bar-title>
           <v-spacer />
           <UserMenu />
@@ -80,6 +97,7 @@ import { useAuth } from "@/stores/auth";
 import { useCookies } from "vue3-cookies";
 import { provide, ref } from "vue";
 import { useTheme } from 'vuetify'
+import { useDisplay } from 'vuetify'
 
 export default {
   name: "App",
@@ -93,6 +111,7 @@ export default {
     const auth = useAuth();
     const theme = ref(localStorage.getItem("theme"));
     const Vtheme = useTheme()
+    const { smAndUp } = useDisplay();
     Vtheme.global.name.value = theme.value
     auth.checkSession();
 
@@ -115,7 +134,8 @@ export default {
     return {
       cookies,
       theme,
-      auth
+      auth,
+      smAndUp
     };
   },
   data() {
@@ -123,7 +143,8 @@ export default {
       showMenu: true,
       showGlobalMessage: false,
       showHistroy: false,
-      app_title: ""
+      app_title: "",
+      drawer: true,
     }
   },
   computed: {

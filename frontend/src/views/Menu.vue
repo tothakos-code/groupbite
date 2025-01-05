@@ -4,7 +4,7 @@
   >
     <v-row>
       <v-col
-        v-show="mobileNav == 'menu'"
+        v-show="mobileNav == 'menu' || lgAndUp"
         cols="12"
         md="7"
         class="p-0 mt-2"

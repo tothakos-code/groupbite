@@ -29,7 +29,7 @@ class NotificationService:
                             "p256dh": noti.p256dh
                         }
                     },
-                    data = json.dumps({"title": f"GroupBite - {vendor.name} rendelés hamarosan zárul", "body": f"Még nem adtál le rendelést ide: {noti.vendor_id}"}),
+                    data = json.dumps({"title": f"GroupBite - {vendor.name} rendelés hamarosan zárul", "body": f"Még nem adtál le rendelést ide: {vendor.name}"}),
                     vapid_private_key = VAPID_PRIVATE,
                     vapid_claims = { "sub": VAPID_SUBJECT }
                 )

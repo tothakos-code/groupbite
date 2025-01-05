@@ -10,12 +10,12 @@
         class="p-0 mt-2"
       >
         <div class="row p-2">
-          <div class="col col-sm-12 col-xl-auto d-flex justify-content-center justify-content-xl-start">
+          <div class="col col-sm-12 d-flex justify-content-center justify-content-xl-start">
             <h2>
               {{ vendorTitle }}
             </h2>
           </div>
-          <div class="col col-sm-auto col-xl-auto d-flex flex-fill align-items-center justify-content-sm-start justify-content-center justify-content-xl-start">
+          <div class="col col-sm-auto col-lg-auto d-flex flex-fill align-items-center justify-content-sm-start justify-content-center justify-content-xl-start">
             <OrderState
 
               class="text-truncate my-auto"

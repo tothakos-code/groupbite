@@ -4,7 +4,7 @@
     :class="{
       'bg-success': status === 'collect',
       'bg-warning': status === 'order',
-      'bg-danger': status === 'closed'}"
+      'bg-error': status === 'closed'}"
     :title="statusTitle"
     disabled
   >

@@ -30,7 +30,7 @@ export const useAuth = defineStore("user", {
             type: "warn",
             text: response.data.error,
           });
-          return;
+          return response;
         }
 
         this.user = response.data.data;
@@ -40,9 +40,11 @@ export const useAuth = defineStore("user", {
           type: "info",
           text: "Sikeresen bejelentkeztél.",
         });
+        return response
       } catch (error) {
         console.log("Error during login:" + error);
         this.isLoading = false;
+        return error.response
 
       }
     },

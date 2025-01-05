@@ -5,7 +5,7 @@
         id="transferBasketButton"
         v-bind="props"
         varian="text"
-        class="my-1 text-primary bg-background"
+        class="my-1 bg-primary"
         border="primary thin"
         @click="openPopup()"
       >

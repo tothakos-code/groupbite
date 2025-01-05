@@ -28,7 +28,7 @@
                   <v-btn
                     v-if="notificationStatus"
                     v-bind="props"
-                    class="bg-background text-primary me-2"
+                    class="bg-primary  me-2"
                     icon
                     size="small"
                     border="primary thin"
@@ -50,7 +50,7 @@
                   <v-btn
                     v-else
                     v-bind="props"
-                    class="bg-surface text-primary me-2"
+                    class="bg-primary me-2"
                     icon
                     size="small"
                     border="primary sm"
@@ -70,7 +70,7 @@
                     </svg>
                   </v-btn>
                 </template>
-                <span>Étkezde értesítései be/ki kapcsolása</span>
+                <span>Üzlet értesítés {{ notificationStatus ? "ki" : "be" }}kapcsolása</span>
               </v-tooltip>
               <v-tooltip location="bottom">
                 <template #activator="{ props }">

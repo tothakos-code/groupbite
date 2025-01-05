@@ -8,12 +8,13 @@ const dark = {
   dark: true,
   colors: {
     background: "#212529",
-    surface: "#0c1a1d",
-    primary: "#4c8c88",
-    secondary: "#202626",
+    surface: "#212529",
+    primary: "#447e7a",
+    secondary: "#2e5452",
+    header: "#252a2e",
     error: "#f44336",
     info: "#2196F3",
-    success: "#4caf50",
+    success: "#2c792f",
     warning: "#fb8c00",
   },
 };
@@ -21,10 +22,11 @@ const dark = {
 const light = {
   dark: false,
   colors: {
-    background: "#edf4fb",
-    surface: "#ebfeff",
+    background: "#ebfeff",
+    surface: "#ffffff",
     primary: "#67bcb7",
-    secondary: "#e6eaee",
+    secondary: "#d1ebe9",
+    header: "#f8f8f8",
     error: "#f44336",
     info: "#2196F3",
     success: "#4caf50",

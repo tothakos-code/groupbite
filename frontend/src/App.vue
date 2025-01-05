@@ -60,7 +60,7 @@
                 class="toast d-flex align-items-center"
                 :class="{
                   'bg-warning':props.item.type === 'warn',
-                  'bg-danger':props.item.type === 'error',
+                  'bg-error':props.item.type === 'error',
                   'bg-info-subtle':props.item.type === 'info',
                   'bg-warning-subtle':props.item.type === 'warn' && theme === 'dark',
                   'bg-danger-subtle':props.item.type === 'error' && theme === 'dark',

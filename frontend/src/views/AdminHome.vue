@@ -3,7 +3,7 @@
     <div class="row ms-2 mt-2">
       <div class="col-auto ">
         <v-btn
-          class="text-primary bg-secondary my-auto"
+          class="bg-primary my-auto"
           border="primary thin"
           @click="openAdminHome()"
         >

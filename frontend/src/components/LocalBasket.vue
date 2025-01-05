@@ -1,7 +1,10 @@
 <template>
   <v-card class="border-sm">
-    <v-card-title class="bg-secondary border-b-sm p-1">
-      <v-row justify="space-between">
+    <v-card-title class="bg-header border-b-sm p-1">
+      <v-row
+        class="mx-0 py-1"
+        justify="space-between"
+      >
         <v-col
           cols="2"
           lg="1"
@@ -29,28 +32,63 @@
           </h2>
         </v-col>
         <v-col
-          cols="7"
-          sm="3"
-          md="7"
-          lg="5"
-          class="text-center m-auto"
+          cols="auto"
+
+          class="text-end my-auto"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            fill="currentColor"
-            class="bi bi-cash me-1 mb-1"
-            viewBox="0 0 16 16"
+          <v-tooltip
+            location="bottom"
+            text="A fizetendő összeg még változhat, a rendelést leadó személyek számától.(Szállítási díjat több fele osztjuk)"
           >
-            <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
-            <path d="M0 4a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V4zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V6a2 2 0 0 1-2-2H3z" />
-          </svg>
-          <v-tooltip text="A fizetendő összeg még változhat, a rendelést leadó személyek számától.(Szállítási díjat több fele osztjuk)">
             <template #activator="{ props }">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="currentColor"
+                class="bi bi-cash me-1 mb-1"
+                viewBox="0 0 16 16"
+              >
+                <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                <path d="M0 4a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V4zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V6a2 2 0 0 1-2-2H3z" />
+              </svg>
               <span
                 v-bind="props"
-              >{{ orderStore.userBasketSum }} Ft</span>
+              >
+                {{ orderStore.userBasketSum }} Ft
+              </span>
+            </template>
+          </v-tooltip>
+        </v-col>
+        <v-col
+          v-if="auth.isLoggedIn && !orderStore.isUserBasketEmpty"
+          cols="auto"
+        >
+          <v-tooltip
+            location="bottom"
+            text="Töröl mindent a kosaradból"
+          >
+            <template #activator="{ props }">
+              <v-btn
+                variant="text"
+                v-bind="props"
+                border="primary thin"
+                class=" text-nowrap bg-primary"
+                @click="orderStore.clearBasket()"
+              >
+                <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Törlés</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  fill="currentColor"
+                  class="bi bi-trash text-bold"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z" />
+                  <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z" />
+                </svg>
+              </v-btn>
             </template>
           </v-tooltip>
         </v-col>
@@ -60,38 +98,6 @@
       <v-row>
         <v-col>
           <v-list class="pt-0 pe-0">
-            <div
-              v-if="auth.isLoggedIn && !orderStore.isUserBasketEmpty"
-
-              class="row px-0 d-flex m-1 mt-0 border border-2 border-top-0 rounded-bottom rounded-top-0"
-            >
-              <div class="col-12 d-flex justify-content-evenly">
-                <v-tooltip text="Töröl mindent a kosaradból">
-                  <template #activator="{ props }">
-                    <v-btn
-                      variant="text"
-                      v-bind="props"
-                      border="primary thin"
-                      class=" text-nowrap text-primary"
-                      @click="orderStore.clearBasket()"
-                    >
-                      <span class="d-none d-sm-inline d-md-none d-xl-inline me-1">Törlés</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        fill="currentColor"
-                        class="bi bi-trash text-bold"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z" />
-                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z" />
-                      </svg>
-                    </v-btn>
-                  </template>
-                </v-tooltip>
-              </div>
-            </div>
             <template
               v-for="(item, index) in orderStore.userBasket"
               :key="index"
@@ -100,7 +106,7 @@
                 <v-list-item
 
                   :class="isHovering ? 'bg-secondary' : undefined"
-                  class="p-0 pe-2"
+                  class="p-0 pe-2 border-b-sm"
                   v-bind="props"
                 >
                   <v-row
@@ -111,7 +117,7 @@
                       class="d-flex justify-start"
                     >
                       <span
-                        class="badge rounded-pill border bg-primary border-error align-self-center"
+                        class="badge rounded-pill border bg-secondary border-error align-self-center"
                         :class="[{pulse: itemQuantityPulse}]"
                         @animationend="itemQuantityPulse = false"
                       >{{ item.quantity }} x</span>

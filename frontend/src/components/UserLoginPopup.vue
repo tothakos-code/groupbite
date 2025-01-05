@@ -85,8 +85,12 @@ export default {
   },
   methods: {
     login: function() {
-      this.auth.login(this.username);
-      this.$emit("cancel");
+      this.auth.login(this.username).then(response => {
+        console.log(response);
+        if (!response.data.error) {
+          this.cancel()
+        }
+      })
     },
     register: function() {
       this.auth.register(this.username, this.email);

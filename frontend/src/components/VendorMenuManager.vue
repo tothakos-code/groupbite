@@ -208,7 +208,7 @@
                 type="button"
                 name="button"
                 title="Szerkesztés"
-                class="bg-background text-primary me-1 mt-1"
+                class="bg-primary me-1 mt-1"
                 icon
                 size="small"
                 border="primary thin"
@@ -236,7 +236,7 @@
                 type="button"
                 name="button"
                 title="Mentés"
-                class="bg-background text-primary me-1 mt-1"
+                class="bg-primary me-1 mt-1"
                 icon
                 size="small"
                 border="primary thin"
@@ -265,7 +265,7 @@
                 type="button"
                 name="button"
                 title="Mégse"
-                class="bg-background text-primary me-1 mt-1"
+                class="bg-primary me-1 mt-1"
                 icon
                 size="small"
                 border="primary thin"
@@ -293,7 +293,7 @@
                 type="button"
                 name="button"
                 title="Törlés"
-                class="bg-background text-primary me-1 mt-1"
+                class="bg-primary me-1 mt-1"
                 icon
                 size="small"
                 border="primary thin"
@@ -322,7 +322,7 @@
                 type="button"
                 name="button"
                 title="Duplikál"
-                class="bg-background text-primary me-1 mt-1"
+                class="bg-primary me-1 mt-1"
                 icon
                 size="small"
                 border="primary thin"
@@ -353,7 +353,7 @@
                 type="button"
                 name="button"
                 title="Items"
-                class="bg-background text-primary me-1 mt-1"
+                class="bg-primary me-1 mt-1"
                 icon
                 size="small"
                 border="primary thin"

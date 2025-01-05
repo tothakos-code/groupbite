@@ -1,6 +1,6 @@
 <template>
   <v-card class="border-sm">
-    <v-card-title class="bg-secondary border-b-sm  px-2">
+    <v-card-title class="bg-header border-b-sm  px-2">
       <v-row justify="space-between">
         <v-col class="col-0 d-none d-sm-inline col-sm-6 col-lg-8 my-auto">
           <h2 class="text-nowrap">
@@ -21,14 +21,15 @@
       v-if="itemlist.length !== 0 && categories.size > 1"
     >
       <v-row
-        class="m-0 border-b-sm"
+        class="mx-0 mb-0 border-b-md"
       >
         <v-col class="d-flex justify-space-around">
           <v-chip
             v-for="category, index in categories"
             :key="index"
             variant="outlined"
-            selected-class="bg-primary"
+            selected-class="bg-secondary"
+            class="text-primary"
             @click="setFilter(category)"
           >
             {{ category }}

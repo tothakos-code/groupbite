@@ -117,15 +117,8 @@
                 Warning! Using SMPT servers with password authentication is not a good security practice! More secure authentication methods are strongly recommended: SMTP relay, IP whitelisting, OAuth2, App-specific Password, Certificate-Based Auth.
               </div>
             </div>
-            <div class="row mb-2">
-              <div class="col-auto">
-                <label
-                  class="form-label"
-                  for="smtp_security"
-                >
-                  SMTP connection:
-                </label>
-
+            <div class="row mt-2">
+              <div class="col-3">
                 <v-select
                   id="smtp_security"
                   v-model="settings.smtp_security"
@@ -193,7 +186,7 @@
                     type="submit"
                     name="button"
                     varian="text"
-                    class="text-primary bg-background"
+                    class="bg-primary"
                     border="primary thin"
                     @click="sendTestEmail()"
                   >
@@ -206,12 +199,12 @@
         </div>
       </form>
       <hr>
-      <div class="mt-3">
+      <div class="my-3">
         <v-btn
           type="submit"
           name="button"
           varian="text"
-          class="text-primary bg-background"
+          class="bg-primary"
           border="primary thin"
           @click="saveSettings()"
         >

@@ -3,7 +3,7 @@
     variant="text"
     :class="auth.isLoggedIn && username === auth.user.username ? 'border-md border-primary' : ''"
   >
-    <v-card-title class="bg-secondary d-flex border-b-sm pe-0">
+    <v-card-title class="bg-header d-flex border-b-sm pe-0">
       <v-row
         no-gutters
         justify="space-between"
@@ -22,10 +22,8 @@
           <v-btn
             v-if="copyable && auth.isLoggedIn && username !== auth.user.username"
             varian="text"
-            class="ms-2 text-primary bg-secondary"
+            class="ms-2 bg-primary"
             title="Másol"
-            border="primary thin"
-            elevation="0"
             @click="orderStore.copy(userId)"
           >
             Másol
@@ -91,7 +89,7 @@
                 class="d-flex justify-start"
               >
                 <span
-                  class="badge rounded-pill bg-primary border-sm border-error align-self-center"
+                  class="badge rounded-pill bg-secondary border-sm border-error align-self-center"
                 >
                   {{ item.quantity }} x
                 </span>

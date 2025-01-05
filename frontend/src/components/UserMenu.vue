@@ -53,7 +53,7 @@
               <v-list-item-title>{{ auth.user.username }}</v-list-item-title>
             </template>
           </v-list-item>
-          <v-divider />
+          <v-divider class="d-md-none" />
           <v-list-item @click="showProfile = true">
             <template #prepend>
               <v-list-item-title>Profil beállítások</v-list-item-title>

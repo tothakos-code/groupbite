@@ -3,7 +3,7 @@ from flask_socketio import rooms
 from sqlalchemy import func, cast, update
 from datetime import datetime
 import logging
-
+import re
 from app.controllers import user_blueprint
 from app.socketio_singleton import SocketioSingleton
 from app.entities import Session
@@ -62,6 +62,30 @@ def handle_user_check_session():
     else:
         return { "error": f"{user_id} nincs bejelentkezve!" }, 200
 
+@user_blueprint.route("/reminder", methods=["GET"])
+def handle_reminder():
+    email = request.args.get('email')
+    if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
+        return { "error": "Helytelen email formátum" }, 200
+
+    user = User.get_one_by_email(email)
+    if user:
+        from app.services.mail_sender_service import send_mail
+        email_body = f"""
+Kedves felhasználó!<br>
+Erre az email címre egy bejelentkezési név emlékeztetőt kértek.<br>
+<br>
+Felhasználóneved: {user.username}<br>
+<br>
+Ha ezt az emlékeztetőt nem te kérted akkor lépj kapcsolatba az oldal üzemeltetőjével!<br>
+Üdv,<br>
+Groubite
+"""
+        ok, msg = send_mail(user.email, "Groupbite: Bejelentkezési adat emlékeztető", email_body)
+        if not ok:
+            return { "error": "Email szolgáltatás nem elérhető, küldés sikertelen" }, 200
+
+    return { "msg": "Email reminder sent" }, 200
 
 @user_blueprint.route("/register", methods=["POST"])
 def handle_user_register():

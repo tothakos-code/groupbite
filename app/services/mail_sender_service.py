@@ -21,7 +21,7 @@ def send_mail(to, subject, body, settings=None):
         smtp_port = settings["smtp_port"]
         smtp_user = settings["smtp_user"]
         smtp_password = settings["smtp_password"]
-        # smtp_security = settings["smtp_security"]
+        smtp_security = settings["smtp_security"]
 
     if sender_email == "" :
         return False, "sender_email can not be empty"

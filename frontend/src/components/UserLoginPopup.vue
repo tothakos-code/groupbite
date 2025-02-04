@@ -1,53 +1,129 @@
 <template>
   <Popup
     :show-modal="show"
-    :title="showLogin ? 'Jelentkezz be!' : 'Regisztráció!'"
-    :confirm-text="showLogin ? 'Belépés' : 'Regisztrál'"
+    :title="showRemainder ? 'Emlékeztető küldése' : showLogin ? 'Jelentkezz be!' : 'Regisztráció!'"
+    :confirm-text="showRemainder ? 'Küldés' : showLogin ? 'Belépés' : 'Regisztrál'"
     cancel-text="Mégse"
     @cancel="cancel()"
     @confirm="confirm()"
   >
-    <p v-if="showLogin">
-      Írd be a nevet amit regisztrációnál megadtál.
-    </p>
-    <p v-else>
-      Válassz egy felhasználó nevet.
-    </p>
-    <p>
-      {{ showLogin ? "Nincs fiókod?" : "Már van fiókod?" }}
-      <a
-        type="button"
-        name="button"
-        class="text-link"
-        @click="change_login()"
+    <div
+      v-if="!showRemainder"
+      class=""
+    >
+      <div v-if="showLogin">
+        <p>
+          Írd be a nevet amit regisztrációnál megadtál.
+        </p>
+        <p>
+          Nincs fiókod?
+
+          <a
+            type="button"
+            name="button"
+            class="text-link"
+            @click="change_login()"
+          >
+            Regisztrálj!
+          </a>
+        </p>
+        <div class="input-group mb-3">
+          <span class="input-group-text">Név</span>
+          <input
+            v-model.trim="username"
+            type="text"
+            class="form-control"
+            placeholder="Felhasználónév"
+            aria-label="Username"
+            aria-describedby="basic-addon1"
+          >
+        </div>
+        <p>
+          Elfelejtetted a bejelentkezési neved?
+          <a
+            type="button"
+            name="button"
+            class="text-link"
+            @click="change_remainder()"
+          >
+            Emlékeztető email kérése
+          </a>
+        </p>
+      </div>
+      <div
+        v-else
       >
-        {{ showLogin ? "Regisztrálj!" : "Jelentkezz be!" }}
-      </a>
-    </p>
-    <div class="input-group mb-3">
-      <span class="input-group-text">Név</span>
-      <input
-        v-model.trim="username"
-        type="text"
-        class="form-control"
-        placeholder="Felhasználónév"
-        aria-label="Username"
-        aria-describedby="basic-addon1"
-      >
+        <p>
+          Válassz egy felhasználó nevet.
+        </p>
+        <p>
+          Már van fiókod?
+
+          <a
+            type="button"
+            name="button"
+            class="text-link"
+            @click="change_login()"
+          >
+            Jelentkezz be!
+          </a>
+        </p>
+        <div class="input-group mb-3">
+          <span class="input-group-text">Név</span>
+          <input
+            v-model.trim="username"
+            type="text"
+            class="form-control"
+            placeholder="Felhasználónév"
+            aria-label="Username"
+            aria-describedby="basic-addon1"
+          >
+        </div>
+        <div
+          class="input-group mb-3"
+        >
+          <span class="input-group-text">Email cím</span>
+          <input
+            v-model.trim="email"
+            type="text"
+            class="form-control"
+            placeholder="Email cím"
+            aria-label="Email"
+            aria-describedby="basic-addon2"
+          >
+        </div>
+      </div>
     </div>
     <div
-      v-if="!showLogin"
-      class="input-group mb-3"
+      v-if="showRemainder"
+      class=""
     >
-      <span class="input-group-text">Email cím</span>
-      <input
-        v-model.trim="email"
-        type="text"
-        class="form-control"
-        placeholder="Email cím"
-        aria-label="Email"
-        aria-describedby="basic-addon2"
+      <p>
+        Írd be a regisztrációkor megadott email címed amire elküldjük a bejelentkezési nevedet
+      </p>
+      <div
+        class="input-group mb-3"
       >
+        <span class="input-group-text">Email cím</span>
+        <input
+          v-model.trim="email"
+          type="text"
+          class="form-control"
+          placeholder="Email cím"
+          aria-label="Email"
+          aria-describedby="basic-addon2"
+        >
+      </div>
+      <p>
+        <a
+          type="button"
+          name="button"
+          class="text-link"
+          @click="change_remainder()"
+        >
+          Vissza a bejelentkezéshez
+        </a>
+      </p>
     </div>
   </Popup>
 </template>
@@ -75,7 +151,8 @@ export default {
     return {
       username: "",
       email: "",
-      showLogin: true
+      showLogin: true,
+      showRemainder: false
     }
   },
   mounted() {
@@ -99,7 +176,14 @@ export default {
     change_login: function() {
       this.showLogin = !this.showLogin;
     },
+    change_remainder: function() {
+      this.showRemainder = !this.showRemainder;
+    },
     confirm: function() {
+      if (this.showRemainder) {
+        this.auth.sendReminder(this.email);
+        return
+      }
       if (this.showLogin) {
         this.login();
       } else {

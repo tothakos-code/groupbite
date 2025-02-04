@@ -38,6 +38,7 @@ class VendorFactory:
             self._vendors[vendor_obj.id] = vendor_obj
 
             # scheduling jobs
+            # TODO: Validate the format
             if vendor_db.settings["closure_scheduler"]["value"] != "manual":
                 from app.scheduler import schedule_task, cancel_task
                 hh, mm = vendor_db.settings["closure_scheduler"]["value"].split(":")
@@ -47,6 +48,11 @@ class VendorFactory:
                 from app.scheduler import schedule_task, cancel_task
                 hh, mm = vendor_db.settings["closed_scheduler"]["value"].split(":")
                 schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
+
+            if vendor_db.settings["email_order_scheduler"]["value"] != "manual":
+                from app.scheduler import schedule_task, cancel_task
+                hh, mm = vendor_db.settings["email_order_scheduler"]["value"].split(":")
+                schedule_task(str(vendor_db.id) + "-email-order", int(hh), int(mm), vendor_db.email_ordering_wrapper)
 
 
     @classmethod

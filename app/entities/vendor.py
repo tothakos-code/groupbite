@@ -2,7 +2,7 @@ from enum import Enum as pyenum
 from sqlalchemy.dialects.postgresql import JSONB
 from . import Base, session
 from datetime import date
-from sqlalchemy import Boolean, select, exc
+from sqlalchemy import Boolean, select, exc, event
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -11,6 +11,77 @@ from typing import List
 import logging
 from marshmallow import Schema, fields
 from .notification import NotificationType
+
+DEFAULT_VENDOR_SETTINGS = {
+  "link": {
+    "name": "Eredeti oldal elérhetősége",
+    "type": "STR",
+    "value": "",
+    "section": "root"
+  },
+  "title": {
+    "name": "Cím",
+    "type": "STR",
+    "value": "",
+    "section": "root"
+  },
+  "comment_example": {
+    "name": "Rendelés megjegyzés példa",
+    "type": "STR",
+    "value": "",
+    "section": "root"
+  },
+  "transport_price": {
+    "name": "Szállítási díj",
+    "type": "INT",
+    "value": "0",
+    "section": "root"
+  },
+  "auto_email_order": {
+    "name": "Automatikus email rendelés",
+    "type": "BOOL",
+    "value": False,
+    "section": "root"
+  },
+  "email_order_scheduler": {
+    "name": "Rendelés automatikus email küldése (formátum: hh:mm)",
+    "type": "STR",
+    "value": "manual",
+    "section": "root"
+  },
+  "closed_scheduler": {
+    "name": "Rendelés automatikus lezárása (formátum: hh:mm)",
+    "type": "STR",
+    "value": "manual",
+    "section": "root"
+  },
+  "closure_scheduler": {
+    "name": "Rendelés automatikus zárás figyelmeztetés (formátum: hh:mm)",
+    "type": "STR",
+    "value": "manual",
+    "section": "root"
+  },
+  "auto_email_order_to": {
+    "name": "Automatikus rendelés címzett",
+    "type": "STR",
+    "value": "",
+    "section": "root"
+  },
+  "order_text_template": {
+    "name": "Rendelés szöveg sor minta",
+    "type": "STR",
+    "value": "${quantity}x ${item_name} ${size_name}\\n",
+    "section": "root"
+  },
+  "auto_email_order_template": {
+    "name": "Automatikus rendelés üzenet sablon",
+    "type": "STRBOX",
+    "value": "",
+    "section": "root"
+  }
+}
+
+
 
 class BaseVendorSchema(Schema):
     name = fields.Str(required=True)
@@ -37,6 +108,11 @@ class Vendor(Base):
 
     def __repr__(self):
         return f"Vendor<id={self.id},name={self.name},type={str(self.type)}>"
+
+    def _validate_settings(self):
+        if not isinstance(self.settings, dict):
+            self.settings = {}
+        self.settings = {**DEFAULT_VENDOR_SETTINGS, **self.settings}
 
     def find_all():
         stmt = select(Vendor).order_by(Vendor.name)
@@ -79,6 +155,14 @@ class Vendor(Base):
                 hh, mm = settings["closed_scheduler"]["value"].split(":")
                 schedule_task(str(self.id) + "-closed", int(hh), int(mm), self.closed_wrapper)
 
+        if self.settings["email_order_scheduler"]["value"] != settings["email_order_scheduler"]["value"]:
+            from app.scheduler import schedule_task, cancel_task
+            cancel_task(str(self.id) + "-email-order")
+
+            if settings["email_order_scheduler"]["value"] != "manual":
+                hh, mm = settings["email_order_scheduler"]["value"].split(":")
+                schedule_task(str(self.id) + "-email-order", int(hh), int(mm), self.email_ordering_wrapper)
+
         self.settings = settings;
         try:
             session.commit()
@@ -120,6 +204,13 @@ class Vendor(Base):
                     schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
             except KeyError as e:
                 logging.error("Task scheduling error, 'closed_scheduler' is undefined in settings")
+            try:
+                if vendor_db.settings["email_order_scheduler"]["value"] != "manual":
+                    from app.scheduler import schedule_task, cancel_task
+                    hh, mm = vendor_db.settings["email_order_scheduler"]["value"].split(":")
+                    schedule_task(str(vendor_db.id) + "-email-order", int(hh), int(mm), vendor_db.email_ordering_wrapper)
+            except KeyError as e:
+                logging.error("Task scheduling error, 'email_order_scheduler' is undefined in settings")
 
         try:
             session.commit()
@@ -161,7 +252,20 @@ class Vendor(Base):
         order = Order.find_open_order_by_date_for_a_vendor(str(self.id), date.today().strftime("%Y-%m-%d"))
         if order:
             from app.socketio_singleton import SocketioSingleton
-            # order.change_state(OrderState.CLOSED, None)
+            order.change_state(OrderState.CLOSED, None)
+            socketio = SocketioSingleton.get_instance()
+            socketio.emit("be_order_update", {
+                "order": order.serialized
+            })
+        else:
+            logging.info("State already changed")
+
+    def email_ordering_wrapper(self):
+        logging.info("Scheduled email ordering running")
+        from app.entities.order import Order, OrderState
+
+        order = Order.find_order_by_date_for_a_vendor(str(self.id), date.today().strftime("%Y-%m-%d"))
+        if order:
             if self.settings["auto_email_order"]["value"] == True:
                 from app.services.mail_sender_service import send_mail
                 from app.entities.user_basket import UserBasket
@@ -180,12 +284,8 @@ class Vendor(Base):
                 logging.info("Scheduled automatic order email sent!")
                 send_mail(self.settings["auto_email_order_to"]["value"], "Makkos rendelés", email_template)
 
-            socketio = SocketioSingleton.get_instance()
-            socketio.emit("be_order_update", {
-                "order": order.serialized
-            })
         else:
-            logging.info("State already changed")
+            logging.info("Order not found")
 
 
     @property
@@ -198,3 +298,10 @@ class Vendor(Base):
             "type": str(self.type),
             "settings": self.settings,
         }
+
+
+def validate_before_save(mapper, connection, target):
+    target._validate_settings()
+
+event.listen(Vendor, "before_insert", validate_before_save)
+event.listen(Vendor, "before_update", validate_before_save)

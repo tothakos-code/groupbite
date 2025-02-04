@@ -1,5 +1,5 @@
 <template>
-  <v-card class="border-sm">
+  <v-card class="border-sm w-100">
     <v-card-title class="bg-header border-b-sm p-1">
       <v-row
         class="mx-0 py-1"

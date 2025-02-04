@@ -9,19 +9,28 @@
         md="7"
         class="p-0 mt-2"
       >
-        <div class="row p-2">
-          <div class="col col-sm-12 d-flex justify-content-center justify-content-xl-start">
+        <v-row class="p-2">
+          <v-col
+            class="d-flex justify-content-center justify-content-xl-start"
+            cols="12"
+          >
             <h2>
               {{ vendorTitle }}
             </h2>
-          </div>
-          <div class="col col-sm-auto col-lg-auto d-flex flex-fill align-items-center justify-content-sm-start justify-content-center justify-content-xl-start">
+          </v-col>
+          <v-col
+            sm="auto"
+            class="d-flex flex-fill align-items-center justify-content-sm-start justify-content-center justify-content-xl-start"
+          >
             <OrderState
 
               class="text-truncate my-auto"
             />
-          </div>
-          <div class="col col-sm-auto col-xl-auto d-flex justify-content-center justify-content-xl-end align-items-center">
+          </v-col>
+          <v-col
+            sm="auto"
+            class="d-flex justify-content-center justify-content-xl-end align-items-center"
+          >
             <div class="">
               <v-tooltip location="bottom">
                 <template #activator="{ props }">
@@ -109,9 +118,11 @@
 
               <TransferPopup />
             </div>
-          </div>
-        </div>
-        <v-row class="row m-0 p-2">
+          </v-col>
+        </v-row>
+        <v-row
+          class="m-0 p-2"
+        >
           <MenuList :key="vendorId" />
         </v-row>
       </v-col>
@@ -122,12 +133,12 @@
         class="mt-2 p-1 pe-0"
       >
         <v-row
-          class="row m-0"
+          class="m-0"
         >
           <LocalBasket />
         </v-row>
 
-        <v-row class="row m-0 mt-2">
+        <v-row class="m-0 mt-2">
           <GlobalBasket />
         </v-row>
       </v-col>

@@ -1,5 +1,5 @@
 <template>
-  <v-card class="border-sm">
+  <v-card class="border-sm w-100">
     <v-card-title class="bg-header border-b-sm  px-2">
       <v-row justify="space-between">
         <v-col class="col-0 d-none d-sm-inline col-sm-6 col-lg-8 my-auto">

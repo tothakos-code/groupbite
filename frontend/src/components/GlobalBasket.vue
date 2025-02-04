@@ -1,5 +1,5 @@
 <template>
-  <v-card class="border-sm">
+  <v-card class="border-sm w-100">
     <v-card-title class="align-items-center bg-header border-b-sm p-1">
       <v-row
         align-content="center"

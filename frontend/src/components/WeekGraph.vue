@@ -1,20 +1,32 @@
 <template>
-  <div class="card">
-    <div class="card-header d-flex justify-content-center">
-      <div class="col-12 row px-0">
-        <div class="col-12 d-flex justify-content-center col-sm-6 col-md-4 justify-content-md-start">
+  <v-card class="border-sm">
+    <v-card-title class="bg-header d-flex border-b-sm justify-content-center">
+      <v-row
+        cols="12"
+        class=""
+      >
+        <v-col
+          cols="auto"
+          class="col-12 d-flex justify-content-center col-sm-6 col-md-4 justify-content-md-start"
+        >
           <h2 class="">
             Rendelés statisztikák
           </h2>
-        </div>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col-12 col-md-10 col-lg-6 px-lg-5">
-          <p class="row justify-content-center">
-            Utolsó év rendeléseinek összesítése havi bontásban
-          </p>
+        </v-col>
+      </v-row>
+    </v-card-title>
+    <v-car-text class="">
+      <v-row class="">
+        <v-col
+          cols="12"
+          lg="6"
+          class="px-lg-5"
+        >
+          <v-row class="justify-content-center">
+            <p>
+              Utolsó év rendeléseinek összesítése havi bontásban
+            </p>
+          </v-row>
           <Bar
             v-if="vendorChartLoaded"
             id="my-chart-id"
@@ -22,11 +34,17 @@
             :options="chartOptions"
             :data="yearChartData"
           />
-        </div>
-        <div class="col-12 col-md-10 col-lg-6 px-lg-5">
-          <p class="row justify-content-center">
-            Utolsó hét rendelésinek összesítése napi bontásban
-          </p>
+        </v-col>
+        <v-col
+          cols="12"
+          lg="6"
+          class="px-lg-5"
+        >
+          <v-row class="justify-content-center">
+            <p>
+              Utolsó hét rendelésinek összesítése napi bontásban
+            </p>
+          </v-row>
           <Bar
             v-if="weekChartLoaded"
             id="my-chart-id"
@@ -34,10 +52,10 @@
             :options="chartOptions"
             :data="weekChartData"
           />
-        </div>
-      </div>
-    </div>
-  </div>
+        </v-col>
+      </v-row>
+    </v-car-text>
+  </v-card>
 </template>
 
 <script>

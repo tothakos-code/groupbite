@@ -1,21 +1,38 @@
 <template>
-  <div
+  <v-card
     v-if="!isLoading"
-    class="card"
+    class="border-sm"
   >
-    <div class="card-header d-flex justify-content-center">
-      <div class="col-12 row px-0">
-        <div class="col-12 d-flex justify-content-center col-sm-6 col-md-4 justify-content-md-start">
+    <v-card-title class="bg-header border-b-sm  d-flex justify-content-center">
+      <v-row
+        cols="12"
+        class="px-0"
+      >
+        <v-col
+          cols="12"
+          sm="6"
+          md="4"
+          class="d-flex justify-content-center justify-content-md-start"
+        >
           <h2 class="">
             Heti összegző
           </h2>
-        </div>
-        <div class="col-12 d-flex justify-content-center col-sm-6 d-md-inline col-md-4">
+        </v-col>
+        <v-col
+          cols="12"
+          sm="6"
+          md="4"
+          class="d-flex justify-content-center  d-md-inline"
+        >
           <span class="text-center text-nowrap px-2 fs-4">
             {{ getCurrentMonthName }} {{ currentDateSelected.getWeek() }}. hét
           </span>
-        </div>
-        <div class="col-12 d-flex col-md-4">
+        </v-col>
+        <v-col
+          cols="12"
+          md="4"
+          class=" d-flex "
+        >
           <div class="col-4 d-flex align-items-center justify-content-center">
             <a
               type="button"
@@ -70,147 +87,154 @@
               </svg>
             </a>
           </div>
-        </div>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="">
-        <div
-          class="col mb-2"
+        </v-col>
+      </v-row>
+    </v-card-title>
+    <v-card-text class="">
+      <v-row
+        class="d-flex mb-2"
+      >
+        <v-col
+          v-for="day in weekdates"
+          :key="day"
+          cols="12"
+          md="auto"
+          class="flex-md-grow-1 justify-content-md-between"
         >
-          <div class="col-12 d-md-flex justify-content-md-between">
-            <div
-              v-for="day in weekdates"
-              :key="day"
-              style="min-height: 200px"
-              class="col border border-2 rounded mx-1 px-2"
-              :class="[
-                {'border-3': new Date(day).getDate() === currentDateSelected.getDate()},
-                new Date(day).getDate() === currentDateSelected.getDate() ? 'border-'+auth.getUserColor : 'border-'+auth.getUserColor + '-subtle'
-              ]"
-              @click="setDay(day)"
-            >
-              <div class="row">
-                <div class="col-8">
-                  <span
-                    class="fs-5"
-                    :class="[onSameDay(day, new Date()) ? `text-primary` : '']"
-                  >
-                    {{ new Date(day).toLocaleDateString('hu-HU', {day:'numeric'}) }}.
-                    {{ new Date(day).toLocaleDateString('hu-HU', {weekday:'short'}) }}
-                  </span>
-                </div>
-                <div
-                  v-if="isThereOrder(history[day])"
-                  class="col-4 d-flex justify-content-end"
+          <v-sheet
+
+            class="rounded mx-1 px-2"
+            border="primary md"
+            style="min-height: 200px"
+            :class="[
+              {'border-3': new Date(day).getDate() === currentDateSelected.getDate()},
+              new Date(day).getDate() === currentDateSelected.getDate() ? 'border-primary' : 'border-primary-subtle'
+            ]"
+          >
+            <v-row class="">
+              <v-col
+                cols="8"
+                class=""
+              >
+                <span
+                  class="fs-5"
+                  :class="[onSameDay(day, new Date()) ? `text-primary` : '']"
                 >
-                  <span title="Ezen a napon te is rendeltél.">
+                  {{ new Date(day).toLocaleDateString('hu-HU', {day:'numeric'}) }}.
+                  {{ new Date(day).toLocaleDateString('hu-HU', {weekday:'short'}) }}
+                </span>
+              </v-col>
+              <v-col
+                v-if="isThereOrder(history[day])"
+                cols="4"
+                class=" d-flex justify-content-end"
+              >
+                <span title="Ezen a napon te is rendeltél.">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="currentColor"
+                    class="bi bi-basket3-fill"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 6h1.717L5.07 1.243a.5.5 0 0 1 .686-.172zM2.468 15.426.943 9h14.114l-1.525 6.426a.75.75 0 0 1-.729.574H3.197a.75.75 0 0 1-.73-.574z" />
+                  </svg>
+                </span>
+              </v-col>
+            </v-row>
+            <div
+              v-if="history[day] !== undefined"
+              class="btn btn-link m-0 p-0"
+            >
+              <button
+                v-for="(order) in Object.values(history[day])"
+                :key="order.id"
+                class="btn btn-link px-0"
+                type="button"
+                name="button"
+                @click="openHistoryPopup(order.id)"
+              >
+                <span
+
+                  class=" badge rounder-pill p-2 py-1 fs-6 bg-primary"
+                  :title="order.vendor + ' rendelés lett leadva ezen a napon'"
+                >
+                  @{{ order.vendor }}
+                  <span
+                    v-if="order.ordered"
+                    :title="'Te is rendeltél ' + order.vendor + '-ból/ből'"
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
+                      width="14"
+                      height="14"
                       fill="currentColor"
-                      class="bi bi-basket3-fill"
+                      class="bi bi-basket3-fill mb-1"
                       viewBox="0 0 16 16"
                     >
                       <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 6h1.717L5.07 1.243a.5.5 0 0 1 .686-.172zM2.468 15.426.943 9h14.114l-1.525 6.426a.75.75 0 0 1-.729.574H3.197a.75.75 0 0 1-.73-.574z" />
                     </svg>
                   </span>
-                </div>
-              </div>
-              <div
-                v-if="history[day] !== undefined"
-                class="btn btn-link m-0 p-0"
-              >
-                <button
-                  v-for="(order) in Object.values(history[day])"
-                  :key="order.id"
-                  class="btn btn-link px-0"
-                  type="button"
-                  name="button"
-                  @click="openHistoryPopup(order.id)"
-                >
-                  <span
-
-                    class=" badge rounder-pill p-2 py-1 fs-6 bg-primary"
-                    :title="order.vendor + ' rendelés lett leadva ezen a napon'"
-                  >
-                    @{{ order.vendor }}
-                    <span
-                      v-if="order.ordered"
-                      :title="'Te is rendeltél ' + order.vendor + '-ból/ből'"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        fill="currentColor"
-                        class="bi bi-basket3-fill mb-1"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 6h1.717L5.07 1.243a.5.5 0 0 1 .686-.172zM2.468 15.426.943 9h14.114l-1.525 6.426a.75.75 0 0 1-.729.574H3.197a.75.75 0 0 1-.73-.574z" />
-                      </svg>
-                    </span>
-                  </span>
-                </button>
-              </div>
+                </span>
+              </button>
+            </div>
+          </v-sheet>
+        </v-col>
+      </v-row>
+      <v-row class="d-flex align-items-strech">
+        <div class="col text-center align-center">
+          <span class="btn pe-none border border-secondary-subtle rounded">
+            A hét rendeléseinek összege {{ sum }} Ft
+          </span>
+        </div>
+        <div class="col text-center">
+          <span class="btn pe-none border border-secondary-subtle rounded">
+            {{ orderCount }} db rendelés a héten
+          </span>
+        </div>
+        <Popup
+          v-if="showOrderSummary"
+          :show-modal="showOrderSummary"
+          title="Rendelés összesítő"
+          :large="true"
+          confirm-text="Ok"
+          @cancel="showOrderSummary = false"
+          @confirm="showOrderSummary = false"
+        >
+          <div class="row d-flex align-items-strech">
+            <div class="col text-center align-center">
+              <span class="btn pe-none border border-secondary-subtle rounded">
+                Összesen {{ calculateHistorySum() }} Ft
+              </span>
+            </div>
+            <div class="col text-center">
+              <span class="btn pe-none border border-secondary-subtle rounded">
+                {{ Math.ceil(loaded_menu.order_fee/Object.keys(loaded_menu.basket).length) }} Ft szállítás díj/fő
+              </span>
             </div>
           </div>
-        </div>
-        <div class="row d-flex align-items-strech">
-          <div class="col text-center align-center">
-            <span class="btn pe-none border border-secondary-subtle rounded">
-              A hét rendeléseinek összege {{ sum }} Ft
-            </span>
-          </div>
-          <div class="col text-center">
-            <span class="btn pe-none border border-secondary-subtle rounded">
-              {{ orderCount }} db rendelés a héten
-            </span>
-          </div>
-          <Popup
-            v-if="showOrderSummary"
-            :show-modal="showOrderSummary"
-            title="Rendelés összesítő"
-            :large="true"
-            confirm-text="Ok"
-            @cancel="showOrderSummary = false"
-            @confirm="showOrderSummary = false"
+          <div
+            v-for="(user_entry) in loaded_menu.basket"
+            :key="user_entry.user_id"
+            class="row mt-1 mb-1"
           >
-            <div class="row d-flex align-items-strech">
-              <div class="col text-center align-center">
-                <span class="btn pe-none border border-secondary-subtle rounded">
-                  Összesen {{ calculateHistorySum() }} Ft
-                </span>
-              </div>
-              <div class="col text-center">
-                <span class="btn pe-none border border-secondary-subtle rounded">
-                  {{ Math.ceil(loaded_menu.order_fee/Object.keys(loaded_menu.basket).length) }} Ft szállítás díj/fő
-                </span>
-              </div>
+            <div class="list-group-item row m-0">
+              <GlobalBasketUser
+                :username="user_entry.username"
+                :user-id="user_entry.user_id"
+                :user-basket="user_entry.items"
+                :order-fee="loaded_menu.order_fee/Object.keys(loaded_menu.basket).length"
+                :start-collapsed="true"
+                :collapsable="true"
+                :copyable="false"
+              />
             </div>
-            <div
-              v-for="(user_entry) in loaded_menu.basket"
-              :key="user_entry.user_id"
-              class="row mt-1 mb-1"
-            >
-              <div class="list-group-item row m-0">
-                <GlobalBasketUser
-                  :username="user_entry.username"
-                  :user-id="user_entry.user_id"
-                  :user-basket="user_entry.items"
-                  :order-fee="loaded_menu.order_fee/Object.keys(loaded_menu.basket).length"
-                  :start-collapsed="true"
-                  :collapsable="true"
-                  :copyable="false"
-                />
-              </div>
-            </div>
-          </Popup>
-        </div>
-      </div>
-    </div>
-  </div>
+          </div>
+        </Popup>
+      </v-row>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>

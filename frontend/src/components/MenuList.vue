@@ -18,19 +18,19 @@
       </v-row>
     </v-card-title>
     <v-chip-group
-      v-if="itemlist.length !== 0 && categories.size > 1"
+      v-if="menuStore.getItems.length !== 0 && menuStore.getCategories.size > 1"
     >
       <v-row
         class="mx-0 mb-0 border-b-md"
       >
         <v-col class="d-flex justify-space-around">
           <v-chip
-            v-for="category, index in categories"
+            v-for="category, index in menuStore.getCategories"
             :key="index"
             variant="outlined"
             selected-class="bg-secondary"
             class="text-primary"
-            @click="setFilter(category)"
+            @click="filter=category"
           >
             {{ category }}
           </v-chip>
@@ -41,21 +41,25 @@
       <v-row>
         <v-col>
           <v-list>
-            <template
-              v-for="(item, i) in itemlist"
+            <div
+              v-for="(item, i) in menuStore.getItems"
               :key="'item-'+i"
             >
-              <v-hover v-slot="{ isHovering, props }">
-                <MenuItem
-                  :key="'item-'+i"
-                  :item="item"
-                  :class="isHovering ? 'bg-secondary' : undefined"
-                  v-bind="props"
-                />
-              </v-hover>
-            </template>
+              <template
+                v-if="filter==='minden' || item.category === filter"
+              >
+                <v-hover v-slot="{ isHovering, props }">
+                  <MenuItem
+                    :key="'item-'+i"
+                    :item="item"
+                    :class="isHovering ? 'bg-secondary' : undefined"
+                    v-bind="props"
+                  />
+                </v-hover>
+              </template>
+            </div>
             <div
-              v-if="itemlist.length === 0 && isLoading === false"
+              v-if="menuStore.getItems.length === 0 && isLoading === false"
               class="d-flex justify-content-center"
             >
               <span>Erre a napra nincsen mit betöltenem</span>
@@ -83,6 +87,7 @@ import Datestamp from "@/components/DateStamp.vue"
 import { state, socket } from "@/main";
 import { useAuth } from "@/stores/auth";
 import { useVendorStore } from "@/stores/vendor";
+import { useMenuStore } from "@/stores/menu";
 import MenuItem from "../components/MenuItem.vue"
 
 
@@ -95,16 +100,16 @@ export default {
   setup() {
     const auth = useAuth();
     const vendorStore = useVendorStore();
+    const menuStore = useMenuStore();
     return {
       auth,
-      vendorStore
+      vendorStore,
+      menuStore
     }
   },
   data() {
     return {
-      itemlist: [],
-      filter:[],
-      categories: new Set(["minden"]),
+      filter: "minden",
       isLoading: true
     }
   },
@@ -117,25 +122,6 @@ export default {
     this.getMenu()
   },
   methods: {
-    loadMenu(day) {
-      if (day === undefined) {
-        day = new Date().toISODate()
-      }
-      this.vendorStore.fetchMenusByDate(this.vendorStore.selectedVendor.id, day, {
-          "filter": this.filter
-        })
-        .then(response => {
-          this.itemlist = response.data.data;
-          // this.categories = new Set(["minden"])
-          for (var item of this.itemlist) {
-            if (item.category !== "") {
-              this.categories.add(item.category)
-            }
-          }
-          this.isLoading = false
-        })
-        .catch(error => console.error(error));
-    },
     getMenu: function(day) {
       if (day === undefined) {
         if (state.selectedDate === undefined) {
@@ -148,12 +134,11 @@ export default {
       socket.emit("fe_date_selection", {
         "old_selected_date": state.selectedDate.toISODate(),
         "new_selected_date": formated_day,
-        "vendor_id": this.vendorStore.selectedVendor.id
+        "vendor_id": this.vendorStore.selectedVendor.id,
       })
       state.selectedDate = new Date(day);
-      this.setFilter("minden");
+      this.isLoading = false
       history.pushState({}, "", `/menu/${this.vendorStore.selectedVendor.name}/${state.selectedDate.toISODate()}`)
-      this.loadMenu(formated_day);
     },
     getCurrentWeekDates() {
       const currentDate = new Date();
@@ -176,23 +161,11 @@ export default {
 
       return weekDates;
     },
-    setFilter(category) {
-      if (category === "minden") {
-        this.filter = [];
-      } else {
-        this.filter = [category];
-      }
-      this.loadMenu(state.selectedDate.toISODate());
-    }
+
   }
 }
 </script>
 
 <style>
-/* [data-bs-theme=light] .list-group-item:hover {
-  background-color: lightgray;
-}
-[data-bs-theme=dark] .list-group-item:hover {
-  background-color: #3c3c3c;
-} */
+
 </style>

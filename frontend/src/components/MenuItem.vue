@@ -25,15 +25,24 @@
           block
           @click="order.addItem(item.id, size.id)"
         >
+          <span
+            v-if="size.quantity > 0"
+            class="text-nowrap me-1"
+          >{{ size.quantity }} db</span>
           <span class="text-nowrap me-1">{{ size.name }}</span>
           <span class="text-nowrap">{{ size.price }} Ft</span>
         </v-btn>
-        <span
+        <v-btn
           v-else
-          class="btn pe-none btn-outline-danger btn-sm"
+          class="text-danger"
+          variant="tonal"
+          block
+          elevation="2"
+          :readonly="true"
         >
+          <span class="text-nowrap me-1">{{ size.name }}</span>
           Elfogyott
-        </span>
+        </v-btn>
       </v-col>
     </v-row>
   </v-list-item>

@@ -4,12 +4,28 @@ import { notify } from "@kyvg/vue3-notification";
 
 export const useMenuStore = defineStore("menu", {
   state: () => ({
-    menu: {},
+    menus: [],
     isLoading: false
   }),
   getters: {
     getItems: (state) => {
-      return state.menu.items
+      let result = [];
+      state.menus.forEach((menu) => {
+        result = result.concat(menu.items)
+      });
+
+      return result;
+    },
+    getCategories: (state) => {
+      let result = new Set(["minden"]);
+      state.menus.forEach((menu) => {
+        menu.items.forEach((item) => {
+          result.add(item.category)
+        });
+
+      });
+
+      return result;
     }
   },
   actions: {

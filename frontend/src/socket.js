@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 import router from "./router.js";
 import { register_plugin_routes } from "./loader.js";
 import { useOrderStore } from "@/stores/order"
+import { useMenuStore } from "@/stores/menu"
 import { useVendorStore } from "@/stores/vendor"
 import { useAuth } from "@/stores/auth"
 
@@ -38,13 +39,21 @@ socket.on("be_user_update", function(user) {
 });
 
 socket.on("be_order_update", function(data) {
-  const order = useOrderStore();
+  const orderStore = useOrderStore();
   if (data.basket) {
-    order.basket = data.basket;
+    orderStore.basket = data.basket;
   }
   if (data.order) {
-    order.order = data.order;
+    orderStore.order = data.order;
   }
+});
+
+socket.on("be_menu_update", function(data) {
+  const menuStore = useMenuStore();
+  if (data.menus) {
+    menuStore.menus = data.menus;
+  }
+
 });
 
 socket.on("Refresh!", function() {

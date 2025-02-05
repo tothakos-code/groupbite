@@ -20,13 +20,19 @@ class BaseVendor(object):
     def get(self):
         raise NotImplementedError("Subclasses must implement the get method")
 
-    def get_menu(self, date, filter=[]):
+    def get_menus(self, date, filter=[]):
         menus = Menu.find_vendor_all_menu(self.id, date)
-        menuids = [menu.id for menu in menus]
 
-        items = MenuItem.find_all_by_menu_list(menuids, filter)
         result = []
-        for i in items:
-            result.append(i.serialized)
-        # result = [menu.serialized for menu in requested_menu]
+        for menu in menus:
+            items = MenuItem.find_all_by_menu_list([menu.id], filter, 100)
+            result_items = []
+            for item in items:
+                result_items.append(item.serialized)
+            result.append({
+                "menu_id": menu.id,
+                "date": str(menu.date),
+                "items": result_items
+            })
+
         return result

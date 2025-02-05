@@ -9,7 +9,7 @@
       <div class="col-4 p-0 text-center">
         <button
           class="btn btn-link text-primary p-0"
-          :disabled="limitToCurrentWeek && currentDateSelected.getAdjustedDay() == 0"
+          :disabled="limitToCurrentWeek && selectedDate.getAdjustedDay() == 0"
           title="Előző nap"
           @click="prevDay()"
         >
@@ -55,7 +55,7 @@
           name="button"
           class="btn btn-link text-primary p-0"
           title="Következő nap"
-          :disabled="limitToCurrentWeek && currentDateSelected.getAdjustedDay() == 6"
+          :disabled="limitToCurrentWeek && selectedDate.getAdjustedDay() == 6"
           @click="nextDay()"
         >
           <svg
@@ -77,7 +77,7 @@
 
 <script>
 import { useAuth } from "@/stores/auth";
-
+import { state } from "@/main";
 export default {
   name: "DateStamp",
   props: {
@@ -95,44 +95,45 @@ export default {
     }
   },
   data(props) {
-    let date = new Date();
     if (props.setDate) {
-      date = new Date(props.setDate);
+      state.selectedDate = new Date(props.setDate);
     }
     return {
-      currentDateSelected: date
     }
   },
   computed: {
     getShownDate() {
-      return this.currentDateSelected.toLocaleDateString("hu-HU", {month:"short",day:"numeric"});
+      return state.selectedDate.toLocaleDateString("hu-HU", {month:"short",day:"numeric"});
     },
     getTodayDayDate() {
-      return this.currentDateSelected.toLocaleDateString("hu-HU");
+      return state.selectedDate.toLocaleDateString("hu-HU");
+    },
+    selectedDate() {
+      return state.selectedDate;
     }
   },
   methods: {
     nextDay: function() {
-      if (this.limitToCurrentWeek && this.currentDateSelected.getAdjustedDay() == 6) {
+      if (this.limitToCurrentWeek && state.selectedDate.getAdjustedDay() == 6) {
         return;
       }
-      const newDate = new Date(this.currentDateSelected);
+      const newDate = new Date(state.selectedDate);
       newDate.setDate(newDate.getDate() + 1);
-      this.currentDateSelected = newDate;
-      this.$emit("selectedDate", this.currentDateSelected);
+      state.selectedDate = newDate;
+      this.$emit("selectedDate", state.selectedDate);
     },
     prevDay: function() {
-      if (this.limitToCurrentWeek && this.currentDateSelected.getAdjustedDay() == 0) {
+      if (this.limitToCurrentWeek && state.selectedDate.getAdjustedDay() == 0) {
         return;
       }
-      const newDate = new Date(this.currentDateSelected);
+      const newDate = new Date(state.selectedDate);
       newDate.setDate(newDate.getDate() - 1);
-      this.currentDateSelected = newDate;
-      this.$emit("selectedDate", this.currentDateSelected);
+      state.selectedDate = newDate;
+      this.$emit("selectedDate", state.selectedDate);
     },
     setDay: function(day) {
-      this.currentDateSelected = new Date(day);
-      this.$emit("selectedDate", this.currentDateSelected);
+      state.selectedDate = new Date(day);
+      this.$emit("selectedDate", state.selectedDate);
     }
   }
 }

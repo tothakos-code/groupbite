@@ -11,7 +11,7 @@ from app.entities.user_basket import UserBasket
 from app.entities import Session
 from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
 from app.utils.validators import IDSchema
-
+from app.vendor_factory import VendorFactory
 
 socketio = SocketioSingleton.get_instance()
 
@@ -174,11 +174,18 @@ def handle_date_selection_change(data):
             logging.error("Cannot create order")
             return
 
+    vendor = VendorFactory.get_one_vendor_object(str(vendor_id))
 
     socketio.emit(
         "be_order_update", {
             "order": order.serialized,
             "basket": UserBasket.get_basket_group_by_user(order.id)
+        },
+        to=request.sid
+        )
+    socketio.emit(
+        "be_menu_update", {
+            "menus": vendor.get_menus(new_date)
         },
         to=request.sid
         )
@@ -196,9 +203,15 @@ def handle_copy_basket(order_id, user_id, src_user_id):
 
     order = Order.get_by_id(order_id)
 
-
+    vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
     socketio.emit("be_order_update", {
         "basket": UserBasket.get_basket_group_by_user(order_id),
+        },
+        to=f"{order.vendor_id}@{order.date_of_order}"
+        )
+    socketio.emit(
+        "be_menu_update", {
+            "menus": vendor.get_menus(str(order.date_of_order))
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
@@ -235,6 +248,13 @@ def handle_add_to_basket(order_id, user_id, item_id, size_id):
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
+        vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
+        socketio.emit(
+            "be_menu_update", {
+                "menus": vendor.get_menus(str(order.date_of_order))
+            },
+            to=f"{order.vendor_id}@{order.date_of_order}"
+            )
         return { "msg": "OK" }, 201
     else:
         return { "error":"Item out of stock" }, 400
@@ -271,6 +291,12 @@ def handle_remove_from_basket(order_id, user_id, item_id, size_id):
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
+        vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
+        socketio.emit("be_menu_update", {
+                "menus": vendor.get_menus(str(order.date_of_order))
+            },
+            to=f"{order.vendor_id}@{order.date_of_order}"
+            )
         return { "msg": "OK" }, 204
     return { "error": "something went wrong." }, 500
 
@@ -286,6 +312,12 @@ def handle_clear_user_basket(order_id, user_id):
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
+        vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
+        socketio.emit("be_menu_update", {
+                "menus": vendor.get_menus(str(order.date_of_order))
+            },
+            to=f"{order.vendor_id}@{order.date_of_order}"
+            )
         return { "msg": "OK" }, 204
     return { "error": "Order or User not found" }, 404
 

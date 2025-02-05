@@ -40,21 +40,6 @@ export const useVendorStore = defineStore("vendor", {
         this.isLoading = false;
       }
     },
-    async fetchMenusByDate(vendorId, date, querryParams) {
-      this.isLoading = true;
-      try {
-
-        const response = await axios.get(`/api/vendor/${vendorId}/menus/date/${date}`,
-          { "params": querryParams }
-        );
-        return response
-      } catch (error) {
-        console.error("Failed to fetch vendors:", error.response.data.error);
-        return error.response
-      } finally {
-        this.isLoading = false;
-      }
-    },
     async add(data) {
       this.isLoading = true;
       try {

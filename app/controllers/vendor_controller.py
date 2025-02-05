@@ -203,15 +203,6 @@ def handle_menu_get(vendor_id):
         }
     }, 200
 
-@vendor_blueprint.route("/<vendor_id>/menus/date/<menu_date>", methods=["GET"])
-@validate_url_params(IDSchema())
-def get_requested_menu(vendor_id, menu_date):
-    filter = request.args.getlist('filter[]')
-
-    vendor = VendorFactory.get_one_vendor_object(str(vendor_id))
-
-    return { "data": vendor.get_menu(menu_date, filter) }, 200
-
 @vendor_blueprint.route("/<vendor_id>/menus/import", methods=["POST"])
 @validate_url_params(IDSchema())
 def import_menu(vendor_id):

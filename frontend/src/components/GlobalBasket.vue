@@ -58,6 +58,14 @@
           <span>{{ orderStore.userCount }} fő</span>
         </v-col>
       </v-row>
+      <v-row class="d-inline d-md-none">
+        <Datestamp
+          ref="dateSelector"
+          :limit-to-current-week="true"
+          :set-date="selectedDate.toISODate()"
+          @selected-date="(day) => getMenu(day)"
+        />
+      </v-row>
     </v-card-title>
     <div
       v-for="(user_entry) in orderStore.basket"
@@ -78,21 +86,50 @@
 <script>
 import GlobalBasketUser from "./GlobalBasketUser.vue"
 import { useOrderStore } from "@/stores/order";
+import Datestamp from "@/components/DateStamp.vue"
+import { state, socket } from "@/main";
+import { useVendorStore } from "@/stores/vendor";
 
 export default {
   name: "GlobalBasket",
   components: {
+    Datestamp,
     GlobalBasketUser
   },
   setup() {
     const orderStore = useOrderStore();
+    const vendorStore = useVendorStore();
     return {
-      orderStore
+      orderStore,
+      vendorStore
     }
   },
   computed: {
     transportFee() {
       return this.orderStore.transportFeePerPerson
+    },
+    selectedDate() {
+      return state.selectedDate;
+    }
+  },
+  methods: {
+    getMenu: function(day) {
+      if (day === undefined) {
+        if (state.selectedDate === undefined) {
+          day = new Date()
+        } else {
+          day = state.selectedDate;
+        }
+      }
+      let formated_day = new Date(day).toISODate();
+      socket.emit("fe_date_selection", {
+        "old_selected_date": state.selectedDate.toISODate(),
+        "new_selected_date": formated_day,
+        "vendor_id": this.vendorStore.selectedVendor.id,
+        "filter": []
+      })
+      state.selectedDate = new Date(day);
+      history.pushState({}, "", `/menu/${this.vendorStore.selectedVendor.name}/${state.selectedDate.toISODate()}`)
     },
   }
 }

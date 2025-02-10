@@ -81,7 +81,7 @@ Ha ezt az emlékeztetőt nem te kérted akkor lépj kapcsolatba az oldal üzemel
 Üdv,<br>
 Groubite
 """
-        ok, msg = send_mail(user.email, "Groupbite: Bejelentkezési adat emlékeztető", email_body)
+        ok, msg = send_mail([user.email], [], "Groupbite: Bejelentkezési adat emlékeztető", email_body)
         if not ok:
             return { "error": "Email szolgáltatás nem elérhető, küldés sikertelen" }, 200
 

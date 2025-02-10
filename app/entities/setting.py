@@ -10,7 +10,7 @@ from sqlalchemy.orm import relationship
 
 import base64
 from cryptography.fernet import Fernet
-
+import logging
 from dotenv import load_dotenv
 from pathlib import Path
 from os import getenv
@@ -68,6 +68,14 @@ class Setting(Base):
             if setting.key == "smtp_password":
                 if value != setting.value:
                     setting.value = Setting.encrypt_value(value)
+            if setting.key == "smtp_address" and value == "":
+                from app.entities.vendor import Vendor
+                from app.scheduler import cancel_task
+                vendors = Vendor.find_all()
+                for vendor in vendors:
+                    vendor.update_setting("auto_email_order", False)
+                    cancel_task(str(vendor.id) + "-email-order")
+                setting.value = value
             else:
                 setting.value = value
             session.commit()

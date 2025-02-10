@@ -1,5 +1,5 @@
 from datetime import date
-from flask import Blueprint, request, send_from_directory, render_template
+from flask import Blueprint, request, send_from_directory, render_template, session
 import logging
 import json
 import requests
@@ -27,7 +27,15 @@ def get_setting(key):
     setting = Setting.get_setting_by_key(key)
     if setting:
         if setting.category != "application":
-            return {"error": "Access denied"}, 403
+            if 'user_id' not in session:
+                logging.warning("User not authenticated")
+                return { "error": "Unauthorized" }, 401
+            from app.entities.user import User
+            if not User.is_admin(session['user_id']):
+                logging.warning("User unauthorized")
+                return { "error": "Unauthorized" }, 401
+
+            return {setting.key: setting.value}, 200
         else:
             return {setting.key: setting.value}
     return {"error": "Setting not found"}, 404
@@ -56,6 +64,6 @@ def send_test_mail():
     if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", test_email):
         return {"error": "Not a valid email address."}, 415
 
-    if not send_mail(test_email, "A message from GroupBite", "<h1>This is a message from GroupBite</h1> <br><p>Hurray you succesfully sent an email from groupbite!</p>", request.json):
+    if not send_mail([test_email], [], "A message from GroupBite", "<h1>This is a message from GroupBite</h1> <br><p>Hurray you succesfully sent an email from groupbite!</p>", request.json):
         return {"error": "Error during email sending"}, 500
     return "Mail sent", 200

@@ -6,78 +6,98 @@ from sqlalchemy import Boolean, select, exc, event
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm.attributes import flag_modified
 from uuid import UUID, uuid4
 from typing import List
 import logging
 from marshmallow import Schema, fields
 from .notification import NotificationType
+from app.entities.setting import Setting
 
 DEFAULT_VENDOR_SETTINGS = {
   "link": {
     "name": "Eredeti oldal elérhetősége",
     "type": "STR",
     "value": "",
-    "section": "root"
+    "section": "general"
   },
   "title": {
     "name": "Cím",
     "type": "STR",
     "value": "",
-    "section": "root"
+    "section": "general"
   },
   "comment_example": {
     "name": "Rendelés megjegyzés példa",
     "type": "STR",
     "value": "",
-    "section": "root"
+    "section": "general"
   },
   "transport_price": {
     "name": "Szállítási díj",
     "type": "INT",
     "value": "0",
-    "section": "root"
+    "section": "general"
   },
   "auto_email_order": {
     "name": "Automatikus email rendelés",
     "type": "BOOL",
     "value": False,
-    "section": "root"
+    "section": "auto-order"
   },
   "email_order_scheduler": {
     "name": "Rendelés automatikus email küldése (formátum: hh:mm)",
     "type": "STR",
-    "value": "manual",
-    "section": "root"
+    "value": "",
+    "section": "auto-order"
+  },
+  "closed_scheduler_active": {
+    "name": "",
+    "type": "BOOL",
+    "value": False,
+    "section": "order"
+  },
+  "closure_scheduler_active": {
+    "name": "",
+    "type": "BOOL",
+    "value": False,
+    "section": "order"
   },
   "closed_scheduler": {
     "name": "Rendelés automatikus lezárása (formátum: hh:mm)",
     "type": "STR",
-    "value": "manual",
-    "section": "root"
+    "value": "",
+    "section": "order"
   },
   "closure_scheduler": {
     "name": "Rendelés automatikus zárás figyelmeztetés (formátum: hh:mm)",
     "type": "STR",
-    "value": "manual",
-    "section": "root"
+    "value": "",
+    "section": "order"
   },
   "auto_email_order_to": {
     "name": "Automatikus rendelés címzett",
-    "type": "STR",
-    "value": "",
-    "section": "root"
+    "type": "LIST",
+    "value": [],
+    "section": "auto-order"
+  },
+  "auto_email_order_cc": {
+    "name": "Automatikus rendelés másolatot kap",
+    "type": "LIST",
+    "value": [],
+    "section": "auto-order"
   },
   "order_text_template": {
     "name": "Rendelés szöveg sor minta",
     "type": "STR",
     "value": "${quantity}x ${item_name} ${size_name}\\n",
-    "section": "root"
+    "section": "order"
   },
   "auto_email_order_template": {
     "name": "Automatikus rendelés üzenet sablon",
     "type": "STRBOX",
     "value": "",
-    "section": "root"
+    "section": "auto-order"
   }
 }
 
@@ -139,31 +159,62 @@ class Vendor(Base):
         session.commit()
 
     def update_settings(self, settings):
-        if self.settings["closure_scheduler"]["value"] != settings["closure_scheduler"]["value"]:
+        closure_scheduler_active_changed = self.settings["closure_scheduler_active"]["value"] != settings["closure_scheduler_active"]["value"]
+        closure_scheduler_changed = self.settings["closure_scheduler"]["value"] != settings["closure_scheduler"]["value"]
+        if closure_scheduler_active_changed or closure_scheduler_changed:
             from app.scheduler import schedule_task, cancel_task
             cancel_task(str(self.id) + "-closure")
 
-            if settings["closure_scheduler"]["value"] != "manual":
+            if settings["closure_scheduler_active"]["value"]:
                 hh, mm = settings["closure_scheduler"]["value"].split(":")
                 schedule_task(str(self.id) + "-closure", int(hh), int(mm), self.closure_wrapper)
 
-        if self.settings["closed_scheduler"]["value"] != settings["closed_scheduler"]["value"]:
+        closed_scheduler_active_changed = self.settings["closed_scheduler_active"]["value"] != settings["closed_scheduler_active"]["value"]
+        closed_scheduler_changed = self.settings["closed_scheduler"]["value"] != settings["closed_scheduler"]["value"]
+        if closed_scheduler_active_changed or closed_scheduler_changed:
             from app.scheduler import schedule_task, cancel_task
             cancel_task(str(self.id) + "-closed")
 
-            if settings["closed_scheduler"]["value"] != "manual":
+            if settings["closed_scheduler_active"]["value"]:
                 hh, mm = settings["closed_scheduler"]["value"].split(":")
                 schedule_task(str(self.id) + "-closed", int(hh), int(mm), self.closed_wrapper)
 
-        if self.settings["email_order_scheduler"]["value"] != settings["email_order_scheduler"]["value"]:
-            from app.scheduler import schedule_task, cancel_task
-            cancel_task(str(self.id) + "-email-order")
+        auto_email_order_changed = self.settings["auto_email_order"]["value"] != settings["auto_email_order"]["value"]
+        if settings["auto_email_order"]["value"] and Setting.get_value_by_key(smtp_address) != "":
+            email_scheduler_changed = self.settings["email_order_scheduler"]["value"] != settings["email_order_scheduler"]["value"]
+            if auto_email_order_changed or email_scheduler_changed:
+                from app.scheduler import schedule_task, cancel_task
+                cancel_task(str(self.id) + "-email-order")
 
-            if settings["email_order_scheduler"]["value"] != "manual":
-                hh, mm = settings["email_order_scheduler"]["value"].split(":")
-                schedule_task(str(self.id) + "-email-order", int(hh), int(mm), self.email_ordering_wrapper)
+                if settings["auto_email_order"]["value"]:
+                    hh, mm = settings["email_order_scheduler"]["value"].split(":")
+                    schedule_task(str(self.id) + "-email-order", int(hh), int(mm), self.email_ordering_wrapper)
+        else:
+            logging.warning("No SMPT server set")
+            settings["auto_email_order"]["value"] = self.settings["auto_email_order"]["value"]
+            settings["email_order_scheduler"]["value"] = self.settings["email_order_scheduler"]["value"]
 
         self.settings = settings;
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during vendor update")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhadled exception happened, rolling back")
+            session.rollback()
+            return False
+
+
+    def update_setting(self, key, value):
+        if key not in self.settings:
+            return False
+        settings = self.settings
+        settings[key]["value"] = value
+        self.settings = settings
+        flag_modified(self, "settings") 
         try:
             session.commit()
             return True
@@ -188,29 +239,25 @@ class Vendor(Base):
             logging.info("New Vendor registered in database: {0}".format(vendor_obj.name))
         else:
             vendor_obj.id = str(vendor_db.id)
+            vendor_db._validate_settings()
             logging.info("Vendor already registered, loaded from database: {0}".format(vendor_obj.name))
 
-            try:
-                if vendor_db.settings["closure_scheduler"]["value"] != "manual":
-                    from app.scheduler import schedule_task, cancel_task
-                    hh, mm = vendor_db.settings["closure_scheduler"]["value"].split(":")
-                    schedule_task(str(vendor_db.id) + "-closure", int(hh), int(mm), vendor_db.closure_wrapper)
-            except KeyError as e:
-                logging.error("Task scheduling error, 'closure_scheduler' is undefined in settings")
-            try:
-                if vendor_db.settings["closed_scheduler"]["value"] != "manual":
-                    from app.scheduler import schedule_task, cancel_task
-                    hh, mm = vendor_db.settings["closed_scheduler"]["value"].split(":")
-                    schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
-            except KeyError as e:
-                logging.error("Task scheduling error, 'closed_scheduler' is undefined in settings")
-            try:
-                if vendor_db.settings["email_order_scheduler"]["value"] != "manual":
-                    from app.scheduler import schedule_task, cancel_task
-                    hh, mm = vendor_db.settings["email_order_scheduler"]["value"].split(":")
-                    schedule_task(str(vendor_db.id) + "-email-order", int(hh), int(mm), vendor_db.email_ordering_wrapper)
-            except KeyError as e:
-                logging.error("Task scheduling error, 'email_order_scheduler' is undefined in settings")
+
+            if vendor_db.settings["closure_scheduler_active"]["value"]:
+                from app.scheduler import schedule_task, cancel_task
+                hh, mm = vendor_db.settings["closure_scheduler"]["value"].split(":")
+                schedule_task(str(vendor_db.id) + "-closure", int(hh), int(mm), vendor_db.closure_wrapper)
+
+            if vendor_db.settings["closed_scheduler_active"]["value"]:
+                from app.scheduler import schedule_task, cancel_task
+                hh, mm = vendor_db.settings["closed_scheduler"]["value"].split(":")
+                schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
+
+            if vendor_db.settings["auto_email_order"]["value"]:
+                from app.scheduler import schedule_task, cancel_task
+                hh, mm = vendor_db.settings["email_order_scheduler"]["value"].split(":")
+                schedule_task(str(vendor_db.id) + "-email-order", int(hh), int(mm), vendor_db.email_ordering_wrapper)
+
 
         try:
             session.commit()
@@ -270,19 +317,36 @@ class Vendor(Base):
                 from app.services.mail_sender_service import send_mail
                 from app.entities.user_basket import UserBasket
                 baskets = UserBasket.find_items_by_order(order.id)
-                email_body = ""
+                if len(baskets) == 0:
+                    logging.info("The order is empty, email not sent")
+                    return
+                basket_template = ""
+                basket_categories = {}
                 for basket in baskets:
                     pattern = self.settings["order_text_template"]["value"]
-                    email_body += pattern \
+                    line = pattern \
                         .replace("${quantity}", str(basket.count)) \
                         .replace("${item_name}", basket.item.name) \
                         .replace("${size_name}", basket.size.name) \
                         .replace("\\n", "<br>")
+                    basket_template += line
+
+                    if basket.item.category not in basket_categories:
+                        basket_categories[basket.item.category] = ""
+                    basket_categories[basket.item.category] += line
 
                 email_template = self.settings["auto_email_order_template"]["value"]
-                email_template = email_template.replace("${basket}", email_body)
+                email_template = email_template.replace("${basket}", basket_template)
+                for category, value in basket_categories.items():
+                    email_template = email_template.replace("${basket." + category + "}", basket_categories[category])
+
+
                 logging.info("Scheduled automatic order email sent!")
-                send_mail(self.settings["auto_email_order_to"]["value"], "Makkos rendelés", email_template)
+                send_mail(
+                    self.settings["auto_email_order_to"]["value"],
+                    self.settings["auto_email_order_cc"]["value"],
+                    self.settings["title"]["value"] + " rendelés",
+                    email_template)
 
         else:
             logging.info("Order not found")

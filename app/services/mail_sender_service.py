@@ -6,7 +6,7 @@ import logging
 
 
 
-def send_mail(to, subject, body, settings=None):
+def send_mail(to, cc, subject, body, settings=None):
 
     sender_email = Setting.get_value_by_key("smtp_sender_email")
     smtp_server = Setting.get_value_by_key("smtp_address")
@@ -34,7 +34,8 @@ def send_mail(to, subject, body, settings=None):
         # Create the email message
     msg = MIMEMultipart("alternative")
     msg['From'] = sender_email
-    msg['To'] = to
+    msg['To'] = ", ".join(to)
+    msg['Cc'] = ", ".join(cc)
     msg['Subject'] = subject
 
     # Attach the email body

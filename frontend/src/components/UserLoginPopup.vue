@@ -163,7 +163,6 @@ export default {
   methods: {
     login: function() {
       this.auth.login(this.username).then(response => {
-        console.log(response);
         if (!response.data.error) {
           this.cancel()
         }

@@ -145,39 +145,89 @@
             </v-row>
             <div
               v-if="history[day] !== undefined"
-              class="btn btn-link m-0 p-0"
+              class="d-flex flex-column align-start"
             >
-              <button
-                v-for="(order) in Object.values(history[day])"
+              <!-- <v-col > -->
+              <v-chip
+                v-for="order in Object.values(history[day])"
                 :key="order.id"
-                class="btn btn-link px-0"
-                type="button"
-                name="button"
-                @click="openHistoryPopup(order.id)"
+                variant="elevated"
+                color="secondary"
+                class="mb-1 pe-0 align-center"
+                @click="addToCalculation(order.id)"
               >
-                <span
-
-                  class=" badge rounder-pill p-2 py-1 fs-6 bg-primary"
-                  :title="order.vendor + ' rendelés lett leadva ezen a napon'"
+                <v-icon
+                  class="m-1"
                 >
+                  {{ isOrderInList(order.id) ? 'mdi-check-circle' : 'mdi-check-circle-outline' }}
+                </v-icon>
+
+                <!-- Order Vendor Name -->
+                <span :title="order.vendor + ' rendelés lett leadva ezen a napon'">
                   @{{ order.vendor }}
-                  <span
-                    v-if="order.ordered"
-                    :title="'Te is rendeltél ' + order.vendor + '-ból/ből'"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
-                      fill="currentColor"
-                      class="bi bi-basket3-fill mb-1"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 6h1.717L5.07 1.243a.5.5 0 0 1 .686-.172zM2.468 15.426.943 9h14.114l-1.525 6.426a.75.75 0 0 1-.729.574H3.197a.75.75 0 0 1-.73-.574z" />
-                    </svg>
-                  </span>
                 </span>
-              </button>
+
+                <!-- Selection Indicator (Check Icon) -->
+
+
+                <!-- Ordered Status Icon -->
+                <v-tooltip
+                  text="Te is rendeltél innen"
+                  location="bottom"
+                >
+                  <template #activator="{ props }">
+                    <span
+                      v-if="order.ordered"
+                      v-bind="props"
+                      class="m-1"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        fill="currentColor"
+                        class="bi bi-basket3-fill mb-1"
+                        viewBox="0 0 16 16"
+                      >
+                        <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 6h1.717L5.07 1.243a.5.5 0 0 1 .686-.172zM2.468 15.426.943 9h14.114l-1.525 6.426a.75.75 0 0 1-.729.574H3.197a.75.75 0 0 1-.73-.574z" />
+                      </svg>
+                    </span>
+                  </template>
+                </v-tooltip>
+
+                <v-tooltip
+                  :text="order.state_id === 'closed' ? 'Elküldve' : 'Még csatlakozhatsz'"
+                  location="bottom"
+                >
+                  <template #activator="{ props }">
+                    <v-icon
+                      v-bind="props"
+                      :color="order.state_id === 'closed' ? 'red' : order.state_id === 'order' ? 'orange' : 'green'"
+                      class="ml-2"
+                    >
+                      {{ order.state_id === 'closed' ? 'mdi-lock' : 'mdi-lock-open' }}
+                    </v-icon>
+                  </template>
+                </v-tooltip>
+
+                <!-- Navigation Button to Order Page -->
+                <v-tooltip
+                  text="Ugrás a rendelésre"
+                  location="bottom"
+                >
+                  <template #activator="{ props }">
+                    <v-btn
+                      v-bind="props"
+                      icon
+                      variant="text"
+                      @click.stop="goToOrder(order.id)"
+                    >
+                      <v-icon>mdi-open-in-app</v-icon>
+                    </v-btn>
+                  </template>
+                </v-tooltip>
+              </v-chip>
+              <!-- </v-col> -->
             </div>
           </v-sheet>
         </v-col>
@@ -193,54 +243,12 @@
             {{ orderCount }} db rendelés a héten
           </span>
         </div>
-        <Popup
-          v-if="showOrderSummary"
-          :show-modal="showOrderSummary"
-          title="Rendelés összesítő"
-          :large="true"
-          confirm-text="Ok"
-          @cancel="showOrderSummary = false"
-          @confirm="showOrderSummary = false"
-        >
-          <div class="row d-flex align-items-strech">
-            <div class="col text-center align-center">
-              <span class="btn pe-none border border-secondary-subtle rounded">
-                Összesen {{ calculateHistorySum() }} Ft
-              </span>
-            </div>
-            <div class="col text-center">
-              <span class="btn pe-none border border-secondary-subtle rounded">
-                {{ Math.ceil(loaded_menu.order_fee/Object.keys(loaded_menu.basket).length) }} Ft szállítás díj/fő
-              </span>
-            </div>
-          </div>
-          <div
-            v-for="(user_entry) in loaded_menu.basket"
-            :key="user_entry.user_id"
-            class="row mt-1 mb-1"
-          >
-            <div class="list-group-item row m-0">
-              <GlobalBasketUser
-                :username="user_entry.username"
-                :user-id="user_entry.user_id"
-                :user-basket="user_entry.items"
-                :order-fee="loaded_menu.order_fee/Object.keys(loaded_menu.basket).length"
-                :start-collapsed="true"
-                :collapsable="true"
-                :copyable="false"
-              />
-            </div>
-          </div>
-        </Popup>
       </v-row>
     </v-card-text>
   </v-card>
 </template>
 
 <script>
-import { defineAsyncComponent } from 'vue'
-const GlobalBasketUser = defineAsyncComponent(() => import("@/components/GlobalBasketUser.vue"));
-const Popup = defineAsyncComponent(() => import("./Popup.vue"));
 import { useAuth } from "@/stores/auth";
 import { useOrderStore } from "@/stores/order";
 import { useVendorStore } from "@/stores/vendor";
@@ -249,8 +257,7 @@ import { ref, watch } from "vue";
 export default {
   name: "WeekSummary",
   components: {
-    Popup,
-    GlobalBasketUser,
+
   },
   emits: ["close"],
   setup() {
@@ -316,6 +323,9 @@ export default {
     });
   },
   methods: {
+    goToOrder: function(order) {
+      console.log(order);
+    },
     onSameDay: function(input_date1, input_date2) {
       const date1 = new Date(input_date1);
       const date2 = new Date(input_date2);
@@ -336,6 +346,9 @@ export default {
       }
       return false;
     },
+    isOrderInList(orderId) {
+      return this.orderStore.selectedOrders.some(order => order.id === orderId);
+    },
     openHistoryPopup: function(item){
       this.orderStore.fetch(item)
         .then(response => {
@@ -349,6 +362,18 @@ export default {
               });
             }
         })
+    },
+    addToCalculation: function(orderId){
+      if (!this.isOrderInList(orderId)) {
+        this.orderStore.fetch(orderId)
+        .then(response => {
+          if (response.status === 200) {
+            this.orderStore.selectedOrders.push(response.data.data)
+          }
+        })
+      } else {
+        this.orderStore.selectedOrders = this.orderStore.selectedOrders.filter(order => order.id !== orderId)
+      }
     },
     async getCurrentWeekDates(date) {
       const weekDates = [];

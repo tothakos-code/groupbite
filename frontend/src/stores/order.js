@@ -8,6 +8,7 @@ export const useOrderStore = defineStore("order", {
   state: () => ({
     order: {},
     basket: {},
+    selectedOrders: [],
     isLoading: false
   }),
   getters: {

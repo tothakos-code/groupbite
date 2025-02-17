@@ -15,7 +15,7 @@
         </v-col>
       </v-row>
     </v-card-title>
-    <v-car-text class="">
+    <v-card-text class="">
       <v-row class="">
         <v-col
           cols="12"
@@ -54,7 +54,7 @@
           />
         </v-col>
       </v-row>
-    </v-car-text>
+    </v-card-text>
   </v-card>
 </template>
 

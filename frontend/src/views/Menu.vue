@@ -28,6 +28,49 @@
             />
           </v-col>
           <v-col
+            v-if="vendorSettings.auto_email_order.value"
+            sm="auto"
+            class="d-flex flex-fill align-items-center justify-content-sm-start justify-content-center"
+          >
+            <v-tooltip location="bottom">
+              <template #activator="{ props }">
+                <span
+                  v-bind="props"
+                  class="text-button font-weight-bold"
+                >Határidő: {{ vendorSettings.email_order_scheduler.value }}
+                </span>
+              </template>
+              <span>Az automata rendelés bevan kapcsolva ennél az étkezdénél</span>
+            </v-tooltip>
+            <v-tooltip location="bottom">
+              <template #activator="{ props }">
+                <span
+                  v-bind="props"
+                  class="text-button"
+                >
+                  <v-icon
+                    v-if="vendorSettings.email_min_user.value <= userCount"
+                    color="success"
+                  >
+                    mdi-clock-check-outline
+                  </v-icon>
+                  <v-icon
+                    v-else
+                    color="warning"
+                  >
+                    mdi-clock-alert-outline
+                  </v-icon>
+                </span>
+              </template>
+              <span v-if="vendorSettings.email_min_user.value <= userCount">
+                Az automata rendelés feltétele teljesült. Min {{ userCount }}/{{ vendorSettings.email_min_user.value }} rendelő
+              </span>
+              <span v-else>
+                Az automata rendelés feltétele NEM teljesül. Min {{ userCount }}/{{ vendorSettings.email_min_user.value }} rendelő
+              </span>
+            </v-tooltip>
+          </v-col>
+          <v-col
             sm="auto"
             class="d-flex justify-content-center justify-content-xl-end align-items-center"
           >
@@ -87,8 +130,7 @@
                     v-if="vendorLink !== ''"
                     v-bind="props"
                     varian="text"
-                    class="my-1 me-2 text-primary bg-secondary"
-                    title="Másol"
+                    class="my-1 me-2 bg-primary"
                     border="primary thin"
                     target="_blank"
                     :href="vendorLink"
@@ -235,6 +277,9 @@ export default {
     itemCount() {
       return this.orderStore.userBasket.length
     },
+    userCount() {
+      return this.orderStore.userBasket.length
+    },
     vendorId() {
       return this.vendorStore.selectedVendor.id
     },
@@ -243,6 +288,9 @@ export default {
     },
     vendorLink() {
       return this.vendorStore.selectedVendor.settings.link.value
+    },
+    vendorSettings() {
+      return this.vendorStore.selectedVendor.settings
     },
     notificationStatus() {
       let response = false;

@@ -51,6 +51,12 @@ DEFAULT_VENDOR_SETTINGS = {
     "value": "",
     "section": "auto-order"
   },
+  "email_min_user": {
+    "name": "Automatikus rendelés minimum részvevő felhasználó",
+    "type": "INT",
+    "value": 3,
+    "section": "auto-order"
+  },
   "closed_scheduler_active": {
     "name": "",
     "type": "BOOL",
@@ -180,7 +186,7 @@ class Vendor(Base):
                 schedule_task(str(self.id) + "-closed", int(hh), int(mm), self.closed_wrapper)
 
         auto_email_order_changed = self.settings["auto_email_order"]["value"] != settings["auto_email_order"]["value"]
-        if settings["auto_email_order"]["value"] and Setting.get_value_by_key(smtp_address) != "":
+        if settings["auto_email_order"]["value"] and Setting.get_value_by_key("smtp_address") != "":
             email_scheduler_changed = self.settings["email_order_scheduler"]["value"] != settings["email_order_scheduler"]["value"]
             if auto_email_order_changed or email_scheduler_changed:
                 from app.scheduler import schedule_task, cancel_task
@@ -195,6 +201,7 @@ class Vendor(Base):
             settings["email_order_scheduler"]["value"] = self.settings["email_order_scheduler"]["value"]
 
         self.settings = settings;
+        flag_modified(self, "settings")
         try:
             session.commit()
             return True
@@ -214,7 +221,7 @@ class Vendor(Base):
         settings = self.settings
         settings[key]["value"] = value
         self.settings = settings
-        flag_modified(self, "settings") 
+        flag_modified(self, "settings")
         try:
             session.commit()
             return True
@@ -313,7 +320,8 @@ class Vendor(Base):
 
         order = Order.find_order_by_date_for_a_vendor(str(self.id), date.today().strftime("%Y-%m-%d"))
         if order:
-            if self.settings["auto_email_order"]["value"] == True:
+            email_min_user = self.settings["email_min_user"]["value"]
+            if self.settings["auto_email_order"]["value"] == True and (email_min_user == 0 or email_min_user <= len(order.get_users())):
                 from app.services.mail_sender_service import send_mail
                 from app.entities.user_basket import UserBasket
                 baskets = UserBasket.find_items_by_order(order.id)
@@ -347,7 +355,8 @@ class Vendor(Base):
                     self.settings["auto_email_order_cc"]["value"],
                     self.settings["title"]["value"] + " rendelés",
                     email_template)
-
+            else:
+                logging.info("Minimum order requirements are not met")
         else:
             logging.info("Order not found")
 

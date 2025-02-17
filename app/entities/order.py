@@ -169,6 +169,16 @@ class Order(Base):
             )
         return session.execute(stmt).all()
 
+    def get_users(self):
+        from .user import User
+        from .user_basket import UserBasket
+        stmt = select(User).distinct().join(
+                UserBasket, User.id == UserBasket.user_id
+            ).where(
+                UserBasket.order_id == self.id
+            )
+        return session.execute(stmt).all()
+
     def change_state(self, new_state, user_id=None):
         self.state_id = new_state
         self.order_by = user_id

@@ -36,7 +36,7 @@
   >
     <a
       type="button"
-      class="text-reset links  hide-xs-arrow d-flex align-items-center"
+      class="text-reset links me-3 hide-xs-arrow d-flex align-items-center"
     >
       <span
         class="d-none d-sm-inline-block pe-1 text-truncate"

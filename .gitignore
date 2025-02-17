@@ -10,3 +10,4 @@ db/migrations/versions/__pycache__
 .env
 env/
 plugins/*
+logs

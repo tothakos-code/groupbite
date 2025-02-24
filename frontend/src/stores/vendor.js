@@ -190,7 +190,7 @@ export const useVendorStore = defineStore("vendor", {
           );
         });
       } catch (error) {
-        console.error("Failed to subscribe to notification:", error.response.data.error);
+        console.error("Failed to subscribe to notification:", error);
         notify({
           type: "error",
           text: "Értesítés beállítása nem sikerült!",
@@ -217,7 +217,7 @@ export const useVendorStore = defineStore("vendor", {
         });
         return response
       } catch (error) {
-        console.error("Failed to unsubscribe from notification:", error.response.data.error);
+        console.error("Failed to unsubscribe from notification:", error);
         notify({
           type: "error",
           text: "Értesítés kikapcsolás nem sikerült!",

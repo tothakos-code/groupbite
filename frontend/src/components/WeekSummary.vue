@@ -220,7 +220,7 @@
                       v-bind="props"
                       icon
                       variant="text"
-                      @click.stop="goToOrder(order.id)"
+                      @click.stop="goToOrder(order)"
                     >
                       <v-icon>mdi-open-in-app</v-icon>
                     </v-btn>
@@ -324,7 +324,7 @@ export default {
   },
   methods: {
     goToOrder: function(order) {
-      console.log(order);
+      this.$router.push({ path: "/menu/" + order.vendor + "/" + order.date_of_order })
     },
     onSameDay: function(input_date1, input_date2) {
       const date1 = new Date(input_date1);

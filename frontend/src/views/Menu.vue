@@ -278,7 +278,7 @@ export default {
       return this.orderStore.userBasket.length
     },
     userCount() {
-      return this.orderStore.userBasket.length
+      return this.orderStore.userCount
     },
     vendorId() {
       return this.vendorStore.selectedVendor.id

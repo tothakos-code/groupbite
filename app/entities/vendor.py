@@ -13,6 +13,7 @@ import logging
 from marshmallow import Schema, fields
 from .notification import NotificationType
 from app.entities.setting import Setting
+import re
 
 DEFAULT_VENDOR_SETTINGS = {
   "link": {
@@ -99,6 +100,12 @@ DEFAULT_VENDOR_SETTINGS = {
     "value": "${quantity}x ${item_name} ${size_name}\\n",
     "section": "order"
   },
+  "auto_email_subject": {
+    "name": "Automatikus rendelés email tárgy",
+    "type": "STR",
+    "value": "${vendor_name} rendelés - ${date}",
+    "section": "auto-order"
+  },
   "auto_email_order_template": {
     "name": "Automatikus rendelés üzenet sablon",
     "type": "STRBOX",
@@ -106,7 +113,7 @@ DEFAULT_VENDOR_SETTINGS = {
     "section": "auto-order"
   }
 }
-
+non_mached = re.compile("\$\{.*?\}")
 
 
 class BaseVendorSchema(Schema):
@@ -328,32 +335,47 @@ class Vendor(Base):
                 if len(baskets) == 0:
                     logging.info("The order is empty, email not sent")
                     return
+
+                basket_sum = {}
+                for item in baskets:
+                    if item.menu_item_id in basket_sum:
+                        basket_sum[item.menu_item_id]["quantity"] += item.count
+                    else:
+                        basket_sum[item.menu_item_id] = {**item.basket_format, "quantity": item.count}
+
                 basket_template = ""
                 basket_categories = {}
-                for basket in baskets:
+                for item in basket_sum.values():
                     pattern = self.settings["order_text_template"]["value"]
                     line = pattern \
-                        .replace("${quantity}", str(basket.count)) \
-                        .replace("${item_name}", basket.item.name) \
-                        .replace("${size_name}", basket.size.name) \
+                        .replace("${quantity}", str(item["quantity"])) \
+                        .replace("${item_name}", item["item_name"]) \
+                        .replace("${size_name}", item["size_name"]) \
                         .replace("\\n", "<br>")
                     basket_template += line
 
-                    if basket.item.category not in basket_categories:
-                        basket_categories[basket.item.category] = ""
-                    basket_categories[basket.item.category] += line
+                    if item["category"] not in basket_categories:
+                        basket_categories[item["category"]] = ""
+                    basket_categories[item["category"]] += line
 
                 email_template = self.settings["auto_email_order_template"]["value"]
                 email_template = email_template.replace("${basket}", basket_template)
                 for category, value in basket_categories.items():
                     email_template = email_template.replace("${basket." + category + "}", basket_categories[category])
+                email_template = non_mached.sub("", email_template)
 
+                email_subject = self.settings["auto_email_subject"]["value"]
+                email_subject = email_subject \
+                    .replace("${vendor_name}", order.vendor.name) \
+                    .replace("${date}", order.date_of_order.strftime("%Y.%m.%d"))
+
+                email_subject = non_mached.sub("", email_subject)
 
                 logging.info("Scheduled automatic order email sent!")
                 send_mail(
                     self.settings["auto_email_order_to"]["value"],
                     self.settings["auto_email_order_cc"]["value"],
-                    self.settings["title"]["value"] + " rendelés",
+                    email_subject,
                     email_template)
             else:
                 logging.info("Minimum order requirements are not met")

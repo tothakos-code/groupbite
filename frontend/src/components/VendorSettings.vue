@@ -26,13 +26,12 @@
           bg-color="white"
         />
         <v-text-field
-          v-model="vendor.settings.transport_price.value"
+          v-model.number="vendor.settings.transport_price.value"
           :label="vendor.settings.transport_price.name"
           :rules="[
             v => !!v || v===0 || 'Kötelező mező',
             v => /^\d+$/.test(v) || 'Csak szám lehetséges'
           ]"
-          :model-modifiers="{number: true}"
           type="number"
           bg-color="white"
           hint="Rendelés díj (szállítási díj, rendszerhasználat díj, egyebek felszámolása) Az összeg szétlessz osztva a rendelésben résztvevők között arányosan"
@@ -105,14 +104,13 @@
           bg-color="white"
         />
         <v-text-field
-          v-model="vendor.settings.email_min_user.value"
+          v-model.number="vendor.settings.email_min_user.value"
           :label="vendor.settings.email_min_user.name"
           :rules="[
             v => !!v || v===0 || 'Kötelező mező',
             v => /^\d+$/.test(v) || 'Csak szám lehetséges'
           ]"
           type="number"
-          :model-modifiers="{number: true}"
           :disabled="!vendor.settings.auto_email_order.value"
           bg-color="white"
           hint="A rendelés csak abban az esetben lesz elküldve ha legalább ennyi felhasználó résztvesz a rendelésben."
@@ -151,10 +149,16 @@
             />
           </template>
         </v-combobox>
+        <v-text-field
+          v-model="vendor.settings.auto_email_subject.value"
+          :label="vendor.settings.auto_email_subject.name"
+          :disabled="!vendor.settings.auto_email_order.value"
+          bg-color="white"
+        />
         <v-textarea
           v-model="vendor.settings.auto_email_order_template.value"
           :label="vendor.settings.auto_email_order_template.name"
-          :disabled="!vendor.settings.auto_email_order.value"
+
           bg-color="white"
         />
         <v-btn

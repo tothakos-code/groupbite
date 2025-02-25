@@ -220,8 +220,8 @@ def import_menu(vendor_id):
             menu_db = Menu(
                 name=menu["name"] if "name" in menu else "imported-" + datetime.now().strftime("%Y-%m-%d-%H:%M"),
                 vendor_id=vendor_id,
-                freq_id=menu["freq"] if "freq" in menu else "DAILY",
-                date=menu["date"] if "date" in menu else date.today().strftime("%Y-%m-%d")
+                from_date=menu["from_date"] if "from_date" in menu else date.today().strftime("%Y-%m-%d"),
+                to_date=menu["to_date"] if "to_date" in menu else date.today().strftime("%Y-%m-%d")
             )
 
             item_index = 0

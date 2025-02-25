@@ -15,35 +15,6 @@
             name="name"
           >
         </div>
-        <div class="col-auto">
-          <label for="freq">Menü gyakorisága:
-          </label>
-          <select
-            id="freq"
-            v-model="newMenu.freq"
-            class="form-select"
-            name="freq"
-          >
-            <option
-              value="FIX"
-              selected
-            >
-              Fix
-            </option>
-            <option value="DAILY">
-              Napi
-            </option>
-            <option value="WEEKLY">
-              Heti
-            </option>
-            <option value="MONTHLY">
-              Havi
-            </option>
-            <option value="YEARLY">
-              Éves
-            </option>
-          </select>
-        </div>
       </div>
       <v-btn
         class="bg-primary"
@@ -106,13 +77,13 @@
             scope="col"
             class="col-2"
           >
-            Dátum
+            Dátumtól
           </th>
           <th
             scope="col"
-            class="col-auto"
+            class="col-2"
           >
-            Gyakoriság
+            Dátumig
           </th>
           <th
             scope="col"
@@ -157,16 +128,24 @@
           <td class="col-2">
             <input
               v-if="menu.isEditing"
-              v-model="menu.date"
+              v-model="menu.from_date"
               class="form-control"
               type="text"
             >
             <span v-else>
-              {{ menu.date }}
+              {{ menu.from_date }}
             </span>
           </td>
-          <td class="col-auto">
-            {{ menu.freq }}
+          <td class="col-2">
+            <input
+              v-if="menu.isEditing"
+              v-model="menu.to_date"
+              class="form-control"
+              type="text"
+            >
+            <span v-else>
+              {{ menu.to_date }}
+            </span>
           </td>
           <td class="col-auto">
             {{ menu.active }}
@@ -451,7 +430,6 @@ export default {
         menulist: [],
         newMenu: {
           name: "",
-          freq: "FIX",
         },
         isLoading: true,
         showImportPopup: false,
@@ -567,6 +545,12 @@ export default {
       },
       updateMenu(menu_id) {
         const menu = this.menulist.get(menu_id)
+        if (!menu.from_date) {
+          delete menu["from_date"]
+        }
+        if (!menu.to_date) {
+          delete menu["to_date"]
+        }
         this.menulist.set(menu.id, { ...menu, isEditing: false})
         delete menu["isEditing"];
         this.menuStore.update(menu_id, menu )

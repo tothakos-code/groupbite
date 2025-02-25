@@ -53,8 +53,9 @@ def handle_menu_get_items(menu_id):
 @require_admin
 def handle_menu_update(data, menu_id):
     menu_db = Menu.find_by_id(menu_id)
-
-    if not menu_db.update(data["name"], data["date"]):
+    from_date = data["from_date"] if "from_date" in data else None
+    to_date = data["to_date"] if "to_date" in data else None
+    if not menu_db.update(data["name"], from_date, to_date):
         return { "error": "Bad request" }, 400
 
     return { "data": json.dumps(menu_db.serialized) }, 200
@@ -80,8 +81,8 @@ def handle_menu_duplicate(menu_id):
     menu_db = Menu(
         name=original_menu.name+"-copy",
         vendor_id=original_menu.vendor_id,
-        freq_id=original_menu.freq_id,
-        date=date.today().strftime("%Y-%m-%d"),
+        from_date=original_menu.from_date,
+        to_date=original_menu.to_date,
         active=False
     )
 
@@ -114,7 +115,7 @@ def handle_menu_duplicate(menu_id):
 @require_auth
 @require_admin
 def handle_menu_add(data):
-    if not Menu.add(Menu(name=data["name"], vendor_id=data["vendor_id"], freq_id=data["freq"])):
+    if not Menu.add(Menu(name=data["name"], vendor_id=data["vendor_id"])):
         return { "error": "Bad request" }, 400
     return { "msg": "OK" }, 201
 

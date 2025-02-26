@@ -33,7 +33,7 @@ def run():
         app,
         host=APP_HOST,
         port=APP_PORT,
-        debug=True
+        debug=False
     )
 
 @cli.command("migrate")

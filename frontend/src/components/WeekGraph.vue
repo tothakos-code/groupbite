@@ -176,30 +176,29 @@ export default {
       return "#" + r + g + b;
 
     },
-    getStats: function(){
-      this.orderStore.stats()
-        .then(response => {
-            if (response.status === 200) {
-              this.yearChartData.labels = response.data.data.year_data.labels
-              for (const [key, value] of Object.entries(response.data.data.year_data.data)) {
-                this.yearChartData.datasets.push({
-                  label: key,
-                  backgroundColor: this.backgroundColor(key),
-                  data: value.data
-                })
-              }
-              this.vendorChartLoaded = true
-              this.weekChartData.labels = response.data.data.week_data.labels
-              for (const [key, value] of Object.entries(response.data.data.week_data.data)) {
-                this.weekChartData.datasets.push({
-                  label: key,
-                  backgroundColor: this.backgroundColor(key),
-                  data: value.data
-                })
-              }
-              this.weekChartLoaded = true
-            }
-        })
+    async getStats(){
+      const response = await this.orderStore.stats()
+
+      if (response.status === 200) {
+        this.yearChartData.labels = response.data.data.year_data.labels
+        for (const [key, value] of Object.entries(response.data.data.year_data.data)) {
+          this.yearChartData.datasets.push({
+            label: key,
+            backgroundColor: this.backgroundColor(key),
+            data: value.data
+          })
+        }
+        this.vendorChartLoaded = true
+        this.weekChartData.labels = response.data.data.week_data.labels
+        for (const [key, value] of Object.entries(response.data.data.week_data.data)) {
+          this.weekChartData.datasets.push({
+            label: key,
+            backgroundColor: this.backgroundColor(key),
+            data: value.data
+          })
+        }
+        this.weekChartLoaded = true
+      }
     },
     async getCurrentWeekDates(date) {
       const weekDates = [];

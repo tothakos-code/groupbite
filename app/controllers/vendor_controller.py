@@ -242,6 +242,7 @@ def import_menu(vendor_id):
                         price=size["price"],
                         index=size["index"] if "index" in size else size_index,
                         quantity=size["quantity"] if "quantity" in size else -1,
+                        unlimited=size["unlimited"] if "unlimited" in size else True
                     ))
                     if "index" not in size:
                         size_index+= 1

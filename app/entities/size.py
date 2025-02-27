@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text, Enum, select, exc
+from sqlalchemy import Column, Text, Enum, select, exc, Boolean
 from uuid import UUID
 from . import Base, session
 import enum
@@ -16,6 +16,7 @@ class BaseSizeSchema(Schema):
     link = fields.Str()
     price = fields.Int(required=True)
     quantity = fields.Int(required=True)
+    unlimited = fields.Bool(required=True)
     index = fields.Int(required=True)
 
 
@@ -32,6 +33,7 @@ class Size(Base):
     link: Mapped[str]
     price: Mapped[int]
     quantity: Mapped[int]
+    unlimited: Mapped[Boolean] = mapped_column(Boolean, nullable=False, default=True)
     index: Mapped[int]
 
     menu_item: Mapped["MenuItem"] = relationship(back_populates="sizes")
@@ -81,10 +83,11 @@ class Size(Base):
             session.rollback()
             return False, None
 
-    def update(self, name, price, quantity, index):
+    def update(self, name, price, quantity, unlimited, index):
         self.name = name
         self.price = price
         self.quantity = quantity
+        self.unlimited = unlimited
         self.index = index
         try:
             session.commit()
@@ -120,5 +123,6 @@ class Size(Base):
             "name": self.name,
             "price": self.price,
             "quantity": self.quantity,
+            "unlimited": self.unlimited,
             "index": self.index,
         }

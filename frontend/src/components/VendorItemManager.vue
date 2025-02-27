@@ -385,6 +385,12 @@
                           scope="col"
                           class="col-auto"
                         >
+                          Végtelen
+                        </th>
+                        <th
+                          scope="col"
+                          class="col-auto"
+                        >
                           Mennyiség
                         </th>
                         <th
@@ -428,6 +434,12 @@
                           </span>
                         </td>
                         <td>
+                          <v-checkbox-btn
+                            v-model="size.unlimited"
+                            :readonly="!size.isEditing"
+                          />
+                        </td>
+                        <td>
                           <input
                             v-if="size.isEditing"
                             v-model="size.quantity"
@@ -435,7 +447,7 @@
                             title="negatív érték ∞-t jelent"
                             type="number"
                           >
-                          <span v-else-if="size.quantity >= 0">
+                          <span v-else-if="!size.unlimited">
                             {{ size.quantity }}
                           </span>
                           <span v-else>
@@ -451,6 +463,7 @@
                             </svg>
                           </span>
                         </td>
+
                         <td>
                           <input
                             v-if="size.isEditing"
@@ -660,6 +673,7 @@ export default {
           category: "",
           // price: 0,
           // quantity: -1,
+          // unlimited: true,
           index: 0,
         },
         items: [],
@@ -766,7 +780,8 @@ export default {
             "id": -1,
             "name": "",
             "price": 0,
-            "quantity": -1,
+            "quantity": 0,
+            "unlimited": true,
             "index": 0,
             "isEditing": true
         }

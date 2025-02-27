@@ -19,7 +19,7 @@
         xxl="2"
       >
         <v-btn
-          v-if="size.quantity !== 0"
+          v-if="size.unlimited || size.quantity > 0"
           class="bg-primary "
           variant="elevated"
           block

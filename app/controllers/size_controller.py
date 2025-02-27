@@ -23,7 +23,8 @@ def handle_menu_item_size_add(data):
         link         = data["link"] if "link" in data else "",
         name         = data["name"],
         price        = data["price"],
-        quantity     = data["quantity"])):
+        quantity        = data["quantity"],
+        unlimited     = data["unlimited"])):
         return { "error": "Bad request or somthing went wrong" }, 400
 
     return { "msg": "OK" }, 201
@@ -41,6 +42,7 @@ def handle_menu_item_size_update(data, size_id):
         data["name"],
         data["price"],
         data["quantity"],
+        data["unlimited"],
         data["index"]):
         return { "error": "Something went wrong" }, 400
 

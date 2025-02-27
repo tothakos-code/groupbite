@@ -100,7 +100,8 @@ def handle_menu_duplicate(menu_id):
                 name=size.name,
                 price=size.price,
                 index=size.index,
-                quantity=size.quantity
+                quantity=size.quantity,
+                unlimited=size.unlimited
             ))
 
 

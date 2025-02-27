@@ -108,8 +108,8 @@ class UserBasket(Base):
             UserBasket.order_id == order_id,
             UserBasket.user_id == user_id
         )
-        user_basket = session.execute(stmt).scalars().all()
-        for basket_entry in user_basket:
+        user_baskets = session.execute(stmt).scalars().all()
+        for basket_entry in user_baskets:
             basket_entry.delete()
         try:
             session.commit()
@@ -139,10 +139,10 @@ class UserBasket(Base):
             size_stmt = select(Size).where(
                 Size.id == size_id
             )
-            size_to_add = session.execute(size_stmt).scalars().first()
+            size_to_remove = session.execute(size_stmt).scalars().first()
 
-            if size_to_add.quantity >= 0:
-                size_to_add.quantity += 1
+            if not size_to_remove.unlimited:
+                size_to_remove.quantity += 1
 
             if user_basket.count == 1:
                 session.delete(user_basket)
@@ -177,8 +177,9 @@ class UserBasket(Base):
         )
         size_to_add = session.execute(size_stmt).scalars().first()
 
-        if size_to_add.quantity != 0:
-            size_to_add.quantity -= 1
+        if size_to_add.unlimited or size_to_add.quantity > 0:
+            if not size_to_add.unlimited:
+                size_to_add.quantity -= 1
             if not user_basket:
                 user_basket = UserBasket(
                     user_id = user_id,
@@ -214,6 +215,8 @@ class UserBasket(Base):
 
 
     def delete(self):
+        if not self.size.unlimited:
+            self.size.quantity += self.count
         session.delete(self)
         try:
             session.commit()

@@ -3,11 +3,12 @@ const HomeView = () => import("./views/Home.vue");
 const AdminHomeView = () => import( "./views/AdminHome.vue");
 const MenuView = () => import( "./views/MenuRender.vue");
 const AdminSettingsView = () => import( "./views/AdminSettings.vue");
-const VendorConfiguration = () => import( "./components/VendorConfiguration.vue");
+const VendorSettings = () => import( "./views/VendorSettings.vue");
+const VendorMenuManager = () => import( "./views/VendorMenuManager.vue");
 const AdminVendorsView = () => import( "./views/AdminVendors.vue");
 const AdminOrdersView = () => import( "./views/AdminOrders.vue");
 const AdminUsersView = () => import( "./views/AdminUsers.vue");
-const VendorItemManager = () => import( "./components/VendorItemManager.vue");
+const VendorItemManager = () => import( "./views/VendorItemManager.vue");
 const VendorAdd = () => import( "./components/VendorAdd.vue");
 const NotFound = () => import( "./components/NotFound.vue");
 import { useAuth } from "@/stores/auth.js";
@@ -71,11 +72,15 @@ const routes = [
       },
       {
         path: ":id/config",
-        component: VendorConfiguration,
+        component: VendorSettings,
+      },
+      {
+        path: ":id/menu",
+        component: VendorMenuManager,
       },
       {
         name:"vendorItems",
-        path: ":id/config/:menuId",
+        path: ":id/menu/:menuId",
         component: VendorItemManager
       },
       {

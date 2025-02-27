@@ -150,11 +150,6 @@ export default {
       drawer: true,
     }
   },
-  computed: {
-    isDataLoaded(){
-      return (this.auth.user !== undefined && this.auth.user.ui_color) || !this.$cookies.isKey("username")
-    }
-  },
   mounted() {
     axios.get(`http://${window.location.host}/api/setting/get/app_title`)
       .then(response => {

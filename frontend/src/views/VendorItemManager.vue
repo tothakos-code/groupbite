@@ -640,9 +640,9 @@ import { useMenuStore } from "@/stores/menu";
 import { useItemStore } from "@/stores/item";
 import { useSizeStore } from "@/stores/size";
 import { useVendorStore } from "@/stores/vendor";
-import Paginator from "./Paginator.vue";
-import DataTable from "./DataTable.vue";
-import Popup from "./Popup.vue";
+import Paginator from "@/components/Paginator.vue";
+import DataTable from "@/components/DataTable.vue";
+import Popup from "@/components/Popup.vue";
 
 export default {
     name: "VendorItemManager",

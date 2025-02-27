@@ -12,6 +12,20 @@ const VendorAdd = () => import( "./components/VendorAdd.vue");
 const NotFound = () => import( "./components/NotFound.vue");
 import { useAuth } from "@/stores/auth.js";
 
+const authGuard = async (to, from, next) => {
+  if (!useAuth().user) {
+    await useAuth().checkSession();
+      if (!useAuth().isLoading && !useAuth().user?.admin) {
+        console.log("Nono, you can't do that");
+        return false
+      }
+    } else if (!useAuth().user?.admin) {
+    console.log("Nono, you can't do that");
+    return false
+  }
+  next();
+}
+
 const routes = [
   {
     path: '/api/:pathMatch(.*)*',
@@ -33,13 +47,7 @@ const routes = [
     name: "admin",
     path: "/admin",
     component: AdminHomeView,
-    beforeEnter: () => {
-      if (!useAuth().user?.admin) {
-        // TODO: This runs sooner than the session check and it retruns false. I am not sure how to handle this yet.
-        console.log("Nono, you can't do that");
-        return false
-      }
-    },
+    beforeEnter: authGuard,
     children: [
       {
         name:"settings",

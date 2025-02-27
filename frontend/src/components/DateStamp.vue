@@ -78,6 +78,7 @@
 <script>
 import { useAuth } from "@/stores/auth";
 import { state } from "@/main";
+
 export default {
   name: "DateStamp",
   props: {

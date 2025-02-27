@@ -92,7 +92,7 @@ export default {
     },
     methods: {
       openAdminHome: function () {
-        this.$router.push({ path:`/admin`})
+        window.history.back();
       },
       openAdminOrders: function () {
         this.$router.push({ path:`/admin/orders`})

@@ -18,6 +18,9 @@
             Email
           </th>
           <th scope="col">
+            Admin
+          </th>
+          <th scope="col">
             Műveletek
           </th>
         </tr>
@@ -32,6 +35,12 @@
           </td>
           <td>
             {{ user.email }}
+          </td>
+          <td>
+            <v-checkbox-btn
+              v-model="user.admin"
+              readonly
+            />
           </td>
           <td>
             <!-- <div

@@ -311,76 +311,95 @@ class Vendor(Base):
         from app.entities.order import Order, OrderState
 
         order = Order.find_open_order_by_date_for_a_vendor(str(self.id), date.today().strftime("%Y-%m-%d"))
-        if order:
-            from app.socketio_singleton import SocketioSingleton
-            order.change_state(OrderState.CLOSED, None)
-            socketio = SocketioSingleton.get_instance()
-            socketio.emit("be_order_update", {
-                "order": order.serialized
-            })
-        else:
+        if not order:
             logging.info("State already changed")
+            return
+
+        from app.socketio_singleton import SocketioSingleton
+        order.change_state(OrderState.CLOSED, None)
+        socketio = SocketioSingleton.get_instance()
+        socketio.emit("be_order_update", {
+            "order": order.serialized
+        })
+
 
     def email_ordering_wrapper(self):
         logging.info("Scheduled email ordering running")
         from app.entities.order import Order, OrderState
 
         order = Order.find_order_by_date_for_a_vendor(str(self.id), date.today().strftime("%Y-%m-%d"))
-        if order:
-            email_min_user = self.settings["email_min_user"]["value"]
-            if self.settings["auto_email_order"]["value"] == True and (email_min_user == 0 or email_min_user <= len(order.get_users())):
-                from app.services.mail_sender_service import send_mail
-                from app.entities.user_basket import UserBasket
-                baskets = UserBasket.find_items_by_order(order.id)
-                if len(baskets) == 0:
-                    logging.info("The order is empty, email not sent")
-                    return
+        if not order:
+            logging.warning("Order not found")
+            return
 
-                basket_sum = {}
-                for item in baskets:
-                    if item.menu_item_id in basket_sum:
-                        basket_sum[item.menu_item_id]["quantity"] += item.count
-                    else:
-                        basket_sum[item.menu_item_id] = {**item.basket_format, "quantity": item.count}
+        email_min_user = self.settings["email_min_user"]["value"]
+        if self.settings["auto_email_order"]["value"] == True and (email_min_user == 0 or email_min_user <= len(order.get_users())):
+            from app.services.mail_sender_service import send_mail
+            from app.entities.user_basket import UserBasket
+            baskets = UserBasket.find_items_by_order(order.id)
+            if len(baskets) == 0:
+                logging.warning("The order is empty, email not sent")
+                return
 
-                basket_template = ""
-                basket_categories = {}
-                for item in basket_sum.values():
-                    pattern = self.settings["order_text_template"]["value"]
-                    line = pattern \
-                        .replace("${quantity}", str(item["quantity"])) \
-                        .replace("${item_name}", item["item_name"]) \
-                        .replace("${size_name}", item["size_name"]) \
-                        .replace("\\n", "<br>")
-                    basket_template += line
+            basket_sum = {}
+            for item in baskets:
+                if item.menu_item_id in basket_sum:
+                    basket_sum[item.menu_item_id]["quantity"] += item.count
+                else:
+                    basket_sum[item.menu_item_id] = {**item.basket_format, "quantity": item.count}
 
-                    if item["category"] not in basket_categories:
-                        basket_categories[item["category"]] = ""
-                    basket_categories[item["category"]] += line
+            basket_template = ""
+            basket_categories = {}
+            for item in basket_sum.values():
+                pattern = self.settings["order_text_template"]["value"]
+                line = pattern \
+                    .replace("${quantity}", str(item["quantity"])) \
+                    .replace("${item_name}", item["item_name"]) \
+                    .replace("${size_name}", item["size_name"]) \
+                    .replace("\\n", "<br>")
+                basket_template += line
 
-                email_template = self.settings["auto_email_order_template"]["value"]
-                email_template = email_template.replace("${basket}", basket_template)
-                for category, value in basket_categories.items():
-                    email_template = email_template.replace("${basket." + category + "}", basket_categories[category])
-                email_template = non_mached.sub("", email_template)
+                if item["category"] not in basket_categories:
+                    basket_categories[item["category"]] = ""
+                basket_categories[item["category"]] += line
 
-                email_subject = self.settings["auto_email_subject"]["value"]
-                email_subject = email_subject \
-                    .replace("${vendor_name}", order.vendor.name) \
-                    .replace("${date}", order.date_of_order.strftime("%Y.%m.%d"))
+            email_template = self.settings["auto_email_order_template"]["value"]
+            email_template = email_template.replace("${basket}", basket_template)
+            for category, value in basket_categories.items():
+                email_template = email_template.replace("${basket." + category + "}", basket_categories[category])
+            email_template = non_mached.sub("", email_template)
 
-                email_subject = non_mached.sub("", email_subject)
+            email_subject = self.settings["auto_email_subject"]["value"]
+            email_subject = email_subject \
+                .replace("${vendor_name}", order.vendor.name) \
+                .replace("${date}", order.date_of_order.strftime("%Y.%m.%d"))
 
-                logging.info("Scheduled automatic order email sent!")
-                send_mail(
-                    self.settings["auto_email_order_to"]["value"],
-                    self.settings["auto_email_order_cc"]["value"],
-                    email_subject,
-                    email_template)
-            else:
-                logging.info("Minimum order requirements are not met")
+            email_subject = non_mached.sub("", email_subject)
+
+            success, error = send_mail(
+                self.settings["auto_email_order_to"]["value"],
+                self.settings["auto_email_order_cc"]["value"],
+                email_subject,
+                email_template)
+            if not success:
+                logging.error("Email could not be sent")
+
+            logging.info("Scheduled automatic order email sent!")
+
+            if not order.change_state(OrderState.CLOSED):
+                return
+
+            from app.socketio_singleton import SocketioSingleton
+            socketio = SocketioSingleton.get_instance()
+
+            socketio.emit("be_order_update", {
+                "order": order.serialized
+                },
+                to=f"{order.vendor_id}@{order.date_of_order}"
+            )
         else:
-            logging.info("Order not found")
+            logging.info("Minimum order requirements are not met")
+
 
 
     @property

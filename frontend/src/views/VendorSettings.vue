@@ -122,7 +122,7 @@
           multiple
           :label="vendor.settings.auto_email_order_to.name"
           :disabled="!vendor.settings.auto_email_order.value"
-          :rules="[ v => validateEmails(v,true)]"
+          :rules="[ v => validateEmails(v,vendor.settings.auto_email_order.value)]"
           bg-color="white"
         >
           <template #chip="{ props }">

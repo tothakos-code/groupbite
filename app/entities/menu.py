@@ -55,8 +55,8 @@ class Menu(Base):
     def find(vendor_id, date):
         stmt = select(Menu).where(
             Menu.vendor_id == vendor_id,
-            Menu.from_date < date,
-            Menu.to_date > date
+            Menu.from_date <= date,
+            Menu.to_date >= date
         )
         return session.execute(stmt).scalars().first()
 

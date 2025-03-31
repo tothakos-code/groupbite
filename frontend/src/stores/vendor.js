@@ -8,7 +8,8 @@ export const useVendorStore = defineStore("vendor", {
   state: () => ({
     vendors: [],
     selectedVendor: undefined,
-    isLoading: false
+    isLoading: false,
+    routesLoaded: false
   }),
   getters: {
 

@@ -12,6 +12,8 @@ const VendorItemManager = () => import( "./views/VendorItemManager.vue");
 const VendorAdd = () => import( "./components/VendorAdd.vue");
 const NotFound = () => import( "./components/NotFound.vue");
 import { useAuth } from "@/stores/auth.js";
+import { useVendorStore } from "@/stores/vendor.js";
+import { watch } from 'vue';
 
 const authGuard = async (to, from, next) => {
   if (!useAuth().user) {
@@ -24,6 +26,7 @@ const authGuard = async (to, from, next) => {
     console.log("Nono, you can't do that");
     return false
   }
+  console.log("Success: admin");
   next();
 }
 
@@ -103,6 +106,21 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes: routes
+});
+
+router.beforeEach((to, from, next) => {
+
+  const vendorStore = useVendorStore();
+  if (vendorStore.routesLoaded) {
+    next()
+  } else {
+    const stopWatching = watch(() => vendorStore.routesLoaded, (newValue) => {
+      if (newValue) {
+        stopWatching(); // Stop watching to prevent memory leaks
+        next();
+      }
+    });
+  }
 });
 
 export default router;

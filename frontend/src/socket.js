@@ -32,6 +32,7 @@ socket.on("disconnect", () => {
 socket.on("be_vendors_update", function(vendors) {
   useVendorStore().vendors = JSON.parse(vendors);
   register_plugin_routes(router);
+  useVendorStore().routesLoaded = true;
 });
 
 socket.on("be_user_update", function(user) {

@@ -194,9 +194,19 @@ export default {
         }
       },
       openVendorConfiguration: function (id) {
+        this.vendorStore.vendors.forEach((item) => {
+          if (item.id === id) {
+            useVendorStore().selectedVendor = item;
+          }
+        });
         this.$router.push({ path:`/admin/${id}/config`})
       },
       openVendorMenuManager: function (id) {
+        this.vendorStore.vendors.forEach((item) => {
+          if (item.id === id) {
+            useVendorStore().selectedVendor = item;
+          }
+        });
         this.$router.push({ path:`/admin/${id}/menu`})
       },
       addVendor: function () {

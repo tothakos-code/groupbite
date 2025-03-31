@@ -153,6 +153,26 @@ export const useVendorStore = defineStore("vendor", {
         this.isLoading = false;
       }
     },
+    async scan(vendorId, data) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/vendor/${vendorId}/scan?menu_date=${data}`);
+        notify({
+          type: "info",
+          text: "Scan sikeres!",
+        });
+        return response
+      } catch (error) {
+        console.error("Failed to run scan on vendor:", error.response.data.error);
+        notify({
+          type: "error",
+          text: "Scan nem sikerült!",
+        });
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async subscribe(){
       const auth = useAuth()
       if (!auth.isLoggedIn) {

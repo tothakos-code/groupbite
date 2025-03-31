@@ -33,6 +33,15 @@
         >
           Importálás
         </v-btn>
+        <v-btn
+          v-if="selectedVendor.type === 'plugin'"
+          class="ms-2 bg-primary"
+          type="button"
+          name="save"
+          @click="openScanPopup()"
+        >
+          Scan
+        </v-btn>
       </div>
       <div
         class="row mt-2"
@@ -398,6 +407,25 @@
           >
         </div>
       </Popup>
+      <Popup
+        title="Menü scan indítás"
+        :show-modal="showScanPopup"
+        confirm-text="Scan"
+        @cancel="showScanPopup=false"
+        @confirm="submitScan()"
+      >
+        <p>
+          Válaszd ki a megfelelő dátumot
+        </p>
+        <div class="mb-3">
+          <v-date-picker
+            v-model="scanDate"
+            show-adjacent-months
+            first-day-of-week="1"
+            hide-header
+          />
+        </div>
+      </Popup>
     </div>
   </div>
 </template>
@@ -435,11 +463,18 @@ export default {
         },
         isLoading: true,
         showImportPopup: false,
+        showScanPopup: false,
+        scanDate: new Date(),
         searchString: "",
         json_file: "",
         limit: 10,
         currentPage: 1,
         totalCount: 0
+      }
+    },
+    computed: {
+      selectedVendor() {
+        return this.vendorStore.selectedVendor || false
       }
     },
     mounted() {
@@ -456,14 +491,26 @@ export default {
       openImportPopup() {
         this.showImportPopup = true;
       },
+      openScanPopup() {
+        this.showScanPopup = true;
+      },
       submitJsonFile() {
         let formData = new FormData();
         formData.append("file", this.file);
         this.vendorStore.import(this.$route.params.id, formData)
         .then(response => {
           if (response.status === 201) {
-            this.showImportPopup=false
-            this.getMenuList()
+            this.showImportPopup=false;
+            this.getMenuList();
+          }
+        })
+      },
+      submitScan() {
+        this.vendorStore.scan(this.$route.params.id, this.scanDate.toISODate())
+        .then(response => {
+          if (response.status === 201) {
+            this.showScanPopup=false;
+            this.getMenuList();
           }
         })
       },

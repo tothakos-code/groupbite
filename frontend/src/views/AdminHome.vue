@@ -76,13 +76,16 @@
 
 <script>
 import { useAuth } from "@/stores/auth";
+import { useVendorStore } from "@/stores/vendor";
 
 export default {
     name: "AdminView",
     setup() {
       const auth = useAuth();
+      const vendorStore = useVendorStore();
       return {
-        auth
+        auth,
+        vendorStore
       }
     },
     data() {
@@ -92,18 +95,23 @@ export default {
     },
     methods: {
       openAdminHome: function () {
+        this.vendorStore.selectedVendor = undefined;
         window.history.back();
       },
       openAdminOrders: function () {
+        this.vendorStore.selectedVendor = undefined;
         this.$router.push({ path:`/admin/orders`})
       },
       openAdminUsers: function () {
+        this.vendorStore.selectedVendor = undefined;
         this.$router.push({ path:`/admin/users`})
       },
       openAdminVendors: function () {
+        this.vendorStore.selectedVendor = undefined;
         this.$router.push({ path:`/admin/vendors`})
       },
       openAdminSettings: function () {
+        this.vendorStore.selectedVendor = undefined;
         this.$router.push({ path:`/admin/settings`})
       }
     }

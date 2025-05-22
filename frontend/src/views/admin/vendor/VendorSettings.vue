@@ -196,7 +196,11 @@ export default {
       return {
         vendor: {},
         isLoading: true,
-        smtpStatus: false
+        smtpStatus: false,
+        mailTypes: [
+          {title:"Text", value:"text"},
+          {title:"HTML", value:"html"},
+        ],
       }
     },
     mounted() {

@@ -6,14 +6,14 @@
 </template>
 
 <script>
-import Menu from "@/views/Menu.vue";
+import Menu from "@/views/menu/Menu.vue";
 import { state } from "@/main";
 import { defineAsyncComponent } from "vue";
 import { useVendorStore } from "@/stores/vendor";
 
 
 const PluginMenu = defineAsyncComponent({
-  loader: () => import(`./../../../plugins/${useVendorStore().selectedVendor.name}/frontend/App.vue`),
+  loader: () => import(`./../../../../plugins/${useVendorStore().selectedVendor.name}/frontend/App.vue`),
 })
 
 export default {

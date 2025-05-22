@@ -5,7 +5,7 @@ export function register_plugin_routes(router) {
   useVendorStore().vendors.forEach((item) => {
 
     if (!router.hasRoute("/"+item.name)) {
-      let component = () => import("@/views/MenuRender.vue")
+      let component = () => import("@/views/menu/MenuRender.vue")
       router.addRoute("menu", {
         name: `${item.name}`,
         path: `${item.name}`,

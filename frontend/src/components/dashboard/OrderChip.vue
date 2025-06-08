@@ -1,7 +1,7 @@
 <template>
   <v-card
     :variant="isSelected ? 'flat' : 'outlined'"
-    :color="isSelected ? 'success' : 'grey-lighten-5'"
+    :color="isSelected ? 'teal-lighten-2' : 'grey-lighten-5'"
     :class="[
       'order-card',
       'mb-2',
@@ -112,7 +112,7 @@
           class="me-4"
         >
           <v-chip
-            color="warning"
+            color="teal-darken-4"
             size="small"
             variant="tonal"
           >
@@ -196,8 +196,8 @@ export default {
     getStatusText(stateId) {
       switch (stateId) {
         case 'closed': return 'Lezárva';
-        case 'order': return 'Rendelés';
-        case 'collect': return 'Gyűjtés';
+        case 'order': return 'Utolsó percek';
+        case 'collect': return 'Nyitott';
         default: return 'Ismeretlen';
       }
     },
@@ -229,7 +229,7 @@ export default {
 
 .order-card.selected {
   transform: scale(1.02);
-  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3) !important;
+  box-shadow: 0 8px 25px rgba(76, 175, 150, 0.3) !important;
 }
 
 .cursor-pointer {

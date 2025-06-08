@@ -1,5 +1,8 @@
 <template>
-  <v-container fluid>
+  <v-container
+    fluid
+    max-width="1400"
+  >
     <div className="mb-8">
       <h2 className="text-h4 mb-4">
         Rendelés történeted
@@ -213,6 +216,7 @@
         :key="order.id"
         class="mb-4"
         elevation="2"
+        max-width="1400"
       >
         <v-card-title class="d-flex justify-space-between align-center">
           <div>

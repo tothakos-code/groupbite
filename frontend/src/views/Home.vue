@@ -8,7 +8,7 @@
           cols="12"
           md="8"
         >
-          <WeekSummary />
+          <WeeklySummary />
         </v-col>
         <v-col
           cols="12"
@@ -37,14 +37,14 @@
 
 <script>
 import { defineAsyncComponent } from 'vue'
-const WeekSummary = defineAsyncComponent(() => import("@/components/WeekSummary.vue"));
+const WeeklySummary = defineAsyncComponent(() => import("@/components/dashboard/WeeklySummary.vue"));
 const WeekGraph = defineAsyncComponent(() => import("@/components/WeekGraph.vue"));
-const OrderSplitter = defineAsyncComponent(() => import("@/components/OrderSplitter.vue"));
+const OrderSplitter = defineAsyncComponent(() => import("@/components/dashboard/OrderSplitter.vue"));
 
 export default {
     name: "HomeView",
     components: {
-      WeekSummary,
+      WeeklySummary,
       WeekGraph,
       OrderSplitter
     }

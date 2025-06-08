@@ -13,7 +13,7 @@
           class="d-inline-block d-flex align-items-center"
         >
           <span
-            class=" text-truncate"
+            class="text-truncate"
             style="max-width: 180px;"
             :title="username"
           >

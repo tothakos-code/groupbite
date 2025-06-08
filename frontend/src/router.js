@@ -10,6 +10,7 @@ const AdminOrdersView = () => import( "./views/admin/AdminOrders.vue");
 const AdminUsersView = () => import( "./views/admin/AdminUsers.vue");
 const VendorItemManager = () => import( "./views/admin/vendor/VendorItemManager.vue");
 const VendorAdd = () => import( "./components/VendorAdd.vue");
+const OrderHistoryView = () => import( "./views/history/OrderHistory.vue");
 const NotFound = () => import( "./components/NotFound.vue");
 import { useAuth } from "@/stores/auth.js";
 import { useVendorStore } from "@/stores/vendor.js";
@@ -96,6 +97,11 @@ const routes = [
     name: "menu",
     path: "/menu",
     component: MenuView
+  },
+  {
+    name: "history",
+    path: "/history",
+    component: OrderHistoryView
   },
   {
     name: "NotFound",

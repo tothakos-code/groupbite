@@ -1,8 +1,9 @@
-from sqlalchemy import Column, Text, Enum, select, exc
+from sqlalchemy import Column, Text, Enum, select, exc, or_, String, cast
 from uuid import UUID
 from . import Base, session
 from .order import Order
 from .menu_item import MenuItem
+from .vendor import Vendor
 from .size import Size
 import enum
 from sqlalchemy import ForeignKey, ForeignKeyConstraint
@@ -36,11 +37,57 @@ class UserBasket(Base):
         stmt = select(UserBasket).where(UserBasket.order_id == order_id)
         return session.execute(stmt).scalars().all()
 
-    def find_user_orders(user_id, limit=None, offset=0):
-        stmt = select(UserBasket).where(UserBasket.user_id == user_id)
-        if limit is not None:
-            stmt = stmt.limit(limit).offset(offset)
+    def find_user_orders(user_id, limit=None, offset=0, search=None, vendor_id=None, date_from=None, date_to=None):
+        subq = (
+            select(Order.id, Order.date_of_order)
+            .join(Order.items)
+            .join(UserBasket.item)
+            .join(UserBasket.size)
+            .where(UserBasket.user_id == user_id)
+        )
+
+        if search is not None:
+            subq = subq.where(
+                or_(
+                    MenuItem.name.ilike(f"%{search}%"),
+                    Size.name.ilike(f"%{search}%"),
+                    cast(Order.state_id, String).ilike(f"%{search}%"),
+                )
+            )
+
+        if vendor_id is not None:
+            subq = subq.where(Order.vendor_id == vendor_id)
+
+        if date_from is not None and date_to is not None:
+            subq = subq.where(Order.date_of_order.between(date_from, date_to))
+
+        # Add ordering + limit/offset to control pagination at ORDER level
+        subq = subq.order_by(Order.date_of_order.desc()).limit(limit).offset(offset)
+        subq = subq.distinct().subquery()
+
+        # Outer query: get all UserBasket rows in those orders for this user
+        stmt = (
+            select(UserBasket)
+            .join(UserBasket.order)
+            .where(
+                UserBasket.user_id == user_id,
+                UserBasket.order_id.in_(select(subq.c.id))
+            )
+            .order_by(Order.date_of_order.desc())
+        )
+
         return session.execute(stmt).scalars().all()
+
+    def find_user_order_vendors(user_id):
+        stmt = (
+            select(Vendor)
+            .join(Order.items)
+            .join(Order.vendor)
+            .where(UserBasket.user_id == user_id)
+            .distinct()
+        )
+        return session.execute(stmt).scalars().all()
+
 
     def find_user_basket(user_id, order_id):
         stmt = select(UserBasket).where(
@@ -92,8 +139,7 @@ class UserBasket(Base):
 
     def find_user_order_dates_between(user_id, start, end):
         stmt = select(
-            UserBasket.order_id,
-            Order.date_of_order
+            UserBasket
         ).join(
             UserBasket,
             Order.items
@@ -101,7 +147,7 @@ class UserBasket(Base):
             UserBasket.user_id == user_id,
             Order.date_of_order.between(start, end)
         )
-        return session.execute(stmt).all()
+        return session.execute(stmt).scalars().all()
 
     def clear_items(user_id, order_id):
         stmt = select(UserBasket).where(
@@ -240,10 +286,15 @@ class UserBasket(Base):
     @property
     def serialized(self):
         return {
-            "user_id": str(self.user_id),
-            "menu_item_id": self.menu_item_id,
+            "user_id": self.user_id,
+            "item_id": self.menu_item_id,
+            "size_id": self.size_id,
             "order_id": self.order_id,
-            "count": self.count
+            "item_name": self.item.name,
+            "size_name": self.size.name,
+            "price": self.size.price,
+            "category": self.item.category,
+            "quantity": self.count,
         }
 
     @property

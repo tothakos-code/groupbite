@@ -26,8 +26,9 @@ def handle_order_history():
 
     result = {}
     for value in UserBasket.find_orders_between_dates(DATE_FROM, DATE_TO):
+        print(value)
         order = Order.get_by_id(value[0])
-        date = value[1].strftime("%Y-%m-%d")
+        date = order.date_of_order.strftime("%Y-%m-%d")
         if date not in result:
             result[date] = {}
 
@@ -42,8 +43,8 @@ def handle_order_history():
 
     if USER_ID != None:
         for value in UserBasket.find_user_order_dates_between(USER_ID, DATE_FROM, DATE_TO):
-            date = value[1].strftime("%Y-%m-%d")
-            order_id = value[0]
+            date = value[0].order.date_of_order.strftime("%Y-%m-%d")
+            order_id = value[0].order_id
             result[date][order_id]["ordered"] = True
 
     return { "data": result }, 200

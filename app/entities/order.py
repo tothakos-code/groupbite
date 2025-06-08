@@ -35,8 +35,10 @@ class Order(Base):
     date_of_order: Mapped[date]
     order_time: Mapped[datetime] = mapped_column(nullable=True)
     order_fee: Mapped[int] = mapped_column(default=0)
+    total_price: Mapped[int] = mapped_column(default=0)
 
     items: Mapped[List["UserBasket"]] = relationship(back_populates="order")
+    order_items: Mapped[List["OrderItem"]] = relationship(back_populates="order")
     vendor: Mapped["Vendor"] = relationship(back_populates="orders")
     ordered_by: Mapped["User"] = relationship(back_populates="placed_orders")
 
@@ -180,8 +182,22 @@ class Order(Base):
         return session.execute(stmt).all()
 
     def change_state(self, new_state, user_id=None):
+        from .order_item import OrderItem
+
+        if self.state_id == OrderState.CLOSED and new_state != OrderState.CLOSED:
+            OrderItem.delete_order(self.id)
+
         self.state_id = new_state
         self.order_by = user_id
+        if self.state_id == OrderState.CLOSED:
+
+            order_price = 0
+            for basket in self.items:
+                ok, order_item = OrderItem.create(basket)
+                if ok:
+                    order_price += order_item.total_price
+            order_price += self.order_fee
+            self.total_price = order_price
         try:
             session.commit()
             return True
@@ -218,5 +234,6 @@ class Order(Base):
             "user_id": str(self.user_id),
             "date_of_order": self.date_of_order.strftime("%Y-%m-%d"),
             "order_time": self.order_time,
-            "order_fee": self.order_fee
+            "order_fee": self.order_fee,
+            "total_price": self.total_price
         }

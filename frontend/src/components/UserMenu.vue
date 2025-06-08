@@ -73,7 +73,7 @@
               </svg>
             </template>
           </v-list-item>
-          <v-list-item @click="openUserHistory()">
+          <v-list-item @click="navigateToHistoryPage()">
             <template #prepend>
               <v-list-item-title>Rendeléseim</v-list-item-title>
             </template>
@@ -157,69 +157,6 @@
     :show="showProfile"
     @cancel="showProfile = false"
   />
-  <Popup
-    :show-modal="showOrderHistory"
-    title="Rendelés történet"
-    confirm-text="Ok"
-    :large="true"
-    @cancel="showOrderHistory = false"
-    @confirm="showOrderHistory = false"
-  >
-    <div class="row d-flex align-items-strech">
-      <div class="col text-center align-center">
-        <span class="btn pe-none border border-secondary-subtle rounded">
-          Összesen {{ totalCount }} redelésed volt.
-        </span>
-      </div>
-      <div class="col text-center">
-        <span class="btn pe-none border border-secondary-subtle rounded">
-          Ennyi pénzt költöttél ebédre összesen: {{ totalSum }} Ft
-        </span>
-      </div>
-      <div class="col text-center">
-        <span class="btn pe-none border border-secondary-subtle rounded">
-          Átlagosan ennyért ettél: {{ Math.round(totalSum/totalCount) }} Ft / rendelés
-        </span>
-      </div>
-    </div>
-    <div
-      v-for="(order , date) in orderHistoryList"
-      :key="date"
-      class="row mt-1 mb-1"
-    >
-      <div
-        v-if="!isLoading"
-        class="list-group-item row m-0"
-      >
-        <GlobalBasketUser
-          :username="order.vendor + ' - ' + order.date"
-          :user-id="date"
-          :user-basket="order.items"
-          :order-fee="order.fee"
-          :start-collapsed="true"
-          :collapsable="true"
-          :copyable="false"
-        />
-      </div>
-      <div
-        v-else
-        class="row text-center"
-      >
-        <div
-          class="spinner-border"
-          role="status"
-        >
-          <span class="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    </div>
-    <Paginator
-      :total-pages="Math.ceil(totalCount/limit)"
-      :current-page="currentPage"
-      :range="5"
-      @page-change="handlePageChange"
-    />
-  </Popup>
 </template>
 
 <script>
@@ -227,9 +164,6 @@ import UserProfilePopup from "./UserProfilePopup.vue";
 import UserLoginPopup from "./UserLoginPopup.vue";
 import { useAuth } from "@/stores/auth.js";
 import { inject } from "vue";
-import Popup from "./Popup.vue";
-import GlobalBasketUser from "./GlobalBasketUser.vue";
-import Paginator from "./Paginator.vue";
 
 export default {
   name: "UserMenu",
@@ -237,9 +171,6 @@ export default {
   components: {
     UserLoginPopup,
     UserProfilePopup,
-    Popup,
-    GlobalBasketUser,
-    Paginator
   },
   setup() {
     const auth = useAuth();
@@ -254,41 +185,17 @@ export default {
     return {
       showProfile: false,
       showLogin: false,
-      showOrderHistory: false,
-      orderHistoryList: {},
-      isLoading: true,
-      limit: 10,
-      currentPage: 1,
-      totalCount: 0,
-      totalSum: 0
     }
   },
   computed: {
   },
   methods: {
-    handlePageChange(page) {
-       this.currentPage = page;
-       this.openUserHistory()
+    navigateToHistoryPage() {
+      this.$router.push({ path:`/history`})
     },
     navigateToAdminPage() {
       this.$router.push({ path:`/admin`})
     },
-    openUserHistory: function(){
-      this.auth.orders({
-            "limit": this.limit,
-            "page": this.currentPage
-          })
-        .then(response => {
-            this.orderHistoryList = response.data.data.items;
-            this.currentPage = response.data.data.page;
-            this.limit = response.data.data.limit;
-            this.totalCount = response.data.data.total_count;
-            this.totalSum = response.data.data.total_sum;
-            this.isLoading = false;
-            this.showOrderHistory = true
-        })
-    },
-
   }
 }
 </script>

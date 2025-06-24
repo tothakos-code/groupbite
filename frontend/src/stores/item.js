@@ -71,5 +71,22 @@ export const useItemStore = defineStore("item", {
         this.isLoading = false;
       }
     },
+    async bulkUpdateIndices(items) {
+      try {
+        const response = axios.put(`/api/item/reorder`, { "data": {"items": items} });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to bulk update indices');
+        }
+
+        const result = await response.json();
+        return result;
+
+      } catch (error) {
+        console.error('Store bulk update error:', error);
+        return error.response;
+      }
+    },
   }
 })

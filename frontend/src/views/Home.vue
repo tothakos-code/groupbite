@@ -38,7 +38,7 @@
 <script>
 import { defineAsyncComponent } from 'vue'
 const WeeklySummary = defineAsyncComponent(() => import("@/components/dashboard/WeeklySummary.vue"));
-const WeekGraph = defineAsyncComponent(() => import("@/components/WeekGraph.vue"));
+const WeekGraph = defineAsyncComponent(() => import("@/components/dashboard/WeekGraph.vue"));
 const OrderSplitter = defineAsyncComponent(() => import("@/components/dashboard/OrderSplitter.vue"));
 
 export default {

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 const HomeView = () => import("./views/Home.vue");
+// const DashboardView = () => import("./views/dashboard/Dashboard.vue");
 const AdminHomeView = () => import( "./views/admin/AdminHome.vue");
 const MenuView = () => import( "./views/menu/MenuRender.vue");
 const AdminSettingsView = () => import( "./views/admin/AdminSettings.vue");

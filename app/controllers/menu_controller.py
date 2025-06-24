@@ -22,23 +22,20 @@ def handle_menu_get_items(menu_id):
     try:
         limit = int(request.args.get('limit'))
         page = int(request.args.get('page'))
-    except ValueError as e:
-        limit = 10
-        page = 1
-    except TypeError as e:
-        limit = 10
-        page = 1
+    except (ValueError, TypeError):
+        limit = None
+        page = None
+
     offset = 0 if page is None else limit * (page - 1)
     search = request.args.get('search')
     items = MenuItem.find_all_by_menu(menu_id, search, limit, offset)
-    total_count = MenuItem.count_by_menu_id(menu_id)
+
+    total_count = MenuItem.count_by_menu_id(menu_id, search) if limit else len(items)
+
     result = []
 
-    for i in items:
-        result.append(i.serialized)
-
     return { "data": {
-        "items": result,
+        "items": [i.serialized for i in items],
         "page": page,
         "limit": limit,
         "total_count": total_count

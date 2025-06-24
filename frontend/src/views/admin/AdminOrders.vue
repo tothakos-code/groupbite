@@ -211,13 +211,11 @@
 import { useAuth } from "@/stores/auth";
 import { useOrderStore } from "@/stores/order";
 import Paginator from "@/components/Paginator.vue";
-import { VNumberInput } from 'vuetify/labs/VNumberInput'
 
 export default {
     name: "AdminOrdesView",
     components: {
-      Paginator,
-      VNumberInput
+      Paginator
     },
     setup() {
       const auth = useAuth();

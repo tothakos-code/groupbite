@@ -9,159 +9,15 @@
         md="7"
         class="p-0 mt-2"
       >
-        <v-row class="p-2">
-          <v-col
-            class="d-flex justify-content-center justify-content-xl-start"
-            cols="12"
-          >
-            <h2>
-              {{ vendorTitle }}
-            </h2>
-          </v-col>
-          <v-col
-            sm="auto"
-            class="d-flex flex-fill align-items-center justify-content-sm-start justify-content-center justify-content-xl-start"
-          >
-            <OrderState
-
-              class="text-truncate my-auto"
-            />
-          </v-col>
-          <v-col
-            v-if="vendorSettings.auto_email_order.value"
-            sm="auto"
-            class="d-flex flex-fill align-items-center justify-content-sm-start justify-content-center"
-          >
-            <v-tooltip location="bottom">
-              <template #activator="{ props }">
-                <span
-                  v-bind="props"
-                  class="text-button font-weight-bold"
-                >Határidő: {{ vendorSettings.email_order_scheduler.value }}
-                </span>
-              </template>
-              <span>Az automata rendelés bevan kapcsolva ennél az étkezdénél</span>
-            </v-tooltip>
-            <v-tooltip location="bottom">
-              <template #activator="{ props }">
-                <span
-                  v-bind="props"
-                  class="text-button"
-                >
-                  <v-icon
-                    v-if="vendorSettings.email_min_user.value <= userCount"
-                    color="success"
-                  >
-                    mdi-clock-check-outline
-                  </v-icon>
-                  <v-icon
-                    v-else
-                    color="warning"
-                  >
-                    mdi-clock-alert-outline
-                  </v-icon>
-                </span>
-              </template>
-              <span v-if="vendorSettings.email_min_user.value <= userCount">
-                Az automata rendelés feltétele teljesült. Min {{ userCount }}/{{ vendorSettings.email_min_user.value }} rendelő
-              </span>
-              <span v-else>
-                Az automata rendelés feltétele NEM teljesül. Min {{ userCount }}/{{ vendorSettings.email_min_user.value }} rendelő
-              </span>
-            </v-tooltip>
-          </v-col>
-          <v-col
-            sm="auto"
-            class="d-flex justify-content-center justify-content-xl-end align-items-center"
-          >
-            <div class="">
-              <v-tooltip location="bottom">
-                <template #activator="{ props }">
-                  <v-btn
-                    v-if="notificationStatus"
-                    v-bind="props"
-                    class="bg-primary  me-2"
-                    icon
-                    size="small"
-                    border="primary thin"
-                    rounded
-                    varian="text"
-                    @click="unsubscribe()"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="currentColor"
-                      class="bi bi-bell"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2M8 1.918l-.797.161A4 4 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4 4 0 0 0-3.203-3.92zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5 5 0 0 1 13 6c0 .88.32 4.2 1.22 6" />
-                    </svg>
-                  </v-btn>
-                  <v-btn
-                    v-else
-                    v-bind="props"
-                    class="bg-primary me-2"
-                    icon
-                    size="small"
-                    border="primary sm"
-                    rounded
-                    varian="text"
-                    @click="subscribe()"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="currentColor"
-                      class="bi bi-bell-slash"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M5.164 14H15c-.299-.199-.557-.553-.78-1-.9-1.8-1.22-5.12-1.22-6q0-.396-.06-.776l-.938.938c.02.708.157 2.154.457 3.58.161.767.377 1.566.663 2.258H6.164zm5.581-9.91a4 4 0 0 0-1.948-1.01L8 2.917l-.797.161A4 4 0 0 0 4 7c0 .628-.134 2.197-.459 3.742q-.075.358-.166.718l-1.653 1.653q.03-.055.059-.113C2.679 11.2 3 7.88 3 7c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0c.942.19 1.788.645 2.457 1.284zM10 15a2 2 0 1 1-4 0zm-9.375.625a.53.53 0 0 0 .75.75l14.75-14.75a.53.53 0 0 0-.75-.75z" />
-                    </svg>
-                  </v-btn>
-                </template>
-                <span>Üzlet értesítés {{ notificationStatus ? "ki" : "be" }}kapcsolása</span>
-              </v-tooltip>
-              <v-tooltip location="bottom">
-                <template #activator="{ props }">
-                  <v-btn
-                    v-if="vendorLink !== ''"
-                    v-bind="props"
-                    varian="text"
-                    class="my-1 me-2 bg-primary"
-                    border="primary thin"
-                    target="_blank"
-                    :href="vendorLink"
-                  >
-                    Eredeti oldal
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="currentColor"
-                      class="bi bi-box-arrow-up-right mb-1"
-                      viewBox="0 0 16 16"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"
-                      />
-                      <path
-                        fill-rule="evenodd"
-                        d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"
-                      />
-                    </svg>
-                  </v-btn>
-                </template>
-                <span>Eredeti étterem oldala megnyitás új lapon</span>
-              </v-tooltip>
-
-              <TransferPopup />
-            </div>
-          </v-col>
-        </v-row>
+        <MenuHeader
+          :vendor-title="vendorTitle"
+          :vendor-settings="vendorSettings"
+          :user-count="userCount"
+          :vendor-link="vendorLink"
+          :notification-status="notificationStatus"
+          @subscribe="handleSubscribe"
+          @unsubscribe="handleUnsubscribe"
+        />
         <v-row
           class="m-0 p-2"
         >
@@ -239,8 +95,7 @@
 import LocalBasket from "@/components/LocalBasket.vue";
 import GlobalBasket from "@/components/GlobalBasket.vue";
 import MenuList from "@/components/MenuList.vue";
-import TransferPopup from "@/components/TransferPopup.vue";
-import OrderState from "@/components/OrderState.vue";
+import MenuHeader from '@/components/menu/MenuHeader.vue'
 import { useAuth } from "@/stores/auth";
 import { useVendorStore } from "@/stores/vendor";
 import { useOrderStore } from "@/stores/order";
@@ -252,8 +107,7 @@ export default {
     LocalBasket,
     GlobalBasket,
     MenuList,
-    OrderState,
-    TransferPopup
+    MenuHeader,
   },
   setup() {
     const auth = useAuth();
@@ -306,10 +160,10 @@ export default {
     },
   },
   methods: {
-    subscribe: function () {
+    handleSubscribe: function () {
       this.vendorStore.subscribe()
     },
-    unsubscribe: function () {
+    handleUnsubscribe: function () {
       this.vendorStore.unsubscribe()
     }
   }

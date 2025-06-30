@@ -8,7 +8,7 @@
     <div class="col-12 d-flex justify-content-between">
       <div class="col-4 p-0 text-center">
         <button
-          class="btn btn-link text-primary p-0"
+          class="btn btn-link text-secondary p-0"
           :disabled="limitToCurrentWeek && selectedDate.getAdjustedDay() == 0"
           title="Előző nap"
           @click="prevDay()"
@@ -28,7 +28,7 @@
       </div>
       <div class="col-4 p-0 text-center">
         <button
-          class="btn btn-link text-primary p-0"
+          class="btn btn-link text-secondary p-0"
           title="Vissza a mai napra"
           @click="setDay(new Date())"
         >
@@ -53,7 +53,7 @@
         <button
           type="button"
           name="button"
-          class="btn btn-link text-primary p-0"
+          class="btn btn-link text-secondary p-0"
           title="Következő nap"
           :disabled="limitToCurrentWeek && selectedDate.getAdjustedDay() == 6"
           @click="nextDay()"

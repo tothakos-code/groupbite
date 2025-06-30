@@ -182,41 +182,32 @@ export const useVendorStore = defineStore("vendor", {
         });
         return;
       }
-      requestNotificationPermission();
       try {
-        const publicKey = await axios.get("/vapid_public_key")
-        navigator.serviceWorker.ready
-        .then(reg => {
-          reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: publicKey.data
-          }).then(
-            sub => {
-              axios.post(`/api/vendor/${this.selectedVendor.id}/notifications/reminder/subscribe`, { "data": sub })
-              .then(() => {
-                notify({
-                  type: "info",
-                  text: `Bekapcsoltad a(z) ${this.selectedVendor.name} értesítést!`,
-                });
-              })
-              .catch(err => {
-                notify({
-                  type: "error",
-                  text: err.response.data.error,
-                });
-              });
-            },
+        await requestNotificationPermission();
 
-            err => console.error(err)
-          );
+        const publicKey = await axios.get("/vapid_public_key");
+        const registration = await navigator.serviceWorker.ready;
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: publicKey.data
         });
+
+        await axios.post(`/api/vendor/${this.selectedVendor.id}/notifications/reminder/subscribe`,
+          { "data": subscription }
+        );
+
+        notify({
+          type: "info",
+          text: `Bekapcsoltad a(z) ${this.selectedVendor.name} értesítést!`,
+        });
+
       } catch (error) {
         console.error("Failed to subscribe to notification:", error);
         notify({
           type: "error",
           text: "Értesítés beállítása nem sikerült!",
         });
-        return error.response
       } finally {
         this.isLoading = false;
       }

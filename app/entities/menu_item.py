@@ -104,15 +104,44 @@ class MenuItem(Base):
 
         return session.execute(stmt).scalar_one()
 
-    def find_all_by_menu_list(menu_id_list, filter=[], desc=False):
-        stmt = select(MenuItem).where(
-            MenuItem.menu_id.in_(menu_id_list),
-            MenuItem.category.in_(filter) if len(filter) != 0 else True
-            )
+    def find_all_by_menu_list(menu_id_list, filter=None, limit=None, desc=False):
+        """
+        Find all menu items by menu ID list with proper filtering and ordering
+
+        Args:
+            menu_id_list: List of menu IDs to search in
+            filter: Optional list of categories to filter by
+            limit: Optional limit for number of results
+            desc: Whether to sort in descending order
+
+        Returns:
+            List of MenuItem objects properly ordered
+        """
+        if filter is None:
+            filter = []
+
+        # Build the base query
+        stmt = select(MenuItem).where(MenuItem.menu_id.in_(menu_id_list))
+
+        # Add category filter if provided and not empty
+        if filter and len(filter) > 0:
+            stmt = stmt.where(MenuItem.category.in_(filter))
+
+        # Add ordering - first by category, then by index
         if desc:
-            stmt = stmt.order_by(MenuItem.category, MenuItem.index.desc())
+            stmt = stmt.order_by(
+                MenuItem.category.desc(),
+                MenuItem.index.desc()
+            )
         else:
-            stmt = stmt.order_by(MenuItem.category, MenuItem.index)
+            stmt = stmt.order_by(
+                MenuItem.category.asc(),
+                MenuItem.index.asc()
+            )
+
+        # Add limit if specified
+        if limit:
+            stmt = stmt.limit(limit)
 
         return session.execute(stmt).scalars().all()
 

@@ -264,6 +264,17 @@ export const useOrderStore = defineStore("order", {
         console.error("Failed to change order_fee:", error.response.data.error);
         return error.response
       }
+    },
+    async sendOrderEmail() {
+      try {
+        const response = axios.post(`/api/order/${this.order.id}/send-email`, { "data": {
+          "order_id": this.order.id
+        } })
+        return response
+      } catch (error) {
+        console.error("Failed to send email:", error);
+        return error.response
+      }
     }
   }
 })

@@ -9,6 +9,7 @@ from app.socketio_singleton import SocketioSingleton
 from app.entities.order import Order, OrderState, BaseOrderSchema
 from app.entities.user_basket import UserBasket
 from app.entities import Session
+from flask import session
 from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
 from app.utils.validators import IDSchema
 from app.vendor_factory import VendorFactory
@@ -354,3 +355,31 @@ def handle_close_order(order_id):
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
     return { "msg": "OK" }, 200
+
+
+@order_blueprint.route("/<order_id>/send-email", methods=["POST"])
+@validate_url_params(IDSchema())
+@require_auth
+def handle_manual_email_order(order_id):
+    from app.scheduler import cancel_task
+
+    logging.info(f"Manual email send triggered by userID: {session.get("user_id")} for order {order_id}")
+    order = Order.get_by_id(order_id)
+    if not order:
+        return {"msg": "Order not found"}, 404
+
+    if order.state_id == OrderState.CLOSED:
+        return {"msg": "Order is already closed, cannot send email"}, 400
+
+    vendor = order.vendor
+
+    # Cancel the scheduled task for this vendor (if exists)
+    task_id = f"{str(vendor.id)}-email-order"
+    cancel_task(task_id)
+    logging.info(f"Scheduled task '{task_id}' canceled due to manual trigger.")
+
+    # Execute the email logic manually
+    if vendor.email_ordering_wrapper(order_id=order_id, manual=True):
+        return {"msg": "Email sent and order closed manually"}, 200
+    else:
+        return {"msg": "Something went wrong during the action"}, 400

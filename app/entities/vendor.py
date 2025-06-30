@@ -10,109 +10,13 @@ from sqlalchemy.orm.attributes import flag_modified
 from uuid import UUID, uuid4
 from typing import List
 import logging
+from typing import Any
 from marshmallow import Schema, fields
 from .notification import NotificationType
 from app.entities.setting import Setting
+from app.utils.vendor_settings_registry import VendorSettingsRegistry
 import re
 
-DEFAULT_VENDOR_SETTINGS = {
-  "link": {
-    "name": "Eredeti oldal elérhetősége",
-    "type": "STR",
-    "value": "",
-    "section": "general"
-  },
-  "title": {
-    "name": "Cím",
-    "type": "STR",
-    "value": "",
-    "section": "general"
-  },
-  "comment_example": {
-    "name": "Rendelés megjegyzés példa",
-    "type": "STR",
-    "value": "",
-    "section": "general"
-  },
-  "transport_price": {
-    "name": "Szállítási díj",
-    "type": "INT",
-    "value": "0",
-    "section": "general"
-  },
-  "auto_email_order": {
-    "name": "Automatikus email rendelés",
-    "type": "BOOL",
-    "value": False,
-    "section": "auto-order"
-  },
-  "email_order_scheduler": {
-    "name": "Rendelés automatikus email küldése (formátum: hh:mm)",
-    "type": "STR",
-    "value": "",
-    "section": "auto-order"
-  },
-  "email_min_user": {
-    "name": "Automatikus rendelés minimum részvevő felhasználó",
-    "type": "INT",
-    "value": 3,
-    "section": "auto-order"
-  },
-  "closed_scheduler_active": {
-    "name": "",
-    "type": "BOOL",
-    "value": False,
-    "section": "order"
-  },
-  "closure_scheduler_active": {
-    "name": "",
-    "type": "BOOL",
-    "value": False,
-    "section": "order"
-  },
-  "closed_scheduler": {
-    "name": "Rendelés automatikus lezárása (formátum: hh:mm)",
-    "type": "STR",
-    "value": "",
-    "section": "order"
-  },
-  "closure_scheduler": {
-    "name": "Rendelés automatikus zárás figyelmeztetés (formátum: hh:mm)",
-    "type": "STR",
-    "value": "",
-    "section": "order"
-  },
-  "auto_email_order_to": {
-    "name": "Automatikus rendelés címzett",
-    "type": "LIST",
-    "value": [],
-    "section": "auto-order"
-  },
-  "auto_email_order_cc": {
-    "name": "Automatikus rendelés másolatot kap",
-    "type": "LIST",
-    "value": [],
-    "section": "auto-order"
-  },
-  "order_text_template": {
-    "name": "Rendelés szöveg sor minta",
-    "type": "STR",
-    "value": "${quantity}x ${item_name} ${size_name}\\n",
-    "section": "order"
-  },
-  "auto_email_subject": {
-    "name": "Automatikus rendelés email tárgy",
-    "type": "STR",
-    "value": "${vendor_name} rendelés - ${date}",
-    "section": "auto-order"
-  },
-  "auto_email_order_template": {
-    "name": "Automatikus rendelés üzenet sablon",
-    "type": "STRBOX",
-    "value": "",
-    "section": "auto-order"
-  }
-}
 non_mached = re.compile("\$\{.*?\}")
 
 
@@ -143,9 +47,31 @@ class Vendor(Base):
         return f"Vendor<id={self.id},name={self.name},type={str(self.type)}>"
 
     def _validate_settings(self):
+        """Ensure all required settings exist with proper defaults"""
         if not isinstance(self.settings, dict):
             self.settings = {}
-        self.settings = {**DEFAULT_VENDOR_SETTINGS, **self.settings}
+
+        # Get default settings from registry
+        default_settings = VendorSettingsRegistry.get_default_settings_dict()
+
+        # Merge with existing settings, keeping existing values
+        for key, default_setting in default_settings.items():
+            if key not in self.settings:
+                self.settings[key] = default_setting
+            else:
+                # Ensure the structure is correct
+                existing = self.settings[key]
+                if not isinstance(existing, dict):
+                    # Reset to default if structure is wrong
+                    self.settings[key] = default_setting
+                else:
+                    # Ensure all required keys exist
+                    for required_key in ["name", "type", "value", "section"]:
+                        if required_key not in existing:
+                            if required_key == "value":
+                                existing[required_key] = default_setting[required_key]
+                            else:
+                                existing[required_key] = default_setting[required_key]
 
     def find_all():
         stmt = select(Vendor).order_by(Vendor.name)
@@ -171,64 +97,147 @@ class Vendor(Base):
         self.active = False;
         session.commit()
 
+    def get_setting_value(self, key: str, default=None):
+        """Safely get a setting value with fallback to default"""
+        try:
+            if key in self.settings and "value" in self.settings[key]:
+                return self.settings[key]["value"]
+        except (KeyError, TypeError):
+            pass
+
+        # Fallback to registry default
+        setting_def = VendorSettingsRegistry.get_setting_by_key(key)
+        if setting_def:
+            return setting_def.get_default_value()
+
+        return default
+
+    def set_setting_value(self, key: str, value: Any) -> bool:
+        """Safely set a setting value with validation"""
+        if not VendorSettingsRegistry.validate_setting(key, value):
+            return False
+
+        if key not in self.settings:
+            # Create from default if doesn't exist
+            setting_def = VendorSettingsRegistry.get_setting_by_key(key)
+            if setting_def:
+                self.settings[key] = setting_def.to_dict()
+            else:
+                return False
+
+        self.settings[key]["value"] = value
+        flag_modified(self, "settings")
+        return True
+
     def update_settings(self, settings):
-        closure_scheduler_active_changed = self.settings["closure_scheduler_active"]["value"] != settings["closure_scheduler_active"]["value"]
-        closure_scheduler_changed = self.settings["closure_scheduler"]["value"] != settings["closure_scheduler"]["value"]
-        if closure_scheduler_active_changed or closure_scheduler_changed:
+        """Update multiple settings with proper validation and scheduling"""
+        # Validate all settings first
+        for key, setting_data in settings.items():
+            if not isinstance(setting_data, dict) or "value" not in setting_data:
+                continue
+            if not VendorSettingsRegistry.validate_setting(key, setting_data["value"]):
+                logging.warning(f"Invalid setting value for {key}: {setting_data['value']}")
+                continue
+
+        # Check for scheduler changes
+        self._handle_scheduler_changes(settings)
+
+        # Update settings
+        self.settings = settings
+        flag_modified(self, "settings")
+
+        try:
+            session.commit()
+            return True
+        except exc.DataError as e:
+            logging.exception("DataError during vendor update")
+            session.rollback()
+            return False
+        except Exception as e:
+            logging.exception("Unhandled exception happened, rolling back")
+            session.rollback()
+            return False
+
+    def _handle_scheduler_changes(self, new_settings):
+        """Handle scheduler task updates when settings change"""
+        # Closure scheduler
+        closure_active_changed = (
+            self.get_setting_value("closure_scheduler_active") !=
+            new_settings.get("closure_scheduler_active", {}).get("value")
+        )
+        closure_time_changed = (
+            self.get_setting_value("closure_scheduler") !=
+            new_settings.get("closure_scheduler", {}).get("value")
+        )
+
+        if closure_active_changed or closure_time_changed:
             from app.scheduler import schedule_task, cancel_task
             cancel_task(str(self.id) + "-closure")
 
-            if settings["closure_scheduler_active"]["value"]:
-                hh, mm = settings["closure_scheduler"]["value"].split(":")
-                schedule_task(str(self.id) + "-closure", int(hh), int(mm), self.closure_wrapper)
+            if new_settings.get("closure_scheduler_active", {}).get("value"):
+                time_value = new_settings.get("closure_scheduler", {}).get("value", "")
+                if ":" in time_value:
+                    hh, mm = time_value.split(":")
+                    schedule_task(str(self.id) + "-closure", int(hh), int(mm), self.closure_wrapper)
 
-        closed_scheduler_active_changed = self.settings["closed_scheduler_active"]["value"] != settings["closed_scheduler_active"]["value"]
-        closed_scheduler_changed = self.settings["closed_scheduler"]["value"] != settings["closed_scheduler"]["value"]
-        if closed_scheduler_active_changed or closed_scheduler_changed:
+        # Closed scheduler
+        closed_active_changed = (
+            self.get_setting_value("closed_scheduler_active") !=
+            new_settings.get("closed_scheduler_active", {}).get("value")
+        )
+        closed_time_changed = (
+            self.get_setting_value("closed_scheduler") !=
+            new_settings.get("closed_scheduler", {}).get("value")
+        )
+
+        if closed_active_changed or closed_time_changed:
             from app.scheduler import schedule_task, cancel_task
             cancel_task(str(self.id) + "-closed")
 
-            if settings["closed_scheduler_active"]["value"]:
-                hh, mm = settings["closed_scheduler"]["value"].split(":")
-                schedule_task(str(self.id) + "-closed", int(hh), int(mm), self.closed_wrapper)
+            if new_settings.get("closed_scheduler_active", {}).get("value"):
+                time_value = new_settings.get("closed_scheduler", {}).get("value", "")
+                if ":" in time_value:
+                    hh, mm = time_value.split(":")
+                    schedule_task(str(self.id) + "-closed", int(hh), int(mm), self.closed_wrapper)
 
-        auto_email_order_changed = self.settings["auto_email_order"]["value"] != settings["auto_email_order"]["value"]
-        if settings["auto_email_order"]["value"] and Setting.get_value_by_key("smtp_address") != "":
-            email_scheduler_changed = self.settings["email_order_scheduler"]["value"] != settings["email_order_scheduler"]["value"]
-            if auto_email_order_changed or email_scheduler_changed:
+        # Auto email order scheduler
+        auto_email_changed = (
+            self.get_setting_value("auto_email_order") !=
+            new_settings.get("auto_email_order", {}).get("value")
+        )
+
+        if new_settings.get("auto_email_order", {}).get("value") and Setting.get_value_by_key("smtp_address") != "":
+            email_scheduler_changed = (
+                self.get_setting_value("email_order_scheduler") !=
+                new_settings.get("email_order_scheduler", {}).get("value")
+            )
+
+            if auto_email_changed or email_scheduler_changed:
                 from app.scheduler import schedule_task, cancel_task
                 cancel_task(str(self.id) + "-email-order")
 
-                if settings["auto_email_order"]["value"]:
-                    hh, mm = settings["email_order_scheduler"]["value"].split(":")
-                    schedule_task(str(self.id) + "-email-order", int(hh), int(mm), self.email_ordering_wrapper)
+                if new_settings.get("auto_email_order", {}).get("value"):
+                    time_value = new_settings.get("email_order_scheduler", {}).get("value", "")
+                    if ":" in time_value:
+                        hh, mm = time_value.split(":")
+                        schedule_task(str(self.id) + "-email-order", int(hh), int(mm), self.email_ordering_wrapper)
         else:
-            logging.warning("No SMPT server set")
-            settings["auto_email_order"]["value"] = self.settings["auto_email_order"]["value"]
-            settings["email_order_scheduler"]["value"] = self.settings["email_order_scheduler"]["value"]
-
-        self.settings = settings;
-        flag_modified(self, "settings")
-        try:
-            session.commit()
-            return True
-        except exc.DataError as e:
-            logging.exception("DataError during vendor update")
-            session.rollback()
-            return False
-        except Exception as e:
-            logging.exception("Unhadled exception happened, rolling back")
-            session.rollback()
-            return False
+            logging.warning("No SMTP server set")
+            # Revert to previous values if SMTP not configured
+            if "auto_email_order" in new_settings:
+                new_settings["auto_email_order"]["value"] = self.get_setting_value("auto_email_order")
+            if "email_order_scheduler" in new_settings:
+                new_settings["email_order_scheduler"]["value"] = self.get_setting_value("email_order_scheduler")
 
 
     def update_setting(self, key, value):
-        if key not in self.settings:
+        """Update a single setting value"""
+        if not VendorSettingsRegistry.validate_setting(key, value):
             return False
-        settings = self.settings
-        settings[key]["value"] = value
-        self.settings = settings
-        flag_modified(self, "settings")
+
+        if not self.set_setting_value(key, value):
+            return False
+
         try:
             session.commit()
             return True
@@ -237,7 +246,7 @@ class Vendor(Base):
             session.rollback()
             return False
         except Exception as e:
-            logging.exception("Unhadled exception happened, rolling back")
+            logging.exception("Unhandled exception happened, rolling back")
             session.rollback()
             return False
 
@@ -257,19 +266,19 @@ class Vendor(Base):
             logging.info("Vendor already registered, loaded from database: {0}".format(vendor_obj.name))
 
 
-            if vendor_db.settings["closure_scheduler_active"]["value"]:
+            if vendor_db.get_setting_value("closure_scheduler_active"):
                 from app.scheduler import schedule_task, cancel_task
-                hh, mm = vendor_db.settings["closure_scheduler"]["value"].split(":")
+                hh, mm = vendor_db.get_setting_value("closure_scheduler").split(":")
                 schedule_task(str(vendor_db.id) + "-closure", int(hh), int(mm), vendor_db.closure_wrapper)
 
-            if vendor_db.settings["closed_scheduler_active"]["value"]:
+            if vendor_db.get_setting_value("closed_scheduler_active"):
                 from app.scheduler import schedule_task, cancel_task
-                hh, mm = vendor_db.settings["closed_scheduler"]["value"].split(":")
+                hh, mm = vendor_db.get_setting_value("closed_scheduler").split(":")
                 schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
 
-            if vendor_db.settings["auto_email_order"]["value"]:
+            if vendor_db.get_setting_value("auto_email_order"):
                 from app.scheduler import schedule_task, cancel_task
-                hh, mm = vendor_db.settings["email_order_scheduler"]["value"].split(":")
+                hh, mm = vendor_db.get_setting_value("email_order_scheduler").split(":")
                 schedule_task(str(vendor_db.id) + "-email-order", int(hh), int(mm), vendor_db.email_ordering_wrapper)
 
 
@@ -323,23 +332,27 @@ class Vendor(Base):
         })
 
 
-    def email_ordering_wrapper(self):
-        logging.info("Scheduled email ordering running")
+    def email_ordering_wrapper(self, order_id=None, manual=False):
+        logging.info(("Manual" if manual else "Scheduled") + " email ordering running")
         from app.entities.order import Order, OrderState
 
-        order = Order.find_order_by_date_for_a_vendor(str(self.id), date.today().strftime("%Y-%m-%d"))
+        if not order_id:
+            order = Order.find_order_by_date_for_a_vendor(str(self.id), date.today().strftime("%Y-%m-%d"))
+        else:
+            order = Order.get_by_id(order_id)
+
         if not order:
             logging.warning("Order not found")
-            return
+            return False
 
-        email_min_user = self.settings["email_min_user"]["value"]
-        if self.settings["auto_email_order"]["value"] == True and (email_min_user == 0 or email_min_user <= len(order.get_users())):
+        email_min_user = self.get_setting_value("email_min_user")
+        if manual or (self.get_setting_value("auto_email_order") == True and (email_min_user == 0 or email_min_user <= len(order.get_users()))):
             from app.services.mail_sender_service import send_mail
             from app.entities.user_basket import UserBasket
             baskets = UserBasket.find_items_by_order(order.id)
             if len(baskets) == 0:
                 logging.warning("The order is empty, email not sent")
-                return
+                return False
 
             basket_sum = {}
             for item in baskets:
@@ -351,7 +364,7 @@ class Vendor(Base):
             basket_template = ""
             basket_categories = {}
             for item in basket_sum.values():
-                pattern = self.settings["order_text_template"]["value"]
+                pattern = self.get_setting_value("order_text_template")
                 line = pattern \
                     .replace("${quantity}", str(item["quantity"])) \
                     .replace("${item_name}", item["item_name"]) \
@@ -363,13 +376,13 @@ class Vendor(Base):
                     basket_categories[item["category"]] = ""
                 basket_categories[item["category"]] += line
 
-            email_template = self.settings["auto_email_order_template"]["value"]
+            email_template = self.get_setting_value("auto_email_order_template")
             email_template = email_template.replace("${basket}", basket_template)
             for category, value in basket_categories.items():
                 email_template = email_template.replace("${basket." + category + "}", basket_categories[category])
             email_template = non_mached.sub("", email_template)
 
-            email_subject = self.settings["auto_email_subject"]["value"]
+            email_subject = self.get_setting_value("auto_email_subject")
             email_subject = email_subject \
                 .replace("${vendor_name}", order.vendor.name) \
                 .replace("${date}", order.date_of_order.strftime("%Y.%m.%d"))
@@ -377,17 +390,18 @@ class Vendor(Base):
             email_subject = non_mached.sub("", email_subject)
 
             success, error = send_mail(
-                self.settings["auto_email_order_to"]["value"],
-                self.settings["auto_email_order_cc"]["value"],
+                self.get_setting_value("auto_email_order_to"),
+                self.get_setting_value("auto_email_order_cc"),
                 email_subject,
                 email_template)
             if not success:
                 logging.error("Email could not be sent")
+                return False
 
             logging.info("Scheduled automatic order email sent!")
 
             if not order.change_state(OrderState.CLOSED):
-                return
+                return True
 
             from app.socketio_singleton import SocketioSingleton
             socketio = SocketioSingleton.get_instance()
@@ -397,14 +411,14 @@ class Vendor(Base):
                 },
                 to=f"{order.vendor_id}@{order.date_of_order}"
             )
+            return True
         else:
             logging.info("Minimum order requirements are not met")
-
+            return False
 
 
     @property
     def serialized(self):
-        # from app.vendor_factory import VendorFactory
         return {
             "id": str(self.id),
             "name": self.name,

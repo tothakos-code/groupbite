@@ -1,6 +1,9 @@
 <template>
   <div class="row ms-2">
-    <v-container v-if="!isLoading">
+    <v-container
+      v-if="!isLoading"
+      max-width="1400"
+    >
       <v-form ref="form">
         <!-- General Settings -->
         <v-card
@@ -143,7 +146,7 @@
             <v-checkbox
               v-model="vendor.settings.show_notification_button.value"
               color="primary"
-              label="Értesítési gomb megjelenítése a menüben"
+              label="Értesítési gomb megjelenítése"
               prepend-icon="mdi-bell"
               hide-details
             />
@@ -238,6 +241,8 @@
             </v-row>
           </v-card-text>
         </v-card>
+
+        <WebhookSettings :vendor-id="vendor.id" />
 
         <!-- Automatic Email Order Settings -->
         <v-card
@@ -445,9 +450,13 @@ import { useVendorStore } from "@/stores/vendor";
 import { useAuth } from "@/stores/auth";
 import { ref } from 'vue';
 import axios from "axios";
+import WebhookSettings from "@/components/vendor/WebhookSettings.vue"
 
 export default {
   name: "VendorSettings",
+  components: {
+    WebhookSettings
+  },
   setup() {
     const auth = useAuth();
     const vendorStore = useVendorStore();

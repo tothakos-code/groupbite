@@ -106,6 +106,18 @@ export const useVendorStore = defineStore("vendor", {
         this.isLoading = false;
       }
     },
+    async fetchWebhooks(vendorId) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/vendor/${vendorId}/webhooks`);
+        return response
+      } catch (error) {
+        console.error("Failed to get vendor webhooks:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async import(vendorId, formData) {
       this.isLoading = true;
       try {

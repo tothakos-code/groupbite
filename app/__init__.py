@@ -6,6 +6,7 @@ from logging.handlers import TimedRotatingFileHandler
 from datetime import timedelta
 
 from app.services.vendor_service import VendorService
+from app.services.webhook_service import webhook_service
 from app.vendor_factory import VendorFactory
 import app.loader
 
@@ -17,6 +18,7 @@ from app.controllers import item_blueprint
 from app.controllers import size_blueprint
 from app.controllers import order_blueprint
 from app.controllers import user_blueprint
+from app.controllers import statistics_blueprint
 
 from os import scandir, makedirs, path
 import sys
@@ -92,7 +94,6 @@ def create_app(debug=False):
     Session(application)
 
 
-
     VendorFactory.load()
     loader.load_plugins([d.path.replace("/",".") for d in scandir("plugins") if d.is_dir()])
 
@@ -107,6 +108,9 @@ def create_app(debug=False):
     from app.controllers import register_blueprints
 
     register_blueprints(application)
+
+    webhook_service.register_all_webhooks_at_boot()
+
 
     logging.info("Initialization finished")
     return application

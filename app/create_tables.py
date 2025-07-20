@@ -8,6 +8,7 @@ from app.entities.vendor import Vendor, VendorType
 from app.entities.menu_item import MenuItem
 from app.entities.user_basket import UserBasket
 from app.entities.setting import Setting
+from app.entities.webhook import Webhook, WebhookType
 from sqlalchemy import event
 from flask_migrate import upgrade, migrate, stamp
 import logging

@@ -38,19 +38,18 @@ class UserBasket(Base):
         return session.execute(stmt).scalars().all()
 
     def find_user_orders(user_id, limit=None, offset=0, search=None, vendor_id=None, date_from=None, date_to=None):
+        from .order_item import OrderItem
         subq = (
             select(Order.id, Order.date_of_order)
-            .join(Order.items)
-            .join(UserBasket.item)
-            .join(UserBasket.size)
+            .join(Order.order_items)
             .where(UserBasket.user_id == user_id)
         )
 
         if search is not None:
             subq = subq.where(
                 or_(
-                    MenuItem.name.ilike(f"%{search}%"),
-                    Size.name.ilike(f"%{search}%"),
+                    OrderItem.item_name.ilike(f"%{search}%"),
+                    OrderItem.size_label.ilike(f"%{search}%"),
                     cast(Order.state_id, String).ilike(f"%{search}%"),
                 )
             )
@@ -67,11 +66,11 @@ class UserBasket(Base):
 
         # Outer query: get all UserBasket rows in those orders for this user
         stmt = (
-            select(UserBasket)
-            .join(UserBasket.order)
+            select(OrderItem)
+            .join(OrderItem.order)
             .where(
-                UserBasket.user_id == user_id,
-                UserBasket.order_id.in_(select(subq.c.id))
+                OrderItem.user_id == user_id,
+                OrderItem.order_id.in_(select(subq.c.id))
             )
             .order_by(Order.date_of_order.desc())
         )
@@ -81,7 +80,7 @@ class UserBasket(Base):
     def find_user_order_vendors(user_id):
         stmt = (
             select(Vendor)
-            .join(Order.items)
+            .join(Order.order_items)
             .join(Order.vendor)
             .where(UserBasket.user_id == user_id)
             .distinct()
@@ -93,59 +92,6 @@ class UserBasket(Base):
         stmt = select(UserBasket).where(
             UserBasket.user_id == user_id,
             UserBasket.order_id == order_id
-        )
-        return session.execute(stmt).scalars().all()
-
-    def find_user_orders_by_date(user_id, date):
-        stmt = select(UserBasket).where(UserBasket.user_id == user_id, UserBasket.order.date_of_order == date)
-        return session.execute(stmt).all()
-
-    def get_basket_group_by_user(order_id):
-        result = {}
-        for basket_entry in UserBasket.find_items_by_order(order_id):
-            if str(basket_entry.user_id) not in result:
-                result[str(basket_entry.user_id)] = {
-                    "username": basket_entry.user.username,
-                    "user_id": str(basket_entry.user_id),
-                    "items": []
-                }
-            result[str(basket_entry.user_id)]["items"].append(basket_entry.basket_format)
-        return result
-
-    def find_user_order_dates(user_id):
-        stmt = select(
-            UserBasket.order_id,
-            Order.date_of_order
-        ).join(
-            UserBasket,
-            Order.items
-        ).where(
-            UserBasket.user_id == user_id
-        )
-        return session.execute(stmt).all()
-
-    def find_orders_between_dates(start, end):
-        stmt = select(
-            UserBasket.order_id,
-            Order.date_of_order,
-            Order.state_id
-        ).join(
-            UserBasket,
-            Order.items
-        ).where(
-            Order.date_of_order.between(start, end)
-        )
-        return session.execute(stmt).all()
-
-    def find_user_order_dates_between(user_id, start, end):
-        stmt = select(
-            UserBasket
-        ).join(
-            UserBasket,
-            Order.items
-        ).where(
-            UserBasket.user_id == user_id,
-            Order.date_of_order.between(start, end)
         )
         return session.execute(stmt).scalars().all()
 

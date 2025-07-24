@@ -142,7 +142,7 @@ def handle_user_update(user_id):
                 order = Order.find_order_by_date_for_a_vendor(vendor, date)
                 socketio.emit(
                     "be_order_update", {
-                        "basket": UserBasket.get_basket_group_by_user(order.id)
+                        "basket": order.get_order_items()
                     },
                     to=room_name
                 )
@@ -184,7 +184,7 @@ def handle_user_order_history(user_id):
     orders_dict = {}
 
     for item in user_items:
-        order_id = item.order.id
+        order_id = item.order_id
         if order_id not in orders_dict:
             # Get all participants for this order to calculate user's share of fee
             order_participants_count = UserBasket.user_count(order_id)
@@ -205,16 +205,15 @@ def handle_user_order_history(user_id):
             }
 
 
-        item_total_price = item.size.price * item.count
         orders_dict[order_id]["order_items"].append({
-            "id": item.item.id,
-            "item_name": item.item.name,
-            "size_label": item.size.name,
+            "id": item.menu_item_id,
+            "item_name": item.item_name,
+            "size_label": item.size_label,
             "count": item.count,
-            "unit_price": item.size.price,
-            "total_price": item_total_price
+            "unit_price": item.unit_price,
+            "total_price": item.total_price
         })
-        orders_dict[order_id]["total_price"] += item_total_price
+        orders_dict[order_id]["total_price"] += item.total_price
 
     for order_data in orders_dict.values():
         order_data["total_price"] += order_data["order_fee"]
@@ -232,7 +231,7 @@ def handle_user_order_history(user_id):
 
     for item in all_items:
         # Add item cost
-        total_user_spending += item.size.price * item.count
+        total_user_spending += item.total_price
 
         # Add user's share of order fee (only once per order)
         if item.order.id not in processed_orders:
@@ -333,11 +332,11 @@ def user_statistics(user_id):
             vendors.append(item.order.vendor.name)
 
             # Track items
-            items.append(item.item.name)
+            items.append(item.item_name)
 
             # Calculate item cost
-            item_cost = item.size.price * item.count
-            total_spent += item_cost
+
+            total_spent += item.total_price
             total_items_count += item.count
 
             # Add user's share of order fee (only once per order)
@@ -355,7 +354,7 @@ def user_statistics(user_id):
             order_datetime = datetime.combine(order_date, datetime.min.time())
 
             if order_datetime >= start_of_month:
-                this_month_spent += item_cost
+                this_month_spent += item.total_price
                 orders_this_month.add(order_id)
 
                 # Add fee share for this month (only once per order)
@@ -365,7 +364,7 @@ def user_statistics(user_id):
                     this_month_spent += user_fee_share
 
             if order_datetime >= start_of_week:
-                this_week_spent += item_cost
+                this_week_spent += item.total_price
 
         # Calculate derived statistics
         total_orders = len(unique_orders)
@@ -416,7 +415,7 @@ def user_spending_trends(user_id):
                     end_date.replace(year=end_date.year - 1, month=end_date.month + 12 - months + 1)
 
         # Get user items within date range
-        user_items = UserBasket.find_user_order_dates_between(
+        user_items = Order.find_user_order_dates_between(
             user_id,
             start_date,
             end_date

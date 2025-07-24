@@ -550,10 +550,19 @@ export default {
         // Update order items with sorting
         this.orderItems = Array.from(newItemMap.values())
           .sort((a, b) => {
+            // Safely get category values, default to empty string if missing
+            const categoryA = a.category || '';
+            const categoryB = b.category || '';
+            
             // Sort by category first, then by name
-            const categoryCompare = a.category.localeCompare(b.category);
+            const categoryCompare = categoryA.localeCompare(categoryB);
             if (categoryCompare !== 0) return categoryCompare;
-            return a.item_name.localeCompare(b.item_name);
+
+            // Safely get item names, default to empty string if missing
+            const nameA = a.item_name || '';
+            const nameB = b.item_name || '';
+
+            return nameA.localeCompare(nameB);
           });
 
         // Show notifications

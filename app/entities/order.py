@@ -108,9 +108,9 @@ class Order(Base):
         orders = session.execute(stmt).scalars()
         sum = 0
         for order in orders:
-            for basket_entry in order.items:
-                sum += basket_entry.count * basket_entry.size.price
-            if len(order.items) != 0:
+            for basket_entry in order.order_items:
+                sum += basket_entry.total_price
+            if len(order.get_order_items()) != 0:
                 sum += order.order_fee
 
 
@@ -127,14 +127,38 @@ class Order(Base):
         orders = session.execute(stmt).scalars()
         sum = 0
         for order in orders:
-            for basket_entry in order.items:
-                sum += basket_entry.count * basket_entry.size.price
-            if len(order.items) != 0:
+            for basket_entry in order.order_items:
+                sum += basket_entry.total_price
+            if len(order.get_order_items()) != 0:
                 sum += order.order_fee
 
 
         return sum
 
+    def find_orders_between_dates(start, end):
+        stmt = select(
+            Order.id,
+            Order.date_of_order,
+            Order.state_id
+        ).join(
+            Order.order_items
+        ).where(
+            Order.date_of_order.between(start, end)
+        )
+        return session.execute(stmt).all()
+
+
+    def find_user_order_dates_between(user_id, start, end):
+        from .order_item import OrderItem
+        stmt = select(
+            Order
+        ).join(
+            Order.order_items
+        ).where(
+            OrderItem.user_id == user_id,
+            Order.date_of_order.between(start, end)
+        )
+        return session.execute(stmt).scalars().all()
 
     def find_all(limit=None, offset=0):
         stmt = select(Order).order_by(Order.date_of_order.desc())
@@ -171,6 +195,91 @@ class Order(Base):
             )
         return session.execute(stmt).all()
 
+    def get_order_items(self, user_filter=None):
+        """
+        Get order items grouped by user (uses order_items if closed, otherwise basket items)
+
+        Args:
+            user_filter: Optional filter - can be:
+                - UUID/str: Return only items for this specific user
+                - List[UUID/str]: Return items for these users only
+                - None: Return items for all users
+
+
+        Returns:
+            dict: Items grouped by user_id with format:
+            {
+                "user_id_1": {
+                    "user_id": "user_id_1",
+                    "items": [...]
+                },
+                ...
+            }
+        """
+        # Convert single user filter to list for uniform handling
+        if user_filter is not None:
+            if not isinstance(user_filter, (list, tuple, set)):
+                user_filter = [user_filter]
+            # Convert to strings for comparison
+            user_filter = [str(uid) for uid in user_filter]
+
+        result = {}
+
+        if self.state_id == OrderState.CLOSED:
+            # Use order_items for closed orders (snapshotted data)
+            items_source = self.order_items
+        else:
+            # Use live basket data for non-closed orders
+            items_source = self.items
+
+        for item in items_source:
+            user_id_str = str(item.user_id)
+
+            # Apply user filter if specified
+            if user_filter is not None and user_id_str not in user_filter:
+                continue
+
+            # Initialize user entry if not exists
+            if user_id_str not in result:
+                result[user_id_str] = {
+                    "user_id": user_id_str,
+                    "items": []
+                }
+
+                # Add username if requested and available
+            result[user_id_str]["username"] = item.user.username if item.user else "Unknown"
+
+            # Format item data
+            if self.state_id == OrderState.CLOSED:
+                # Use snapshotted data from order_items
+                item_data = {
+                    "item_id": item.menu_item_id,
+                    "size_id": item.size_id,
+                    "item_name": item.item_name,
+                    "size_name": item.size_label,
+                    "price": item.unit_price,
+                    "category": None,  # Not stored in order_items, could be added if needed
+                    "quantity": item.count,
+                    "total_price": item.total_price
+                }
+            else:
+                # Use live data from basket items
+                item_data = {
+                    "item_id": item.item.id,
+                    "size_id": item.size.id,
+                    "item_name": item.item.name,
+                    "size_name": item.size.name,
+                    "price": item.size.price,
+                    "category": item.item.category,
+                    "quantity": item.count,
+                    "total_price": item.size.price * item.count
+                }
+
+            result[user_id_str]["items"].append(item_data)
+
+        return result
+
+
     def get_users(self):
         from .user import User
         from .user_basket import UserBasket
@@ -182,32 +291,100 @@ class Order(Base):
         return session.execute(stmt).all()
 
     def change_state(self, new_state, user_id=None):
+        """
+        Change order state and handle order item creation/deletion
+
+        Args:
+            new_state: The new OrderState
+            user_id: User ID if changing the order_by field
+
+        Returns:
+            bool: True if successful, False otherwise
+        """
         from .order_item import OrderItem
 
-        if self.state_id == OrderState.CLOSED and new_state != OrderState.CLOSED:
-            OrderItem.delete_order(self.id)
-
-        self.state_id = new_state
-        self.order_by = user_id
-        if self.state_id == OrderState.CLOSED:
-
-            order_price = 0
-            for basket in self.items:
-                ok, order_item = OrderItem.create(basket)
-                if ok:
-                    order_price += order_item.total_price
-            order_price += self.order_fee
-            self.total_price = order_price
         try:
+            # If changing FROM CLOSED state to any other state, delete existing order items
+            if self.state_id == OrderState.CLOSED and new_state != OrderState.CLOSED:
+                self._delete_order_items()
+
+            # Update state and user
+            old_state = self.state_id
+            self.state_id = new_state
+            if user_id:
+                self.order_by = user_id
+
+            # If changing TO CLOSED state, create order items and calculate total
+            if new_state == OrderState.CLOSED and old_state != OrderState.CLOSED:
+                success = self._create_order_items_and_calculate_total()
+                if not success:
+                    # Rollback state change if order item creation failed
+                    self.state_id = old_state
+                    session.rollback()
+                    return False
+
             session.commit()
             return True
+
         except exc.DataError as e:
-            logging.exception("DataError during order add")
+            logging.exception("DataError during order state change")
             session.rollback()
             return False
         except Exception as e:
-            logging.exception("Unhadled exception happened, rolling back")
+            logging.exception("Unhandled exception during order state change")
             session.rollback()
+            return False
+
+    def _delete_order_items(self):
+        """Delete all order items for this order"""
+        from .order_item import OrderItem
+        session.query(OrderItem).filter(OrderItem.order_id == self.id).delete()
+
+    def _create_order_items_and_calculate_total(self):
+        """
+        Create order items from user basket and calculate total price
+
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        from .order_item import OrderItem
+
+        order_price = 0
+        created_items = []
+
+        try:
+            # Create order items from basket items
+            for basket_item in self.items:
+                # Create OrderItem with snapshotted data
+                order_item = OrderItem(
+                    order_id=self.id,
+                    menu_item_id=basket_item.menu_item_id,
+                    size_id=basket_item.size_id,
+                    user_id=basket_item.user_id,
+                    count=basket_item.count,
+                    item_name=basket_item.item.name,
+                    size_label=basket_item.size.name,
+                    unit_price=basket_item.size.price,
+                    total_price=basket_item.size.price * basket_item.count
+                )
+
+                session.add(order_item)
+                created_items.append(order_item)
+                order_price += order_item.total_price
+
+            # Add order fee to total price
+            order_price += self.order_fee
+            self.total_price = order_price
+
+            # Flush to get any database errors before final commit
+            session.flush()
+            return True
+
+        except Exception as e:
+            logging.exception("Error creating order items")
+            # Clean up any partially created items
+            for item in created_items:
+                session.expunge(item)
             return False
 
     def set_order_fee(self, fee):

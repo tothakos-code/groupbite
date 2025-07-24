@@ -26,8 +26,7 @@ def handle_order_history():
         USER_ID = request.json["user_id"]
 
     result = {}
-    for value in UserBasket.find_orders_between_dates(DATE_FROM, DATE_TO):
-        print(value)
+    for value in Order.find_orders_between_dates(DATE_FROM, DATE_TO):
         order = Order.get_by_id(value[0])
         date = order.date_of_order.strftime("%Y-%m-%d")
         if date not in result:
@@ -37,15 +36,15 @@ def handle_order_history():
         result[date][value[0]]["vendor"] = order.vendor.name
 
         sum = 0
-        for item in order.items:
-            sum += item.size.price * item.count
+        for item in order.order_items:
+            sum += item.total_price
         sum += order.order_fee
         result[date][value[0]]["sum"] = sum
 
     if USER_ID != None:
-        for value in UserBasket.find_user_order_dates_between(USER_ID, DATE_FROM, DATE_TO):
-            date = value.order.date_of_order.strftime("%Y-%m-%d")
-            order_id = value.order_id
+        for value in Order.find_user_order_dates_between(USER_ID, DATE_FROM, DATE_TO):
+            date = value.date_of_order.strftime("%Y-%m-%d")
+            order_id = value.id
             result[date][order_id]["ordered"] = True
 
     return { "data": result }, 200
@@ -56,7 +55,7 @@ def handle_order_history():
 def handle_get_basket(order_id):
     order = Order.get_by_id(order_id)
     return_obj = order.serialized
-    return_obj["basket"] = UserBasket.get_basket_group_by_user(order.id)
+    return_obj["basket"] = order.get_order_items()
     return { "data": return_obj }, 200
 
 
@@ -181,7 +180,7 @@ def handle_date_selection_change(data):
     socketio.emit(
         "be_order_update", {
             "order": order.serialized,
-            "basket": UserBasket.get_basket_group_by_user(order.id)
+            "basket": order.get_order_items()
         },
         to=request.sid
         )
@@ -207,7 +206,7 @@ def handle_copy_basket(order_id, user_id, src_user_id):
 
     vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
     socketio.emit("be_order_update", {
-        "basket": UserBasket.get_basket_group_by_user(order_id),
+        "basket": order.get_order_items(),
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
@@ -246,7 +245,7 @@ def handle_add_to_basket(order_id, user_id, item_id, size_id):
 
     if ok:
         socketio.emit("be_order_update", {
-            "basket": UserBasket.get_basket_group_by_user(order_id)
+            "basket": order.get_order_items()
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
@@ -289,7 +288,7 @@ def handle_remove_from_basket(order_id, user_id, item_id, size_id):
 
     if ok:
         socketio.emit("be_order_update", {
-            "basket": UserBasket.get_basket_group_by_user(order_id)
+            "basket": order.get_order_items()
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
@@ -310,7 +309,7 @@ def handle_clear_user_basket(order_id, user_id):
     if UserBasket.clear_items(user_id, order_id):
         order = Order.get_by_id(order_id)
         socketio.emit("be_order_update", {
-            "basket": UserBasket.get_basket_group_by_user(order_id)
+            "basket": order.get_order_items()
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )

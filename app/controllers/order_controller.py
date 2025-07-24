@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from flask_socketio import join_room, leave_room
+from flask_socketio import join_room, leave_room, rooms
 import json
 import logging
 from datetime import date, timedelta, datetime
@@ -160,10 +160,11 @@ def handle_date_selection_change(data):
     new_date = data["new_selected_date"]
     vendor_id = data["vendor_id"]
 
-
-    if "old_selected_date" in data:
-        old_date = data["old_selected_date"]
-        leave_room(f"{vendor_id}@{old_date}")
+    # leave all old rooms
+    sid = request.sid
+    for room in rooms(sid):
+        if room != sid:
+            leave_room(room, sid=sid)
 
     join_room(f"{vendor_id}@{new_date}")
 

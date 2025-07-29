@@ -33,11 +33,7 @@
         <v-row
           class="m-0"
         >
-          <LocalBasket />
-        </v-row>
-
-        <v-row class="m-0 mt-2">
-          <GlobalBasket />
+          <UnifiedBasket />
         </v-row>
       </v-col>
     </v-row>
@@ -92,8 +88,7 @@
 </template>
 
 <script>
-import LocalBasket from "@/components/LocalBasket.vue";
-import GlobalBasket from "@/components/GlobalBasket.vue";
+import UnifiedBasket from "@/components/basket/UnifiedBasket.vue";
 import MenuList from "@/components/MenuList.vue";
 import MenuHeader from '@/components/menu/MenuHeader.vue'
 import { useAuth } from "@/stores/auth";
@@ -104,8 +99,7 @@ import { useDisplay } from 'vuetify'
 export default {
   name: "MenuView",
   components: {
-    LocalBasket,
-    GlobalBasket,
+    UnifiedBasket,
     MenuList,
     MenuHeader,
   },

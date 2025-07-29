@@ -5,7 +5,7 @@ from .vendor import Vendor
 from uuid import UUID
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
-from sqlalchemy import ForeignKey, select, exc, extract, Index, text
+from sqlalchemy import ForeignKey, select, exc, extract, Index, text, func, and_
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -76,32 +76,105 @@ class Order(Base):
 
 
     def last_7_days_statistics():
-        result = {}
-        last_7_days = [(date.today() - relativedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+        today = date.today()
+        start_date = today - relativedelta(days=6)  # 6 days ago + today = 7 days
+
+        # Generate day list
+        last_7_days = [(today - relativedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
         last_7_days.reverse()
-        for vendor in Vendor.find_all_active():
-            result[vendor.name] = {
-            "data": []
-            }
+
+        vendors = Vendor.find_all_active()
+        vendor_dict = {vendor.id: vendor.name for vendor in vendors}
+
+        # Get ALL daily sums for ALL vendors
+        daily_sums_query = (
+            select(
+                Order.vendor_id,
+                Order.date_of_order,
+                func.coalesce(func.sum(Order.total_price), 0).label('daily_sum')  # Adjust column name as needed
+            )
+            .where(
+                and_(
+                    Order.date_of_order >= start_date,
+                    Order.date_of_order <= today,
+                    Order.vendor_id.in_(list(vendor_dict.keys()))
+                )
+            )
+            .group_by(
+                Order.vendor_id,
+                Order.date_of_order
+            )
+        )
+
+        daily_data = session.execute(daily_sums_query).all()
+
+        daily_lookup = {}
+        for row in daily_data:
+            key = f"{row.vendor_id}-{row.date_of_order.strftime('%Y-%m-%d')}"
+            daily_lookup[key] = row.daily_sum
+
+        result = {}
+        for vendor_id, vendor_name in vendor_dict.items():
+            result[vendor_name] = {"data": []}
+
             for day in last_7_days:
-                parsed_date = datetime.strptime(day, "%Y-%m-%d")
-                result[vendor.name]["data"].append(Order.day_sum_by_vendor(vendor.id, parsed_date.year, parsed_date.month, parsed_date.day))
+                lookup_key = f"{vendor_id}-{day}"
+                daily_sum = daily_lookup.get(lookup_key, 0)
+                result[vendor_name]["data"].append(daily_sum)
 
         return result, last_7_days
 
 
     def last_12_month_statistics():
-        result = {}
-        last_12_months = [(date.today() - relativedelta(months=i)).strftime("%Y-%m") for i in range(12)]
-        last_12_months.reverse()
-        for vendor in Vendor.find_all_active():
-            result[vendor.name] = {
-                "data": []
-            }
-            for month in last_12_months:
-                parsed_date = datetime.strptime(month, "%Y-%m")
-                result[vendor.name]["data"].append(Order.month_sum_by_vendor(vendor.id, parsed_date.year, parsed_date.month))
 
+        today = date.today()
+        start_date = today - relativedelta(months=11)  # 11 months ago + current month = 12 months
+
+        # Generate month list
+        last_12_months = [(today - relativedelta(months=i)).strftime("%Y-%m") for i in range(12)]
+        last_12_months.reverse()
+
+        vendors = Vendor.find_all_active()
+        vendor_dict = {vendor.id: vendor.name for vendor in vendors}
+
+        # Get ALL monthly sums for ALL vendors
+        monthly_sums_query = (
+            select(
+                Order.vendor_id,
+                extract('year', Order.date_of_order).label('year'),
+                extract('month', Order.date_of_order).label('month'),
+                func.coalesce(func.sum(Order.total_price), 0).label('monthly_sum')  # Adjust column name as needed
+            )
+            .where(
+                and_(
+                    Order.date_of_order >= start_date,
+                    Order.date_of_order <= today,
+                    Order.vendor_id.in_(list(vendor_dict.keys()))
+                )
+            )
+            .group_by(
+                Order.vendor_id,
+                extract('year', Order.date_of_order),
+                extract('month', Order.date_of_order)
+            )
+        )
+
+        monthly_data = session.execute(monthly_sums_query).all()
+
+        monthly_lookup = {}
+        for row in monthly_data:
+            key = f"{row.vendor_id}-{int(row.year)}-{int(row.month):02d}"
+            monthly_lookup[key] = row.monthly_sum
+
+        result = {}
+        for vendor_id, vendor_name in vendor_dict.items():
+            result[vendor_name] = {"data": []}
+
+            for month in last_12_months:
+                year, month_num = month.split('-')
+                lookup_key = f"{vendor_id}-{year}-{month_num}"
+                monthly_sum = monthly_lookup.get(lookup_key, 0)
+                result[vendor_name]["data"].append(monthly_sum)
 
         return result, last_12_months
 

@@ -153,14 +153,10 @@ def handle_user_update(user_id):
 @user_blueprint.route("/<user_id>/orders", methods=["GET"])
 @validate_url_params(IDSchema())
 def handle_user_order_history(user_id):
-
     try:
         limit = int(request.args.get('limit'))
         page = int(request.args.get('page'))
-    except ValueError as e:
-        limit = 10
-        page = 1
-    except TypeError as e:
+    except (ValueError, TypeError):
         limit = 10
         page = 1
 
@@ -168,42 +164,36 @@ def handle_user_order_history(user_id):
     vendor_id = request.args.get('vendor_id')
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
-
     offset = 0 if page is None else limit * (page - 1)
 
     user_items = UserBasket.find_user_orders(user_id, limit, offset, search, vendor_id, date_from, date_to)
     all_items = UserBasket.find_user_orders(user_id, None, 0, search, vendor_id, date_from, date_to)
 
+
     vendors = UserBasket.find_user_order_vendors(user_id)
+    vendors_list = [{"id": vendor.id, "title": vendor.name} for vendor in vendors]
 
-    vendors_list = [{
-        "id": vendor.id,
-        "title": vendor.name
-    } for vendor in vendors]
+    all_order_ids = list(set(item.order_id for item in user_items))
+    order_user_counts = UserBasket.get_user_counts_batch(all_order_ids)
 
+    # Build orders dictionary
     orders_dict = {}
-
     for item in user_items:
         order_id = item.order_id
         if order_id not in orders_dict:
-            # Get all participants for this order to calculate user's share of fee
-            order_participants_count = UserBasket.user_count(order_id)
+            order_participants_count = order_user_counts.get(order_id, 1)
             user_order_fee = item.order.order_fee / order_participants_count if order_participants_count > 0 else 0
 
-            # Initialize order structure
             orders_dict[order_id] = {
                 "id": item.order.id,
-                "vendor": {
-                    "name": item.order.vendor.name
-                },
+                "vendor": {"name": item.order.vendor.name},
                 "state_id": str(item.order.state_id),
                 "date_of_order": item.order.date_of_order.strftime("%Y-%m-%d"),
                 "order_time": item.order.order_time.isoformat() if item.order.order_time else None,
                 "order_fee": user_order_fee,
-                "total_price": 0,  # Will be calculated
+                "total_price": 0,
                 "order_items": []
             }
-
 
         orders_dict[order_id]["order_items"].append({
             "id": item.menu_item_id,
@@ -215,38 +205,39 @@ def handle_user_order_history(user_id):
         })
         orders_dict[order_id]["total_price"] += item.total_price
 
+
+    # Add order fees to total prices
     for order_data in orders_dict.values():
         order_data["total_price"] += order_data["order_fee"]
 
-    # Convert to list and sort by date (most recent first)
+
     orders_list = list(orders_dict.values())
     orders_list.sort(key=lambda x: x["date_of_order"], reverse=True)
 
     unique_orders = set(item.order.id for item in all_items)
     total_orders = len(unique_orders)
 
-    # Calculate total spending across all orders
-    total_user_spending = 0
+    total_user_spending = sum(item.total_price for item in all_items)
     processed_orders = set()
 
-    for item in all_items:
-        # Add item cost
-        total_user_spending += item.total_price
+    all_order_ids_for_total = list(unique_orders)
+    all_order_user_counts = UserBasket.get_user_counts_batch(all_order_ids_for_total)
 
-        # Add user's share of order fee (only once per order)
+    for item in all_items:
         if item.order.id not in processed_orders:
-            order_participants_count = UserBasket.user_count(item.order.id)
+            order_participants_count = all_order_user_counts.get(item.order.id, 1)
             user_order_fee = item.order.order_fee / order_participants_count if order_participants_count > 0 else 0
             total_user_spending += user_order_fee
             processed_orders.add(item.order.id)
 
-    return { "data": {
-        "items": orders_list,
-        "vendors": vendors_list,
-        "page": page,
-        "limit": limit,
-        "total_count": total_orders,
-        "total_sum": total_user_spending
+    return {
+        "data": {
+            "items": orders_list,
+            "vendors": vendors_list,
+            "page": page,
+            "limit": limit,
+            "total_count": total_orders,
+            "total_sum": total_user_spending
         }
     }, 200
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text, Enum, select, exc, or_, String, cast
+from sqlalchemy import Column, Text, Enum, select, exc, or_, String, cast, func
 from uuid import UUID
 from . import Base, session
 from .order import Order
@@ -7,6 +7,7 @@ from .vendor import Vendor
 from .size import Size
 import enum
 from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -40,16 +41,23 @@ class UserBasket(Base):
         stmt = select(UserBasket).where(UserBasket.order_id == order_id)
         return session.execute(stmt).scalars().all()
 
+    @staticmethod
     def find_user_orders(user_id, limit=None, offset=0, search=None, vendor_id=None, date_from=None, date_to=None):
         from .order_item import OrderItem
-        subq = (
-            select(Order.id, Order.date_of_order)
-            .join(Order.order_items)
-            .where(UserBasket.user_id == user_id)
+
+
+        stmt = (
+            select(OrderItem)
+            .options(
+                selectinload(OrderItem.order).selectinload(Order.vendor),
+                selectinload(OrderItem.order)
+            )
+            .join(OrderItem.order)
+            .where(OrderItem.user_id == user_id)
         )
 
         if search is not None:
-            subq = subq.where(
+            stmt = stmt.where(
                 or_(
                     OrderItem.item_name.ilike(f"%{search}%"),
                     OrderItem.size_label.ilike(f"%{search}%"),
@@ -58,35 +66,33 @@ class UserBasket(Base):
             )
 
         if vendor_id is not None:
-            subq = subq.where(Order.vendor_id == vendor_id)
+            stmt = stmt.where(Order.vendor_id == vendor_id)
 
         if date_from is not None and date_to is not None:
-            subq = subq.where(Order.date_of_order.between(date_from, date_to))
+            stmt = stmt.where(Order.date_of_order.between(date_from, date_to))
 
-        # Add ordering + limit/offset to control pagination at ORDER level
-        subq = subq.order_by(Order.date_of_order.desc()).limit(limit).offset(offset)
-        subq = subq.distinct().subquery()
+        stmt = stmt.order_by(Order.date_of_order.desc())
 
-        # Outer query: get all UserBasket rows in those orders for this user
-        stmt = (
-            select(OrderItem)
-            .join(OrderItem.order)
-            .where(
-                OrderItem.user_id == user_id,
-                OrderItem.order_id.in_(select(subq.c.id))
-            )
-            .order_by(Order.date_of_order.desc())
-        )
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        if offset > 0:
+            stmt = stmt.offset(offset)
 
         return session.execute(stmt).scalars().all()
 
     def find_user_order_vendors(user_id):
-        stmt = (
-            select(Vendor)
-            .join(Order.order_items)
-            .join(Order.vendor)
+        user_vendor_ids_subquery = (
+            select(Order.vendor_id)
+            .join(UserBasket, UserBasket.order_id == Order.id)
             .where(UserBasket.user_id == user_id)
             .distinct()
+            .subquery()
+        )
+
+        stmt = (
+            select(Vendor)
+            .where(Vendor.id.in_(select(user_vendor_ids_subquery.c.vendor_id)))
+            .order_by(Vendor.name)
         )
         return session.execute(stmt).scalars().all()
 
@@ -231,6 +237,24 @@ class UserBasket(Base):
             UserBasket.order_id == order_id
         )
         return len(session.execute(stmt).all())
+
+    @staticmethod
+    def get_user_counts_batch(order_ids):
+        """Get user counts for multiple orders in a single query"""
+        if not order_ids:
+            return {}
+
+        stmt = (
+            select(
+                UserBasket.order_id,
+                func.count(func.distinct(UserBasket.user_id)).label('user_count')
+            )
+            .where(UserBasket.order_id.in_(order_ids))
+            .group_by(UserBasket.order_id)
+        )
+
+        result = session.execute(stmt).all()
+        return {row.order_id: row.user_count for row in result}
 
     @property
     def serialized(self):

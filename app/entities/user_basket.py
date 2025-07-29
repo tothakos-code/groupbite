@@ -6,7 +6,7 @@ from .menu_item import MenuItem
 from .vendor import Vendor
 from .size import Size
 import enum
-from sqlalchemy import ForeignKey, ForeignKeyConstraint
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -28,6 +28,9 @@ class UserBasket(Base):
 
     __table_args__ = (
         ForeignKeyConstraint(['size_id', 'menu_item_id'], ['size.id', 'size.menu_item_id'], name='fk_size_item'),
+        Index('idx_userbasket_user_id', 'user_id'),
+        Index('idx_userbasket_order_id', 'order_id'),
+        Index('idx_userbasket_user_order', 'user_id', 'order_id'),
     )
 
     def __repr__(self):

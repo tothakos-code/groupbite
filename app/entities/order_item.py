@@ -7,7 +7,7 @@ from .user_basket import UserBasket
 import enum
 import logging
 from typing import List
-from sqlalchemy import ForeignKey, exc, func, or_
+from sqlalchemy import ForeignKey, exc, func, or_, Index
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -35,6 +35,24 @@ class OrderItem(Base):
     # Relationships (optional)
     order: Mapped["Order"] = relationship(back_populates="order_items")
     user: Mapped["User"] = relationship()
+
+    __table_args__ = (
+        Index('idx_orderitem_user_id', 'user_id'),
+        Index('idx_orderitem_order_id', 'order_id'),
+        Index('idx_orderitem_user_order', 'user_id', 'order_id'),
+        Index(
+            'idx_orderitem_item_name_gin',
+            'item_name',
+            postgresql_using='gin',
+            postgresql_ops={'item_name': 'gin_trgm_ops'}
+        ),
+        Index(
+            'idx_orderitem_size_label_gin',
+            'size_label',
+            postgresql_using='gin',
+            postgresql_ops={'size_label': 'gin_trgm_ops'}
+        ),
+    )
 
     def __repr__(self):
         return f"OrderItem<{self.id},order_id={self.order_id},user_id={self.user_id},item_name={self.item_name}>"

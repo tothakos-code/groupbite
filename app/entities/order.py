@@ -5,7 +5,7 @@ from .vendor import Vendor
 from uuid import UUID
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
-from sqlalchemy import ForeignKey, select, exc, extract
+from sqlalchemy import ForeignKey, select, exc, extract, Index, text
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -34,13 +34,21 @@ class Order(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"),nullable=True)
     date_of_order: Mapped[date]
     order_time: Mapped[datetime] = mapped_column(nullable=True)
-    order_fee: Mapped[int] = mapped_column(default=0)
+    order_fee: Mapped[int] = mapped_column(default=0, nullable=False)
     total_price: Mapped[int] = mapped_column(default=0)
 
     items: Mapped[List["UserBasket"]] = relationship(back_populates="order")
     order_items: Mapped[List["OrderItem"]] = relationship(back_populates="order")
     vendor: Mapped["Vendor"] = relationship(back_populates="orders")
     ordered_by: Mapped["User"] = relationship(back_populates="placed_orders")
+
+    __table_args__ = (
+        Index('idx_order_date_desc', text('date_of_order DESC')),
+        Index('idx_order_vendor_id', 'vendor_id'),
+        Index('idx_order_state_id', 'state_id'),
+        Index('idx_order_vendor_date', 'vendor_id', text('date_of_order DESC')),
+    )
+
 
     def __repr__(self):
         return f"Order<id={self.id},order_time={self.order_time},vendor_id={self.vendor_id},state_id={str(self.state_id)},user_id={self.user_id},date_of_order={self.date_of_order},order_time={self.order_time}>"

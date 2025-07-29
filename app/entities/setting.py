@@ -26,8 +26,8 @@ class Setting(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     key: Mapped[str] = mapped_column(nullable=False)
-    value: Mapped[str]
-    category: Mapped[str]
+    value: Mapped[str] = mapped_column(nullable=True)
+    category: Mapped[str] = mapped_column(nullable=True)
 
 
     def __repr__(self):

@@ -40,7 +40,7 @@ class MenuItem(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     menu_id: Mapped[int] = mapped_column(ForeignKey("menu.id"))
     name: Mapped[str]
-    description: Mapped[str]
+    description: Mapped[str] = mapped_column(nullable=True)
     index: Mapped[int]
     category: Mapped[str]
 

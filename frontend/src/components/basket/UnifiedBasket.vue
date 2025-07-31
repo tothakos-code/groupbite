@@ -2,6 +2,7 @@
   <v-card
     class="unified-basket"
     elevation="2"
+    rounded="lg"
   >
     <!-- Header -->
     <v-card-title class="bg-primary text-white pa-3">
@@ -61,7 +62,7 @@
       <v-divider />
 
       <div class="other-users-section">
-        <div class="other-users-header bg-surface-bright px-4 py-2 d-flex align-center justify-space-between">
+        <div class="other-users-header bg-surface px-4 py-2 d-flex align-center justify-space-between">
           <div class="d-flex align-center">
             <v-icon
               class="me-2"

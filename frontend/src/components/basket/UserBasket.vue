@@ -5,7 +5,7 @@
     class="compact-user-basket mb-1"
     bg-color="surface"
   >
-    <v-expansion-panel>
+    <v-expansion-panel class="user-panel">
       <v-expansion-panel-title class="user-panel-header pa-3 border-bottom">
         <v-row
           align="center"
@@ -62,10 +62,10 @@
         </v-row>
       </v-expansion-panel-title>
 
-      <v-expansion-panel-text class="pa-0">
+      <v-expansion-panel-text class="pa-0 user-panel">
         <v-list
           density="compact"
-          class="bg-surface"
+          class="bg-surface user-panel"
         >
           <v-list-item
             v-for="item in userBasketArray"
@@ -102,7 +102,7 @@
 
           <!-- Transport fee info -->
           <v-divider />
-          <v-list-item class="px-4 py-2 bg-surface-bright">
+          <v-list-item class="px-4 py-2 bg-surface">
             <v-list-item-title class="text-caption text-medium-emphasis">
               Szállítási díj: {{ Math.ceil(transportFee) }} Ft
             </v-list-item-title>
@@ -190,6 +190,11 @@ const basketTotal = computed(() => {
 </script>
 
 <style scoped>
+.user-panel {
+  border-radius: 12px !important;
+}
+
+
 .compact-user-basket {
   margin: 0 8px;
 }
@@ -198,7 +203,7 @@ const basketTotal = computed(() => {
   background-color: rgb(var(--v-theme-surface)) !important;
   min-height: 64px !important;
   border: 1px solid rgb(var(--v-theme-outline-variant));
-  border-radius: 4px 4px 0 0;
+  border-radius: 12px !important;
 }
 
 .compact-item {
@@ -229,6 +234,7 @@ const basketTotal = computed(() => {
 
 :deep(.v-expansion-panel-text__wrapper) {
   padding: 0;
+  border-radius: 12px !important;
   background-color: rgb(var(--v-theme-surface)) !important;
 }
 

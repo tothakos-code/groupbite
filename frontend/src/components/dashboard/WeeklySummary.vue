@@ -4,14 +4,7 @@
     class=""
   >
     <!-- Loading State -->
-    <v-skeleton-loader
-      v-if="isLoading"
-      type="card"
-      class="mx-auto"
-      max-width="1000"
-    />
     <v-card
-      v-else
       elevation="2"
       class="mb-4"
     >
@@ -101,7 +94,16 @@
           </v-col>
         </v-row>
       </v-card-title>
-      <v-card-text class="pa-4">
+      <v-skeleton-loader
+        v-if="isLoading"
+        type="card"
+        class="mx-auto"
+        max-width="1000"
+      />
+      <v-card-text
+        v-else
+        class="pa-4"
+      >
         <!-- Date Tabs for Quick Navigation -->
         <v-chip-group
           v-model="selectedDay"
@@ -245,17 +247,6 @@ export default {
       return this.orderStore.selectedOrders.reduce((total, order) => total + (order.sum || 0), 0);
     }
   },
-  watch: {
-    selectedDay() {
-      // Auto-scroll to today when component loads
-      this.$nextTick(() => {
-        const todayIndex = this.weekdates.findIndex(day => this.onSameDay(day, new Date()));
-        if (todayIndex !== -1 && this.selectedDay === 0) {
-          this.selectedDay = todayIndex;
-        }
-      });
-    }
-  },
   mounted() {
     this.getCurrentWeekDates(new Date()).then(res => {
       this.weekdates = res;
@@ -394,7 +385,7 @@ export default {
     setDay: function(day) {
       const newDate = new Date(day);
       this.currentDateSelected = newDate;
-
+      this.isLoading = true;
       this.getCurrentWeekDates(newDate).then(res => {
         this.weekdates = res;
         // Set selected day to today if switching to current week

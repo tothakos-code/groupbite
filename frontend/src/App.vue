@@ -52,34 +52,90 @@
           position="top center"
           :ignore-duplicates="true"
           :pause-on-hover="true"
-          classes="my-custom-class"
+          classes=""
         >
           <template #body="props">
-            <div class="my-notification">
-              <div
-                class="toast d-flex align-items-center"
-                :class="{
-                  'bg-warning':props.item.type === 'warn',
-                  'bg-error':props.item.type === 'error',
-                  'bg-info-subtle':props.item.type === 'info',
-                  'bg-warning-subtle':props.item.type === 'warn' && theme === 'dark',
-                  'bg-danger-subtle':props.item.type === 'error' && theme === 'dark',
-                }"
-              >
-                <p class="title toast-body">
-                  {{ props.item.title }}
-                </p>
-                <div>
+            <v-card
+              class="notification-card mb-3"
+              :class="{
+                'bg-warning':props.item.type === 'warn',
+                'bg-error':props.item.type === 'error',
+                'bg-info-subtle':props.item.type === 'info',
+                'bg-warning-subtle':props.item.type === 'warn' && theme === 'dark',
+                'bg-danger-subtle':props.item.type === 'error' && theme === 'dark',
+              }"
+              elevation="8"
+              rounded="lg"
+              min-width="400"
+            >
+              <!-- Header Section -->
+              <v-card-item class="pb-2">
+                <div class="d-flex align-items-start">
+                  <!-- Icon Avatar -->
+                  <v-avatar
+                    size="40"
+                    :color="props.item.type === 'success' ? 'success' :
+                      props.item.type === 'error' ? 'error' :
+                      props.item.type === 'warn' || props.item.type === 'warning' ? 'warning' :
+                      props.item.type === 'info' ? 'info' : 'primary'"
+                    class="me-3 flex-shrink-0"
+                  >
+                    <v-icon
+                      :icon="props.item.type === 'success' ? 'mdi-check-circle' :
+                        props.item.type === 'error' ? 'mdi-alert-circle' :
+                        props.item.type === 'warn' || props.item.type === 'warning' ? 'mdi-alert' :
+                        props.item.type === 'info' ? 'mdi-information' : 'mdi-bell'"
+                      color="white"
+                      size="20"
+                    />
+                  </v-avatar>
+
+                  <!-- Content -->
+                  <div class="flex-grow-1">
+                    <div class="text-subtitle-1 font-weight-bold notification-title">
+                      {{ props.item.title ||
+                        (props.item.type === 'success' ? 'Sikeres művelet' :
+                          props.item.type === 'error' ? 'Hiba történt' :
+                          props.item.type === 'warn' || props.item.type === 'warning' ? 'Figyelmeztetés' :
+                          props.item.type === 'info' ? 'Információ' : 'Értesítés') }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ new Date().toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' }) }}
+                    </div>
+                  </div>
+
+                  <!-- Close Button -->
+                  <v-btn
+                    icon="mdi-close"
+                    variant="text"
+                    size="small"
+                    density="comfortable"
+                    class="flex-shrink-0 ms-2"
+                    @click="props.close"
+                  />
+                </div>
+              </v-card-item>
+
+              <!-- Message Content -->
+              <v-card-text class="pt-0 pb-3">
+                <div class="text-body-2 notification-message">
                   {{ props.item.text }}
                 </div>
-                <button
-                  type="button"
-                  class="btn-close me-2 m-auto"
-                  aria-label="Close"
-                  @click="props.close"
+              </v-card-text>
+
+              <!-- Progress indicator -->
+              <div class="notification-progress-container">
+                <v-progress-linear
+                  :color="props.item.type === 'success' ? 'success' :
+                    props.item.type === 'error' ? 'error' :
+                    props.item.type === 'warn' || props.item.type === 'warning' ? 'warning' :
+                    props.item.type === 'info' ? 'info' : 'primary'"
+                  height="4"
+                  indeterminate
+                  class="notification-progress"
                 />
               </div>
-            </div>
+            </v-card>
           </template>
         </notifications>
       </v-main>

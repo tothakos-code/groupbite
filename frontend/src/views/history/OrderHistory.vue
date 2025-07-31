@@ -26,8 +26,8 @@
           >
             <v-text-field
               v-model="searchQuery"
-              label="Search orders..."
-              placeholder="Search by item name, order ID, or vendor"
+              label="Keresés..."
+              placeholder="Keress étel névre, rendelésre, vagy üzletre"
               prepend-inner-icon="mdi-magnify"
               variant="outlined"
               density="compact"
@@ -45,7 +45,7 @@
               v-model="selectedVendor"
               :items="vendorOptions"
               item-value="id"
-              label="Filter by vendor"
+              label="Üzlet szűrése"
               variant="outlined"
               density="compact"
               clearable
@@ -80,7 +80,7 @@
                   >
                     mdi-calendar
                   </v-icon>
-                  Date Range
+                  Dátum tartomány
                 </v-btn>
               </template>
               <v-card>
@@ -88,7 +88,7 @@
                   <v-date-picker
                     v-model="dateRange"
                     multiple="range"
-                    title="Select range"
+                    title="Dátum szűrés"
                     @update:model-value="applyDateFilter"
                   />
                 </v-card-text>
@@ -98,13 +98,13 @@
                     text
                     @click="clearDateFilter"
                   >
-                    Clear
+                    Üres
                   </v-btn>
                   <v-btn
                     text
                     @click="dateMenu = false"
                   >
-                    Close
+                    Bezár
                   </v-btn>
                 </v-card-actions>
               </v-card>
@@ -131,7 +131,7 @@
               >
                 mdi-magnify
               </v-icon>
-              Search: "{{ searchQuery }}"
+              Keresés: "{{ searchQuery }}"
             </v-chip>
 
             <v-chip
@@ -178,7 +178,7 @@
               >
                 mdi-close
               </v-icon>
-              Clear All
+              Szűrések törlése
             </v-chip>
           </v-chip-group>
         </div>
@@ -271,7 +271,7 @@
                     {{ order.order_items.length }} tétel{{ order.order_items.length !== 1 ? 's' : '' }}
                   </span>
                   <span class="text-right">
-                    <strong>{{ order.total_price }} Ft</strong>
+                    <strong>{{ Math.ceil(order.total_price) }} Ft</strong>
                   </span>
                 </div>
               </v-expansion-panel-title>

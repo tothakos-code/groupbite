@@ -37,7 +37,7 @@
               class="chart-card h-100"
               elevation="1"
             >
-              <v-card-title class="text-center pa-4 bg-grey-lighten-5">
+              <v-card-title class="text-center pa-4 bg-surface">
                 <div class="d-flex align-center justify-center">
                   <v-icon
                     class="me-2"
@@ -98,7 +98,7 @@
               class="chart-card h-100"
               elevation="1"
             >
-              <v-card-title class="text-center pa-4 bg-grey-lighten-5">
+              <v-card-title class="text-center pa-4 bg-surface">
                 <div class="d-flex align-center justify-center">
                   <v-icon
                     class="me-2"
@@ -183,7 +183,7 @@
                   mdi-store
                 </v-icon>
                 <div class="text-h6 font-weight-bold">
-                  {{ getTotalVendors() }}
+                  {{ getTotalVendors() }} db
                 </div>
                 <div class="text-body-2">
                   Aktív üzletek
@@ -210,10 +210,10 @@
                   mdi-calendar-month
                 </v-icon>
                 <div class="text-h6 font-weight-bold">
-                  {{ getTotalYearOrders() }}
+                  {{ getTotalYearOrders() }} Ft
                 </div>
                 <div class="text-body-2">
-                  Éves rendelések
+                  Éves rendelések összege
                 </div>
               </v-card-text>
             </v-card>
@@ -237,10 +237,10 @@
                   mdi-calendar-week
                 </v-icon>
                 <div class="text-h6 font-weight-bold">
-                  {{ getTotalWeekOrders() }}
+                  {{ getTotalWeekOrders() }} Ft
                 </div>
                 <div class="text-body-2">
-                  Heti rendelések
+                  Heti rendelések összege
                 </div>
               </v-card-text>
             </v-card>
@@ -264,7 +264,7 @@
                   mdi-trending-up
                 </v-icon>
                 <div class="text-h6 font-weight-bold">
-                  {{ getAverageOrdersPerMonth().toFixed(1) }}
+                  {{ getAverageOrdersPerMonth().toFixed(1) }} Ft
                 </div>
                 <div class="text-body-2">
                   Átlag/hónap

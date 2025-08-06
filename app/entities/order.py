@@ -218,15 +218,11 @@ class Order(Base):
 
     def find_orders_between_dates(start, end):
         stmt = select(
-            Order.id,
-            Order.date_of_order,
-            Order.state_id
-        ).join(
-            Order.order_items
+            Order
         ).where(
             Order.date_of_order.between(start, end)
         )
-        return session.execute(stmt).all()
+        return session.execute(stmt).scalars().all()
 
 
     def find_user_order_dates_between(user_id, start, end):

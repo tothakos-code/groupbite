@@ -26,25 +26,29 @@ def handle_order_history():
         USER_ID = request.json["user_id"]
 
     result = {}
-    for value in Order.find_orders_between_dates(DATE_FROM, DATE_TO):
-        order = Order.get_by_id(value[0])
+    for order in Order.find_orders_between_dates(DATE_FROM, DATE_TO):
         date = order.date_of_order.strftime("%Y-%m-%d")
         if date not in result:
             result[date] = {}
 
-        result[date][value[0]] = order.serialized
-        result[date][value[0]]["vendor"] = order.vendor.name
+        result[date][order.id] = order.serialized
+        result[date][order.id]["vendor"] = order.vendor.name
 
         sum = 0
-        for item in order.order_items:
-            sum += item.total_price
+
+        if order.state_id == OrderState.CLOSED:
+            for item in order.order_items:
+                sum += item.total_price
+        else:
+            for item in order.items:
+                sum += item.size.price * item.count
         sum += order.order_fee
-        result[date][value[0]]["sum"] = sum
+        result[date][order.id]["sum"] = sum
 
     if USER_ID != None:
-        for value in Order.find_user_order_dates_between(USER_ID, DATE_FROM, DATE_TO):
-            date = value.date_of_order.strftime("%Y-%m-%d")
-            order_id = value.id
+        for order in Order.find_user_order_dates_between(USER_ID, DATE_FROM, DATE_TO):
+            date = order.date_of_order.strftime("%Y-%m-%d")
+            order_id = order.id
             result[date][order_id]["ordered"] = True
 
     return { "data": result }, 200

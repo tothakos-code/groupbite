@@ -400,8 +400,11 @@ class Vendor(Base):
 
             logging.info("Scheduled automatic order email sent!")
 
+            from app.event_manager import event_manager
+            event_manager.trigger_event("beforeClose@" + order.vendor.name, {"order_id": order.id})
             if not order.change_state(OrderState.CLOSED):
                 return True
+            event_manager.trigger_event("afterClose@" + order.vendor.name, {"order_id": order.id})
 
             from app.socketio_singleton import SocketioSingleton
             socketio = SocketioSingleton.get_instance()

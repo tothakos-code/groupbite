@@ -95,7 +95,6 @@ export const useAuth = defineStore("user", {
     async checkSession() {
       try {
         const response = await axios.get(`/api/user/checkSession`);
-        console.log();
         if (response.data.error) {
           console.log(response.data.error);
           return;
@@ -106,6 +105,29 @@ export const useAuth = defineStore("user", {
         this.isLoggedIn = true;
       } catch (error) {
         console.log("Error during session check:" + error);
+        this.isLoading = false;
+
+      }
+    },
+    async sendReminder(email) {
+      try {
+        const response = await axios.get(`/api/user/reminder`,
+          { "params": {"email": email} }
+        );
+        if (response.data.error) {
+          notify({
+            type: "warn",
+            text: response.data.error,
+          });
+          return;
+        }
+        notify({
+          type: "info",
+          text: "Emlékeztető email kiküldve!",
+        });
+        this.isLoading = false;
+      } catch (error) {
+        console.log("Error during reminder send:" + error);
         this.isLoading = false;
 
       }

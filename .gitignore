@@ -1,3 +1,4 @@
+__pycache__
 app/__pycache__
 app/entities/__pycache__
 app/controllers/__pycache__
@@ -9,3 +10,4 @@ db/migrations/versions/__pycache__
 .env
 env/
 plugins/*
+logs

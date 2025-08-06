@@ -6,7 +6,7 @@ import logging
 
 
 
-def send_mail(to, subject, body, settings=None):
+def send_mail(to, cc, subject, body, settings=None):
 
     sender_email = Setting.get_value_by_key("smtp_sender_email")
     smtp_server = Setting.get_value_by_key("smtp_address")
@@ -21,7 +21,7 @@ def send_mail(to, subject, body, settings=None):
         smtp_port = settings["smtp_port"]
         smtp_user = settings["smtp_user"]
         smtp_password = settings["smtp_password"]
-        # smtp_security = settings["smtp_security"]
+        smtp_security = settings["smtp_security"]
 
     if sender_email == "" :
         return False, "sender_email can not be empty"
@@ -34,11 +34,12 @@ def send_mail(to, subject, body, settings=None):
         # Create the email message
     msg = MIMEMultipart("alternative")
     msg['From'] = sender_email
-    msg['To'] = to
+    msg['To'] = ", ".join(to)
+    msg['Cc'] = ", ".join(cc)
     msg['Subject'] = subject
 
     # Attach the email body
-    msg.attach(MIMEText(body.replace("\r\n", "<br>"), 'html'))
+    msg.attach(MIMEText("<p>" + body.replace("\r\n", "<br>").replace("\n", "<br>") + "</p>", 'html'))
     msg.attach(MIMEText(body.replace("<br>", "\r\n"), 'plain'))
 
     # Try to log in to server and send email

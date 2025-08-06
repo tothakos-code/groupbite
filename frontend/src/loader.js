@@ -3,8 +3,9 @@ import { useVendorStore } from "@/stores/vendor";
 
 export function register_plugin_routes(router) {
   useVendorStore().vendors.forEach((item) => {
+
     if (!router.hasRoute("/"+item.name)) {
-      let component = () => import("@/views/MenuRender.vue")
+      let component = () => import("@/views/menu/MenuRender.vue")
       router.addRoute("menu", {
         name: `${item.name}`,
         path: `${item.name}`,
@@ -23,6 +24,7 @@ export function register_plugin_routes(router) {
       });
     }
   });
-  const currentRoute = router.resolve(router.currentRoute.value.path);
-  router.replace(currentRoute);
+  router.isReady().then(() => {
+    router.replace(router.currentRoute.value.fullPath);
+  });
 }

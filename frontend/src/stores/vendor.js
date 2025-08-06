@@ -8,7 +8,8 @@ export const useVendorStore = defineStore("vendor", {
   state: () => ({
     vendors: [],
     selectedVendor: undefined,
-    isLoading: false
+    isLoading: false,
+    routesLoaded: false
   }),
   getters: {
 
@@ -30,21 +31,6 @@ export const useVendorStore = defineStore("vendor", {
       this.isLoading = true;
       try {
         const response = await axios.get(`/api/vendor/${vendorId}/menus`,
-          { "params": querryParams }
-        );
-        return response
-      } catch (error) {
-        console.error("Failed to fetch vendors:", error.response.data.error);
-        return error.response
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    async fetchMenusByDate(vendorId, date, querryParams) {
-      this.isLoading = true;
-      try {
-
-        const response = await axios.get(`/api/vendor/${vendorId}/menus/date/${date}`,
           { "params": querryParams }
         );
         return response
@@ -120,6 +106,18 @@ export const useVendorStore = defineStore("vendor", {
         this.isLoading = false;
       }
     },
+    async fetchWebhooks(vendorId) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/vendor/${vendorId}/webhooks`);
+        return response
+      } catch (error) {
+        console.error("Failed to get vendor webhooks:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async import(vendorId, formData) {
       this.isLoading = true;
       try {
@@ -167,6 +165,26 @@ export const useVendorStore = defineStore("vendor", {
         this.isLoading = false;
       }
     },
+    async scan(vendorId, data) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/vendor/${vendorId}/scan?menu_date=${data}`);
+        notify({
+          type: "info",
+          text: "Scan sikeres!",
+        });
+        return response
+      } catch (error) {
+        console.error("Failed to run scan on vendor:", error.response.data.error);
+        notify({
+          type: "error",
+          text: "Scan nem sikerült!",
+        });
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async subscribe(){
       const auth = useAuth()
       if (!auth.isLoggedIn) {
@@ -176,41 +194,32 @@ export const useVendorStore = defineStore("vendor", {
         });
         return;
       }
-      requestNotificationPermission();
       try {
-        const publicKey = await axios.get("/vapid_public_key")
-        navigator.serviceWorker.ready
-        .then(reg => {
-          reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: publicKey.data
-          }).then(
-            sub => {
-              axios.post(`/api/vendor/${this.selectedVendor.id}/notifications/reminder/subscribe`, { "data": sub })
-              .then(() => {
-                notify({
-                  type: "info",
-                  text: `Bekapcsoltad a(z) ${this.selectedVendor.name} értesítést!`,
-                });
-              })
-              .catch(err => {
-                notify({
-                  type: "error",
-                  text: err.response.data.error,
-                });
-              });
-            },
+        await requestNotificationPermission();
 
-            err => console.error(err)
-          );
+        const publicKey = await axios.get("/vapid_public_key");
+        const registration = await navigator.serviceWorker.ready;
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: publicKey.data
         });
+
+        await axios.post(`/api/vendor/${this.selectedVendor.id}/notifications/reminder/subscribe`,
+          { "data": subscription }
+        );
+
+        notify({
+          type: "info",
+          text: `Bekapcsoltad a(z) ${this.selectedVendor.name} értesítést!`,
+        });
+
       } catch (error) {
-        console.error("Failed to subscribe to notification:", error.response.data.error);
+        console.error("Failed to subscribe to notification:", error);
         notify({
           type: "error",
           text: "Értesítés beállítása nem sikerült!",
         });
-        return error.response
       } finally {
         this.isLoading = false;
       }
@@ -232,7 +241,7 @@ export const useVendorStore = defineStore("vendor", {
         });
         return response
       } catch (error) {
-        console.error("Failed to unsubscribe from notification:", error.response.data.error);
+        console.error("Failed to unsubscribe from notification:", error);
         notify({
           type: "error",
           text: "Értesítés kikapcsolás nem sikerült!",

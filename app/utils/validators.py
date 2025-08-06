@@ -3,6 +3,7 @@ from app.entities.user import User
 from app.entities.menu_item import MenuItem
 from app.entities.size import Size
 from app.entities.vendor import Vendor
+from app.entities.webhook import Webhook
 from app.entities.menu import Menu
 from app.entities.notification import NotificationType
 from marshmallow import Schema, fields, ValidationError, validate
@@ -33,6 +34,11 @@ def validate_vendor_id(vendor_id):
     if not exists:
         raise ValidationError(f"Vendor with ID {vendor_id} does not exist.")
 
+def validate_webhook_id(webhook_id):
+    exists = Webhook.find_by_id((str(webhook_id))) is not None
+    if not exists:
+        raise ValidationError(f"Webhook with ID {vendor_id} does not exist.")
+
 def validate_menu_id(menu_id):
     exists = Menu.find_by_id(menu_id) is not None
     if not exists:
@@ -44,6 +50,7 @@ class IDSchema(Schema):
     user_id = fields.UUID(validate=validate_user_id)
     src_user_id = fields.UUID(validate=validate_user_id)
     vendor_id = fields.UUID(validate=validate_vendor_id)
+    webhook_id = fields.UUID(validate=validate_webhook_id)
     item_id = fields.Integer(validate=validate_item_id)
     size_id = fields.Integer(validate=validate_size_id)
     menu_id = fields.Integer(validate=validate_menu_id)

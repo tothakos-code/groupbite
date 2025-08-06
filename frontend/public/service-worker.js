@@ -1,17 +1,36 @@
-export async function regWorker () {
+// service-worker.js
+console.log('Service worker script loaded');
 
-  navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
-
-self.addEventListener("install", () => self.skipWaiting());
-
-self.addEventListener("activate", () => self.clients.claim());
-
-self.addEventListener("push", event => {
-  const data = event.data.json();
-  self.registration.showNotification(data.title, {
-    body: data.body,
-    icon: data.icon,
-    image: data.image
-  });
+self.addEventListener('install', () => {
+  console.log('Service worker installing...');
+  self.skipWaiting();
 });
-}
+
+self.addEventListener('activate', (event) => {
+  console.log('Service worker activating...');
+  event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener('push', (event) => {
+  console.log('Push event received:', event);
+
+  if (!event.data) {
+    console.log('No data in push event');
+    return;
+  }
+
+  try {
+    const data = event.data.json();
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'Notification', {
+        body: data.body || 'No message',
+        icon: data.icon,
+        image: data.image,
+        tag: 'push-notification'
+      })
+    );
+  } catch (error) {
+    console.error('Error processing push event:', error);
+  }
+});

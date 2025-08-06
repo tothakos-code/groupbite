@@ -36,17 +36,23 @@ class VendorFactory:
                 )
 
             self._vendors[vendor_obj.id] = vendor_obj
-
+            vendor_db._validate_settings()
+            vendor_db.update_settings(vendor_db.settings)
             # scheduling jobs
-            if vendor_db.settings["closure_scheduler"]["value"] != "manual":
+            if vendor_db.get_setting_value("closure_scheduler_active"):
                 from app.scheduler import schedule_task, cancel_task
-                hh, mm = vendor_db.settings["closure_scheduler"]["value"].split(":")
+                hh, mm = vendor_db.get_setting_value("closure_scheduler").split(":")
                 schedule_task(str(vendor_db.id) + "-closure", int(hh), int(mm), vendor_db.closure_wrapper)
 
-            if vendor_db.settings["closed_scheduler"]["value"] != "manual":
+            if vendor_db.get_setting_value("closed_scheduler_active"):
                 from app.scheduler import schedule_task, cancel_task
-                hh, mm = vendor_db.settings["closed_scheduler"]["value"].split(":")
+                hh, mm = vendor_db.get_setting_value("closed_scheduler").split(":")
                 schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
+
+            if vendor_db.get_setting_value("auto_email_order"):
+                from app.scheduler import schedule_task, cancel_task
+                hh, mm = vendor_db.get_setting_value("email_order_scheduler").split(":")
+                schedule_task(str(vendor_db.id) + "-email-order", int(hh), int(mm), vendor_db.email_ordering_wrapper)
 
 
     @classmethod

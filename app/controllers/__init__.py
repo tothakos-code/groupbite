@@ -9,6 +9,7 @@ item_blueprint = Blueprint("item_controller", __name__, url_prefix="/api/item")
 size_blueprint = Blueprint("size_controller", __name__, url_prefix="/api/size")
 order_blueprint = Blueprint("order_controller", __name__, url_prefix="/api/order")
 user_blueprint = Blueprint("user_controller", __name__, url_prefix="/api/user")
+webhook_blueprint = Blueprint("webhook_controller", __name__, url_prefix="/api/webhook")
 
 
 def register_blueprints(app):
@@ -21,6 +22,7 @@ def register_blueprints(app):
     from .size_controller import size_blueprint
     from .order_controller import order_blueprint
     from .user_controller import user_blueprint
+    from .webhook_controller import webhook_blueprint
 
     # registering the blueprint in the app
     app.register_blueprint(main_blueprint)
@@ -31,3 +33,4 @@ def register_blueprints(app):
     app.register_blueprint(size_blueprint)
     app.register_blueprint(order_blueprint)
     app.register_blueprint(user_blueprint)
+    app.register_blueprint(webhook_blueprint)

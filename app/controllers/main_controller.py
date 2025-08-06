@@ -28,7 +28,7 @@ def catch_all(path):
         return send_from_directory(main_blueprint.static_folder, path)
 
     if APP_ENV == "development":
-        logging.info("Redirecting to Frontned...")
+        logging.debug("Redirecting to Frontned...")
         # This is for developer mode only
         return requests.get("http://127.0.0.1:8080/{0}".format(path)).text
 

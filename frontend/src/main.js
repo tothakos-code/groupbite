@@ -26,15 +26,13 @@ import VueCookies from "vue3-cookies";
 import VueClipboard from "vue3-clipboard";
 import Notifications from "@kyvg/vue3-notification";
 import router from "./router.js";
-import { regWorker } from "../public/service-worker.js";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.min.js";
-import "./assets/scss/main.scss";
-import { socket, state } from "@/socket"
-import vuetify from '@/plugins/vuetify'
+// import "bootstrap/dist/js/bootstrap.min.js";
+import { socket, state } from "@/socket";
+import vuetify from '@/plugins/vuetify';
 
 const app = createApp(App);
-const pinia = createPinia()
+const pinia = createPinia();
 
 app.use(router);
 app.use(pinia);
@@ -47,18 +45,25 @@ app.use(VueClipboard, {
 });
 
 
+export async function regWorker() {
+  try {
+    const registration = await navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
+    return registration;
+  } catch (error) {
+    console.error('Service worker registration failed:', error);
+    throw error;
+  }
+}
+
 export async function requestNotificationPermission() {
   if (Notification.permission === "default") {
-      Notification.requestPermission().then(() => {
-        if (Notification.permission === "granted") {
-          regWorker().catch(err => console.error(err));
-        }
-      });
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+      await regWorker();
     }
-
-    else if (Notification.permission === "granted") {
-      regWorker().catch(err => console.error(err));
-    }
+  } else if (Notification.permission === "granted") {
+    await regWorker();
+  }
 }
 
 

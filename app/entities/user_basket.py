@@ -1,11 +1,13 @@
-from sqlalchemy import Column, Text, Enum, select, exc
+from sqlalchemy import Column, Text, Enum, select, exc, or_, String, cast, func
 from uuid import UUID
 from . import Base, session
 from .order import Order
 from .menu_item import MenuItem
+from .vendor import Vendor
 from .size import Size
 import enum
-from sqlalchemy import ForeignKey, ForeignKeyConstraint
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -27,6 +29,9 @@ class UserBasket(Base):
 
     __table_args__ = (
         ForeignKeyConstraint(['size_id', 'menu_item_id'], ['size.id', 'size.menu_item_id'], name='fk_size_item'),
+        Index('idx_userbasket_user_id', 'user_id'),
+        Index('idx_userbasket_order_id', 'order_id'),
+        Index('idx_userbasket_user_order', 'user_id', 'order_id'),
     )
 
     def __repr__(self):
@@ -36,11 +41,61 @@ class UserBasket(Base):
         stmt = select(UserBasket).where(UserBasket.order_id == order_id)
         return session.execute(stmt).scalars().all()
 
-    def find_user_orders(user_id, limit=None, offset=0):
-        stmt = select(UserBasket).where(UserBasket.user_id == user_id)
+    @staticmethod
+    def find_user_orders(user_id, limit=None, offset=0, search=None, vendor_id=None, date_from=None, date_to=None):
+        from .order_item import OrderItem
+
+
+        stmt = (
+            select(OrderItem)
+            .options(
+                selectinload(OrderItem.order).selectinload(Order.vendor),
+                selectinload(OrderItem.order)
+            )
+            .join(OrderItem.order)
+            .where(OrderItem.user_id == user_id)
+        )
+
+        if search is not None:
+            stmt = stmt.where(
+                or_(
+                    OrderItem.item_name.ilike(f"%{search}%"),
+                    OrderItem.size_label.ilike(f"%{search}%"),
+                    cast(Order.state_id, String).ilike(f"%{search}%"),
+                )
+            )
+
+        if vendor_id is not None:
+            stmt = stmt.where(Order.vendor_id == vendor_id)
+
+        if date_from is not None and date_to is not None:
+            stmt = stmt.where(Order.date_of_order.between(date_from, date_to))
+
+        stmt = stmt.order_by(Order.date_of_order.desc())
+
         if limit is not None:
-            stmt = stmt.limit(limit).offset(offset)
+            stmt = stmt.limit(limit)
+        if offset > 0:
+            stmt = stmt.offset(offset)
+
         return session.execute(stmt).scalars().all()
+
+    def find_user_order_vendors(user_id):
+        user_vendor_ids_subquery = (
+            select(Order.vendor_id)
+            .join(UserBasket, UserBasket.order_id == Order.id)
+            .where(UserBasket.user_id == user_id)
+            .distinct()
+            .subquery()
+        )
+
+        stmt = (
+            select(Vendor)
+            .where(Vendor.id.in_(select(user_vendor_ids_subquery.c.vendor_id)))
+            .order_by(Vendor.name)
+        )
+        return session.execute(stmt).scalars().all()
+
 
     def find_user_basket(user_id, order_id):
         stmt = select(UserBasket).where(
@@ -49,67 +104,13 @@ class UserBasket(Base):
         )
         return session.execute(stmt).scalars().all()
 
-    def find_user_orders_by_date(user_id, date):
-        stmt = select(UserBasket).where(UserBasket.user_id == user_id, UserBasket.order.date_of_order == date)
-        return session.execute(stmt).all()
-
-    def get_basket_group_by_user(order_id):
-        result = {}
-        for basket_entry in UserBasket.find_items_by_order(order_id):
-            if str(basket_entry.user_id) not in result:
-                result[str(basket_entry.user_id)] = {
-                    "username": basket_entry.user.username,
-                    "user_id": str(basket_entry.user_id),
-                    "items": []
-                }
-            result[str(basket_entry.user_id)]["items"].append(basket_entry.basket_format)
-        return result
-
-    def find_user_order_dates(user_id):
-        stmt = select(
-            UserBasket.order_id,
-            Order.date_of_order
-        ).join(
-            UserBasket,
-            Order.items
-        ).where(
-            UserBasket.user_id == user_id
-        )
-        return session.execute(stmt).all()
-
-    def find_orders_between_dates(start, end):
-        stmt = select(
-            UserBasket.order_id,
-            Order.date_of_order,
-            Order.state_id
-        ).join(
-            UserBasket,
-            Order.items
-        ).where(
-            Order.date_of_order.between(start, end)
-        )
-        return session.execute(stmt).all()
-
-    def find_user_order_dates_between(user_id, start, end):
-        stmt = select(
-            UserBasket.order_id,
-            Order.date_of_order
-        ).join(
-            UserBasket,
-            Order.items
-        ).where(
-            UserBasket.user_id == user_id,
-            Order.date_of_order.between(start, end)
-        )
-        return session.execute(stmt).all()
-
     def clear_items(user_id, order_id):
         stmt = select(UserBasket).where(
             UserBasket.order_id == order_id,
             UserBasket.user_id == user_id
         )
-        user_basket = session.execute(stmt).scalars().all()
-        for basket_entry in user_basket:
+        user_baskets = session.execute(stmt).scalars().all()
+        for basket_entry in user_baskets:
             basket_entry.delete()
         try:
             session.commit()
@@ -139,10 +140,10 @@ class UserBasket(Base):
             size_stmt = select(Size).where(
                 Size.id == size_id
             )
-            size_to_add = session.execute(size_stmt).scalars().first()
+            size_to_remove = session.execute(size_stmt).scalars().first()
 
-            if size_to_add.quantity >= 0:
-                size_to_add.quantity += 1
+            if not size_to_remove.unlimited:
+                size_to_remove.quantity += 1
 
             if user_basket.count == 1:
                 session.delete(user_basket)
@@ -177,8 +178,9 @@ class UserBasket(Base):
         )
         size_to_add = session.execute(size_stmt).scalars().first()
 
-        if size_to_add.quantity != 0:
-            size_to_add.quantity -= 1
+        if size_to_add.unlimited or size_to_add.quantity > 0:
+            if not size_to_add.unlimited:
+                size_to_add.quantity -= 1
             if not user_basket:
                 user_basket = UserBasket(
                     user_id = user_id,
@@ -214,6 +216,8 @@ class UserBasket(Base):
 
 
     def delete(self):
+        if not self.size.unlimited:
+            self.size.quantity += self.count
         session.delete(self)
         try:
             session.commit()
@@ -234,13 +238,36 @@ class UserBasket(Base):
         )
         return len(session.execute(stmt).all())
 
+    @staticmethod
+    def get_user_counts_batch(order_ids):
+        """Get user counts for multiple orders in a single query"""
+        if not order_ids:
+            return {}
+
+        stmt = (
+            select(
+                UserBasket.order_id,
+                func.count(func.distinct(UserBasket.user_id)).label('user_count')
+            )
+            .where(UserBasket.order_id.in_(order_ids))
+            .group_by(UserBasket.order_id)
+        )
+
+        result = session.execute(stmt).all()
+        return {row.order_id: row.user_count for row in result}
+
     @property
     def serialized(self):
         return {
-            "user_id": str(self.user_id),
-            "menu_item_id": self.menu_item_id,
+            "user_id": self.user_id,
+            "item_id": self.menu_item_id,
+            "size_id": self.size_id,
             "order_id": self.order_id,
-            "count": self.count
+            "item_name": self.item.name,
+            "size_name": self.size.name,
+            "price": self.size.price,
+            "category": self.item.category,
+            "quantity": self.count,
         }
 
     @property

@@ -6,20 +6,20 @@
 </template>
 
 <script>
-import Menu from "@/views/Menu.vue";
+import MenuView from "@/views/menu/Menu.vue";
 import { state } from "@/main";
 import { defineAsyncComponent } from "vue";
 import { useVendorStore } from "@/stores/vendor";
 
 
 const PluginMenu = defineAsyncComponent({
-  loader: () => import(`./../../../plugins/${useVendorStore().selectedVendor.name}/frontend/App.vue`),
+  loader: () => import(`./../../../../plugins/${useVendorStore().selectedVendor.name}/frontend/App.vue`),
 })
 
 export default {
   name: "MenuRenderView",
   components: {
-    Menu,
+    MenuView,
     PluginMenu
   },
   beforeRouteEnter(to) {
@@ -58,7 +58,7 @@ export default {
   },
   computed:{
     activeVendor() {
-      return state.selectedVendor?.type === "plugin" ? PluginMenu : Menu;
+      return state.selectedVendor?.type === "plugin" ? PluginMenu : MenuView;
     },
     activeVendorId() {
       return state.selectedVendor?.id;

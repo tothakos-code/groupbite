@@ -14,6 +14,7 @@ from app.socketio_singleton import SocketioSingleton
 from app.services.vendor_service import VendorService
 from app.entities.vendor import Vendor, BaseVendorSchema
 from app.entities.menu import Menu
+from app.entities.webhook import Webhook
 from app.entities.user import User
 from app.entities.notification import Notification, NotificationType
 from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
@@ -152,6 +153,14 @@ def handle_run_scan(vendor_id):
     return { "msg": f"Vendor scan ran for {vendor_id} id" }, 201
 
 
+@vendor_blueprint.route("/<vendor_id>/webhooks", methods=["GET"])
+@validate_url_params(IDSchema())
+def handle_get_webhooks(vendor_id):
+    webhooks = Webhook.find_by_vendor_id(vendor_id)
+
+    return { "data": {"vendors": [wh.serialized for wh in webhooks]} }, 200
+
+
 @vendor_blueprint.route("/<vendor_id>", methods=["GET"])
 @validate_url_params(IDSchema())
 def handle_get_settings(vendor_id):
@@ -203,15 +212,6 @@ def handle_menu_get(vendor_id):
         }
     }, 200
 
-@vendor_blueprint.route("/<vendor_id>/menus/date/<menu_date>", methods=["GET"])
-@validate_url_params(IDSchema())
-def get_requested_menu(vendor_id, menu_date):
-    filter = request.args.getlist('filter[]')
-
-    vendor = VendorFactory.get_one_vendor_object(str(vendor_id))
-
-    return { "data": vendor.get_menu(menu_date, filter) }, 200
-
 @vendor_blueprint.route("/<vendor_id>/menus/import", methods=["POST"])
 @validate_url_params(IDSchema())
 def import_menu(vendor_id):
@@ -229,8 +229,8 @@ def import_menu(vendor_id):
             menu_db = Menu(
                 name=menu["name"] if "name" in menu else "imported-" + datetime.now().strftime("%Y-%m-%d-%H:%M"),
                 vendor_id=vendor_id,
-                freq_id=menu["freq"] if "freq" in menu else "DAILY",
-                date=menu["date"] if "date" in menu else date.today().strftime("%Y-%m-%d")
+                from_date=menu["from_date"] if "from_date" in menu else date.today().strftime("%Y-%m-%d"),
+                to_date=menu["to_date"] if "to_date" in menu else date.today().strftime("%Y-%m-%d")
             )
 
             item_index = 0
@@ -251,6 +251,7 @@ def import_menu(vendor_id):
                         price=size["price"],
                         index=size["index"] if "index" in size else size_index,
                         quantity=size["quantity"] if "quantity" in size else -1,
+                        unlimited=size["unlimited"] if "unlimited" in size else True
                     ))
                     if "index" not in size:
                         size_index+= 1

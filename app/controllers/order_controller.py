@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from flask_socketio import join_room, leave_room
+from flask_socketio import join_room, leave_room, rooms
 import json
 import logging
 from datetime import date, timedelta, datetime
@@ -9,9 +9,10 @@ from app.socketio_singleton import SocketioSingleton
 from app.entities.order import Order, OrderState, BaseOrderSchema
 from app.entities.user_basket import UserBasket
 from app.entities import Session
+from flask import session
 from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
 from app.utils.validators import IDSchema
-
+from app.vendor_factory import VendorFactory
 
 socketio = SocketioSingleton.get_instance()
 
@@ -25,25 +26,29 @@ def handle_order_history():
         USER_ID = request.json["user_id"]
 
     result = {}
-    for value in UserBasket.find_orders_between_dates(DATE_FROM, DATE_TO):
-        order = Order.get_by_id(value[0])
-        date = value[1].strftime("%Y-%m-%d")
+    for order in Order.find_orders_between_dates(DATE_FROM, DATE_TO):
+        date = order.date_of_order.strftime("%Y-%m-%d")
         if date not in result:
             result[date] = {}
 
-        result[date][value[0]] = order.serialized
-        result[date][value[0]]["vendor"] = order.vendor.name
+        result[date][order.id] = order.serialized
+        result[date][order.id]["vendor"] = order.vendor.name
 
         sum = 0
-        for item in order.items:
-            sum += item.size.price * item.count
+
+        if order.state_id == OrderState.CLOSED:
+            for item in order.order_items:
+                sum += item.total_price
+        else:
+            for item in order.items:
+                sum += item.size.price * item.count
         sum += order.order_fee
-        result[date][value[0]]["sum"] = sum
+        result[date][order.id]["sum"] = sum
 
     if USER_ID != None:
-        for value in UserBasket.find_user_order_dates_between(USER_ID, DATE_FROM, DATE_TO):
-            date = value[1].strftime("%Y-%m-%d")
-            order_id = value[0]
+        for order in Order.find_user_order_dates_between(USER_ID, DATE_FROM, DATE_TO):
+            date = order.date_of_order.strftime("%Y-%m-%d")
+            order_id = order.id
             result[date][order_id]["ordered"] = True
 
     return { "data": result }, 200
@@ -54,7 +59,7 @@ def handle_order_history():
 def handle_get_basket(order_id):
     order = Order.get_by_id(order_id)
     return_obj = order.serialized
-    return_obj["basket"] = UserBasket.get_basket_group_by_user(order.id)
+    return_obj["basket"] = order.get_order_items()
     return { "data": return_obj }, 200
 
 
@@ -159,10 +164,11 @@ def handle_date_selection_change(data):
     new_date = data["new_selected_date"]
     vendor_id = data["vendor_id"]
 
-
-    if "old_selected_date" in data:
-        old_date = data["old_selected_date"]
-        leave_room(f"{vendor_id}@{old_date}")
+    # leave all old rooms
+    sid = request.sid
+    for room in rooms(sid):
+        if room != sid:
+            leave_room(room, sid=sid)
 
     join_room(f"{vendor_id}@{new_date}")
 
@@ -174,11 +180,18 @@ def handle_date_selection_change(data):
             logging.error("Cannot create order")
             return
 
+    vendor = VendorFactory.get_one_vendor_object(str(vendor_id))
 
     socketio.emit(
         "be_order_update", {
             "order": order.serialized,
-            "basket": UserBasket.get_basket_group_by_user(order.id)
+            "basket": order.get_order_items()
+        },
+        to=request.sid
+        )
+    socketio.emit(
+        "be_menu_update", {
+            "menus": vendor.get_menus(new_date)
         },
         to=request.sid
         )
@@ -196,9 +209,15 @@ def handle_copy_basket(order_id, user_id, src_user_id):
 
     order = Order.get_by_id(order_id)
 
-
+    vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
     socketio.emit("be_order_update", {
-        "basket": UserBasket.get_basket_group_by_user(order_id),
+        "basket": order.get_order_items(),
+        },
+        to=f"{order.vendor_id}@{order.date_of_order}"
+        )
+    socketio.emit(
+        "be_menu_update", {
+            "menus": vendor.get_menus(str(order.date_of_order))
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
@@ -231,10 +250,17 @@ def handle_add_to_basket(order_id, user_id, item_id, size_id):
 
     if ok:
         socketio.emit("be_order_update", {
-            "basket": UserBasket.get_basket_group_by_user(order_id)
+            "basket": order.get_order_items()
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
+        vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
+        socketio.emit(
+            "be_menu_update", {
+                "menus": vendor.get_menus(str(order.date_of_order))
+            },
+            to=f"{order.vendor_id}@{order.date_of_order}"
+            )
         return { "msg": "OK" }, 201
     else:
         return { "error":"Item out of stock" }, 400
@@ -267,10 +293,16 @@ def handle_remove_from_basket(order_id, user_id, item_id, size_id):
 
     if ok:
         socketio.emit("be_order_update", {
-            "basket": UserBasket.get_basket_group_by_user(order_id)
+            "basket": order.get_order_items()
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
+        vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
+        socketio.emit("be_menu_update", {
+                "menus": vendor.get_menus(str(order.date_of_order))
+            },
+            to=f"{order.vendor_id}@{order.date_of_order}"
+            )
         return { "msg": "OK" }, 204
     return { "error": "something went wrong." }, 500
 
@@ -282,10 +314,16 @@ def handle_clear_user_basket(order_id, user_id):
     if UserBasket.clear_items(user_id, order_id):
         order = Order.get_by_id(order_id)
         socketio.emit("be_order_update", {
-            "basket": UserBasket.get_basket_group_by_user(order_id)
+            "basket": order.get_order_items()
         },
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
+        vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
+        socketio.emit("be_menu_update", {
+                "menus": vendor.get_menus(str(order.date_of_order))
+            },
+            to=f"{order.vendor_id}@{order.date_of_order}"
+            )
         return { "msg": "OK" }, 204
     return { "error": "Order or User not found" }, 404
 
@@ -321,3 +359,31 @@ def handle_close_order(order_id):
         to=f"{order.vendor_id}@{order.date_of_order}"
         )
     return { "msg": "OK" }, 200
+
+
+@order_blueprint.route("/<order_id>/send-email", methods=["POST"])
+@validate_url_params(IDSchema())
+@require_auth
+def handle_manual_email_order(order_id):
+    from app.scheduler import cancel_task
+
+    logging.info(f"Manual email send triggered by userID: {session.get("user_id")} for order {order_id}")
+    order = Order.get_by_id(order_id)
+    if not order:
+        return {"msg": "Order not found"}, 404
+
+    if order.state_id == OrderState.CLOSED:
+        return {"msg": "Order is already closed, cannot send email"}, 400
+
+    vendor = order.vendor
+
+    # Cancel the scheduled task for this vendor (if exists)
+    task_id = f"{str(vendor.id)}-email-order"
+    cancel_task(task_id)
+    logging.info(f"Scheduled task '{task_id}' canceled due to manual trigger.")
+
+    # Execute the email logic manually
+    if vendor.email_ordering_wrapper(order_id=order_id, manual=True):
+        return {"msg": "Email sent and order closed manually"}, 200
+    else:
+        return {"msg": "Something went wrong during the action"}, 400

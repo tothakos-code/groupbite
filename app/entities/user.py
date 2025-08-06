@@ -24,7 +24,7 @@ class User(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, unique=True, nullable=False, default=uuid4)
     username: Mapped[str] = mapped_column(Text, unique=True)
     email: Mapped[str] = mapped_column(Text, unique=True)
-    password: Mapped[str] = mapped_column(Text)
+    password: Mapped[str] = mapped_column(Text, nullable=True)
     admin: Mapped[Boolean] = mapped_column(Boolean, nullable=False, default=False)
     settings: Mapped[dict] = mapped_column(JSONB)
     theme: Mapped[Theme] = mapped_column(default=Theme.LIGHT)

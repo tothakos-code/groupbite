@@ -2,9 +2,11 @@ from flask import Flask
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 import logging
+from logging.handlers import TimedRotatingFileHandler
 from datetime import timedelta
 
 from app.services.vendor_service import VendorService
+from app.services.webhook_service import webhook_service
 from app.vendor_factory import VendorFactory
 import app.loader
 
@@ -16,8 +18,10 @@ from app.controllers import item_blueprint
 from app.controllers import size_blueprint
 from app.controllers import order_blueprint
 from app.controllers import user_blueprint
+from app.controllers import statistics_blueprint
 
-from os import scandir
+from os import scandir, makedirs, path
+import sys
 
 from dotenv import load_dotenv
 from pathlib import Path
@@ -33,11 +37,35 @@ DB_NAME = getenv("POSTGRES_DB_NAME")
 
 DB_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-def create_migration():
+LOG_FILE = "logs/groupbite.log"
+
+def initialize_logging():
+    makedirs(path.dirname(LOG_FILE), exist_ok=True)
+    handler = TimedRotatingFileHandler(
+        LOG_FILE, when="midnight", interval=1, backupCount=31, encoding="utf-8"
+    )
+    formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s")
+    handler.setFormatter(formatter)
     logging.basicConfig(
-        level=logging.NOTSET,
-        format="%(asctime)s:%(levelname)s:%(message)s"
-        )
+        handlers=[handler],
+        level=logging.NOTSET
+    )
+
+        # Redirect stdout and stderr to logger
+    class LoggerWriter:
+        def __init__(self, level):
+            self.level = level
+        def write(self, message):
+            if message.strip():  # Avoid writing empty lines
+                self.level(message)
+        def flush(self):
+            pass  # Needed for compatibility with sys.stdout/sys.stderr
+
+    sys.stdout = LoggerWriter(logging.info)  # Redirect stdout (prints)
+    sys.stderr = LoggerWriter(logging.error)
+
+def create_migration():
+    initialize_logging()
     application = Flask(__name__)
     application.config["SQLALCHEMY_DATABASE_URI"] = DB_URL
     application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -45,10 +73,7 @@ def create_migration():
     create_database_migration(application)
 
 def create_app(debug=False):
-    logging.basicConfig(
-        level=logging.NOTSET,
-        format="%(asctime)s:%(levelname)s:%(message)s"
-        )
+    initialize_logging()
     logging.info("Initialization started")
 
     application = Flask(__name__)
@@ -69,7 +94,6 @@ def create_app(debug=False):
     Session(application)
 
 
-
     VendorFactory.load()
     loader.load_plugins([d.path.replace("/",".") for d in scandir("plugins") if d.is_dir()])
 
@@ -84,6 +108,9 @@ def create_app(debug=False):
     from app.controllers import register_blueprints
 
     register_blueprints(application)
+
+    webhook_service.register_all_webhooks_at_boot()
+
 
     logging.info("Initialization finished")
     return application

@@ -4,176 +4,485 @@
       <v-btn
         id="transferBasketButton"
         v-bind="props"
-        varian="text"
-        class="my-1 bg-primary"
-        border="primary thin"
+        variant="elevated"
+        color="primary"
+        class="me-2"
         @click="openPopup()"
       >
         Rendelés
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          fill="currentColor"
-          class="bi bi-truck"
-          viewBox="0 0 16 16"
-        >
-          <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-3.998-.085A1.5 1.5 0 0 1 0 10.5v-7zm1.294 7.456A1.999 1.999 0 0 1 4.732 11h5.536a2.01 2.01 0 0 1 .732-.732V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .294.456zM12 10a2 2 0 0 1 1.732 1h.768a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12v4zm-9 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
-        </svg>
+        <v-icon class="ml-2">
+          mdi-truck
+        </v-icon>
       </v-btn>
     </template>
     <span>Rendelése leadás megkezdése</span>
   </v-tooltip>
-  <Popup
-    :show-modal="showInitial"
-    title="Rendelés áttöltése"
-    :large="true"
-    @cancel="showInitial = false"
-    @confirm="closeOrder()"
-  >
-    <div class="row">
-      <div class="col-9 me-0 pe-0">
-        <p>A lista automatikusan frissül, ha valaki változtat a kosarán. Pipáld ki ha átraktad VAGY másold a teljes rendelést szövegként</p>
-      </div>
-      <div class="col-3 text-end">
-        <v-btn
-          type="button"
-          name="button"
-          title="Copy to clipboard"
-          varian="text"
-          class="ms-0  bg-secondary"
-          border="primary thin"
-          @click="doCopyOrder()"
-        >
-          Másol
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            fill="currentColor"
-            class="bi bi-clipboard2"
-            viewBox="0 0 16 16"
-          >
-            <path d="M3.5 2a.5.5 0 0 0-.5.5v12a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-12a.5.5 0 0 0-.5-.5H12a.5.5 0 0 1 0-1h.5A1.5 1.5 0 0 1 14 2.5v12a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-12A1.5 1.5 0 0 1 3.5 1H4a.5.5 0 0 1 0 1h-.5Z" />
-            <path d="M10 .5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5.5.5 0 0 1-.5.5.5.5 0 0 0-.5.5V2a.5.5 0 0 0 .5.5h5A.5.5 0 0 0 11 2v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 1-.5-.5Z" />
-          </svg>
-        </v-btn>
-      </div>
-    </div>
 
-    <div
-      v-for="item in orderItems"
-      :key="item.id"
-      class="list-group-item d-flex justify-content-between align-items-center fs-4 rounded"
-    >
-      <span
-        :class="{'text-decoration-line-through': item.deleted, 'fw-bold': !item.tick}"
-        class="ms-1"
-      >
-        {{ item.quantity }}x {{ item.item_name }} {{ item.size_name }}
-      </span>
-      <span
-        v-if="item.deleted"
-        class="text-danger"
-      >Törölték</span>
-      <input
-        v-model="item.tick"
-        type="checkbox"
-        class="form-check-input m-0 me-1"
-        name=""
-        :value="item.tick"
-      >
-    </div>
-  </Popup>
-  <teleport to="body">
-    <div
-      v-if="showSpinner"
-      class="overlay d-flex justify-content-center"
-    >
-      <div
-        class="spinner-border text-center text-dark"
-        style="width: 4rem; height: 4rem; z-index: 20;"
-        role="status"
-      >
-        <span class="visually-hidden">Loading...</span>
-      </div>
-    </div>
-  </teleport>
-  <Popup
-    :show-modal="showFinish"
-    title="Rendelés befejezése"
-    :cancel-btn="false"
-    confirm-text="Befejez"
-    @confirm="changeTransportPrice();"
+  <v-dialog
+    v-model="optionDialogVisible"
+    max-width="600"
+    :persistent="false"
+    scrim
   >
-    <p>Rendelés lezárva, további kosármódosítás letiltva.</p>
-    <p>
-      Rendelés megjegyzés példa:
-    </p>
-    <div class="d-flex">
-      <div class="border bg-light-subtle rounded ps-2">
-        <code class="user-select-all">{{ orderDesc }}</code>
-      </div>
-      <button
-        type="button"
-        name="button"
-        title="Copy to clipboard"
-        class="btn "
-        @click="doCopy()"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="28"
-          height="28"
-          fill="currentColor"
-          class="bi bi-clipboard2"
-          viewBox="0 0 16 16"
+    <v-card>
+      <v-card-title class="text-h5 text-center">
+        Rendelés mód kiválasztása
+      </v-card-title>
+
+      <v-card-text>
+        <v-row
+          dense
+          align="stretch"
         >
-          <path d="M3.5 2a.5.5 0 0 0-.5.5v12a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-12a.5.5 0 0 0-.5-.5H12a.5.5 0 0 1 0-1h.5A1.5 1.5 0 0 1 14 2.5v12a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-12A1.5 1.5 0 0 1 3.5 1H4a.5.5 0 0 1 0 1h-.5Z" />
-          <path d="M10 .5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5.5.5 0 0 1-.5.5.5.5 0 0 0-.5.5V2a.5.5 0 0 0 .5.5h5A.5.5 0 0 0 11 2v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 1-.5-.5Z" />
-        </svg>
-      </button>
-    </div>
-    <br>
-    <div class="">
-      <p>
-        Ha a  szállítási díj eltérhet az alapértelmezetten megadottól (pl.: eltér a tényleges szállítás díj, rendszerhasználati díj felszámításra került) itt megtudod változtatni.
-      </p>
-      <p>
-        A különböző extra díjak összegét írd be valuta nélkül
-      </p>
-      <p>
-        Az alapértelmezett beállított díj: {{ vendorStore.selectedVendor.settings.transport_price.value }}
-      </p>
-      <div class="input-group mb-3">
-        <span class="input-group-text">A jelenlegi díj</span>
-        <input
-          v-model.trim="transport_price"
-          type="number"
-          class="form-control"
-          :placeholder="transport_price"
-          aria-label="A jelenleg beállított díj"
-          aria-describedby="basic-addon1"
+          <!-- Full Auto -->
+          <v-col
+            cols="12"
+            sm="4"
+          >
+            <v-card
+              class="d-flex flex-column align-center justify-center py-6 px-3 text-center cursor-pointer hover:shadow-md transition"
+              color="success"
+              variant="elevated"
+              :disabled="!enable_full_automatic_order"
+              @click="startFullAutoOrder"
+            >
+              <v-icon size="48">
+                mdi-robot
+              </v-icon>
+              <div class="mt-3 font-weight-medium text-subtitle-1">
+                Automatikus
+              </div>
+              <div class="text-body-2 mt-1">
+                Rendelés áttöltése és/vagy rendelése az eredeti oldalon keresztül.
+              </div>
+            </v-card>
+          </v-col>
+
+          <!-- Semi Auto -->
+          <v-col
+            cols="12"
+            sm="4"
+          >
+            <v-card
+              class="fill-height d-flex flex-column align-center justify-center py-6 px-3 text-center cursor-pointer hover:shadow-md transition"
+              color="info"
+              variant="elevated"
+              :loading="emailSending"
+              :disabled="!enable_email_order"
+              @click="confirmSemiAuto = true"
+            >
+              <v-icon size="48">
+                mdi-email-fast-outline
+              </v-icon>
+              <div class="mt-3 font-weight-medium text-subtitle-1">
+                Félig automatikus
+              </div>
+              <div class="text-body-2 mt-1">
+                Lezárja és továbbítja a rendelést emailben.
+              </div>
+            </v-card>
+          </v-col>
+
+          <!-- Manual -->
+          <v-col
+            cols="12"
+            sm="4"
+          >
+            <v-card
+              class="fill-height d-flex flex-column align-center justify-center py-6 px-3 text-center cursor-pointer hover:shadow-md transition"
+              color="primary"
+              variant="elevated"
+              :disabled="!enable_manual_order"
+              @click="startManualOrder"
+            >
+              <v-icon size="48">
+                mdi-hand-pointing-up
+              </v-icon>
+              <div class="mt-3 font-weight-medium text-subtitle-1">
+                Manuális
+              </div>
+              <div class="text-body-2 mt-1">
+                Minden lépést te végzel el kézzel, maximális kontroll.
+              </div>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog
+    v-model="confirmSemiAuto"
+    max-width="500"
+    persistent
+  >
+    <v-card>
+      <v-card-title class="text-h6">
+        Biztosan folytatod?
+      </v-card-title>
+
+      <v-card-text>
+        <v-alert
+          type="info"
+          variant="tonal"
+          class="mb-2"
         >
-      </div>
-    </div>
-    <p>Köszönjük az ebédet!</p>
-  </Popup>
+          Ez a művelet lezárja a rendelést és elküldi emailben az érintett félnek. További módosítás nem lesz lehetséges.
+        </v-alert>
+        <p class="text-body-2">
+          Ha megerősíted, a rendelés lezárul és a rendszer emailt küld automatikusan.
+        </p>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-spacer />
+        <v-btn
+          variant="text"
+          @click="confirmSemiAuto = false"
+        >
+          Mégse
+        </v-btn>
+        <v-btn
+          color="info"
+          variant="elevated"
+          :loading="emailSending"
+          @click="confirmAndSendEmail"
+        >
+          Rendelés lezárása és email küldése
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+
+  <!-- Main Order Dialog -->
+  <v-dialog
+    v-model="showInitial"
+    max-width="800px"
+    persistent
+  >
+    <v-card>
+      <v-card-title class="text-h5">
+        Rendelés áttöltése
+      </v-card-title>
+
+      <v-card-text>
+        <v-row>
+          <!-- Email Sending Section -->
+          <v-card
+            variant="outlined"
+            class="mb-4"
+          >
+            <v-card-title class="text-subtitle-1">
+              Email küldés
+            </v-card-title>
+            <v-card-text>
+              <p class="text-body-2 mb-3">
+                Nincs meg a minimum automatikus rendeléshez? Küld el az emailt itt!
+              </p>
+              <v-btn
+                variant="elevated"
+                color="info"
+                :loading="emailSending"
+                prepend-icon="mdi-email-send"
+                @click="sendOrderEmail()"
+              >
+                Email küldés
+              </v-btn>
+            </v-card-text>
+          </v-card>
+        </v-row>
+        <v-row>
+          <v-alert
+            type="info"
+            variant="tonal"
+            class="mb-4"
+          >
+            A lista automatikusan frissül, ha valaki változtat a kosarán. Pipáld ki ha átraktad VAGY másold a teljes rendelést szövegként
+          </v-alert>
+        </v-row>
+
+        <v-row>
+          <v-col>
+            <v-card-subtitle class="d-flex justify-space-between align-center pa-3">
+              <div>
+                <span class="text-body-2">
+                  {{ tickedItemsCount }} / {{ activeItemsCount }} elem kijelölve
+                </span>
+              </div>
+
+              <div class="ms-2 d-flex gap-2">
+                <v-btn
+                  size="small"
+                  variant="elevated"
+                  color="primary"
+                  :disabled="allActiveItemsTicked || activeItemsCount === 0"
+                  @click="tickAllItems"
+                >
+                  Mind kijelöl
+                </v-btn>
+
+                <v-btn
+                  size="small"
+                  variant="elevated"
+                  color="primary"
+                  :disabled="!someActiveItemsTicked"
+                  @click="untickAllItems"
+                >
+                  Mind törli
+                </v-btn>
+                <v-btn
+                  size="small"
+                  variant="elevated"
+                  color="primary"
+                  @click="doCopyOrder()"
+                >
+                  Szövegesen másol
+                  <v-icon class="ml-2">
+                    mdi-content-copy
+                  </v-icon>
+                </v-btn>
+              </div>
+            </v-card-subtitle>
+
+            <v-divider />
+
+            <!-- Items List -->
+            <v-list density="compact">
+              <!-- Individual items -->
+              <v-list-item
+                v-for="item in orderItems"
+                :key="item.item_id"
+
+                :class="{
+                  'bg-grey-lighten-4': item.deleted,
+                  'bg-green-lighten-5': item.tick && !item.deleted
+                }"
+              >
+                <template #prepend>
+                  <v-checkbox
+                    v-model="item.tick"
+                    :disabled="item.deleted"
+                    color="primary"
+                    hide-details
+                  />
+                </template>
+
+                <v-list-item-title
+                  :class="{
+                    'text-decoration-line-through text-grey': item.deleted,
+                    'font-weight-bold': !item.tick && !item.deleted,
+                    'text-success': item.tick && !item.deleted
+                  }"
+                >
+                  <span class="text-h6 me-2">{{ item.quantity }}×</span>
+                  {{ item.item_name }}
+                  <span
+                    v-if="item.size_name"
+                    class="text-body-2 text-grey-darken-1"
+                  >
+                    ({{ item.size_name }})
+                  </span>
+                </v-list-item-title>
+
+
+                <template #append>
+                  <div class="d-flex align-center gap-2">
+                    <!-- Status indicators -->
+                    <v-icon
+                      v-if="item.tick && !item.deleted"
+                      color="success"
+                      size="small"
+                    >
+                      mdi-check-circle
+                    </v-icon>
+
+                    <v-chip
+                      v-if="item.deleted"
+                      color="error"
+                      variant="flat"
+                      size="small"
+                    >
+                      Törölték
+                    </v-chip>
+                  </div>
+                </template>
+              </v-list-item>
+
+              <!-- Empty state -->
+              <v-list-item v-if="orderItems.length === 0">
+                <v-list-item-title class="text-center text-grey">
+                  Nincs termék a kosárban
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-col>
+        </v-row>
+
+        <v-card-actions
+          v-if="orderItems.length > 0"
+          class="justify-center"
+        >
+          <v-chip
+            :color="tickedItemsCount === activeItemsCount && activeItemsCount > 0 ? 'success' : 'primary'"
+            variant="flat"
+          >
+            {{ tickedItemsCount }} / {{ activeItemsCount }} elem feldolgozva
+          </v-chip>
+        </v-card-actions>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-spacer />
+        <v-btn
+          variant="text"
+          @click="showInitial = false"
+        >
+          Mégse
+        </v-btn>
+        <v-btn
+          variant="elevated"
+          color="primary"
+          @click="closeOrder()"
+        >
+          Folytat
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- Loading Overlay -->
+  <v-overlay
+    v-model="showSpinner"
+    class="d-flex align-center justify-center"
+  >
+    <v-progress-circular
+      indeterminate
+      size="64"
+      color="primary"
+    />
+  </v-overlay>
+
+  <!-- Finish Order Dialog -->
+  <v-dialog
+    v-model="showFinish"
+    max-width="600px"
+    persistent
+  >
+    <v-card>
+      <v-card-title class="text-h5">
+        Rendelés befejezése
+      </v-card-title>
+
+      <v-card-text>
+        <v-alert
+          type="success"
+          variant="tonal"
+          class="mb-4"
+        >
+          Rendelés lezárva, további kosármódosítás letiltva.
+        </v-alert>
+
+        <v-card
+          variant="outlined"
+          class="mb-4"
+        >
+          <v-card-title class="text-subtitle-1">
+            Rendelés megjegyzés példa:
+          </v-card-title>
+          <v-card-text>
+            <div class="d-flex align-center">
+              <v-sheet
+                color="grey-lighten-4"
+                class="pa-2 flex-grow-1 font-family-monospace"
+                rounded
+              >
+                {{ orderDesc }}
+              </v-sheet>
+              <v-btn
+                variant="text"
+                icon="mdi-content-copy"
+                class="ml-2"
+                @click="doCopy()"
+              />
+            </div>
+          </v-card-text>
+        </v-card>
+
+        <v-card
+          variant="outlined"
+          class="mb-4"
+        >
+          <v-card-title class="text-subtitle-1">
+            Szállítási díj módosítása
+          </v-card-title>
+          <v-card-text>
+            <p class="text-body-2 mb-2">
+              Ha a szállítási díj eltérhet az alapértelmezetten megadottól (pl.: eltér a tényleges szállítás díj, rendszerhasználati díj felszámításra került) itt megtudod változtatni.
+            </p>
+            <p class="text-body-2 mb-2">
+              A különböző extra díjak összegét írd be valuta nélkül
+            </p>
+            <p class="text-body-2 mb-3">
+              Az alapértelmezett beállított díj: {{ vendorStore.selectedVendor.settings.transport_price.value }}
+            </p>
+
+            <v-text-field
+              v-model.number="transport_price"
+              type="number"
+              label="A jelenlegi díj"
+              variant="outlined"
+              density="compact"
+              :placeholder="transport_price.toString()"
+            />
+          </v-card-text>
+        </v-card>
+
+        <v-alert
+          type="success"
+          variant="tonal"
+        >
+          Köszönjük az ebédet!
+        </v-alert>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-spacer />
+        <v-btn
+          variant="elevated"
+          color="primary"
+          @click="changeTransportPrice()"
+        >
+          Befejez
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
-import Popup from "./Popup.vue";
 import { useAuth } from "@/stores/auth";
 import { useOrderStore } from "@/stores/order";
 import { useVendorStore } from "@/stores/vendor";
 import { copyText } from "vue3-clipboard";
 import { notify } from "@kyvg/vue3-notification";
-import { watch, unref } from "vue";
+import { unref } from "vue";
 
 export default {
   name: "TransferPopup",
-  components: {
-    Popup
+  props: {
+    enable_email_order: {
+      type: Boolean,
+      default: false
+    },
+    enable_manual_order: {
+      type: Boolean,
+      default: false
+    },
+    enable_full_automatic_order: {
+      type: Boolean,
+      default: false
+    },
   },
   setup() {
     const auth = useAuth();
@@ -191,6 +500,10 @@ export default {
       showInitial: false,
       showSpinner: false,
       showFinish: false,
+      emailSending: false,
+      optionDialogVisible: false,
+      bulkActionInProgress: false,
+      confirmSemiAuto: false,
       orderItems: [],
       psid: "",
       transport_price: unref(useVendorStore().selectedVendor.settings.transport_price.value)
@@ -200,99 +513,206 @@ export default {
     orderDesc() {
       return this.vendorStore.selectedVendor.settings.comment_example.value
     },
+    tickedItemsCount() {
+      return this.orderItems.filter(item => item.tick && !item.deleted).length;
+    },
+
+    activeItemsCount() {
+      return this.orderItems.filter(item => !item.deleted).length;
+    },
+
+    allActiveItemsTicked() {
+      const activeItems = this.orderItems.filter(item => !item.deleted);
+      return activeItems.length > 0 && activeItems.every(item => item.tick);
+    },
+
+    someActiveItemsTicked() {
+      return this.orderItems.some(item => item.tick && !item.deleted);
+    }
   },
-  mounted() {
+  watch: {
+    'orderStore.basket': {
+      handler(newBasket) {
+        // Skip processing during bulk actions to prevent conflicts
+        if (this.bulkActionInProgress) return;
 
-        watch(
-          () => this.orderStore.basket,
-          (newBasket) =>{
-            let resultList = []
-            for (const value of Object.values(newBasket)) {
-              for (const item of value.items) {
-                let i = item;
-                i.quantity = item.quantity;
-                i.tick = false;
-                i.deleted = false;
-                resultList.push(i);
-              }
-            }
+        // Create new merged item map
+        const newItemMap = this.createMergedBasketItems(newBasket);
 
-            const itemMap = new Map();
+        // Create map of current items for comparison
+        const oldItemsMap = new Map(
+          this.orderItems.map(item => [item.item_id, { ...item }])
+        );
 
-            for (const item of resultList) {
-                if (itemMap.has(item.item_id)) {
-                    itemMap.get(item.item_id).quantity += Number(item.quantity);
-                } else {
-                    itemMap.set(item.item_id, { ...item, count: Number(item.quantity) });
-                }
-            }
+        // Process changes and get notifications
+        const notifications = this.processItemChanges(newItemMap, oldItemsMap);
 
-            const oldMap = new Map(this.orderItems.map(item => [item.item_id, item]));
+        // Update order items with sorting
+        this.orderItems = Array.from(newItemMap.values())
+          .sort((a, b) => {
+            // Safely get category values, default to empty string if missing
+            const categoryA = a.category || '';
+            const categoryB = b.category || '';
+            
+            // Sort by category first, then by name
+            const categoryCompare = categoryA.localeCompare(categoryB);
+            if (categoryCompare !== 0) return categoryCompare;
 
-            for (const newItem of Array.from(itemMap.values())) {
-                const oldItem = oldMap.get(newItem.item_id);
-                if (oldItem) {
-                    if (oldItem.quantity !== newItem.quantity) {
-                        itemMap.set(newItem.item_id, {...newItem, tick: false})
-                        if (this.showInitial) {
-                          notify({
-                            type: "warn",
-                            text: newItem.item_name +" mennyisége megváltozott. A lista frissült!",
-                          });
-                        }
-                    } else {
-                      itemMap.set(newItem.item_id, {...newItem, tick: oldItem.tick})
+            // Safely get item names, default to empty string if missing
+            const nameA = a.item_name || '';
+            const nameB = b.item_name || '';
 
-                    }
-                    oldMap.delete(newItem.item_id)
-                } else {
-                  if (this.showInitial) {
-                    notify({
-                      type: "warn",
-                      text: "Új termék került a kosárba: " + newItem.item_name+". A lista frissült!",
-                    });
-                  }
-                }
-            }
+            return nameA.localeCompare(nameB);
+          });
 
-            if (oldMap.size !== 0) {
-              for (const oldItem of oldMap.values()) {
-                if (oldItem.tick && !oldItem.deleted) {
-                  itemMap.set(oldItem.item_id, {...oldItem, tick: false, deleted:true})
-                  if (this.showInitial) {
-                    notify({
-                      type: "warn",
-                      text: "Egy terméket töröltek a kosárból amit már átraktál: " + oldItem.item_name+". A lista frissült!",
-                    });
-                  }
-                }
-                if (oldItem.deleted && !oldItem.tick) {
-                  itemMap.set(oldItem.item_id, {...oldItem, tick: false, deleted:true})
-                }
-              }
-            }
-
-            this.orderItems = Array.from(itemMap.values()).sort((a, b) => a.category.localeCompare(b.category));
-          },
-          {
-             deep: true,
-             immediate: true
-          }
-        )
+        // Show notifications
+        this.showNotifications(notifications);
+      },
+      deep: true,
+      immediate: true
+    }
   },
   methods: {
-    openPopup: function() {
+    openPopup() {
       if (this.orderStore.order.state_id === "closed") {
         notify({
           type: "warn",
           text: "A rendelést ma már elküldték",
         });
-        return
+        return;
       } else {
-        this.showInitial = true;
+        this.optionDialogVisible = true; // NEW: show option dialog first
       }
     },
-    closeOrder: function() {
+    toggleAllItems(tickState) {
+      this.bulkActionInProgress = true;
+
+      this.orderItems.forEach(item => {
+        if (!item.deleted) {
+          item.tick = tickState;
+        }
+      });
+
+      this.bulkActionInProgress = false;
+    },
+
+    tickAllItems() {
+      this.toggleAllItems(true);
+    },
+    untickAllItems() {
+      this.toggleAllItems(false);
+    },
+    createMergedBasketItems(basket) {
+      const itemMap = new Map();
+
+      // Flatten all basket items and merge by item_id
+      Object.values(basket).forEach(userBasket => {
+        userBasket.items.forEach(item => {
+          const itemId = item.item_id;
+          const quantity = Number(item.quantity);
+
+          if (itemMap.has(itemId)) {
+            itemMap.get(itemId).quantity += quantity;
+          } else {
+            itemMap.set(itemId, {
+              ...item,
+              quantity,
+              tick: false,
+              deleted: false
+            });
+          }
+        });
+      });
+
+      return itemMap;
+    },
+    startFullAutoOrder() {
+      this.optionDialogVisible = false;
+      this.showFinish = true;
+      // TODO: Trigger full auto API logic here if needed
+    },
+    startManualOrder() {
+      this.optionDialogVisible = false;
+      this.showInitial = true;
+    },
+    async confirmAndSendEmail() {
+      this.confirmSemiAuto = false;
+      this.optionDialogVisible = false;
+      await this.sendOrderEmail().then(() => {
+        this.showFinish = true;
+      });
+    },
+    processItemChanges(newItemMap, oldItemsMap) {
+       const notifications = [];
+
+       // Process existing and new items
+       for (const [itemId, newItem] of newItemMap) {
+         const oldItem = oldItemsMap.get(itemId);
+
+         if (oldItem) {
+           // Item exists - check for quantity changes
+           if (oldItem.quantity !== newItem.quantity) {
+             newItem.tick = false;
+             if (this.showInitial) {
+               notifications.push({
+                 type: "warn",
+                 text: `${newItem.item_name} mennyisége megváltozott. A lista frissült!`
+               });
+             }
+           } else {
+             // Quantity unchanged - preserve tick state
+             newItem.tick = oldItem.tick;
+           }
+
+           // Remove from old items map (remaining items will be considered deleted)
+           oldItemsMap.delete(itemId);
+         } else {
+           // New item added
+           if (this.showInitial) {
+             notifications.push({
+               type: "warn",
+               text: `Új termék került a kosárba: ${newItem.item_name}. A lista frissült!`
+             });
+           }
+         }
+       }
+
+       // Handle deleted items
+       for (const [itemId, oldItem] of oldItemsMap) {
+         if (oldItem.tick && !oldItem.deleted) {
+           // Previously ticked item was deleted
+           newItemMap.set(itemId, {
+             ...oldItem,
+             tick: false,
+             deleted: true
+           });
+
+           if (this.showInitial) {
+             notifications.push({
+               type: "warn",
+               text: `Egy terméket töröltek a kosárból amit már átraktál: ${oldItem.item_name}. A lista frissült!`
+             });
+           }
+         } else if (oldItem.deleted) {
+           // Keep deleted items in list
+           newItemMap.set(itemId, {
+             ...oldItem,
+             tick: false,
+             deleted: true
+           });
+         }
+       }
+
+       return notifications;
+     },
+
+     // Show notifications
+     showNotifications(notifications) {
+       notifications.forEach(notification => {
+         notify(notification);
+       });
+   },
+    closeOrder() {
       if (this.orderItems.length === 0) {
         notify({
           type: "warn",
@@ -300,21 +720,19 @@ export default {
         });
         return
       }
-      for (const item of this.orderItems) {
-        if (!item.tick) {
-          notify({
-            type: "warn",
-            text: "Minden sort kikell pipálnod mielött lezárhatod a rendelést.",
-          });
-          return
-        }
+      if (!this.allActiveItemsTicked) {
+        notify({
+          type: "warn",
+          text: "Minden sort kikell pipálnod mielött lezárhatod a rendelést.",
+        });
+        return
       }
       this.orderStore.close()
 
       this.showInitial = false;
       this.showFinish = true;
     },
-    doCopyOrder: function() {
+    doCopyOrder() {
       let orderText = ""
       for (const item of this.orderItems) {
         if (item.deleted) {
@@ -326,61 +744,73 @@ export default {
           .replace("${size_name}", item.size_name)
           .replace("\\n", "\n");
 
-        // orderText += `${item.quantity}x ${item.item_name} ${item.size_name}\n`;
         item.tick = true;
       }
-      copyText(orderText, undefined, (error, event) =>{
+      copyText(orderText, undefined, (error, event) => {
         if (error) {
-           notify({
-             type: "warn",
-             text: "Nem sikerült a vágólapra másolás",
-           });
-           console.log(error)
-         } else {
-           notify({
-             type: "info",
-             text: "Rendelés vágólapra másolva",
-           });
-           console.log(event)
-         }
+          notify({
+            type: "warn",
+            text: "Nem sikerült a vágólapra másolás",
+          });
+          console.log(error)
+        } else {
+          notify({
+            type: "info",
+            text: "Rendelés vágólapra másolva",
+          });
+          console.log(event)
+        }
       });
     },
-    doCopy: function() {
-      copyText(this.orderDesc, undefined, (error, event) =>{
+    doCopy() {
+      copyText(this.orderDesc, undefined, (error, event) => {
         if (error) {
-           notify({
-             type: "warn",
-             text: "Nem sikerült a vágólapra másolás",
-           });
-           console.log(error)
-         } else {
-           notify({
-             type: "info",
-             text: "Rendelés vágólapra másolva",
-           });
-           console.log(event)
-         }
+          notify({
+            type: "warn",
+            text: "Nem sikerült a vágólapra másolás",
+          });
+          console.log(error)
+        } else {
+          notify({
+            type: "info",
+            text: "Rendelés vágólapra másolva",
+          });
+          console.log(event)
+        }
       });
     },
-    changeTransportPrice: function() {
+    changeTransportPrice() {
       if (this.transport_price !== this.orderStore.transportFee) {
         this.orderStore.changeTransportPrice(this.transport_price)
       }
       this.showFinish = false;
+    },
+    async sendOrderEmail() {
+      this.emailSending = true;
+      try {
+        await this.orderStore.sendOrderEmail()
+
+        notify({
+          type: "success",
+          text: "Email sikeresen elküldve!",
+        });
+
+      } catch (error) {
+        notify({
+          type: "error",
+          text: "Hiba történt az email küldése során.",
+        });
+        console.error('Email sending error:', error);
+      } finally {
+        this.emailSending = false;
+      }
     }
   }
 }
 </script>
 
-<style>
-.overlay {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
-    top: 40%;
-    left: 0px;
-    opacity: 0.5;
-    filter: alpha(opacity=50);
- }
+<style scoped>
+.font-family-monospace {
+  font-family: 'Courier New', monospace;
+}
 </style>

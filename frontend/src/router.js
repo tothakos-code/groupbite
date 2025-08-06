@@ -1,16 +1,36 @@
 import { createRouter, createWebHistory } from "vue-router";
 const HomeView = () => import("./views/Home.vue");
-const AdminHomeView = () => import( "./views/AdminHome.vue");
-const MenuView = () => import( "./views/MenuRender.vue");
-const AdminSettingsView = () => import( "./views/AdminSettings.vue");
-const VendorConfiguration = () => import( "./components/VendorConfiguration.vue");
-const AdminVendorsView = () => import( "./views/AdminVendors.vue");
-const AdminOrdersView = () => import( "./views/AdminOrders.vue");
-const AdminUsersView = () => import( "./views/AdminUsers.vue");
-const VendorItemManager = () => import( "./components/VendorItemManager.vue");
+// const DashboardView = () => import("./views/dashboard/Dashboard.vue");
+const AdminHomeView = () => import( "./views/admin/AdminHome.vue");
+const MenuView = () => import( "./views/menu/MenuRender.vue");
+const AdminSettingsView = () => import( "./views/admin/AdminSettings.vue");
+const VendorSettings = () => import( "./views/admin/vendor/VendorSettings.vue");
+const VendorMenuManager = () => import( "./views/admin/vendor/VendorMenuManager.vue");
+const AdminVendorsView = () => import( "./views/admin/AdminVendors.vue");
+const AdminOrdersView = () => import( "./views/admin/AdminOrders.vue");
+const AdminUsersView = () => import( "./views/admin/AdminUsers.vue");
+const VendorItemManager = () => import( "./views/admin/vendor/VendorItemManager.vue");
 const VendorAdd = () => import( "./components/VendorAdd.vue");
+const OrderHistoryView = () => import( "./views/history/OrderHistory.vue");
 const NotFound = () => import( "./components/NotFound.vue");
 import { useAuth } from "@/stores/auth.js";
+import { useVendorStore } from "@/stores/vendor.js";
+import { watch } from 'vue';
+
+const authGuard = async (to, from, next) => {
+  if (!useAuth().user) {
+    await useAuth().checkSession();
+      if (!useAuth().isLoading && !useAuth().user?.admin) {
+        console.log("Nono, you can't do that");
+        return false
+      }
+    } else if (!useAuth().user?.admin) {
+    console.log("Nono, you can't do that");
+    return false
+  }
+  console.log("Success: admin");
+  next();
+}
 
 const routes = [
   {
@@ -33,13 +53,7 @@ const routes = [
     name: "admin",
     path: "/admin",
     component: AdminHomeView,
-    beforeEnter: () => {
-      if (!useAuth().user?.admin) {
-        // TODO: This runs sooner than the session check and it retruns false. I am not sure how to handle this yet.
-        console.log("Nono, you can't do that");
-        return false
-      }
-    },
+    beforeEnter: authGuard,
     children: [
       {
         name:"settings",
@@ -63,11 +77,15 @@ const routes = [
       },
       {
         path: ":id/config",
-        component: VendorConfiguration,
+        component: VendorSettings,
+      },
+      {
+        path: ":id/menu",
+        component: VendorMenuManager,
       },
       {
         name:"vendorItems",
-        path: ":id/config/:menuId",
+        path: ":id/menu/:menuId",
         component: VendorItemManager
       },
       {
@@ -82,6 +100,11 @@ const routes = [
     component: MenuView
   },
   {
+    name: "history",
+    path: "/history",
+    component: OrderHistoryView
+  },
+  {
     name: "NotFound",
     path: "/:pathMatch(.*)*",
     component: NotFound
@@ -90,6 +113,21 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes: routes
+});
+
+router.beforeEach((to, from, next) => {
+
+  const vendorStore = useVendorStore();
+  if (vendorStore.routesLoaded) {
+    next()
+  } else {
+    const stopWatching = watch(() => vendorStore.routesLoaded, (newValue) => {
+      if (newValue) {
+        stopWatching(); // Stop watching to prevent memory leaks
+        next();
+      }
+    });
+  }
 });
 
 export default router;

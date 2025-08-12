@@ -138,7 +138,7 @@
               class="text-caption"
               :class="isSelected ? 'text-success-lighten-4' : 'text-grey-lighten-1'"
             >
-              {{ getParticipantCount(order) }} résztvevő
+              {{ order.user_count }} résztvevő
             </div>
           </div>
         </v-col>
@@ -200,12 +200,6 @@ export default {
         case 'collect': return 'Nyitott';
         default: return 'Ismeretlen';
       }
-    },
-    getParticipantCount(order) {
-      if (order.basket && typeof order.basket === 'object') {
-        return Object.keys(order.basket).length;
-      }
-      return 0;
     },
     goToOrder(order) {
       this.$router.push({ path: "/menu/" + order.vendor + "/" + order.date_of_order })

@@ -27,6 +27,10 @@ def handle_order_history():
 
     result = {}
     for order in Order.find_orders_between_dates(DATE_FROM, DATE_TO):
+        order_participants = order.find_order_participants()
+        if len(order_participants) == 0:
+            continue
+
         date = order.date_of_order.strftime("%Y-%m-%d")
         if date not in result:
             result[date] = {}
@@ -45,11 +49,11 @@ def handle_order_history():
         sum += order.order_fee
         result[date][order.id]["sum"] = sum
 
-    if USER_ID != None:
-        for order in Order.find_user_order_dates_between(USER_ID, DATE_FROM, DATE_TO):
-            date = order.date_of_order.strftime("%Y-%m-%d")
-            order_id = order.id
-            result[date][order_id]["ordered"] = True
+
+        result[date][order.id]["user_count"] = len(order_participants)
+
+        if USER_ID != None:
+            result[date][order.id]["ordered"] = any(user.id == USER_ID for user in order_participants)
 
     return { "data": result }, 200
 

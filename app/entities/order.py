@@ -262,15 +262,32 @@ class Order(Base):
         )
         return session.execute(stmt).all()
 
-    def find_order_participants(order_id):
+
+    def find_order_participants(self):
         from .user import User
         from .user_basket import UserBasket
-        stmt = select(User).distinct().join(
-                UserBasket, User.id == UserBasket.user_id
-            ).where(
-                UserBasket.order_id == order_id
+        from .order_item import OrderItem
+        from .order import Order
+
+        if self.state_id == OrderState.CLOSED:
+            # Closed order → participants come from OrderItem
+            stmt = (
+                select(User)
+                .distinct()
+                .join(OrderItem, User.id == OrderItem.user_id)
+                .where(OrderItem.order_id == self.id)
             )
-        return session.execute(stmt).all()
+        else:
+            # Open (or other) state → participants come from UserBasket
+            stmt = (
+                select(User)
+                .distinct()
+                .join(UserBasket, User.id == UserBasket.user_id)
+                .where(UserBasket.order_id == self.id)
+            )
+
+        return session.execute(stmt).scalars().all()
+
 
     def get_order_items(self, user_filter=None):
         """

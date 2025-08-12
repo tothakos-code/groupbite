@@ -39,15 +39,11 @@
 
       <!-- Size Options -->
       <div class="size-options">
-        <v-row class="ma-0">
-          <v-col
+        <div class="size-grid">
+          <div
             v-for="size in item.sizes"
             :key="size.id"
-            cols="12"
-            sm="6"
-            md="4"
-            lg="3"
-            class="pa-1"
+            class="size-item"
           >
             <v-card
               :class="[
@@ -55,16 +51,16 @@
                 size.unlimited || size.quantity > 0 ? 'available' : 'unavailable'
               ]"
               :elevation="size.unlimited || size.quantity > 0 ? 2 : 0"
-              rounded="lg"
+              rounded="md"
             >
-              <v-card-text class="pa-3">
-                <div class="size-info mb-2">
-                  <div class="d-flex align-center justify-space-between mb-1">
+              <v-card-text class="py-2 px-3">
+                <div class="d-flex align-center justify-space-between">
+                  <div class="d-flex align-center gap-2">
                     <span class="text-subtitle-2 font-weight-bold">
                       {{ size.name }}
                     </span>
                     <v-chip
-                      v-if="!size.unlimited && size.quantity <= 5 && size.quantity > 0"
+                      v-if="!size.unlimited"
                       size="x-small"
                       color="warning"
                       variant="flat"
@@ -72,52 +68,47 @@
                       {{ size.quantity }} db
                     </v-chip>
                   </div>
-                  <div class="price-display">
-                    <span class="text-h6 font-weight-bold text-primary">
-                      {{ formatPrice(size.price) }}
-                    </span>
-                  </div>
+
+                  <!-- Action Button -->
+                  <v-btn
+                    v-if="size.unlimited || size.quantity > 0"
+                    color="primary"
+                    variant="elevated"
+                    rounded="lg"
+                    class="compact-order-btn"
+                    @click="handleOrder(item.id, size.id)"
+                  >
+                    <v-icon
+                      start
+                      size="16"
+                    >
+                      mdi-plus-circle
+                    </v-icon>
+                    <span>{{ formatPrice(size.price) }}</span>
+                  </v-btn>
+                  <v-btn
+                    v-else
+                    color="error"
+                    variant="tonal"
+                    rounded="lg"
+                    class="compact-order-btn"
+                    disabled
+                  >
+                    <v-icon
+                      start
+                      size="16"
+                    >
+                      mdi-close-circle
+                    </v-icon>
+                    <span class="text-medium-emphasis">{{ formatPrice(size.price) }}</span>
+                  </v-btn>
                 </div>
-
-                <!-- Action Button -->
-                <v-btn
-                  v-if="size.unlimited || size.quantity > 0"
-                  block
-                  color="primary"
-                  variant="elevated"
-                  class="order-btn"
-                  @click="handleOrder(item.id, size.id)"
-                >
-                  <v-icon
-                    start
-                    size="small"
-                  >
-                    mdi-plus-circle
-                  </v-icon>
-                  Rendelés
-                </v-btn>
-
-                <v-btn
-                  v-else
-                  block
-                  color="error"
-                  variant="tonal"
-                  disabled
-                  class="sold-out-btn"
-                >
-                  <v-icon
-                    start
-                    size="small"
-                  >
-                    mdi-close-circle
-                  </v-icon>
-                  Elfogyott
-                </v-btn>
               </v-card-text>
             </v-card>
-          </v-col>
-        </v-row>
+          </div>
+        </div>
       </div>
+
 
       <!-- Additional Info -->
       <div
@@ -221,19 +212,43 @@ export default {
   padding-bottom: 12px;
 }
 
+.size-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+/* Responsive size grid based on layout context */
+:global(.layout-1-col) .size-grid {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+:global(.layout-2-col) .size-grid {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+:global(.layout-3-col) .size-grid {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 6px;
+}
+
 .size-card {
   transition: all 0.2s ease;
-  border: 1px solid transparent;
+  border: 1px solid rgba(var(--v-theme-outline), 0.2);
+  background: rgb(var(--v-theme-surface-container-low));
+   padding: 0;
 }
 
 .size-card.available {
-  background: rgb(var(--v-theme-surface-container-high));
-  border-color: rgba(var(--v-theme-primary), 0.2);
+  border-color: rgba(var(--v-theme-primary), 0.3);
+  background: rgb(var(--v-theme-surface-container));
 }
 
 .size-card.available:hover {
-  transform: translateY(-2px);
-  border-color: rgba(var(--v-theme-primary), 0.4);
+  transform: translateY(-1px);
+  border-color: rgba(var(--v-theme-primary), 0.5);
   box-shadow: 0 4px 12px rgba(var(--v-theme-primary), 0.15);
 }
 
@@ -253,11 +268,20 @@ export default {
   font-weight: 600;
   text-transform: none;
   letter-spacing: 0.5px;
+  min-height: 48px;
+  box-shadow: 0 2px 8px rgba(var(--v-theme-primary), 0.3);
+  transition: all 0.2s ease;
+}
+
+.order-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--v-theme-primary), 0.4);
 }
 
 .sold-out-btn {
   font-weight: 500;
   text-transform: none;
+  min-height: 48px;
   opacity: 0.7;
 }
 
@@ -278,11 +302,11 @@ export default {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
-.v-theme--dark .size-card.available {
+.v-theme--dark .size-container.available {
   background: rgba(var(--v-theme-primary), 0.1);
 }
 
-.v-theme--dark .size-card.unavailable {
+.v-theme--dark .size-container.unavailable {
   background: rgba(var(--v-theme-surface), 0.5);
 }
 
@@ -292,8 +316,8 @@ export default {
     margin-bottom: 8px;
   }
 
-  .size-card {
-    margin-bottom: 8px;
+  .size-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
   }
 }
 
@@ -311,6 +335,11 @@ export default {
     margin-top: 8px;
     margin-left: 0 !important;
   }
+
+  .size-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+  }
 }
 
 /* Animation for quantity chips */
@@ -320,5 +349,20 @@ export default {
 
 .v-chip:hover {
   transform: scale(1.05);
+}
+
+.size-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.compact-order-btn {
+  padding: 0 10px;
+  height: 32px;
+  font-size: 0.75rem;
+  text-transform: none;
+  min-width: unset;
+  white-space: nowrap;
+  line-height: 1;
 }
 </style>

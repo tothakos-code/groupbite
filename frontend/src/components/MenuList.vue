@@ -83,84 +83,12 @@
     </v-card-text>
 
     <!-- Menu Items Section -->
-    <v-card-text class="pa-0">
-      <v-container
-        v-if="filteredItems.length > 0"
-        fluid
-        class="pa-0"
-      >
-        <v-row class="ma-0">
-          <v-col
-            cols="12"
-            class="pa-2"
-          >
-            <v-fade-transition
-              group
-              tag="div"
-            >
-              <div
-                v-for="item in filteredItems"
-                :key="`item-${item.id}`"
-                class="menu-item-wrapper mb-2"
-              >
-                <v-hover v-slot="{ isHovering, props }">
-                  <MenuItem
-                    :item="item"
-                    :class="[
-                      'menu-item-card',
-                      isHovering ? 'item-hover' : ''
-                    ]"
-                    v-bind="props"
-                  />
-                </v-hover>
-              </div>
-            </v-fade-transition>
-          </v-col>
-        </v-row>
-      </v-container>
-
-      <!-- Empty State -->
-      <v-container
-        v-else-if="!isLoading"
-        fluid
-        class="pa-0"
-      >
-        <div class="text-center py-8 px-4">
-          <v-icon
-            size="64"
-            color="grey-lighten-1"
-            class="mb-4"
-          >
-            mdi-food-off
-          </v-icon>
-          <h3 class="text-h6 text-medium-emphasis mb-2">
-            Nincs elérhető menü
-          </h3>
-          <p class="text-body-2 text-medium-emphasis">
-            Erre a napra jelenleg nincsen menü betöltve.
-          </p>
-        </div>
-      </v-container>
-
-      <!-- Loading State -->
-      <v-container
-        v-if="isLoading"
-        fluid
-        class="pa-0"
-      >
-        <div class="text-center py-8 px-4">
-          <v-progress-circular
-            indeterminate
-            size="64"
-            color="primary"
-            class="mb-4"
-          />
-          <p class="text-body-1 text-medium-emphasis">
-            Menü betöltése...
-          </p>
-        </div>
-      </v-container>
-    </v-card-text>
+    <MenuLayoutChanger
+      :filtered-items="filteredItems"
+      :is-loading="isLoading"
+      :initial-layout="'2'"
+      @layout-changed="handleLayoutChange"
+    />
   </v-card>
 </template>
 
@@ -170,13 +98,14 @@ import { state, socket } from "@/main";
 import { useAuth } from "@/stores/auth";
 import { useVendorStore } from "@/stores/vendor";
 import { useMenuStore } from "@/stores/menu";
-import MenuItem from "../components/MenuItem.vue"
+// import MenuItem from "../components/MenuItem.vue"
+import MenuLayoutChanger from "../components/LayoutChanger.vue"
 
 export default {
   name: "MenuList",
   components: {
     Datestamp,
-    MenuItem,
+    MenuLayoutChanger,
   },
   setup() {
     const auth = useAuth();
@@ -303,6 +232,11 @@ export default {
 
       return weekDates;
     },
+    handleLayoutChange(layout) {
+      // Optional: Save user preference
+      localStorage.setItem('menuLayout', layout);
+      console.log(`Layout changed to ${layout} columns`);
+    },
   }
 }
 </script>
@@ -392,5 +326,46 @@ export default {
   .category-filter {
     padding: 16px 8px !important;
   }
+}
+
+.two-column-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.menu-item-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .two-column-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .two-column-grid {
+    gap: 6px;
+  }
+}
+
+/* Optional: Masonry-like effect for varied heights */
+.two-column-grid.masonry {
+  grid-auto-rows: min-content;
+}
+
+/* Hover effects */
+.item-hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--v-theme-shadow), 0.15) !important;
+}
+
+/* Dark theme adjustments */
+.v-theme--dark .item-hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
 }
 </style>

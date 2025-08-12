@@ -294,6 +294,7 @@ export default {
       webhooks: [],
       eventOptions: [
         { title: 'Rendelés küldés státusz után', value: 'afterClose' },
+        { title: 'Rendelés követelmény nem teljesült', value: 'closeFailed' },
         { title: 'Rendelés küldés státusz előtt', value: 'beforeClose' },
         { title: 'Rendeléshez Item hozzáadás után', value: 'afterAdd' },
         { title: 'Rendeléshez Item hozzáadás előtt', value: 'beforeAdd' },

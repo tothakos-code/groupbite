@@ -1,159 +1,441 @@
 <template>
-  <div v-if="auth.isLoggedIn">
-    <div class="row ms-2 mt-2">
-      <h1 class="col d-flex justify-content-start">
-        Felhasználók
-      </h1>
-    </div>
-    <div
-      v-if="!isLoading"
-      class="row ms-2"
+  <v-container
+    v-if="auth.isLoggedIn"
+    fluid
+    class="pa-2 pa-md-4"
+  >
+    <!-- Header -->
+    <v-row class="mb-4">
+      <v-col>
+        <h1 class="text-h4 text-md-h3">
+          Felhasználók
+        </h1>
+      </v-col>
+    </v-row>
+
+    <!-- Mobile Cards View -->
+    <v-row
+      v-if="!isLoading && $vuetify.display.mobile"
+      class="d-md-none"
     >
-      <table class="table table-striped table-hover">
-        <thead>
-          <tr>
-            <th scope="col">
-              Felhasználónév
-            </th>
-            <th scope="col">
-              Email
-            </th>
-            <th scope="col">
-              Admin
-            </th>
-            <th scope="col">
-              Műveletek
-            </th>
-          </tr>
-        </thead>
-        <tbody class="table-group-divider">
-          <tr
-            v-for="user in users"
-            :key="user.id"
-          >
-            <td>
-              {{ user.username }}
-            </td>
-            <td>
-              {{ user.email }}
-            </td>
-            <td>
-              <v-checkbox-btn
-                v-model="user.admin"
-                readonly
-              />
-            </td>
-            <td>
-            <!-- <div
-              class="btn"
-              :class="['text-' + auth.getUserColor ]"
-              title="Üzlet elérhetőség ki/be kapcsolása"
-              @click="toggleActivation(vendor)"
-            >
-              <svg
-                v-if="order.active"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                class="bi bi-toggle-on"
-                viewBox="0 0 16 16"
+      <v-col cols="12">
+        <v-card
+          v-for="user in users"
+          :key="user.id"
+          class="mb-3"
+          elevation="2"
+        >
+          <v-card-text class="pb-2">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <div class="text-subtitle-1 font-weight-medium">
+                {{ user.username }}
+              </div>
+              <v-chip
+                :color="user.admin ? 'success' : 'default'"
+                :variant="user.admin ? 'flat' : 'outlined'"
+                size="small"
               >
-                <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-              </svg>
-              <svg
-                v-else
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                class="bi bi-toggle-off"
-                viewBox="0 0 16 16"
-              >
-                <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-              </svg>
+                {{ user.admin ? 'Admin' : 'User' }}
+              </v-chip>
             </div>
-            <div
-              class="btn"
-              :class="['text-' + auth.getUserColor ]"
-              title="Üzlet beállítások"
-              @click="openVendorConfiguration(vendor.id)"
+            <div class="text-body-2 text-medium-emphasis mb-3">
+              {{ user.email }}
+            </div>
+          </v-card-text>
+
+          <v-card-actions class="pt-0">
+            <v-btn
+              :color="user.admin ? 'warning' : 'primary'"
+              :prepend-icon="user.admin ? 'mdi-shield-account' : 'mdi-shield-account-outline'"
+              variant="text"
+              size="small"
+              @click="toggleAdminStatus(user)"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                class="bi bi-gear-fill"
-                viewBox="0 0 16 16"
-              >
-                <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z" />
-              </svg>
-            </div> -->
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <Paginator
-        :total-pages="Math.ceil(totalCount/limit)"
-        :current-page="currentPage"
-        :range="5"
-        @page-change="handlePageChange"
-      />
-    </div>
-  </div>
+              {{ user.admin ? 'Admin eltávolítás' : 'Admin hozzáadás' }}
+            </v-btn>
+
+            <v-spacer />
+
+            <v-btn
+              icon="mdi-format-list-bulleted"
+              color="info"
+              variant="text"
+              size="small"
+              @click="viewUserOrders(user)"
+            />
+            <v-btn
+              icon="mdi-cog"
+              color="grey"
+              variant="text"
+              size="small"
+              @click="openUserSettings(user)"
+            />
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Desktop Table View -->
+    <v-row
+      v-if="!isLoading"
+      class="d-none d-md-flex"
+    >
+      <v-col>
+        <v-data-table
+          :headers="headers"
+          :items="users"
+          :loading="isLoading"
+          :items-per-page="itemsPerPage"
+          :items-per-page-options="itemsPerPageOptions"
+          :items-length="totalItems"
+          class="elevation-1"
+          hover
+          fixed-header
+          @update:items-per-page="updateItemsPerPage"
+          @update:page="updatePage"
+        >
+          <!-- Admin status column -->
+          <template #item.admin="{ item }">
+            <v-chip
+              :color="item.admin ? 'success' : 'default'"
+              :variant="item.admin ? 'flat' : 'outlined'"
+              size="small"
+            >
+              {{ item.admin ? 'Admin' : 'User' }}
+            </v-chip>
+          </template>
+
+          <!-- Actions column -->
+          <template #item.actions="{ item }">
+            <div class="d-flex ga-2">
+              <v-tooltip text="Admin jogosultság ki/be kapcsolása">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    :icon="item.admin ? 'mdi-shield-account' : 'mdi-shield-account-outline'"
+                    :color="item.admin ? 'warning' : 'primary'"
+                    variant="text"
+                    size="small"
+                    @click="toggleAdminStatus(item)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip text="Felhasználó rendelései">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-format-list-bulleted"
+                    color="info"
+                    variant="text"
+                    size="small"
+                    @click="viewUserOrders(item)"
+                  />
+                </template>
+              </v-tooltip>
+            </div>
+          </template>
+
+          <!-- Custom bottom pagination -->
+          <template #bottom>
+            <div class="d-flex justify-space-between align-center pa-4">
+              <div class="text-body-2 text-medium-emphasis">
+                {{ paginationText }}
+              </div>
+              <div class="d-flex align-center ga-4">
+                <v-select
+                  v-model="itemsPerPage"
+                  :items="itemsPerPageOptions"
+                  label="Elemek száma"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  style="min-width: 120px;"
+                />
+                <v-pagination
+                  v-model="page"
+                  :length="Math.ceil(totalItems / itemsPerPage)"
+                  :total-visible="$vuetify.display.mobile ? 5 : 7"
+                  size="small"
+                />
+              </div>
+            </div>
+          </template>
+        </v-data-table>
+      </v-col>
+    </v-row>
+
+    <!-- Mobile Pagination -->
+    <v-row
+      v-if="!isLoading && $vuetify.display.mobile"
+      class="d-md-none"
+    >
+      <v-col class="d-flex flex-column align-center ga-4">
+        <div class="text-body-2 text-medium-emphasis">
+          {{ paginationText }}
+        </div>
+        <div class="d-flex align-center ga-4">
+          <v-select
+            v-model="itemsPerPage"
+            :items="itemsPerPageOptions"
+            label="Elemek/oldal"
+            variant="outlined"
+            density="compact"
+            hide-details
+            style="min-width: 120px;"
+          />
+          <v-pagination
+            v-model="page"
+            :length="Math.ceil(totalItems / itemsPerPage)"
+            :total-visible="5"
+            size="small"
+          />
+        </div>
+      </v-col>
+    </v-row>
+
+    <!-- Loading state -->
+    <v-row v-if="isLoading">
+      <v-col class="text-center py-12">
+        <v-progress-circular
+          indeterminate
+          size="64"
+          color="primary"
+        />
+        <div class="text-h6 mt-4">
+          Felhasználók betöltése...
+        </div>
+      </v-col>
+    </v-row>
+
+    <!-- Confirmation dialog -->
+    <v-dialog
+      v-model="confirmDialog"
+      max-width="400"
+      :fullscreen="$vuetify.display.mobile"
+      :transition="$vuetify.display.mobile ? 'dialog-bottom-transition' : 'dialog-transition'"
+    >
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon class="me-2">
+            mdi-help-circle
+          </v-icon>
+          <span class="text-h6">Megerősítés</span>
+          <v-spacer />
+          <v-btn
+            v-if="$vuetify.display.mobile"
+            icon="mdi-close"
+            variant="text"
+            @click="confirmDialog = false"
+          />
+        </v-card-title>
+
+        <v-card-text class="py-4">
+          <div class="text-body-1">
+            Biztosan {{ selectedUser?.admin ? 'elveszed' : 'megadod' }} az admin jogosultságot
+            <strong class="text-primary">{{ selectedUser?.username }}</strong> felhasználónak?
+          </div>
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-spacer v-if="!$vuetify.display.mobile" />
+          <v-btn
+            :block="$vuetify.display.mobile"
+            color="grey-darken-1"
+            variant="outlined"
+            class="mb-2 mb-sm-0"
+            @click="confirmDialog = false"
+          >
+            Mégse
+          </v-btn>
+          <v-btn
+            :block="$vuetify.display.mobile"
+            :color="selectedUser?.admin ? 'warning' : 'primary'"
+            variant="flat"
+            @click="confirmToggleAdmin"
+          >
+            {{ selectedUser?.admin ? 'Elveszed' : 'Megadod' }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Snackbar -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="4000"
+      :location="$vuetify.display.mobile ? 'top' : 'bottom end'"
+      :multi-line="$vuetify.display.mobile"
+    >
+      {{ snackbar.text }}
+      <template #actions>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="snackbar.show = false"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </v-container>
 </template>
 
-<script>
-import { useAuth } from "@/stores/auth";
-import Paginator from "@/components/Paginator.vue";
+<script setup>
+import { ref, onMounted, computed, watch } from 'vue'
+import { useAuth } from "@/stores/auth"
 
-export default {
-    name: "AdminOrdesView",
-    components: {
-      Paginator
-    },
-    setup() {
-      const auth = useAuth();
-      return {
-        auth
+// Composables
+const auth = useAuth()
+
+// Reactive data
+const users = ref([])
+const isLoading = ref(true)
+const page = ref(1)
+const itemsPerPage = ref(10)
+const totalItems = ref(0)
+const confirmDialog = ref(false)
+const selectedUser = ref(null)
+const snackbar = ref({
+  show: false,
+  text: '',
+  color: 'success'
+})
+
+// Items per page options
+const itemsPerPageOptions = [
+  { value: 5, title: '5' },
+  { value: 10, title: '10' },
+  { value: 25, title: '25' },
+  { value: 50, title: '50' },
+  { value: -1, title: 'Összes' }
+]
+
+// Table headers configuration
+const headers = [
+  {
+    title: 'Felhasználónév',
+    key: 'username',
+    align: 'start',
+    sortable: true,
+    minWidth: '150px'
+  },
+  {
+    title: 'Email',
+    key: 'email',
+    align: 'start',
+    sortable: true,
+    minWidth: '200px'
+  },
+  {
+    title: 'Státusz',
+    key: 'admin',
+    align: 'center',
+    sortable: true,
+    width: '120px'
+  },
+  {
+    title: 'Műveletek',
+    key: 'actions',
+    align: 'center',
+    sortable: false,
+    width: '180px'
+  }
+]
+
+// Computed properties
+const paginationText = computed(() => {
+  const start = (page.value - 1) * itemsPerPage.value + 1
+  const end = Math.min(page.value * itemsPerPage.value, totalItems.value)
+  return `${start}-${end} / ${totalItems.value}`
+})
+
+// Watchers
+watch([page, itemsPerPage], () => {
+  refreshUsersList()
+})
+
+// Methods
+const updatePage = (newPage) => {
+  page.value = newPage
+}
+
+const updateItemsPerPage = (newItemsPerPage) => {
+  itemsPerPage.value = newItemsPerPage
+  page.value = 1 // Reset to first page when changing items per page
+}
+
+const refreshUsersList = async () => {
+  try {
+    isLoading.value = true
+    const response = await auth.fetchAll({
+      limit: itemsPerPage.value === -1 ? 1000 : itemsPerPage.value, // Handle "show all"
+      page: page.value
+    })
+
+    if (response.status === 200) {
+      users.value = response.data.data.items
+      totalItems.value = response.data.data.total_count
+
+      // Update pagination info from server if needed
+      if (response.data.data.page !== page.value) {
+        page.value = response.data.data.page
       }
-    },
-    data() {
-      return {
-        users: [],
-        isLoading: true,
-        limit: 10,
-        currentPage: 1,
-        totalCount: 0
-      }
-    },
-    mounted() {
-      this.refreshUsersList()
-    },
-    methods: {
-      handlePageChange(page) {
-        this.currentPage = page;
-        this.refreshUsersList()
-      },
-      refreshUsersList: function () {
-        this.auth.fetchAll({
-            "limit": this.limit,
-            "page": this.currentPage
-          })
-          .then(response => {
-            if (response.status === 200) {
-              this.users = response.data.data.items;
-              this.currentPage = response.data.data.page;
-              this.limit = response.data.data.limit;
-              this.totalCount = response.data.data.total_count;
-            }
-            this.isLoading = false;
-          })
-      },
     }
-};
+  } catch (error) {
+    showSnackbar('Hiba történt a felhasználók betöltése során', 'error')
+    console.error('Error fetching users:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const toggleAdminStatus = (user) => {
+  selectedUser.value = user
+  confirmDialog.value = true
+}
+
+const confirmToggleAdmin = async () => {
+  try {
+    // TODO: Implement actual API call to toggle admin status
+    // Example: await auth.updateUserAdminStatus(selectedUser.value.id, !selectedUser.value.admin)
+
+    selectedUser.value.admin = !selectedUser.value.admin
+
+    const message = selectedUser.value.admin
+      ? `${selectedUser.value.username} admin jogosultságot kapott`
+      : `${selectedUser.value.username} admin jogosultsága elvéve`
+
+    showSnackbar(message, 'success')
+
+    confirmDialog.value = false
+    selectedUser.value = null
+  } catch (error) {
+    showSnackbar('Hiba történt a jogosultság módosítása során', 'error')
+    console.error('Error toggling admin status:', error)
+  }
+}
+
+const viewUserOrders = (user) => {
+  console.log('View orders for user:', user.username)
+  showSnackbar(`${user.username} rendeléseinek megtekintése`, 'info')
+}
+
+const showSnackbar = (text, color = 'success') => {
+  snackbar.value = {
+    show: true,
+    text,
+    color
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  refreshUsersList()
+})
 </script>
 
 <style scoped>
+/* Using Vuetify's built-in spacing classes */
 </style>

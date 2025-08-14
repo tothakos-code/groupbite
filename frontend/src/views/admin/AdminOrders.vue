@@ -1,66 +1,90 @@
 <template>
-  <div v-if="auth.isLoggedIn">
-    <div class="row ms-2 mt-2">
-      <h1 class="col d-flex justify-content-start">
-        Rendelések
-      </h1>
-    </div>
-    <div
-      v-if="!isLoading"
-      class="row ms-2"
+  <v-container
+    v-if="auth.isLoggedIn"
+    fluid
+    class="pa-2 pa-md-4"
+  >
+    <!-- Header -->
+    <v-row class="mb-4">
+      <v-col>
+        <h1 class="text-h4 text-md-h3">
+          Rendelések
+        </h1>
+      </v-col>
+    </v-row>
+
+    <!-- Mobile Cards View -->
+    <v-row
+      v-if="!isLoading && $vuetify.display.mobile"
+      class="d-md-none"
     >
-      <table class="table table-striped table-hover">
-        <thead>
-          <tr>
-            <th scope="col">
-              #
-            </th>
-            <th scope="col">
-              Üzelt
-            </th>
-            <th scope="col">
-              Állapot
-            </th>
-            <th scope="col">
-              Felhasználó
-            </th>
-            <th scope="col">
-              Dátum
-            </th>
-            <th scope="col">
-              Rendelési díj
-            </th>
-            <th scope="col">
-              Műveletek
-            </th>
-          </tr>
-        </thead>
-        <tbody class="table-group-divider">
-          <tr
-            v-for="order in orders"
-            :key="order.id"
-          >
-            <th scope="row">
-              {{ order.id }}
-            </th>
-            <td>
-              {{ order.vendor }}
-            </td>
-            <td>
+      <v-col cols="12">
+        <v-card
+          v-for="order in orders"
+          :key="order.id"
+          class="mb-3"
+          elevation="2"
+        >
+          <v-card-text class="pb-2">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <div class="text-subtitle-1 font-weight-bold">
+                #{{ order.id }}
+              </div>
+              <v-chip
+                :color="getStatusColor(order.state_id)"
+                size="small"
+                variant="flat"
+              >
+                {{ order.state_id }}
+              </v-chip>
+            </div>
+
+            <div class="text-body-2 mb-2">
+              <strong>Üzlet:</strong> {{ order.vendor }}
+            </div>
+            <div class="text-body-2 mb-2">
+              <strong>Felhasználó:</strong> {{ order.user_id }}
+            </div>
+            <div class="text-body-2 mb-2">
+              <strong>Dátum:</strong> {{ formatDate(order.date_of_order) }}
+            </div>
+            <div class="text-body-2 mb-3">
+              <strong>Díj:</strong>
+              <v-text-field
+                v-if="editing === order.id"
+                v-model.number="order.order_fee"
+                type="number"
+                step="50"
+                variant="outlined"
+                density="compact"
+                hide-details
+                suffix="Ft"
+                class="d-inline-block"
+                style="width: 120px; vertical-align: middle;"
+              />
+              <span v-else>{{ order.order_fee }} Ft</span>
+            </div>
+
+            <!-- Mobile Status Edit -->
+            <div
+              v-if="editing === order.id"
+              class="mb-3"
+            >
               <v-select
-                v-if="editing && order.id === editing"
                 v-model="order.state_id"
                 :items="orderStates"
+                label="Állapot"
+                variant="outlined"
+                density="compact"
+                hide-details
               >
                 <template #selection="{ item }">
                   <v-chip
-                    :class="item.value === 'collect' ? 'bg-success' :
-                      item.title === 'order' ? 'bg-warning' :
-                      item.title === 'closed' ? 'bg-error' : ''"
-                    border="sm"
-                    flat
+                    :color="getStatusColor(item.value)"
+                    size="small"
+                    variant="flat"
                   >
-                    <span>{{ item.title }}</span>
+                    {{ item.title }}
                   </v-chip>
                 </template>
                 <template #item="{ props, item }">
@@ -69,219 +93,669 @@
                     title=""
                   >
                     <v-chip
-
-                      :class="item.value === 'collect' ? 'bg-success' :
-                        item.title === 'order' ? 'bg-warning' :
-                        item.title === 'closed' ? 'bg-error' : ''"
-                      border="sm"
-                      flat
+                      :color="getStatusColor(item.value)"
+                      size="small"
+                      variant="flat"
                     >
-                      <span>{{ item.title }}</span>
+                      {{ item.title }}
                     </v-chip>
                   </v-list-item>
                 </template>
               </v-select>
-              <v-chip
-                v-else
-                :class="order.state_id === 'collect' ? 'bg-success' :
-                  order.state_id === 'order' ? 'bg-warning' :
-                  order.state_id === 'closed' ? 'bg-error' : ''"
-                border="sm"
-                flat
+            </div>
+          </v-card-text>
+
+          <v-card-actions class="pt-0">
+            <!-- Normal state buttons -->
+            <div
+              v-if="editing !== order.id"
+              class="d-flex ga-2 flex-wrap"
+            >
+              <v-btn
+                color="primary"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-pencil"
+                @click="editOrder(order.id)"
               >
-                <span>{{ order.state_id }}</span>
-              </v-chip>
-            </td>
-            <td>
-              {{ order.user_id }}
-            </td>
-            <td>
-              {{ order.date_of_order }}
-            </td>
-            <td>
-              <VNumberInput
-                v-if="editing && order.id === editing"
-                v-model="order.order_fee"
-                :step="50"
-                control-variant="split"
-              />
-              <span v-else>{{ order.order_fee }}</span>
-            </td>
-            <td>
-              <div
-                v-if="order.id != editing"
-                class="col-auto"
+                Szerkesztés
+              </v-btn>
+              <v-btn
+                color="info"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-eye"
+                @click="viewOrder(order)"
               >
-                <v-btn
-                  type="button"
-                  name="button"
-                  title="Szerkesztés"
-                  class="bg-primary me-1 mt-1"
-                  icon
+                Részletek
+              </v-btn>
+              <v-btn
+                v-if="canDeleteOrder(order)"
+                color="error"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-delete"
+                @click="confirmDeleteOrder(order)"
+              >
+                Törlés
+              </v-btn>
+            </div>
+
+            <!-- Edit state buttons -->
+            <div
+              v-else
+              class="d-flex ga-2"
+            >
+              <v-btn
+                color="success"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-content-save"
+                @click="updateOrder(order)"
+              >
+                Mentés
+              </v-btn>
+              <v-btn
+                color="grey"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-close"
+                @click="cancelEdit()"
+              >
+                Mégse
+              </v-btn>
+            </div>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Desktop Table View -->
+    <v-row
+      v-if="!isLoading"
+      class="d-none d-md-flex"
+    >
+      <v-col>
+        <v-data-table
+          :headers="headers"
+          :items="orders"
+          :loading="isLoading"
+          :items-per-page="itemsPerPage"
+          :items-per-page-options="itemsPerPageOptions"
+          :items-length="totalItems"
+          class="elevation-1"
+          hover
+          fixed-header
+          @update:items-per-page="updateItemsPerPage"
+          @update:page="updatePage"
+        >
+          <!-- Order ID column -->
+          <template #item.id="{ item }">
+            <span class="font-weight-bold">#{{ item.id }}</span>
+          </template>
+
+          <!-- Status column -->
+          <template #item.state_id="{ item }">
+            <v-select
+              v-if="editing === item.id"
+              v-model="item.state_id"
+              :items="orderStates"
+              variant="outlined"
+              density="compact"
+              hide-details
+            >
+              <template #selection="{ item: selectItem }">
+                <v-chip
+                  :color="getStatusColor(selectItem.value)"
                   size="small"
-                  border="primary thin"
-                  rounded
-                  varian="text"
-                  @click="edit(order.id)"
+                  variant="flat"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    class="bi bi-pen"
-                    viewBox="0 0 16 16"
+                  {{ selectItem.title }}
+                </v-chip>
+              </template>
+              <template #item="{ props, item: selectItem }">
+                <v-list-item
+                  v-bind="props"
+                  title=""
+                >
+                  <v-chip
+                    :color="getStatusColor(selectItem.value)"
+                    size="small"
+                    variant="flat"
                   >
-                    <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z" />
-                  </svg>
-                </v-btn>
-              </div>
-              <div
-                v-if="editing && order.id === editing"
-                class="col-auto"
+                    {{ selectItem.title }}
+                  </v-chip>
+                </v-list-item>
+              </template>
+            </v-select>
+            <v-chip
+              v-else
+              :color="getStatusColor(item.state_id)"
+              size="small"
+              variant="flat"
+            >
+              {{ item.state_id }}
+            </v-chip>
+          </template>
+
+          <!-- Date column -->
+          <template #item.date_of_order="{ item }">
+            {{ formatDate(item.date_of_order) }}
+          </template>
+
+          <!-- Order fee column -->
+          <template #item.order_fee="{ item }">
+            <v-text-field
+              v-if="editing === item.id"
+              v-model.number="item.order_fee"
+              type="number"
+              step="50"
+              variant="outlined"
+              density="compact"
+              hide-details
+              suffix="Ft"
+              style="width: 120px;"
+            />
+            <span v-else>{{ item.order_fee }} Ft</span>
+          </template>
+
+          <!-- Actions column -->
+          <template #item.actions="{ item }">
+            <div
+              v-if="editing !== item.id"
+              class="d-flex ga-2"
+            >
+              <v-tooltip text="Szerkesztés">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-pencil"
+                    color="primary"
+                    variant="text"
+                    size="small"
+                    @click="editOrder(item.id)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip text="Rendelés részletei">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-eye"
+                    color="info"
+                    variant="text"
+                    size="small"
+                    @click="viewOrder(item)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip
+                v-if="canDeleteOrder(item)"
+                text="Rendelés törlése"
               >
-                <v-btn
-                  type="button"
-                  name="button"
-                  title="Mentés"
-                  class="bg-primary me-1 mt-1"
-                  icon
-                  size="small"
-                  border="primary thin"
-                  rounded
-                  varian="text"
-                  @click="updateOrder(order)"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    class="bi bi-floppy"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M11 2H9v3h2z" />
-                    <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z" />
-                  </svg>
-                </v-btn>
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-delete"
+                    color="error"
+                    variant="text"
+                    size="small"
+                    @click="confirmDeleteOrder(item)"
+                  />
+                </template>
+              </v-tooltip>
+            </div>
+
+            <div
+              v-else
+              class="d-flex ga-2"
+            >
+              <v-tooltip text="Mentés">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-content-save"
+                    color="success"
+                    variant="text"
+                    size="small"
+                    @click="updateOrder(item)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip text="Mégse">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-close"
+                    color="grey"
+                    variant="text"
+                    size="small"
+                    @click="cancelEdit()"
+                  />
+                </template>
+              </v-tooltip>
+            </div>
+          </template>
+
+          <!-- Custom bottom pagination -->
+          <template #bottom>
+            <div class="d-flex justify-space-between align-center pa-4">
+              <div class="text-body-2 text-medium-emphasis">
+                {{ paginationText }}
               </div>
-              <div
-                v-if="editing && order.id === editing"
-                class="col-auto"
-              >
-                <v-btn
-                  type="button"
-                  name="button"
-                  title="Mégse"
-                  class="bg-primary me-1 mt-1"
-                  icon
+              <div class="d-flex align-center ga-4">
+                <v-select
+                  v-model="itemsPerPage"
+                  :items="itemsPerPageOptions"
+                  label="Elemek száma"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  style="min-width: 120px;"
+                />
+                <v-pagination
+                  v-model="page"
+                  :length="Math.ceil(totalItems / itemsPerPage)"
+                  :total-visible="$vuetify.display.mobile ? 5 : 7"
                   size="small"
-                  border="primary thin"
-                  rounded
-                  varian="text"
-                  @click="cancelEdit()"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    class="bi bi-x"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
-                  </svg>
-                </v-btn>
+                />
               </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <Paginator
-        :total-pages="Math.ceil(totalCount/limit)"
-        :current-page="currentPage"
-        :range="5"
-        @page-change="handlePageChange"
-      />
-    </div>
-  </div>
+            </div>
+          </template>
+        </v-data-table>
+      </v-col>
+    </v-row>
+
+    <!-- Mobile Pagination -->
+    <v-row
+      v-if="!isLoading && $vuetify.display.mobile"
+      class="d-md-none"
+    >
+      <v-col class="d-flex flex-column align-center ga-4">
+        <div class="text-body-2 text-medium-emphasis">
+          {{ paginationText }}
+        </div>
+        <div class="d-flex align-center ga-4">
+          <v-select
+            v-model="itemsPerPage"
+            :items="itemsPerPageOptions"
+            label="Elemek/oldal"
+            variant="outlined"
+            density="compact"
+            hide-details
+            style="min-width: 120px;"
+          />
+          <v-pagination
+            v-model="page"
+            :length="Math.ceil(totalItems / itemsPerPage)"
+            :total-visible="5"
+            size="small"
+          />
+        </div>
+      </v-col>
+    </v-row>
+
+    <!-- Loading state -->
+    <v-row v-if="isLoading">
+      <v-col class="text-center py-12">
+        <v-progress-circular
+          indeterminate
+          size="64"
+          color="primary"
+        />
+        <div class="text-h6 mt-4">
+          Rendelések betöltése...
+        </div>
+      </v-col>
+    </v-row>
+
+    <!-- Delete confirmation dialog -->
+    <v-dialog
+      v-model="deleteDialog"
+      max-width="500"
+      :fullscreen="$vuetify.display.mobile"
+      :transition="$vuetify.display.mobile ? 'dialog-bottom-transition' : 'dialog-transition'"
+    >
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon
+            class="me-2"
+            color="error"
+          >
+            mdi-delete-alert
+          </v-icon>
+          <span class="text-h6">Rendelés törlése</span>
+          <v-spacer />
+          <v-btn
+            v-if="$vuetify.display.mobile"
+            icon="mdi-close"
+            variant="text"
+            @click="deleteDialog = false"
+          />
+        </v-card-title>
+
+        <v-card-text class="py-4">
+          <div class="text-body-1 mb-4">
+            Biztosan törölni szeretnéd a
+            <strong class="text-error">#{{ selectedOrder?.id }}</strong>
+            számú rendelést?
+          </div>
+          <v-alert
+            type="warning"
+            variant="tonal"
+            class="mb-4"
+          >
+            Ez a művelet nem visszavonható!
+          </v-alert>
+          <div class="text-body-2">
+            <strong>Üzlet:</strong> {{ selectedOrder?.vendor }}<br>
+            <strong>Felhasználó:</strong> {{ selectedOrder?.user_id }}<br>
+            <strong>Dátum:</strong> {{ formatDate(selectedOrder?.date_of_order) }}
+          </div>
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-spacer v-if="!$vuetify.display.mobile" />
+          <v-btn
+            :block="$vuetify.display.mobile"
+            color="grey-darken-1"
+            variant="outlined"
+            class="mb-2 mb-sm-0"
+            @click="deleteDialog = false"
+          >
+            Mégse
+          </v-btn>
+          <v-btn
+            :block="$vuetify.display.mobile"
+            color="error"
+            variant="flat"
+            @click="deleteOrder"
+          >
+            Törlés
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Snackbar -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="4000"
+      :location="$vuetify.display.mobile ? 'top' : 'bottom end'"
+      :multi-line="$vuetify.display.mobile"
+    >
+      {{ snackbar.text }}
+      <template #actions>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="snackbar.show = false"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </v-container>
 </template>
 
-<script>
-import { useAuth } from "@/stores/auth";
-import { useOrderStore } from "@/stores/order";
-import Paginator from "@/components/Paginator.vue";
+<script setup>
+import { ref, onMounted, computed, watch } from 'vue'
+import { useAuth } from "@/stores/auth"
+import { useOrderStore } from "@/stores/order"
 
-export default {
-    name: "AdminOrdesView",
-    components: {
-      Paginator
-    },
-    setup() {
-      const auth = useAuth();
-      const orderStore = useOrderStore();
-      return {
-        auth,
-        orderStore
-      }
-    },
-    data() {
-      return {
-        orders: [],
-        isLoading: true,
-        limit: 10,
-        currentPage: 1,
-        totalCount: 0,
-        editing: false,
-        editOriginal: null,
-        orderStates: ["collect","order","closed",]
-      }
-    },
-    mounted() {
-      this.refreshOrdersList()
-    },
-    methods: {
-      handlePageChange(page) {
-        this.currentPage = page;
-        this.refreshOrdersList()
-      },
-      refreshOrdersList: function () {
-        this.orderStore.fetchAll({
-            "limit": this.limit,
-            "page": this.currentPage
-          })
-          .then(response => {
-            if (response.status === 200) {
-              this.orders = response.data.data.items;
-              this.currentPage = response.data.data.page;
-              this.limit = response.data.data.limit;
-              this.totalCount = response.data.data.total_count;
-            }
-            this.isLoading = false;
-          })
-      },
-      edit(order_id) {
-        this.editing = order_id
-      },
-      cancelEdit() {
-        this.editing = false;
-        this.refreshOrdersList()
-      },
-      updateOrder(order){
-        this.orderStore.update(order.id, {
-          "state_id": order.state_id,
-          "order_fee": order.order_fee
-        } )
-          .then(response => {
-            if (response.status === 200) {
-              this.editing = false;
-              this.refreshOrdersList()
-            }
-          })
+// Composables
+const auth = useAuth()
+const orderStore = useOrderStore()
+
+// Reactive data
+const orders = ref([])
+const isLoading = ref(true)
+const page = ref(1)
+const itemsPerPage = ref(10)
+const totalItems = ref(0)
+const editing = ref(false)
+const editOriginal = ref(null)
+const deleteDialog = ref(false)
+const selectedOrder = ref(null)
+const snackbar = ref({
+  show: false,
+  text: '',
+  color: 'success'
+})
+
+// Order states
+const orderStates = ["collect", "order", "closed"]
+
+// Items per page options
+const itemsPerPageOptions = [
+  { value: 5, title: '5' },
+  { value: 10, title: '10' },
+  { value: 25, title: '25' },
+  { value: 50, title: '50' },
+  { value: -1, title: 'Összes' }
+]
+
+// Table headers configuration
+const headers = [
+  {
+    title: '#',
+    key: 'id',
+    align: 'start',
+    sortable: true,
+    width: '80px'
+  },
+  {
+    title: 'Üzlet',
+    key: 'vendor',
+    align: 'start',
+    sortable: true,
+    minWidth: '150px'
+  },
+  {
+    title: 'Állapot',
+    key: 'state_id',
+    align: 'center',
+    sortable: true,
+    width: '140px'
+  },
+  {
+    title: 'Felhasználó',
+    key: 'user_id',
+    align: 'start',
+    sortable: true,
+    minWidth: '120px'
+  },
+  {
+    title: 'Dátum',
+    key: 'date_of_order',
+    align: 'start',
+    sortable: true,
+    width: '120px'
+  },
+  {
+    title: 'Rendelési díj',
+    key: 'order_fee',
+    align: 'end',
+    sortable: true,
+    width: '140px'
+  },
+  {
+    title: 'Műveletek',
+    key: 'actions',
+    align: 'center',
+    sortable: false,
+    width: '200px'
+  }
+]
+
+// Computed properties
+const paginationText = computed(() => {
+  const start = (page.value - 1) * itemsPerPage.value + 1
+  const end = Math.min(page.value * itemsPerPage.value, totalItems.value)
+  return `${start}-${end} / ${totalItems.value}`
+})
+
+// Watchers
+watch([page, itemsPerPage], () => {
+  if (editing.value) {
+    cancelEdit()
+  }
+  refreshOrdersList()
+})
+
+// Methods
+const updatePage = (newPage) => {
+  page.value = newPage
+}
+
+const updateItemsPerPage = (newItemsPerPage) => {
+  itemsPerPage.value = newItemsPerPage
+  page.value = 1
+}
+
+const refreshOrdersList = async () => {
+  try {
+    isLoading.value = true
+    const response = await orderStore.fetchAll({
+      limit: itemsPerPage.value === -1 ? 1000 : itemsPerPage.value,
+      page: page.value
+    })
+
+    if (response.status === 200) {
+      orders.value = response.data.data.items
+      totalItems.value = response.data.data.total_count
+
+      if (response.data.data.page !== page.value) {
+        page.value = response.data.data.page
       }
     }
-};
+  } catch (error) {
+    showSnackbar('Hiba történt a rendelések betöltése során', 'error')
+    console.error('Error fetching orders:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const editOrder = (orderId) => {
+  const order = orders.value.find(o => o.id === orderId)
+  if (order) {
+    editOriginal.value = { ...order }
+    editing.value = orderId
+  }
+}
+
+const cancelEdit = () => {
+  if (editOriginal.value) {
+    const orderIndex = orders.value.findIndex(o => o.id === editing.value)
+    if (orderIndex !== -1) {
+      orders.value[orderIndex] = { ...editOriginal.value }
+    }
+  }
+  editing.value = false
+  editOriginal.value = null
+}
+
+const updateOrder = async (order) => {
+  try {
+    const response = await orderStore.update(order.id, {
+      state_id: order.state_id,
+      order_fee: order.order_fee
+    })
+
+    if (response.status === 200) {
+      editing.value = false
+      editOriginal.value = null
+      showSnackbar('Rendelés sikeresen frissítve', 'success')
+      refreshOrdersList()
+    }
+  } catch (error) {
+    showSnackbar('Hiba történt a rendelés frissítése során', 'error')
+    console.error('Error updating order:', error)
+  }
+}
+
+const viewOrder = (order) => {
+  // TODO: Implement order details view
+  console.log('View order details:', order.id)
+  showSnackbar(`#${order.id} rendelés részleteinek megtekintése - még nem implementált`, 'info')
+}
+
+const canDeleteOrder = (order) => {
+  if (order.state_id === 'closed') {
+    return false
+  }
+
+  // Check if order is older than 1 week
+  const orderDate = new Date(order.date_of_order)
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+  // TODO: Check if order is empty (no items)
+  const isEmpty = false // This should be determined based on order items
+
+  return isEmpty || orderDate < oneWeekAgo
+}
+
+const confirmDeleteOrder = (order) => {
+  selectedOrder.value = order
+  deleteDialog.value = true
+}
+
+const deleteOrder = async () => {
+  try {
+    // TODO: Implement actual delete API call
+    // await orderStore.delete(selectedOrder.value.id)
+
+    console.log('Delete order:', selectedOrder.value.id)
+    showSnackbar(`#${selectedOrder.value.id} rendelés törlése - még nem implementált`, 'warning')
+
+    deleteDialog.value = false
+    selectedOrder.value = null
+    // refreshOrdersList()
+  } catch (error) {
+    showSnackbar('Hiba történt a rendelés törlése során', 'error')
+    console.error('Error deleting order:', error)
+  }
+}
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'collect': return 'success'
+    case 'order': return 'warning'
+    case 'closed': return 'error'
+    default: return 'default'
+  }
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('hu-HU', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+}
+
+const showSnackbar = (text, color = 'success') => {
+  snackbar.value = {
+    show: true,
+    text,
+    color
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  refreshOrdersList()
+})
 </script>
 
 <style scoped>
+/* Using Vuetify's built-in spacing classes */
 </style>

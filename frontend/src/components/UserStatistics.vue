@@ -23,7 +23,7 @@
           <h3 class="text-h6 font-weight-bold">
             {{ statistics.totalOrders }}
           </h3>
-          <p class="text-body-2 grey--text mb-0">
+          <p class="text-body-2 text mb-0">
             Összes rendelés
           </p>
         </v-card>
@@ -47,7 +47,7 @@
           <h3 class="text-h6 font-weight-bold">
             {{ (statistics.totalSpent).toFixed(2) }} Ft
           </h3>
-          <p class="text-body-2 grey--text mb-0">
+          <p class="text-body-2 text mb-0">
             Teljes költésed
           </p>
         </v-card>
@@ -71,7 +71,7 @@
           <h3 class="text-h6 font-weight-bold">
             {{ (statistics.averageOrderValue).toFixed(2) }} Ft
           </h3>
-          <p class="text-body-2 grey--text mb-0">
+          <p class="text-body-2 text mb-0">
             Rendeléseid átlaga
           </p>
         </v-card>
@@ -98,7 +98,7 @@
           <h3 class="text-h6 font-weight-bold">
             {{ statistics.totalItems }}
           </h3>
-          <p class="text-body-2 grey--text mb-0">
+          <p class="text-body-2 text mb-0">
             Rendelt tétel
           </p>
         </v-card>
@@ -122,7 +122,7 @@
           <h3 class="text-h6 font-weight-bold">
             {{ statistics.uniqueVendors }}
           </h3>
-          <p class="text-body-2 grey--text mb-0">
+          <p class="text-body-2 text mb-0">
             Különböző üzlet
           </p>
         </v-card>
@@ -146,7 +146,7 @@
           <h3 class="text-h6 font-weight-bold">
             {{ statistics.favoriteVendor?.name || 'N/A' }}
           </h3>
-          <p class="text-body-2 grey--text mb-0">
+          <p class="text-body-2 text mb-0">
             Kedvenc üzleted
           </p>
         </v-card>
@@ -170,7 +170,7 @@
           <h3 class="text-h6 font-weight-bold">
             {{ statistics.favoriteItem?.name || 'N/A' }}
           </h3>
-          <p class="text-body-2 grey--text mb-0">
+          <p class="text-body-2 text mb-0">
             Legtöbbet rendelt ételed
           </p>
         </v-card>
@@ -197,7 +197,7 @@
           <h3 class="text-h6 font-weight-bold">
             {{ (statistics.thisMonthSpent).toFixed(2) }} Ft
           </h3>
-          <p class="text-body-2 grey--text mb-0">
+          <p class="text-body-2 text mb-0">
             A hónapban
           </p>
         </v-card>
@@ -221,7 +221,7 @@
           <h3 class="text-h6 font-weight-bold">
             {{ (statistics.thisWeekSpent).toFixed(2) }} Ft
           </h3>
-          <p class="text-body-2 grey--text mb-0">
+          <p class="text-body-2 text mb-0">
             Ezen a héten
           </p>
         </v-card>
@@ -245,7 +245,7 @@
           <h3 class="text-h6 font-weight-bold">
             {{ statistics.ordersThisMonth }}
           </h3>
-          <p class="text-body-2 grey--text mb-0">
+          <p class="text-body-2 text mb-0">
             Rendeléseid a hónapban
           </p>
         </v-card>

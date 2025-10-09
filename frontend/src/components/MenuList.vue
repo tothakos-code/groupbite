@@ -154,15 +154,6 @@ export default {
       return sortedItems.filter(item => item.category === this.selectedCategory);
     }
   },
-  watch: {
-    'menuStore.getCategories': {
-      handler() {
-        // Reset to "minden" when categories change
-        this.selectedCategoryIndex = 0;
-      },
-      deep: true
-    }
-  },
   mounted() {
     this.getMenu()
   },

@@ -251,8 +251,8 @@ class Menu(Base):
         return {
             "id": self.id,
             "name": self.name,
-            "from_date": str(self.from_date),
-            "to_date": str(self.to_date),
+            "from_date": str(self.from_date if self.from_date else ""),
+            "to_date": str(self.to_date if self.to_date else ""),
             "vendor_id": str(self.vendor_id),
             "active": self.active,
             "items": [item.serialized for item in self.items]

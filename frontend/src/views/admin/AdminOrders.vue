@@ -283,7 +283,7 @@
                   <v-btn
                     v-bind="props"
                     icon="mdi-eye"
-                    color="info"
+                    color="primary"
                     variant="text"
                     size="small"
                     @click="viewOrder(item)"
@@ -299,7 +299,7 @@
                   <v-btn
                     v-bind="props"
                     icon="mdi-delete"
-                    color="error"
+                    color="primary"
                     variant="text"
                     size="small"
                     @click="confirmDeleteOrder(item)"
@@ -317,7 +317,7 @@
                   <v-btn
                     v-bind="props"
                     icon="mdi-content-save"
-                    color="success"
+                    color="primary"
                     variant="text"
                     size="small"
                     @click="updateOrder(item)"
@@ -423,7 +423,7 @@
         <v-card-title class="d-flex align-center">
           <v-icon
             class="me-2"
-            color="error"
+            color="primary"
           >
             mdi-delete-alert
           </v-icon>
@@ -444,8 +444,7 @@
             számú rendelést?
           </div>
           <v-alert
-            type="warning"
-            variant="tonal"
+            type="secondary"
             class="mb-4"
           >
             Ez a művelet nem visszavonható!
@@ -470,7 +469,7 @@
           </v-btn>
           <v-btn
             :block="$vuetify.display.mobile"
-            color="error"
+            color="primary"
             variant="flat"
             @click="deleteOrder"
           >

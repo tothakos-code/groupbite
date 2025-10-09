@@ -97,7 +97,7 @@
           <!-- Admin status column -->
           <template #item.admin="{ item }">
             <v-chip
-              :color="item.admin ? 'success' : 'default'"
+              :color="item.admin ? 'primary' : 'default'"
               :variant="item.admin ? 'flat' : 'outlined'"
               size="small"
             >
@@ -113,7 +113,7 @@
                   <v-btn
                     v-bind="props"
                     :icon="item.admin ? 'mdi-shield-account' : 'mdi-shield-account-outline'"
-                    :color="item.admin ? 'warning' : 'primary'"
+                    color="primary"
                     variant="text"
                     size="small"
                     @click="toggleAdminStatus(item)"
@@ -126,7 +126,7 @@
                   <v-btn
                     v-bind="props"
                     icon="mdi-format-list-bulleted"
-                    color="info"
+                    color="primary"
                     variant="text"
                     size="small"
                     @click="viewUserOrders(item)"

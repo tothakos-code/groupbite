@@ -69,7 +69,7 @@
               variant="elevated"
               :loading="emailSending"
               :disabled="!enable_email_order"
-              @click="confirmSemiAuto = true"
+              @click="confirmSemiAuto = true; optionDialogVisible = false"
             >
               <v-icon size="48">
                 mdi-email-fast-outline
@@ -553,7 +553,7 @@ export default {
             // Safely get category values, default to empty string if missing
             const categoryA = a.category || '';
             const categoryB = b.category || '';
-            
+
             // Sort by category first, then by name
             const categoryCompare = categoryA.localeCompare(categoryB);
             if (categoryCompare !== 0) return categoryCompare;
@@ -638,8 +638,13 @@ export default {
     async confirmAndSendEmail() {
       this.confirmSemiAuto = false;
       this.optionDialogVisible = false;
-      await this.sendOrderEmail().then(() => {
-        this.showFinish = true;
+      this.showSpinner = true;
+      await this.sendOrderEmail().then((result) => {
+        this.showSpinner = false;
+        if (result) {
+          this.showFinish = true;
+        }
+        
       });
     },
     processItemChanges(newItemMap, oldItemsMap) {
@@ -787,6 +792,7 @@ export default {
     },
     async sendOrderEmail() {
       this.emailSending = true;
+      let result = true;
       try {
         await this.orderStore.sendOrderEmail()
 
@@ -801,9 +807,11 @@ export default {
           text: "Hiba történt az email küldése során.",
         });
         console.error('Email sending error:', error);
+        result = false;
       } finally {
         this.emailSending = false;
       }
+      return result;
     }
   }
 }

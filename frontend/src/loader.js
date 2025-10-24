@@ -24,6 +24,9 @@ export function register_plugin_routes(router) {
       });
     }
   });
+  if (router.hasRoute("menu-loading")) {
+    router.removeRoute("menu-loading");
+  }
   router.isReady().then(() => {
     router.replace(router.currentRoute.value.fullPath);
   });

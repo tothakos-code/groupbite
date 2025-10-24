@@ -3,6 +3,7 @@ const HomeView = () => import("./views/Home.vue");
 // const DashboardView = () => import("./views/dashboard/Dashboard.vue");
 const AdminHomeView = () => import( "./views/admin/AdminHome.vue");
 const MenuView = () => import( "./views/menu/MenuRender.vue");
+const MenuLoading = () => import("./views/menu//MenuLoading.vue");
 const AdminSettingsView = () => import( "./views/admin/AdminSettings.vue");
 const VendorSettings = () => import( "./views/admin/vendor/VendorSettings.vue");
 const VendorMenuManager = () => import( "./views/admin/vendor/VendorMenuManager.vue");
@@ -100,6 +101,11 @@ const routes = [
     component: MenuView
   },
   {
+    name: "menu-loading",
+    path: "/menu/:rest(.*)*",
+    component: MenuLoading
+  },
+  {
     name: "history",
     path: "/history",
     component: OrderHistoryView
@@ -123,7 +129,7 @@ router.beforeEach((to, from, next) => {
   } else {
     const stopWatching = watch(() => vendorStore.routesLoaded, (newValue) => {
       if (newValue) {
-        stopWatching(); // Stop watching to prevent memory leaks
+        stopWatching();
         next();
       }
     });

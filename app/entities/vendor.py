@@ -167,7 +167,9 @@ class Vendor(Base):
         )
         closure_time_changed = (
             self.get_setting_value("closure_scheduler") !=
-            new_settings.get("closure_scheduler", {}).get("value")
+            new_settings.get("closure_scheduler", {}).get("value") or
+            self.get_setting_value("closure_scheduler_days") !=
+            new_settings.get("closure_scheduler_days", {}).get("value")
         )
 
         if closure_active_changed or closure_time_changed:
@@ -178,7 +180,7 @@ class Vendor(Base):
                 time_value = new_settings.get("closure_scheduler", {}).get("value", "")
                 if ":" in time_value:
                     hh, mm = time_value.split(":")
-                    schedule_task(str(self.id) + "-closure", int(hh), int(mm), self.closure_wrapper)
+                    schedule_task(str(self.id) + "-closure", int(hh), int(mm), self.closure_wrapper, new_settings.get("closure_scheduler_days", {}).get("value"))
 
         # Closed scheduler
         closed_active_changed = (
@@ -187,7 +189,9 @@ class Vendor(Base):
         )
         closed_time_changed = (
             self.get_setting_value("closed_scheduler") !=
-            new_settings.get("closed_scheduler", {}).get("value")
+            new_settings.get("closed_scheduler", {}).get("value") or
+            self.get_setting_value("closed_scheduler_days") !=
+            new_settings.get("closed_scheduler_days", {}).get("value")
         )
 
         if closed_active_changed or closed_time_changed:
@@ -198,7 +202,7 @@ class Vendor(Base):
                 time_value = new_settings.get("closed_scheduler", {}).get("value", "")
                 if ":" in time_value:
                     hh, mm = time_value.split(":")
-                    schedule_task(str(self.id) + "-closed", int(hh), int(mm), self.closed_wrapper)
+                    schedule_task(str(self.id) + "-closed", int(hh), int(mm), self.closed_wrapper, new_settings.get("closed_scheduler_days", {}).get("value"))
 
         # Auto email order scheduler
         auto_email_changed = (
@@ -206,28 +210,11 @@ class Vendor(Base):
             new_settings.get("auto_email_order", {}).get("value")
         )
 
-        if new_settings.get("auto_email_order", {}).get("value") and Setting.get_value_by_key("smtp_address") != "":
-            email_scheduler_changed = (
-                self.get_setting_value("email_order_scheduler") !=
-                new_settings.get("email_order_scheduler", {}).get("value")
-            )
-
-            if auto_email_changed or email_scheduler_changed:
-                from app.scheduler import schedule_task, cancel_task
-                cancel_task(str(self.id) + "-email-order")
-
-                if new_settings.get("auto_email_order", {}).get("value"):
-                    time_value = new_settings.get("email_order_scheduler", {}).get("value", "")
-                    if ":" in time_value:
-                        hh, mm = time_value.split(":")
-                        schedule_task(str(self.id) + "-email-order", int(hh), int(mm), self.email_ordering_wrapper)
-        else:
+        if new_settings.get("auto_email_order", {}).get("value") and Setting.get_value_by_key("smtp_address") == "":
             logging.warning("No SMTP server set")
             # Revert to previous values if SMTP not configured
             if "auto_email_order" in new_settings:
                 new_settings["auto_email_order"]["value"] = self.get_setting_value("auto_email_order")
-            if "email_order_scheduler" in new_settings:
-                new_settings["email_order_scheduler"]["value"] = self.get_setting_value("email_order_scheduler")
 
 
     def update_setting(self, key, value):
@@ -275,13 +262,6 @@ class Vendor(Base):
                 from app.scheduler import schedule_task, cancel_task
                 hh, mm = vendor_db.get_setting_value("closed_scheduler").split(":")
                 schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
-
-            if vendor_db.get_setting_value("auto_email_order"):
-                from app.scheduler import schedule_task, cancel_task
-                hh, mm = vendor_db.get_setting_value("email_order_scheduler").split(":")
-                schedule_task(str(vendor_db.id) + "-email-order", int(hh), int(mm), vendor_db.email_ordering_wrapper)
-
-
         try:
             session.commit()
             return True
@@ -302,20 +282,21 @@ class Vendor(Base):
         from app.event_manager import event_manager
 
         order = Order.find_open_order_by_date_for_a_vendor(self.id, date.today().strftime("%Y-%m-%d"))
+        if not order:
+            logging.info("Open order not found for state changing")
+            return
         event_manager.trigger_event("beforeOrder@" + self.name, {"order_id": order.id})
-        if order:
-            ok = order.change_state(OrderState.ORDER, None)
-            if not ok:
-                logging.error("Error during order close")
 
-            socketio = SocketioSingleton.get_instance()
-            socketio.emit("be_order_update", {
-                "order": order.serialized
-            })
-            NotificationService.send_vendor_notification(self, order, NotificationType.REMINDER)
-            event_manager.trigger_event("afterOrder@" + self.name, {"order_id": order.id})
-        else:
-            logging.info("State already changed")
+        ok = order.change_state(OrderState.ORDER, None)
+        if not ok:
+            logging.error("Error during order close")
+
+        socketio = SocketioSingleton.get_instance()
+        socketio.emit("be_order_update", {
+            "order": order.serialized
+        })
+        NotificationService.send_vendor_notification(self, order, NotificationType.REMINDER)
+        event_manager.trigger_event("afterOrder@" + self.name, {"order_id": order.id})
 
 
     def closed_wrapper(self):
@@ -324,22 +305,42 @@ class Vendor(Base):
         from app.event_manager import event_manager
 
         order = Order.find_open_order_by_date_for_a_vendor(str(self.id), date.today().strftime("%Y-%m-%d"))
-        event_manager.trigger_event("beforeClose@" + self.name, {"order_id": order.id})
         if not order:
-            logging.info("State already changed")
+            logging.info("Open order not found for state changing")
             return
+        event_manager.trigger_event("beforeClose@" + self.name, {"order_id": order.id})
 
         from app.socketio_singleton import SocketioSingleton
-        order.change_state(OrderState.CLOSED, None)
+
+
+        if self.get_setting_value("auto_email_order"):
+            email_min_user = self.get_setting_value("email_min_user")
+            if self.get_setting_value("auto_email_order") == True and (email_min_user == 0 or email_min_user <= len(order.get_users())):
+                logging.info("Scheduled email ordering running")
+                email_sent =  order.send_in_mail()
+                if email_sent:
+                    order.change_state(OrderState.CLOSED)
+                else:
+                    logging.info("There was an error sending the email.")
+                    return False
+            else:
+                logging.info("Minimum order requirements are not met")
+                event_manager.trigger_event("closeFailed@" + order.vendor.name, {"order_id": order.id})
+                return False
+        else:
+            order.change_state(OrderState.CLOSED, None)
+
         event_manager.trigger_event("afterClose@" + self.name, {"order_id": order.id})
         socketio = SocketioSingleton.get_instance()
         socketio.emit("be_order_update", {
             "order": order.serialized
-        })
+            },
+            to=f"{order.vendor_id}@{order.date_of_order}"
+        )
 
 
     def email_ordering_wrapper(self, order_id=None, manual=False):
-        logging.info(("Manual" if manual else "Scheduled") + " email ordering running")
+        logging.info("Manual email ordering running")
         from app.entities.order import Order, OrderState
         from app.event_manager import event_manager
 
@@ -355,73 +356,23 @@ class Vendor(Base):
         event_manager.trigger_event("beforeClose@" + order.vendor.name, {"order_id": order.id})
         email_min_user = self.get_setting_value("email_min_user")
         if manual or (self.get_setting_value("auto_email_order") == True and (email_min_user == 0 or email_min_user <= len(order.get_users()))):
-            from app.services.mail_sender_service import send_mail
-            from app.entities.user_basket import UserBasket
-            baskets = UserBasket.find_items_by_order(order.id)
-            if len(baskets) == 0:
-                logging.warning("The order is empty, email not sent")
-                return False
+            email_sent =  order.send_in_mail()
+            if email_sent:
+                if not order.change_state(OrderState.CLOSED):
+                    return True
+                event_manager.trigger_event("afterClose@" + order.vendor.name, {"order_id": order.id})
 
-            basket_sum = {}
-            for item in baskets:
-                if item.menu_item_id in basket_sum:
-                    basket_sum[item.menu_item_id]["quantity"] += item.count
-                else:
-                    basket_sum[item.menu_item_id] = {**item.basket_format, "quantity": item.count}
+                from app.socketio_singleton import SocketioSingleton
+                socketio = SocketioSingleton.get_instance()
 
-            basket_template = ""
-            basket_categories = {}
-            for item in basket_sum.values():
-                pattern = self.get_setting_value("order_text_template")
-                line = pattern \
-                    .replace("${quantity}", str(item["quantity"])) \
-                    .replace("${item_name}", item["item_name"]) \
-                    .replace("${size_name}", item["size_name"]) \
-                    .replace("\\n", "<br>")
-                basket_template += line
-
-                if item["category"] not in basket_categories:
-                    basket_categories[item["category"]] = ""
-                basket_categories[item["category"]] += line
-
-            email_template = self.get_setting_value("auto_email_order_template")
-            email_template = email_template.replace("${basket}", basket_template)
-            for category, value in basket_categories.items():
-                email_template = email_template.replace("${basket." + category + "}", basket_categories[category])
-            email_template = non_mached.sub("", email_template)
-
-            email_subject = self.get_setting_value("auto_email_subject")
-            email_subject = email_subject \
-                .replace("${vendor_name}", order.vendor.name) \
-                .replace("${date}", order.date_of_order.strftime("%Y.%m.%d"))
-
-            email_subject = non_mached.sub("", email_subject)
-
-            success, error = send_mail(
-                self.get_setting_value("auto_email_order_to"),
-                self.get_setting_value("auto_email_order_cc"),
-                email_subject,
-                email_template)
-            if not success:
-                logging.error("Email could not be sent")
-                return False
-
-            logging.info("Scheduled automatic order email sent!")
-
-
-            if not order.change_state(OrderState.CLOSED):
+                socketio.emit("be_order_update", {
+                    "order": order.serialized
+                    },
+                    to=f"{order.vendor_id}@{order.date_of_order}"
+                )
                 return True
-            event_manager.trigger_event("afterClose@" + order.vendor.name, {"order_id": order.id})
-
-            from app.socketio_singleton import SocketioSingleton
-            socketio = SocketioSingleton.get_instance()
-
-            socketio.emit("be_order_update", {
-                "order": order.serialized
-                },
-                to=f"{order.vendor_id}@{order.date_of_order}"
-            )
-            return True
+            else:
+                return False
         else:
             logging.info("Minimum order requirements are not met")
             event_manager.trigger_event("closeFailed@" + order.vendor.name, {"order_id": order.id})

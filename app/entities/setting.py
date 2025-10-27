@@ -74,7 +74,6 @@ class Setting(Base):
                 vendors = Vendor.find_all()
                 for vendor in vendors:
                     vendor.update_setting("auto_email_order", False)
-                    cancel_task(str(vendor.id) + "-email-order")
                 setting.value = value
             else:
                 setting.value = value

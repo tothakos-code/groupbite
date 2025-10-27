@@ -57,6 +57,7 @@ def handle_webhook_update(data, webhook_id):
         message_template=data["message_template"],
         trigger_type=WebhookType(data["trigger_type"]),
         scheduled_time=data["scheduled_time"],
+        scheduled_days=data["scheduled_days"],
         event_types=data["event_types"],
         is_active=data["is_active"]):
         return { "error": "Bad request" }, 400

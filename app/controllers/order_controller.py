@@ -376,13 +376,12 @@ def handle_close_order(order_id):
 @require_auth
 def handle_manual_email_order(order_id):
     from app.scheduler import cancel_task, reschedule_task
-    from app.event_manager import event_manager
+
     order = Order.get_by_id(order_id)
     logging.info(f"Manual email send triggered by userID: {session.get("user_id")} for order {order_id}")
     data = {
         "order_id": order_id
     }
-    event_manager.trigger_event("beforeClose@" + order.vendor.name, data)
 
     if not order:
         return {"msg": "Order not found"}, 404
@@ -392,14 +391,16 @@ def handle_manual_email_order(order_id):
 
     vendor = order.vendor
 
-    # Cancel the scheduled task for this vendor (if exists)
-    task_id = f"{str(vendor.id)}-email-order"
-    reschedule_task(task_id)
-    logging.info(f"Scheduled task '{task_id}' rescheduled to next day due to manual trigger.")
+    try:
+        # Cancel the scheduled task for this vendor (if exists)
+        task_id = f"{str(vendor.id)}-closed"
+        reschedule_task(task_id)
+        logging.info(f"Scheduled task '{task_id}' rescheduled to next day due to manual trigger.")
+    except KeyError as e:
+        logging.info(f"Scheduled task '{task_id}' not found.") 
 
     # Execute the email logic manually
     if vendor.email_ordering_wrapper(order_id=order_id, manual=True):
-        event_manager.trigger_event("afterClose@" + order.vendor.name, data)
         return {"msg": "Email sent and order closed manually"}, 200
     else:
         return {"msg": "Something went wrong during the action"}, 400

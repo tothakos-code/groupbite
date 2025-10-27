@@ -78,65 +78,12 @@
           </v-card-text>
         </v-card>
 
-        <!-- Order Type Control -->
-        <v-card
-          class="mb-4"
-          elevation="2"
-        >
-          <v-card-title class="bg-secondary text-white">
-            <v-icon left>
-              mdi-order-bool-ascending
-            </v-icon>
-            Rendelési típusok kezelése
-          </v-card-title>
-          <v-card-text class="pa-4">
-            <v-row>
-              <v-col
-                cols="12"
-                md="4"
-              >
-                <v-checkbox
-                  v-model="vendor.settings.enable_full_automatic_order.value"
-                  color="success"
-                  label="Teljes automatikus rendelés"
-                  prepend-icon="mdi-robot"
-                  hide-details
-                />
-              </v-col>
-              <v-col
-                cols="12"
-                md="4"
-              >
-                <v-checkbox
-                  v-model="vendor.settings.enable_email_order.value"
-                  color="info"
-                  label="Email rendelés"
-                  prepend-icon="mdi-email"
-                  hide-details
-                />
-              </v-col>
-              <v-col
-                cols="12"
-                md="4"
-              >
-                <v-checkbox
-                  v-model="vendor.settings.enable_manual_order.value"
-                  color="warning"
-                  label="Manuális rendelés"
-                  prepend-icon="mdi-hand-back-right"
-                  hide-details
-                />
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-
         <!-- UI Settings -->
         <v-card
           class="mb-4"
           elevation="2"
         >
-          <v-card-title class="bg-info text-white">
+          <v-card-title class="bg-secondary text-white">
             <v-icon left>
               mdi-palette
             </v-icon>
@@ -151,6 +98,46 @@
               hide-details
             />
           </v-card-text>
+          <v-divider class="my-4" />
+          Rendelés opciók engedélyezése
+          <v-row class="pa-4">
+            <v-col
+              cols="12"
+              md="4"
+            >
+              <v-checkbox
+                v-model="vendor.settings.enable_full_automatic_order.value"
+                color="success"
+                label="Teljes automatikus rendelés"
+                prepend-icon="mdi-robot"
+                hide-details
+              />
+            </v-col>
+            <v-col
+              cols="12"
+              md="4"
+            >
+              <v-checkbox
+                v-model="vendor.settings.enable_email_order.value"
+                color="info"
+                label="Email rendelés"
+                prepend-icon="mdi-email"
+                hide-details
+              />
+            </v-col>
+            <v-col
+              cols="12"
+              md="4"
+            >
+              <v-checkbox
+                v-model="vendor.settings.enable_manual_order.value"
+                color="warning"
+                label="Manuális rendelés"
+                prepend-icon="mdi-hand-back-right"
+                hide-details
+              />
+            </v-col>
+          </v-row>
         </v-card>
 
         <!-- Order Process Settings -->
@@ -162,87 +149,325 @@
             <v-icon left>
               mdi-clock-outline
             </v-icon>
-            Rendelés folyamat beállítások
+            Rendelés időzítés beállítások
           </v-card-title>
           <v-card-text class="pa-4">
-            <v-row>
-              <v-col
-                cols="12"
-                md="6"
-              >
-                <v-switch
-                  v-model="vendor.settings.closed_scheduler_active.value"
-                  color="primary"
-                  :label="vendor.settings.closed_scheduler_active.name"
-                  prepend-icon="mdi-clock-end"
-                  hide-details
-                  inset
-                />
-              </v-col>
-              <v-col
-                cols="12"
-                md="6"
-              >
-                <v-text-field
-                  v-model="vendor.settings.closed_scheduler.value"
-                  :label="vendor.settings.closed_scheduler.name"
-                  :disabled="!vendor.settings.closed_scheduler_active.value"
-                  :rules="getTimeRules(vendor.settings.closed_scheduler_active.value)"
-                  prepend-icon="mdi-clock"
-                  variant="outlined"
-                  density="comfortable"
-                  placeholder="HH:MM"
-                />
-              </v-col>
-            </v-row>
+            <!-- Closed Scheduler Section -->
+            <div class="mb-6">
+              <div class="text-body-2 text-medium-emphasis mb-3">
+                A rendelés napi lezárásának időzítése. Beállítható, hogy a hét csak bizonos napjain fusson.
+              </div>
 
-            <v-row>
-              <v-col
-                cols="12"
-                md="6"
-              >
-                <v-switch
-                  v-model="vendor.settings.closure_scheduler_active.value"
-                  color="primary"
-                  :label="vendor.settings.closure_scheduler_active.name"
-                  prepend-icon="mdi-clock-alert"
-                  hide-details
-                  inset
-                />
-              </v-col>
-              <v-col
-                cols="12"
-                md="6"
-              >
-                <v-text-field
-                  v-model="vendor.settings.closure_scheduler.value"
-                  :label="vendor.settings.closure_scheduler.name"
-                  :disabled="!vendor.settings.closure_scheduler_active.value"
-                  :rules="getTimeRules(vendor.settings.closure_scheduler_active.value)"
-                  prepend-icon="mdi-clock"
-                  variant="outlined"
-                  density="comfortable"
-                  placeholder="HH:MM"
-                />
-              </v-col>
-            </v-row>
+              <v-row align="center">
+                <v-col
+                  cols="12"
+                  md="6"
+                  lg="4"
+                >
+                  <v-checkbox
+                    v-model="vendor.settings.closed_scheduler_active.value"
+                    color="primary"
+                    :label="vendor.settings.closed_scheduler_active.name"
+                    prepend-icon="mdi-clock-end"
+                    hide-details
+                  />
+                </v-col>
+                <v-col
+                  cols="12"
+                  md="6"
+                  lg="4"
+                >
+                  <v-text-field
+                    v-model="vendor.settings.closed_scheduler.value"
+                    :label="vendor.settings.closed_scheduler.name"
+                    :disabled="!vendor.settings.closed_scheduler_active.value"
+                    :rules="getTimeRules(vendor.settings.closed_scheduler_active.value)"
+                    prepend-icon="mdi-clock"
+                    variant="outlined"
+                    density="comfortable"
+                    placeholder="HH:MM"
+                    hide-details="auto"
+                  />
+                </v-col>
+              </v-row>
 
-            <v-row>
-              <v-col cols="12">
-                <v-textarea
-                  v-model="vendor.settings.order_text_template.value"
-                  :label="vendor.settings.order_text_template.name"
-                  prepend-icon="mdi-text-box"
-                  variant="outlined"
-                  rows="3"
-                  auto-grow
-                />
-              </v-col>
-            </v-row>
+              <v-row class="mt-2">
+                <v-col cols="12">
+                  <div class="d-flex align-center mb-2">
+                    <v-icon
+                      size="small"
+                      class="mr-2"
+                    >
+                      mdi-calendar-week
+                    </v-icon>
+                    <span class="text-caption font-weight-medium">Napok (üres = minden nap):</span>
+
+                    <v-spacer />
+
+                    <!-- Quick actions -->
+                    <div class="d-flex flex-wrap gap-1">
+                      <v-btn
+                        size="x-small"
+                        variant="text"
+                        :disabled="!vendor.settings.closed_scheduler_active.value"
+                        @click="vendor.settings.closed_scheduler_days.value = ['mon','tue','wed','thu','fri','sat','sun']"
+                      >
+                        Összes
+                      </v-btn>
+                      <v-btn
+                        size="x-small"
+                        variant="text"
+                        :disabled="!vendor.settings.closed_scheduler_active.value"
+                        @click="vendor.settings.closed_scheduler_days.value = ['mon','tue','wed','thu','fri']"
+                      >
+                        Hétköznapok
+                      </v-btn>
+                      <v-btn
+                        size="x-small"
+                        variant="text"
+                        :disabled="!vendor.settings.closed_scheduler_active.value"
+                        @click="vendor.settings.closed_scheduler_days.value = ['sat','sun']"
+                      >
+                        Hétvége
+                      </v-btn>
+                      <v-btn
+                        size="x-small"
+                        variant="text"
+                        color="error"
+                        :disabled="!vendor.settings.closed_scheduler_active.value"
+                        @click="vendor.settings.closed_scheduler_days.value = []"
+                      >
+                        Törlés
+                      </v-btn>
+                    </div>
+                  </div>
+
+                  <v-chip-group
+                    v-model="vendor.settings.closed_scheduler_days.value"
+                    :disabled="!vendor.settings.closed_scheduler_active.value"
+                    multiple
+                    column
+                  >
+                    <v-chip
+                      v-for="d in dayOptions"
+                      :key="d.code"
+                      :value="d.code"
+                      filter
+                      variant="outlined"
+                      size="small"
+                    >
+                      {{ d.label }}
+                      <span class="text-disabled text-caption ml-1">({{ d.code }})</span>
+                    </v-chip>
+                  </v-chip-group>
+
+                  <div class="text-caption text-medium-emphasis mt-2">
+                    Ha nem választasz napot, akkor minden nap fut a megadott időpontban.
+                  </div>
+                </v-col>
+              </v-row>
+            </div>
+
+            <v-divider class="my-6" />
+
+            <!-- Closure Scheduler Section -->
+            <div class="mb-6">
+              <div class="text-body-2 text-medium-emphasis mb-3">
+                Rendelés léptetése 'Siess' státuszba. Egy rendelés zárásának figyelmeztetésének is lehet használni. Beállítható, hogy a hét csak bizonos napjain fusson.
+              </div>
+
+              <v-row align="center">
+                <v-col
+                  cols="12"
+                  md="6"
+                  lg="4"
+                >
+                  <v-checkbox
+                    v-model="vendor.settings.closure_scheduler_active.value"
+                    color="primary"
+                    :label="vendor.settings.closure_scheduler_active.name"
+                    prepend-icon="mdi-clock-alert"
+                    hide-details
+                  />
+                </v-col>
+                <v-col
+                  cols="12"
+                  md="6"
+                  lg="4"
+                >
+                  <v-text-field
+                    v-model="vendor.settings.closure_scheduler.value"
+                    :label="vendor.settings.closure_scheduler.name"
+                    :disabled="!vendor.settings.closure_scheduler_active.value"
+                    :rules="getTimeRules(vendor.settings.closure_scheduler_active.value)"
+                    prepend-icon="mdi-clock"
+                    variant="outlined"
+                    density="comfortable"
+                    placeholder="HH:MM"
+                    hide-details="auto"
+                  />
+                </v-col>
+              </v-row>
+
+              <v-row class="mt-2">
+                <v-col cols="12">
+                  <div class="d-flex align-center mb-2">
+                    <v-icon
+                      size="small"
+                      class="mr-2"
+                    >
+                      mdi-calendar-week
+                    </v-icon>
+                    <span class="text-caption font-weight-medium">Napok (üres = minden nap):</span>
+
+                    <v-spacer />
+
+                    <!-- Quick actions -->
+                    <div class="d-flex flex-wrap gap-1">
+                      <v-btn
+                        size="x-small"
+                        variant="text"
+                        :disabled="!vendor.settings.closure_scheduler_active.value"
+                        @click="vendor.settings.closure_scheduler_days.value = ['mon','tue','wed','thu','fri','sat','sun']"
+                      >
+                        Összes
+                      </v-btn>
+                      <v-btn
+                        size="x-small"
+                        variant="text"
+                        :disabled="!vendor.settings.closure_scheduler_active.value"
+                        @click="vendor.settings.closure_scheduler_days.value = ['mon','tue','wed','thu','fri']"
+                      >
+                        Hétköznapok
+                      </v-btn>
+                      <v-btn
+                        size="x-small"
+                        variant="text"
+                        :disabled="!vendor.settings.closure_scheduler_active.value"
+                        @click="vendor.settings.closure_scheduler_days.value = ['sat','sun']"
+                      >
+                        Hétvége
+                      </v-btn>
+                      <v-btn
+                        size="x-small"
+                        variant="text"
+                        color="error"
+                        :disabled="!vendor.settings.closure_scheduler_active.value"
+                        @click="vendor.settings.closure_scheduler_days.value = []"
+                      >
+                        Törlés
+                      </v-btn>
+                    </div>
+                  </div>
+
+                  <v-chip-group
+                    v-model="vendor.settings.closure_scheduler_days.value"
+                    :disabled="!vendor.settings.closure_scheduler_active.value"
+                    multiple
+                    column
+                  >
+                    <v-chip
+                      v-for="d in dayOptions"
+                      :key="d.code"
+                      :value="d.code"
+                      filter
+                      variant="outlined"
+                      size="small"
+                    >
+                      {{ d.label }}
+                      <span class="text-disabled text-caption ml-1">({{ d.code }})</span>
+                    </v-chip>
+                  </v-chip-group>
+
+                  <div class="text-caption text-medium-emphasis mt-2">
+                    Ha nem választasz napot, akkor minden nap fut a megadott időpontban.
+                  </div>
+                </v-col>
+              </v-row>
+            </div>
+
+            <v-divider class="my-6" />
+
+            <!-- SMTP Warning Alert -->
+            <v-alert
+              v-if="!smtpStatus"
+              type="warning"
+              variant="tonal"
+              class="mb-6"
+            >
+              <template #prepend>
+                <v-icon>mdi-alert</v-icon>
+              </template>
+              SMTP beállítások nem konfiguráltak. Az automatikus email funkciók nem elérhetők.
+            </v-alert>
+
+            <!-- Auto Email Order Section -->
+            <div class="mb-6">
+              <div class="text-body-2 text-medium-emphasis mb-3">
+                Rendelés zárás időzíő kor a rendelés tételei emailben elküldése a beállított email címre. Ehhez egy minimum rendelésben részvevő felhasználó feltételt is lehet adni így csak akkor megy ki az email ha minimum ennyi felhasználó rendel.
+              </div>
+
+              <v-row align="center">
+                <v-col
+                  cols="12"
+                  md="6"
+                  lg="4"
+                >
+                  <v-checkbox
+                    v-model="vendor.settings.auto_email_order.value"
+                    color="success"
+                    :label="vendor.settings.auto_email_order.name"
+                    :disabled="!smtpStatus || !vendor.settings.closed_scheduler_active.value"
+                    prepend-icon="mdi-email-fast"
+                    hide-details
+                  />
+                </v-col>
+                <v-col
+                  cols="12"
+                  md="6"
+                  lg="4"
+                >
+                  <v-text-field
+                    v-model.number="vendor.settings.email_min_user.value"
+                    :label="vendor.settings.email_min_user.name"
+                    :disabled="!vendor.settings.auto_email_order.value"
+                    :rules="numberRules"
+                    type="number"
+                    prepend-icon="mdi-account-multiple"
+                    variant="outlined"
+                    density="comfortable"
+                    hint="Minimum résztvevő szám a rendelés elküldéséhez"
+                    persistent-hint
+                  />
+                </v-col>
+              </v-row>
+            </div>
+
+            <v-divider class="my-6" />
+
+            <!-- Order Text Template Section -->
+            <div>
+              <div class="text-body-2 text-medium-emphasis mb-3">
+                Ez a minta alapján jelennek meg a sorok az emailben és/vagy manuálisan vágólapra másolva rendelés tételei.
+              </div>
+
+              <v-row>
+                <v-col cols="12">
+                  <v-textarea
+                    v-model="vendor.settings.order_text_template.value"
+                    :label="vendor.settings.order_text_template.name"
+                    prepend-icon="mdi-text-box"
+                    variant="outlined"
+                    rows="3"
+                    auto-grow
+                    hint="Használható változók: ${quantity}, ${item_name}, ${size_name}"
+                    persistent-hint
+                  />
+                </v-col>
+              </v-row>
+            </div>
           </v-card-text>
         </v-card>
-
-        <WebhookSettings :vendor-id="vendor.id" />
 
         <!-- Automatic Email Order Settings -->
         <v-card
@@ -256,68 +481,9 @@
             Automatikus email rendelés beállítások
           </v-card-title>
           <v-card-text class="pa-4">
-            <v-alert
-              v-if="!smtpStatus"
-              type="warning"
-              variant="tonal"
-              class="mb-4"
-            >
-              <template #prepend>
-                <v-icon>mdi-alert</v-icon>
-              </template>
-              SMTP beállítások nem konfiguráltak. Az automatikus email funkciók nem elérhetők.
-            </v-alert>
-
-            <v-row>
-              <v-col cols="12">
-                <v-switch
-                  v-model="vendor.settings.auto_email_order.value"
-                  color="success"
-                  :label="vendor.settings.auto_email_order.name"
-                  :disabled="!smtpStatus"
-                  prepend-icon="mdi-email-send-outline"
-                  hide-details
-                  inset
-                />
-              </v-col>
-            </v-row>
-
             <v-expand-transition>
               <div v-if="vendor.settings.auto_email_order.value">
                 <v-divider class="my-4" />
-
-                <v-row>
-                  <v-col
-                    cols="12"
-                    md="6"
-                  >
-                    <v-text-field
-                      v-model="vendor.settings.email_order_scheduler.value"
-                      :label="vendor.settings.email_order_scheduler.name"
-                      :rules="getTimeRules(vendor.settings.auto_email_order.value)"
-                      prepend-icon="mdi-clock"
-                      variant="outlined"
-                      density="comfortable"
-                      placeholder="HH:MM"
-                    />
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    md="6"
-                  >
-                    <v-text-field
-                      v-model.number="vendor.settings.email_min_user.value"
-                      :label="vendor.settings.email_min_user.name"
-                      :rules="numberRules"
-                      type="number"
-                      prepend-icon="mdi-account-multiple"
-                      variant="outlined"
-                      density="comfortable"
-                      hint="Minimum résztvevő szám a rendelés elküldéséhez"
-                      persistent-hint
-                    />
-                  </v-col>
-                </v-row>
 
                 <v-row>
                   <v-col
@@ -401,6 +567,8 @@
           </v-card-text>
         </v-card>
 
+        <WebhookSettings :vendor-id="vendor.id" />
+
         <!-- Action Buttons -->
         <v-card elevation="2">
           <v-card-actions class="pa-4">
@@ -482,7 +650,16 @@ export default {
       numberRules: [
         v => (v !== null && v !== undefined && v !== '') || v === 0 || 'Kötelező mező',
         v => /^\d+$/.test(v) || 'Csak szám lehetséges'
-      ]
+      ],
+      dayOptions: [
+        { code: 'mon', label: 'Hétfő' },
+        { code: 'tue', label: 'Kedd' },
+        { code: 'wed', label: 'Szerda' },
+        { code: 'thu', label: 'Csütörtök' },
+        { code: 'fri', label: 'Péntek' },
+        { code: 'sat', label: 'Szombat' },
+        { code: 'sun', label: 'Vasárnap' },
+      ],
     };
   },
   mounted() {

@@ -2,7 +2,6 @@ from typing import List, Dict, Any, Union
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 
-# Setting type definitions
 @dataclass
 class BaseSetting:
     name: str
@@ -74,11 +73,9 @@ class ListSetting(BaseSetting):
     def get_type(self) -> str:
         return "LIST"
 
-# Vendor settings registry
 class VendorSettingsRegistry:
     """Registry for all vendor settings with type safety and validation"""
 
-    # General Settings
     TITLE = StringSetting(
         name="Cím",
         section="general"
@@ -100,7 +97,6 @@ class VendorSettingsRegistry:
         default_value=0
     )
 
-    # Order Type Controls (New)
     ENABLE_FULL_AUTOMATIC_ORDER = BooleanSetting(
         name="Teljes automatikus rendelés engedélyezése",
         section="order-types",
@@ -119,16 +115,14 @@ class VendorSettingsRegistry:
         default_value=True
     )
 
-    # UI Settings (New)
     SHOW_NOTIFICATION_BUTTON = BooleanSetting(
         name="Értesítési gomb megjelenítése",
         section="ui",
         default_value=True
     )
 
-    # Order Process Settings
     CLOSED_SCHEDULER_ACTIVE = BooleanSetting(
-        name="Automatikus lezárás aktív",
+        name="Időzített lezárás ",
         section="order",
         default_value=False
     )
@@ -138,8 +132,14 @@ class VendorSettingsRegistry:
         section="order"
     )
 
+    CLOSED_SCHEDULER_DAYS = ListSetting(
+        name="Időzített napok",
+        section="order",
+        default_value=[]
+    )
+
     CLOSURE_SCHEDULER_ACTIVE = BooleanSetting(
-        name="Lezárás figyelmeztetés aktív",
+        name="Időzített figyelmeztetés lezárás elött",
         section="order",
         default_value=False
     )
@@ -149,22 +149,22 @@ class VendorSettingsRegistry:
         section="order"
     )
 
+    CLOSURE_SCHEDULER_DAYS = ListSetting(
+        name="Időzített napok",
+        section="order",
+        default_value=[]
+    )
+
     ORDER_TEXT_TEMPLATE = StringSetting(
         name="Rendelés szöveg sor minta",
         section="order",
         default_value="${quantity}x ${item_name} ${size_name}\\n"
     )
 
-    # Auto Email Settings
     AUTO_EMAIL_ORDER = BooleanSetting(
-        name="Automatikus email rendelés",
+        name="Rendelés záráskor emailben küldés",
         section="auto-order",
         default_value=False
-    )
-
-    EMAIL_ORDER_SCHEDULER = StringSetting(
-        name="Rendelés automatikus email küldése (formátum: hh:mm)",
-        section="auto-order"
     )
 
     EMAIL_MIN_USER = IntegerSetting(
@@ -201,7 +201,6 @@ class VendorSettingsRegistry:
         for attr_name in dir(cls):
             attr = getattr(cls, attr_name)
             if isinstance(attr, BaseSetting):
-                # Use snake_case key for consistency
                 key = attr_name.lower()
                 settings[key] = attr
         return settings
@@ -227,7 +226,6 @@ class VendorSettingsRegistry:
         setting = settings[key]
         expected_type = type(setting.get_default_value())
 
-        # Special handling for different types
         if isinstance(setting, StringSetting) or isinstance(setting, TextAreaSetting):
             return isinstance(value, str)
         elif isinstance(setting, IntegerSetting):

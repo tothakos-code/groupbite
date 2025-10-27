@@ -41,11 +41,10 @@ class EventManager:
                         # Simple template replacement - you can enhance this
                         payload = {"text": message_template.format(**data) if isinstance(data, dict) else message_template}
 
-                    logging.debug(f"Sending webhook to {webhook_url} for events {event_types}")
+                    logging.debug(f"Sending webhook for event: {event_types}")
                     headers = {'Content-Type': 'application/json'}
                     response = requests.post(webhook_url, json=payload, headers=headers, timeout=5)
                     response.raise_for_status()
-                    logging.info(f"Webhook {webhook_id} sent successfully")
                 except Exception as e:
                     logging.error(f"Webhook call failed for {webhook_url}: {e}")
 

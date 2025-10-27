@@ -18,12 +18,12 @@
 
     <!-- Auto Email Order Info -->
     <v-col
-      v-if="vendorSettings.auto_email_order.value"
+      v-if="vendorSettings.auto_email_order.value && vendorSettings.closed_scheduler_active.value"
       sm="auto"
       class="d-flex flex-fill align-items-center justify-content-sm-start justify-content-center"
     >
       <AutoEmailOrderInfo
-        :deadline="vendorSettings.email_order_scheduler.value"
+        :deadline="vendorSettings.closed_scheduler.value"
         :min-users="vendorSettings.email_min_user.value"
         :current-users="userCount"
       />

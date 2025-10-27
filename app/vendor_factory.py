@@ -49,11 +49,6 @@ class VendorFactory:
                 hh, mm = vendor_db.get_setting_value("closed_scheduler").split(":")
                 schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
 
-            if vendor_db.get_setting_value("auto_email_order"):
-                from app.scheduler import schedule_task, cancel_task
-                hh, mm = vendor_db.get_setting_value("email_order_scheduler").split(":")
-                schedule_task(str(vendor_db.id) + "-email-order", int(hh), int(mm), vendor_db.email_ordering_wrapper)
-
 
     @classmethod
     def get_vendors(self) -> str:

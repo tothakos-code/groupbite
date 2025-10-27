@@ -182,6 +182,86 @@
                   />
                 </v-col>
 
+                <!-- Days picker (only for time-trigger) -->
+                <v-col
+                  v-if="webhook.trigger_type === 'time'"
+                  cols="12"
+                  md="6"
+                >
+                  <div class="d-flex align-center mb-2">
+                    <v-icon
+                      size="small"
+                      class="mr-1"
+                    >
+                      mdi-calendar-week
+                    </v-icon>
+                    <span class="text-caption">Napok (üres = minden nap):</span>
+
+                    <v-spacer />
+
+                    <!-- Quick actions -->
+                    <v-btn
+                      size="x-small"
+                      variant="text"
+                      class="mr-1"
+                      @click="webhook.scheduled_days = ['mon','tue','wed','thu','fri','sat','sun']"
+                    >
+                      Összes
+                    </v-btn>
+                    <v-btn
+                      size="x-small"
+                      variant="text"
+                      class="mr-1"
+                      @click="webhook.scheduled_days = ['mon','tue','wed','thu','fri']"
+                    >
+                      Hétköznapok
+                    </v-btn>
+                    <v-btn
+                      size="x-small"
+                      variant="text"
+                      class="mr-1"
+                      @click="webhook.scheduled_days = ['sat','sun']"
+                    >
+                      Hétvége
+                    </v-btn>
+                    <v-btn
+                      size="x-small"
+                      variant="text"
+                      color="error"
+                      @click="webhook.scheduled_days = []"
+                    >
+                      Törlés
+                    </v-btn>
+                  </div>
+
+                  <v-chip-group
+                    v-model="webhook.scheduled_days"
+                    multiple
+                    column
+                    density="comfortable"
+                  >
+                    <v-chip
+                      v-for="d in dayOptions"
+                      :key="d.code"
+                      :value="d.code"
+                      filter
+                      variant="outlined"
+                      class="mr-2 mb-2"
+                    >
+                      <div class="d-flex align-center">
+                        {{ d.label }}
+                        <span class="text-disabled text-caption ml-2">({{ d.code }})</span>
+                      </div>
+                    </v-chip>
+                  </v-chip-group>
+
+                  <!-- Optional helper text -->
+                  <div class="text-caption text-medium-emphasis mt-2">
+                    Ha nem választasz napot, a webhook minden nap fut a megadott időpontban.
+                  </div>
+                </v-col>
+
+
                 <!-- Event trigger settings -->
                 <v-col
                   v-if="webhook.trigger_type === 'event'"
@@ -304,6 +384,15 @@ export default {
         { title: 'Rendelés létrehozás előtt', value: 'beforeCollect' },
         { title: 'Rendelés folyamatban státusz után', value: 'afterOrder' },
         { title: 'Rendelés folyamatban státusz', value: 'beforeOrder' }
+      ],
+      dayOptions: [
+        { code: 'mon', label: 'Hétfő' },
+        { code: 'tue', label: 'Kedd' },
+        { code: 'wed', label: 'Szerda' },
+        { code: 'thu', label: 'Csütörtök' },
+        { code: 'fri', label: 'Péntek' },
+        { code: 'sat', label: 'Szombat' },
+        { code: 'sun', label: 'Vasárnap' },
       ],
       urlRules: [
         v => !!v || 'URL megadása kötelező',

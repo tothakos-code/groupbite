@@ -81,7 +81,7 @@ class WebhookService:
                     logging.error(f"Scheduled webhook {webhook_id} failed: {e}")
 
             # Schedule the task
-            schedule_task(webhook_id, hour, minute, webhook_task)
+            schedule_task(webhook_id, hour, minute, webhook_task, webhook.scheduled_days)
 
         except ValueError as e:
             logging.error(f"Invalid scheduled_time format for webhook {webhook.id}: {e}")

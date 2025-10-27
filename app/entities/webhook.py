@@ -19,6 +19,7 @@ class BaseWebhookSchema(Schema):
     message_template = fields.Str(required=True)
     trigger_type = fields.Str(required=True)
     scheduled_time = fields.Str(required=False)
+    scheduled_days = fields.List(fields.Str(), required=False, load_default=None)
     event_types = fields.List(fields.Str(), required=False)
 
 class UpdateWebhookSchema(BaseWebhookSchema):
@@ -44,6 +45,7 @@ class Webhook(Base):
     message_template: Mapped[str] = mapped_column(Text, nullable=True)
     trigger_type: Mapped[WebhookType] = mapped_column(nullable=False)
     scheduled_time: Mapped[str] = mapped_column(Text, nullable=True)
+    scheduled_days: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True)
     event_types: Mapped[List[str]] = mapped_column(JSON, nullable=True)
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -186,14 +188,14 @@ class Webhook(Base):
             if not url_pattern.match(url):
                 raise Exception("Érvényes URL-t adjon meg (http:// vagy https://)")
 
+
+
         # Trigger type validation
         trigger_type = data.get('trigger_type')
         if trigger_type == WebhookType.TIME:
             # Time validation for scheduled webhooks
-            logging.info("scheduled_time")
             scheduled_time = data.get('scheduled_time')
-            logging.info("scheduled_time")
-            logging.info(scheduled_time)
+            scheduled_days = data.get('scheduled_days')
             if not scheduled_time:
                 raise Exception("Időpont megadása kötelező")
 
@@ -201,6 +203,22 @@ class Webhook(Base):
             time_pattern = re.compile(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')
             if not time_pattern.match(scheduled_time):
                 raise Exception("Érvénytelen időformátum. Érvényes formátum: HH:MM")
+
+            if scheduled_days:
+                if not isinstance(scheduled_days, list):
+                    raise Exception("A 'scheduled_days' mezőnek listának kell lennie (pl. ['mon','tue','wed']).")
+                else:
+                    # Filter invalid and duplicate entries
+                    clean_days = []
+                    for d in scheduled_days:
+                        if isinstance(d, str):
+                            day = d.strip().lower()
+                            if len(day) == 3 and day in {"mon", "tue", "wed", "thu", "fri", "sat", "sun"} and day not in clean_days:
+                                clean_days.append(day)
+                    # Store sanitized list (can be empty)
+                    data['scheduled_days'] = clean_days
+
+
 
     def send_to_google_chat(webhook_url, message):
         import requests
@@ -226,6 +244,7 @@ class Webhook(Base):
             "is_active": self.is_active,
             "trigger_type": str(self.trigger_type),
             "scheduled_time": self.scheduled_time,
+            "scheduled_days": self.scheduled_days,
             "event_types": self.event_types,
             "last_executed": self.last_executed.isoformat() if self.last_executed else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,

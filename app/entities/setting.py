@@ -68,7 +68,7 @@ class Setting(Base):
             if setting.key == "smtp_password":
                 if value != setting.value:
                     setting.value = Setting.encrypt_value(value)
-            if setting.key == "smtp_address" and value == "":
+            elif setting.key == "smtp_address" and value == "":
                 from app.entities.vendor import Vendor
                 from app.scheduler import cancel_task
                 vendors = Vendor.find_all()

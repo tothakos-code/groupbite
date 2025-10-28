@@ -199,6 +199,9 @@ def handle_date_selection_change(data):
         },
         to=request.sid
         )
+    return {
+        "ok": True
+    }
 
 
 @order_blueprint.route("/<order_id>/user/<user_id>/copy-from/<src_user_id>", methods=["PUT"])

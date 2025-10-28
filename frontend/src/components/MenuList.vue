@@ -175,15 +175,10 @@ export default {
         "old_selected_date": state.selectedDate.toISODate(),
         "new_selected_date": formated_day,
         "vendor_id": this.vendorStore.selectedVendor.id,
+      }, () => {
+          this.isLoading = false;
       });
-
       state.selectedDate = new Date(day);
-
-      // Set loading to false after a short delay to ensure data is loaded
-      setTimeout(() => {
-        this.isLoading = false;
-      }, 500);
-
       history.pushState({}, "", `/menu/${this.vendorStore.selectedVendor.name}/${state.selectedDate.toISODate()}`)
     },
 

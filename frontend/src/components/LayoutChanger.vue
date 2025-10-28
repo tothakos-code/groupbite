@@ -75,7 +75,7 @@
     <!-- Menu Items Section -->
     <v-card-text class="pa-0">
       <v-container
-        v-if="filteredItems.length > 0"
+        v-if="filteredItems.length > 0 && !isLoading"
         fluid
         class="pa-0"
       >

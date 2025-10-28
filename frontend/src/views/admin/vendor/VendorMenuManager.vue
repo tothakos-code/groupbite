@@ -73,48 +73,176 @@
         </v-card>
       </v-col>
     </v-row>
+    <v-card
+      class="mb-4"
+      elevation="1"
+    >
+      <v-card-text>
+        <v-row>
+          <!-- Search Input -->
+          <v-col
+            cols="12"
+            md="6"
+          >
+            <v-text-field
+              v-model="searchQuery"
+              label="Keresés..."
+              placeholder="Keress étel névre, rendelésre, vagy üzletre"
+              prepend-inner-icon="mdi-magnify"
+              variant="outlined"
+              density="compact"
+              clearable
+              @input="debounceSearch"
+            />
+          </v-col>
 
-    <!-- Search Section -->
-    <v-row class="mb-4">
-      <v-col>
-        <v-card
-          elevation="2"
-          class="pa-4"
+          <!-- Active Filter -->
+          <v-col
+            cols="12"
+            md="4"
+          >
+            <v-checkbox
+              v-model="searchActive"
+              label="Csak aktív menük"
+              variant="outlined"
+              density="compact"
+              clearable
+              color="primary"
+              prepend-inner-icon="mdi-store"
+              @update:model-value="applyFilters"
+            />
+          </v-col>
+
+          <!-- Date Range Filter -->
+          <v-col
+            cols="12"
+            md="2"
+          >
+            <v-menu
+              v-model="dateMenu"
+              :close-on-content-click="false"
+              transition="scale-transition"
+              offset-y
+              min-width="auto"
+            >
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  variant="outlined"
+                  color="primary"
+                  size="small"
+                  block
+                >
+                  <v-icon
+                    small
+                    class="mr-1"
+                  >
+                    mdi-calendar
+                  </v-icon>
+                  Dátum tartomány
+                </v-btn>
+              </template>
+              <v-card>
+                <v-card-text>
+                  <v-date-picker
+                    v-model="dateRange"
+                    multiple="range"
+                    title="Dátum szűrés"
+                    @update:model-value="applyDateFilter"
+                  />
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn
+                    text
+                    @click="clearDateFilter"
+                  >
+                    Üres
+                  </v-btn>
+                  <v-btn
+                    text
+                    @click="dateMenu = false"
+                  >
+                    Bezár
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-menu>
+          </v-col>
+        </v-row>
+
+        <!-- Active Filters -->
+        <div
+          v-if="hasActiveFilters"
+          class="mt-3"
         >
-          <v-row class="align-center">
-            <v-col
-              cols="12"
-              md="6"
+          <v-chip-group>
+            <v-chip
+              v-if="searchQuery"
+              closable
+              color="primary"
+              variant="outlined"
+              @click:close="clearSearch"
             >
-              <v-text-field
-                v-model="searchString"
-                label="Keresés"
-                variant="outlined"
-                density="compact"
-                prepend-inner-icon="mdi-magnify"
-                hide-details
-                clearable
-                @keyup.enter="search()"
-              />
-            </v-col>
-            <v-col
-              cols="12"
-              md="6"
-            >
-              <v-btn
-                color="primary"
-                variant="flat"
-                prepend-icon="mdi-magnify"
-                @click="search()"
+              <v-icon
+                small
+                class="mr-1"
               >
-                Keresés
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-card>
-      </v-col>
-    </v-row>
+                mdi-magnify
+              </v-icon>
+              Keresés: "{{ searchQuery }}"
+            </v-chip>
 
+            <v-chip
+              v-if="searchActive"
+              closable
+              color="primary"
+              variant="outlined"
+              @click:close="clearActive"
+            >
+              <v-icon
+                small
+                class="mr-1"
+              >
+                mdi-store
+              </v-icon>
+              {{ searchActive }}
+            </v-chip>
+
+            <v-chip
+              v-if="dateRange && dateRange.length > 1"
+              closable
+              color="primary"
+              variant="outlined"
+              @click:close="clearDateFilter"
+            >
+              <v-icon
+                small
+                class="mr-1"
+              >
+                mdi-calendar
+              </v-icon>
+              {{ formatDateRange(dateRange) }}
+            </v-chip>
+
+            <v-chip
+              v-if="hasActiveFilters"
+              color="error"
+              variant="outlined"
+              @click="clearAllFilters"
+            >
+              <v-icon
+                small
+                class="mr-1"
+              >
+                mdi-close
+              </v-icon>
+              Szűrések törlése
+            </v-chip>
+          </v-chip-group>
+        </div>
+      </v-card-text>
+    </v-card>
     <!-- Mobile Cards View -->
     <v-row
       v-if="!isLoading && $vuetify.display.mobile"
@@ -267,7 +395,6 @@
 
     <!-- Desktop Table View -->
     <v-row
-      v-if="!isLoading"
       class="d-none d-md-flex"
     >
       <v-col>
@@ -275,6 +402,7 @@
           :headers="headers"
           :items="Array.from(menulist.values())"
           :loading="isLoading"
+          loading-text="Adatok betöltése"
           :items-per-page="limit"
           :items-per-page-options="itemsPerPageOptions"
           :items-length="totalCount"
@@ -282,7 +410,7 @@
           hover
           fixed-header
           @update:items-per-page="updateItemsPerPage"
-          @update:page="updatePage"
+          @update:page="handlePageChange"
         >
           <!-- ID column -->
           <template #item.id="{ item }">
@@ -752,7 +880,13 @@ const isLoading = ref(true)
 const showImportPopup = ref(false)
 const showScanPopup = ref(false)
 const scanDate = ref(new Date())
-const searchString = ref("")
+
+const searchQuery = ref("")
+const searchActive = ref(true)
+const dateMenu = ref(false)
+const dateRange = ref([])
+const searchTimeout = ref(null)
+
 const uploadedFiles = ref([])
 const file = ref(null)
 const limit = ref(10)
@@ -831,24 +965,105 @@ const paginationText = computed(() => {
   return `${start}-${end} / ${totalCount.value}`
 })
 
+const hasActiveFilters = computed(() => {
+  return searchQuery.value || searchActive.value || (dateRange.value && dateRange.value.length > 1)
+})
+
+
 // Watchers
 watch([currentPage, limit], () => {
-  getMenuList()
+  loadMenu()
 })
 
 // Methods
-const updatePage = (newPage) => {
-  currentPage.value = newPage
+
+const loadMenu  = () => {
+  let params = {
+      "limit": limit.value,
+      "page": currentPage.value
+    }
+  if (searchQuery.value) params['search'] = searchQuery.value
+  if (searchActive.value) params['active'] = searchActive.value
+  if (dateRange.value && dateRange.value.length > 1) {
+    params['date_from'] = dateRange.value[0].toISODate()
+    params['date_to'] = dateRange.value[dateRange.value.length - 1].toISODate()
+  }
+
+  vendorStore.fetchMenus(route.params.id, params).then(response => {
+    const newMenuList = new Map(
+      response.data.data.menus.map(
+        item => [item.id, { ...item, isEditing: false }]
+      )
+    )
+
+    currentPage.value = response.data.data.page
+    limit.value = response.data.data.limit
+    totalCount.value = response.data.data.total_count
+    menulist.value = newMenuList
+    isLoading.value = false
+  })
+}
+
+const handlePageChange = (page) => {
+  isLoading.value = true
+  currentPage.value = page;
+  loadMenu()
+}
+
+const formatDateRange = (range) => {
+  if (!range || range.length < 2) return ''
+  const start = new Date(range[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const end = new Date(range[range.length - 1]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return `${start} - ${end}`
+}
+
+const debounceSearch = () => {
+  clearTimeout(searchTimeout.value)
+  searchTimeout.value = setTimeout(() => {
+    applyFilters()
+  }, 500)
+}
+
+const applyFilters = () => {
+  isLoading.value = true
+  currentPage.value = 1
+  loadMenu()
+}
+
+const applyDateFilter = () => {
+  if (dateRange.value.length <= 1) {
+    return
+  }
+  dateMenu.value = false
+  applyFilters()
+}
+
+const clearSearch = () => {
+  searchQuery.value = ""
+  applyFilters()
+}
+
+const clearActive = () => {
+  searchActive.value = false
+  applyFilters()
+}
+
+const clearDateFilter = () => {
+  dateRange.value = []
+  dateMenu.value = false
+  applyFilters()
+}
+
+const clearAllFilters = () => {
+  searchQuery.value = ""
+  searchActive.value = true
+  dateRange.value = []
+  applyFilters()
 }
 
 const updateItemsPerPage = (newItemsPerPage) => {
   limit.value = newItemsPerPage
   currentPage.value = 1
-}
-
-const search = () => {
-  currentPage.value = 1
-  getMenuList()
 }
 
 const openImportPopup = () => {
@@ -867,11 +1082,9 @@ const submitJsonFile = async () => {
 
     if (response.status === 201) {
       showImportPopup.value = false
-      showSnackbar('Menü sikeresen importálva', 'success')
-      getMenuList()
+      loadMenu()
     }
   } catch (error) {
-    showSnackbar('Hiba történt az importálás során', 'error')
     console.error('Error importing menu:', error)
   }
 }
@@ -882,11 +1095,9 @@ const submitScan = async () => {
 
     if (response.status === 201) {
       showScanPopup.value = false
-      showSnackbar('Scan sikeresen elindítva', 'success')
-      getMenuList()
+      loadMenu()
     }
   } catch (error) {
-    showSnackbar('Hiba történt a scan során', 'error')
     console.error('Error scanning menu:', error)
   }
 }
@@ -903,12 +1114,9 @@ const handleFileUpload = (event) => {
         file.value = selectedFile
       } catch (error) {
         console.log("Invalid JSON:", error)
-        showSnackbar("Helytelen JSON fájl: " + error.message, 'error')
       }
     }
     reader.readAsText(selectedFile)
-  } else {
-    showSnackbar("Csak .json fájlok engedélyezettek", 'error')
   }
 }
 
@@ -922,39 +1130,10 @@ const toggleActivation = async (menu) => {
     }
 
     if (result.status === 200) {
-      showSnackbar(menu.active ? 'Menü kikapcsolva' : 'Menü bekapcsolva', 'success')
-      getMenuList()
+      loadMenu()
     }
   } catch (error) {
-    showSnackbar('Hiba történt az aktiválás során', 'error')
     console.error('Error toggling activation:', error)
-  }
-}
-
-const getMenuList = async () => {
-  try {
-    isLoading.value = true
-    const response = await vendorStore.fetchMenus(route.params.id, {
-      "search": searchString.value,
-      "limit": limit.value,
-      "page": currentPage.value
-    })
-
-    const newMenuList = new Map(
-      response.data.data.menus.map(
-        item => [item.id, { ...item, isEditing: false }]
-      )
-    )
-
-    currentPage.value = response.data.data.page
-    limit.value = response.data.data.limit
-    totalCount.value = response.data.data.total_count
-    menulist.value = newMenuList
-  } catch (error) {
-    showSnackbar('Hiba történt a menük betöltése során', 'error')
-    console.error('Error fetching menus:', error)
-  } finally {
-    isLoading.value = false
   }
 }
 
@@ -967,12 +1146,10 @@ const addMenu = async () => {
     const response = await menuStore.add(menuData)
 
     if (response.status === 201) {
-      showSnackbar('Menü sikeresen létrehozva', 'success')
       newMenu.value = { name: "" }
-      getMenuList()
+      loadMenu()
     }
   } catch (error) {
-    showSnackbar('Hiba történt a menü létrehozása során', 'error')
     console.error('Error adding menu:', error)
   }
 }
@@ -1010,11 +1187,9 @@ const updateMenu = async (menuId) => {
     const response = await menuStore.update(menuId, updateData)
 
     if (response.status === 200) {
-      showSnackbar('Menü sikeresen frissítve', 'success')
-      getMenuList()
+      loadMenu()
     }
   } catch (error) {
-    showSnackbar('Hiba történt a menü frissítése során', 'error')
     console.error('Error updating menu:', error)
   }
 }
@@ -1031,13 +1206,11 @@ const deleteMenu = async () => {
     const response = await menuStore.delete(selectedMenu.value.id)
 
     if (response.status === 200) {
-      showSnackbar('Menü sikeresen törölve', 'success')
       deleteDialog.value = false
       selectedMenu.value = null
-      getMenuList()
+      loadMenu()
     }
   } catch (error) {
-    showSnackbar('Hiba történt a menü törlése során', 'error')
     console.error('Error deleting menu:', error)
   }
 }
@@ -1053,11 +1226,9 @@ const duplicateMenu = async (menuId) => {
     const response = await menuStore.duplicate(menuId, duplicateData)
 
     if (response.status === 200) {
-      showSnackbar('Menü sikeresen duplikálva', 'success')
-      getMenuList()
+      loadMenu()
     }
   } catch (error) {
-    showSnackbar('Hiba történt a menü duplikálása során', 'error')
     console.error('Error duplicating menu:', error)
   }
 }
@@ -1066,16 +1237,8 @@ const openItemManager = (menuId) => {
   router.push({ path: `/admin/${route.params.id}/menu/${menuId}` })
 }
 
-const showSnackbar = (text, color = 'success') => {
-  snackbar.value = {
-    show: true,
-    text,
-    color
-  }
-}
-
 // Lifecycle
 onMounted(() => {
-  getMenuList()
+  loadMenu()
 })
 </script>

@@ -87,10 +87,11 @@ class Menu(Base):
 
         return session.execute(stmt).scalars().first()
 
-    def find_all_by_vendor(vendor_id, search, limit=10, offset=0):
+    def find_by_vendor(vendor_id, limit=None, offset=0, search=None, active=None, date_from=None, date_to=None):
         stmt = select(Menu).where(
             Menu.vendor_id == vendor_id
-        ).order_by(Menu.from_date.desc(), Menu.name).limit(limit).offset(offset)
+        )
+
         if search:
             stmt = stmt.where(
                 or_(
@@ -99,6 +100,25 @@ class Menu(Base):
                     cast(Menu.to_date, String).ilike(f"%{search}%")
                 )
             )
+
+        if active is not None:
+            stmt = stmt.where(Menu.active == active)
+
+        if date_from is not None and date_to is not None:
+            stmt = stmt.where(
+                 and_(
+                    or_(Menu.from_date == None, Menu.from_date <= date_to),
+                    or_(Menu.to_date == None,   Menu.to_date   >= date_from)
+                )
+            )
+
+        stmt = stmt.order_by(Menu.active.desc(), Menu.from_date.desc(), Menu.name)
+
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        if offset > 0:
+            stmt = stmt.offset(offset)
+
         return session.execute(stmt).scalars().all()
 
     def count_by_vendor_id(vendor_id):

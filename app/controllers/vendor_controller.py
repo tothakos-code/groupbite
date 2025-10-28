@@ -196,14 +196,18 @@ def handle_menu_get(vendor_id):
     except TypeError as e:
         limit = 10
         page = 1
-    offset = 0 if page is None else limit * (page - 1)
-    search = request.args.get('search')
-    menus = Menu.find_all_by_vendor(vendor_id, search, limit, offset)
-    total_count = Menu.count_by_vendor_id(vendor_id)
-    result = []
-    for m in menus:
-        result.append(m.serialized)
 
+    search = request.args.get('search')
+    active = request.args.get('active')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    offset = 0 if page is None else limit * (page - 1)
+
+    menus = Menu.find_by_vendor(vendor_id, limit, offset, search, active, date_from, date_to)
+    all_menus = Menu.find_by_vendor(vendor_id, None, 0, search, active, date_from, date_to)
+
+    total_count = len(all_menus)
+    result = [m.serialized for m in menus]
     return { "data": {
         "menus": result,
         "page": page,

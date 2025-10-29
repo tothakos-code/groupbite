@@ -221,6 +221,7 @@
                       variant="outlined"
                       density="compact"
                       hide-details
+                      @click.stop=""
                     />
                     <span
                       v-else
@@ -238,6 +239,7 @@
                       variant="outlined"
                       density="compact"
                       hide-details
+                      @click.stop=""
                     />
                     <span v-else>{{ item.description || '-' }}</span>
                   </div>
@@ -252,6 +254,7 @@
                       variant="outlined"
                       density="compact"
                       hide-details
+                      @click.stop=""
                     />
                     <v-chip
                       v-else

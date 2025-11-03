@@ -1,6 +1,7 @@
 from functools import wraps
 from marshmallow import ValidationError
 from flask import request, session
+from app.db.session import get_session_context
 import logging
 
 
@@ -13,7 +14,7 @@ def validate_data(schema):
             except ValidationError as err:
                 logging.warning(f"Validation error: {err.messages}")
                 return {"error": err.messages}, 400
-            return f(request_data, *args, **kwargs)
+            return f(data=request_data, *args, **kwargs)
         return decorated_function
     return decorator
 
@@ -49,3 +50,18 @@ def require_admin(f):
             return { "error": "Unauthorized" }, 401
         return f(*args, **kwargs)
     return decorated_function
+
+def handle_request(f):
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        # this creates the request scoped database session
+        with get_session_context() as db:
+            try:
+                return f(self, db=db, *args, **kwargs)
+            except ValueError as e:
+                logging.warning(f"Bad request in {f.__name__}: {e}")
+                return {"error": str(e)}, 400
+            except Exception as e:
+                logging.exception(f"Internal server error in {f.__name__}: {e}")
+                return {"error": "Internal server error"}, 500
+    return wrapper

@@ -13,7 +13,7 @@ from marshmallow import Schema, fields
 import logging
 import re
 
-non_matched = re.compile("\$\{.*?\}")
+non_matched = re.compile("\$\{.*?}")
 
 
 class BaseOrderSchema(Schema):
@@ -74,225 +74,26 @@ class Order(Base):
             session.rollback()
             return False, None
 
+# repo
     def get_by_id(order_id):
         stmt = select(Order).where(Order.id == order_id)
         return session.execute(stmt).scalars().first()
 
-
-    def last_7_days_statistics():
-        today = date.today()
-        start_date = today - relativedelta(days=6)  # 6 days ago + today = 7 days
-
-        # Generate day list
-        last_7_days = [(today - relativedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
-        last_7_days.reverse()
-
-        vendors = Vendor.find_all_active()
-        vendor_dict = {vendor.id: vendor.name for vendor in vendors}
-
-        # Get ALL daily sums for ALL vendors
-        daily_sums_query = (
-            select(
-                Order.vendor_id,
-                Order.date_of_order,
-                func.coalesce(func.sum(Order.total_price), 0).label('daily_sum')  # Adjust column name as needed
-            )
-            .where(
-                and_(
-                    Order.date_of_order >= start_date,
-                    Order.date_of_order <= today,
-                    Order.vendor_id.in_(list(vendor_dict.keys()))
-                )
-            )
-            .group_by(
-                Order.vendor_id,
-                Order.date_of_order
-            )
-        )
-
-        daily_data = session.execute(daily_sums_query).all()
-
-        daily_lookup = {}
-        for row in daily_data:
-            key = f"{row.vendor_id}-{row.date_of_order.strftime('%Y-%m-%d')}"
-            daily_lookup[key] = row.daily_sum
-
-        result = {}
-        for vendor_id, vendor_name in vendor_dict.items():
-            result[vendor_name] = {"data": []}
-
-            for day in last_7_days:
-                lookup_key = f"{vendor_id}-{day}"
-                daily_sum = daily_lookup.get(lookup_key, 0)
-                result[vendor_name]["data"].append(daily_sum)
-
-        return result, last_7_days
-
-
-    def last_12_month_statistics():
-
-        today = date.today()
-        start_date = today - relativedelta(months=11)  # 11 months ago + current month = 12 months
-
-        # Generate month list
-        last_12_months = [(today - relativedelta(months=i)).strftime("%Y-%m") for i in range(12)]
-        last_12_months.reverse()
-
-        vendors = Vendor.find_all_active()
-        vendor_dict = {vendor.id: vendor.name for vendor in vendors}
-
-        # Get ALL monthly sums for ALL vendors
-        monthly_sums_query = (
-            select(
-                Order.vendor_id,
-                extract('year', Order.date_of_order).label('year'),
-                extract('month', Order.date_of_order).label('month'),
-                func.coalesce(func.sum(Order.total_price), 0).label('monthly_sum')  # Adjust column name as needed
-            )
-            .where(
-                and_(
-                    Order.date_of_order >= start_date,
-                    Order.date_of_order <= today,
-                    Order.vendor_id.in_(list(vendor_dict.keys()))
-                )
-            )
-            .group_by(
-                Order.vendor_id,
-                extract('year', Order.date_of_order),
-                extract('month', Order.date_of_order)
-            )
-        )
-
-        monthly_data = session.execute(monthly_sums_query).all()
-
-        monthly_lookup = {}
-        for row in monthly_data:
-            key = f"{row.vendor_id}-{int(row.year)}-{int(row.month):02d}"
-            monthly_lookup[key] = row.monthly_sum
-
-        result = {}
-        for vendor_id, vendor_name in vendor_dict.items():
-            result[vendor_name] = {"data": []}
-
-            for month in last_12_months:
-                year, month_num = month.split('-')
-                lookup_key = f"{vendor_id}-{year}-{month_num}"
-                monthly_sum = monthly_lookup.get(lookup_key, 0)
-                result[vendor_name]["data"].append(monthly_sum)
-
-        return result, last_12_months
-
-
-    def month_sum_by_vendor(vendor_id, year, month):
-        stmt = select(Order).where(
-            Order.vendor_id == vendor_id,
-            extract("year", Order.date_of_order) == year,
-            extract("month", Order.date_of_order) == month
-        )
-
-        orders = session.execute(stmt).scalars()
-        sum = 0
-        for order in orders:
-            for basket_entry in order.order_items:
-                sum += basket_entry.total_price
-            if len(order.get_order_items()) != 0:
-                sum += order.order_fee
-
-
-        return sum
-
-    def day_sum_by_vendor(vendor_id, year, month, day):
-        stmt = select(Order).where(
-            Order.vendor_id == vendor_id,
-            extract("year", Order.date_of_order) == year,
-            extract("month", Order.date_of_order) == month,
-            extract("day", Order.date_of_order) == day
-        )
-
-        orders = session.execute(stmt).scalars()
-        sum = 0
-        for order in orders:
-            for basket_entry in order.order_items:
-                sum += basket_entry.total_price
-            if len(order.get_order_items()) != 0:
-                sum += order.order_fee
-
-
-        return sum
-
-    def find_orders_between_dates(start, end):
-        stmt = select(
-            Order
-        ).where(
-            Order.date_of_order.between(start, end)
-        )
-        return session.execute(stmt).scalars().all()
-
-
-    def find_user_order_dates_between(user_id, start, end):
-        from .order_item import OrderItem
-        stmt = select(
-            Order
-        ).join(
-            Order.order_items
-        ).where(
-            OrderItem.user_id == user_id,
-            Order.date_of_order.between(start, end)
-        )
-        return session.execute(stmt).scalars().all()
-
-    def find_all(limit=None, offset=0):
-        stmt = select(Order).order_by(Order.date_of_order.desc())
-        if limit is not None:
-            stmt = stmt.limit(limit).offset(offset)
-        return session.execute(stmt).scalars().all()
-
+# repo
     def find_open_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today()):
         stmt = select(Order).where(
             Order.vendor_id == vendor_id,
             Order.date_of_order == date,
             Order.state_id != OrderState.CLOSED)
         return session.execute(stmt).scalars().first()
-
+# repo
     def find_order_by_date_for_a_vendor(vendor_id: UUID, date: date = date.today()):
         stmt = select(Order).where(
             Order.vendor_id == vendor_id,
             Order.date_of_order == date)
         return session.execute(stmt).scalars().first()
 
-    def find_order_between(date_from, date_to):
-        stmt = select(Order).where(
-            Order.date_of_order.between(date_from, date_to)
-        )
-        return session.execute(stmt).all()
-
-
-    def find_order_participants(self):
-        from .user import User
-        from .user_basket import UserBasket
-        from .order_item import OrderItem
-        from .order import Order
-
-        if self.state_id == OrderState.CLOSED:
-            # Closed order → participants come from OrderItem
-            stmt = (
-                select(User)
-                .distinct()
-                .join(OrderItem, User.id == OrderItem.user_id)
-                .where(OrderItem.order_id == self.id)
-            )
-        else:
-            # Open (or other) state → participants come from UserBasket
-            stmt = (
-                select(User)
-                .distinct()
-                .join(UserBasket, User.id == UserBasket.user_id)
-                .where(UserBasket.order_id == self.id)
-            )
-
-        return session.execute(stmt).scalars().all()
-
-
+# service
     def get_order_items(self, user_filter=None):
         """
         Get order items grouped by user (uses order_items if closed, otherwise basket items)
@@ -377,7 +178,7 @@ class Order(Base):
 
         return result
 
-
+# repo
     def get_users(self):
         from .user import User
         from .user_basket import UserBasket
@@ -387,18 +188,8 @@ class Order(Base):
                 UserBasket.order_id == self.id
             )
         return session.execute(stmt).all()
-
+# repo/service
     def change_state(self, new_state, user_id=None):
-        """
-        Change order state and handle order item creation/deletion
-
-        Args:
-            new_state: The new OrderState
-            user_id: User ID if changing the order_by field
-
-        Returns:
-            bool: True if successful, False otherwise
-        """
         from .order_item import OrderItem
 
         try:
@@ -432,12 +223,12 @@ class Order(Base):
             logging.exception("Unhandled exception during order state change")
             session.rollback()
             return False
-
+# repo
     def _delete_order_items(self):
         """Delete all order items for this order"""
         from .order_item import OrderItem
         session.query(OrderItem).filter(OrderItem.order_id == self.id).delete()
-
+# repo/service
     def _create_order_items_and_calculate_total(self):
         """
         Create order items from user basket and calculate total price
@@ -485,22 +276,7 @@ class Order(Base):
                 session.expunge(item)
             return False
 
-    def set_order_fee(self, fee):
-        self.order_fee = fee
-        try:
-            session.commit()
-            return True
-        except exc.DataError as e:
-            logging.exception("DataError during order add")
-            session.rollback()
-            return False
-        except Exception as e:
-            logging.exception("Unhadled exception happened, rolling back")
-            session.rollback()
-            return False
-
-
-
+# service?
     def send_in_mail(self):
         from app.services.mail_sender_service import send_mail
         from app.entities.user_basket import UserBasket
@@ -515,7 +291,7 @@ class Order(Base):
                 basket_sum[item.menu_item_id]["quantity"] += item.count
             else:
                 basket_sum[item.menu_item_id] = {**item.basket_format, "quantity": item.count}
-
+# utils/email templating
         basket_template = ""
         basket_categories = {}
         for item in basket_sum.values():

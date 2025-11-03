@@ -16,9 +16,11 @@ from app.controllers import vendor_blueprint
 from app.controllers import menu_blueprint
 from app.controllers import item_blueprint
 from app.controllers import size_blueprint
-from app.controllers import order_blueprint
 from app.controllers import user_blueprint
 from app.controllers import statistics_blueprint
+
+from app.config import Config
+from app.db.session import init_db
 
 from os import scandir, makedirs, path
 import sys
@@ -72,7 +74,7 @@ def create_migration():
     from app.create_tables import create_database_migration
     create_database_migration(application)
 
-def create_app(debug=False):
+def create_app(config: Config = Config(), debug=False) -> Flask:
     initialize_logging()
     logging.info("Initialization started")
 
@@ -104,6 +106,9 @@ def create_app(debug=False):
         debug=debug,
         async_mode="eventlet",
         allow_unsafe_werkzeug=True)
+
+    # Initialize database
+    init_db(config)
 
     from app.controllers import register_blueprints
 

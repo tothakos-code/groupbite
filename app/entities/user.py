@@ -37,20 +37,6 @@ class User(Base):
         return f"User<id={self.id},username={self.username}>"
 
 
-    def get_one_by_username(username):
-        stmt = select(User).where(
-            User.username == username
-        )
-        return session.execute(stmt).scalars().first()
-
-
-    def find_all(limit=None, offset=0):
-        stmt = select(User)
-        if limit is not None:
-            stmt = stmt.limit(limit).offset(offset)
-        return session.execute(stmt).scalars().all()
-
-
     def get_one_by_email(email):
         stmt = select(User).where(
             User.email == email
@@ -74,90 +60,6 @@ class User(Base):
             User.id == user_id
         )
         return session.execute(stmt).scalars().first().admin
-
-    def is_username_valid(username):
-        notvalid_usernames = [
-            "null",
-            "None",
-            None,
-            "undefined",
-            ""
-        ]
-        if username in notvalid_usernames:
-            return False, "Ez nem lehet a neved: " + username
-
-        notvalid_characters = ["'", '"', "=", ",", ".", "&", "@", "#", "<", ">", "(", ")","[", "]", "{", "}", "%", ";", "*", "`"]
-        for char in notvalid_characters:
-            if char in username:
-                return False, "Tiltott karakter a felhasználónévben: " + char
-
-        if User.get_one_by_username(username):
-            return False, "Ez a felhasználónév már foglalt"
-
-        if len(username) > 50:
-            return False, "Felhasználónév túl hosszú, válassz rövidebbet"
-
-        return True, ""
-
-
-    def is_email_valid(email):
-        if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
-            return False, "Helytelen email formátum"
-
-        if User.get_one_by_email(email):
-            return False, "Ez az email cím már foglalt"
-
-        return True, ""
-
-
-    def create_user(user):
-        if session.query(User).filter(User.username == user.username).first():
-            logging.error(f"Error in user creation. User '{user.username}' already exist.")
-            return None
-        session.add(user)
-
-        try:
-            session.commit()
-            session.refresh(user)
-            return True, user
-        except exc.DataError as e:
-            logging.exception("DataError during user add")
-            session.rollback()
-            return False, None
-        except Exception as e:
-            logging.exception("Unhadled exception happened, rolling back")
-            session.rollback()
-            return False, None
-
-
-    def update_user(self, user):
-        self.username = user["username"]
-        try:
-            session.commit()
-            session.refresh(self)
-            return True, user
-        except exc.DataError as e:
-            logging.exception("DataError during user update")
-            session.rollback()
-            return False, None
-        except Exception as e:
-            logging.exception("Unhadled exception happened, rolling back")
-            session.rollback()
-            return False, None
-        return self
-
-
-    def get_all_orders(self):
-        return self.orders
-
-
-    def get_all_orders_between(self, start, end):
-        stmt = select(User).where(
-            User.id == self.id,
-            User.orders.any(Order.date_of_order.between(start, end))
-        )
-        return session.execute(stmt).all()
-
 
     @property
     def serialized(self):

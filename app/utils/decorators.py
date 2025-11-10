@@ -4,6 +4,8 @@ from flask import request, session
 from app.db.session import get_session_context
 import logging
 
+from app.repositories.user_repository import UserRepository
+
 
 def validate_data(schema):
     def decorator(f):
@@ -44,10 +46,10 @@ def require_auth(f):
 def require_admin(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        from app.entities.user import User
-        if not User.is_admin(session['user_id']):
-            logging.warning("User unauthorized")
-            return { "error": "Unauthorized" }, 401
+        with get_session_context() as db:
+            if not UserRepository(db).is_admin(session['user_id']):
+                logging.warning("User unauthorized")
+                return { "error": "Unauthorized" }, 401
         return f(*args, **kwargs)
     return decorated_function
 

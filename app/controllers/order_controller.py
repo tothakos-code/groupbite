@@ -36,7 +36,6 @@ class OrderController:
         bp.add_url_rule("/<order_id>/state", view_func=self.handle_close_order, methods=["PUT"])
         bp.add_url_rule("/<order_id>/send-email", view_func=self.handle_manual_email_order, methods=["POST"])
         bp.add_url_rule("/statistics", view_func=self.handle_get_statistics, methods=["GET"])
-        bp.add_url_rule("/schedules", view_func=self.schedules, methods=["GET"])
 
     @handle_request
     def handle_order_history(self, db):

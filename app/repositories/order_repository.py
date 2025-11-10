@@ -5,11 +5,8 @@ from app.entities.user_basket import UserBasket
 from sqlalchemy import ForeignKey, select, exc, extract, Index, text, func, and_
 from typing import Optional
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 from datetime import date
 from uuid import UUID
-import logging
-import re
 
 class OrderRepository:
 
@@ -85,10 +82,10 @@ class OrderRepository:
         return self.db.execute(stmt).scalars().all()
 
     def delete_order_items(self, order):
-        db.query(OrderItem).filter(OrderItem.order_id == order.id).delete()
+        self.db.query(OrderItem).filter(OrderItem.order_id == order.id).delete()
 
     def save(self, order: Order):
-        db.add(order)
+        self.db.add(order)
 
     def get_daily_sums(self, start_date: date, end_date: date, vendors_ids: list):
         daily_sums_query = (

@@ -16,7 +16,6 @@ from app.controllers import vendor_blueprint
 from app.controllers import menu_blueprint
 from app.controllers import item_blueprint
 from app.controllers import size_blueprint
-from app.controllers import user_blueprint
 from app.controllers import statistics_blueprint
 
 from app.config import Config

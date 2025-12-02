@@ -77,7 +77,7 @@ class Vendor(Base):
         stmt = select(Vendor).order_by(Vendor.name)
         return session.execute(stmt).scalars().all()
 
-    def find_all_by_type(type):
+    def find_all_by_type(type: VendorType):
         stmt = select(Vendor).where(Vendor.type == type)
         return session.execute(stmt).scalars().all()
 

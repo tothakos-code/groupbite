@@ -1,10 +1,9 @@
-from typing import Any, Callable
 import json
-import logging
 from app.entities.vendor import Vendor, VendorType
+from app.event_manager import event_manager
+from app.services.order_service import OrderService
 from app.services.vendor_service import VendorService
 from app.base_vendor import BaseVendor
-from datetime import date
 
 class VendorFactory:
     _vendors = {}
@@ -49,6 +48,7 @@ class VendorFactory:
                 hh, mm = vendor_db.get_setting_value("closed_scheduler").split(":")
                 schedule_task(str(vendor_db.id) + "-closed", int(hh), int(mm), vendor_db.closed_wrapper)
 
+            event_manager.register_listener("afterAdd@" + str(vendor_db.name), OrderService.emit_update)
 
     @classmethod
     def get_vendors(self) -> str:

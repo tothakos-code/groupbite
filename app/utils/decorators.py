@@ -1,7 +1,7 @@
 from functools import wraps
 from marshmallow import ValidationError
 from flask import request, session
-from app.db.session import get_session_context
+from app.db.session import get_session_context, get_scoped_session_context
 import logging
 
 from app.repositories.user_repository import UserRepository
@@ -57,7 +57,7 @@ def handle_request(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         # this creates the request scoped database session
-        with get_session_context() as db:
+        with get_scoped_session_context() as db:
             try:
                 return f(self, db=db, *args, **kwargs)
             except ValueError as e:

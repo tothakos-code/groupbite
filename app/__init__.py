@@ -52,17 +52,17 @@ def initialize_logging():
         level=logging.NOTSET
     )
 
-        # Redirect stdout and stderr to logger
+
     class LoggerWriter:
         def __init__(self, level):
             self.level = level
         def write(self, message):
-            if message.strip():  # Avoid writing empty lines
+            if message.strip():
                 self.level(message)
         def flush(self):
-            pass  # Needed for compatibility with sys.stdout/sys.stderr
+            pass
 
-    sys.stdout = LoggerWriter(logging.info)  # Redirect stdout (prints)
+    sys.stdout = LoggerWriter(logging.info)
     sys.stderr = LoggerWriter(logging.error)
 
 def create_migration():

@@ -3,6 +3,8 @@ import re
 from datetime import datetime, timedelta
 from collections import Counter
 
+from app.repositories.user_basket_repository import UserBasketRepository
+from app.services.user_basket_service import UserBasketService
 from app.socketio_singleton import SocketioSingleton
 
 socketio = SocketioSingleton.get_instance()
@@ -15,6 +17,9 @@ from app.repositories.user_repository import UserRepository
 
 
 class UserService:
+
+    def __init__(self, user_basket_service: UserBasketService):
+        self.user_basket_service = user_basket_service
 
     @staticmethod
     def login(db, user_id):
@@ -171,8 +176,7 @@ class UserService:
         return True, ""
 
     # TODO: Move to UserBasket service
-    @staticmethod
-    def get_user_history(db, user_id, args):
+    def get_user_history(self, db, user_id, args):
         try:
             limit = int(args.get('limit'))
             page = int(args.get('page'))
@@ -194,7 +198,7 @@ class UserService:
         vendors_list = [{"id": vendor.id, "title": vendor.name} for vendor in vendors]
 
         all_order_ids = list(set(item.order_id for item in user_items))
-        order_user_counts = UserBasket.get_user_counts_batch(all_order_ids)
+        order_user_counts = self.user_basket_service.get_user_count_by_order(db, all_order_ids)
 
         # Build orders dictionary
         orders_dict = {}
@@ -241,7 +245,7 @@ class UserService:
         processed_orders = set()
 
         all_order_ids_for_total = list(unique_orders)
-        all_order_user_counts = UserBasket.get_user_counts_batch(all_order_ids_for_total)
+        all_order_user_counts = self.user_basket_service.get_user_count_by_order(db, all_order_ids_for_total)
 
         for item in all_items:
             if item.order.id not in processed_orders:
@@ -260,7 +264,8 @@ class UserService:
 
     # TODO: move to UserBasket service
     @staticmethod
-    def get_user_statistics(user_id):
+    def get_user_statistics(db, user_id):
+        user_basket_repo = UserBasketRepository(db)
         try:
             all_user_items = UserBasket.find_user_orders(user_id)
 
@@ -317,7 +322,7 @@ class UserService:
 
                 # Add user's share of order fee (only once per order)
                 if order_id not in processed_order_fees:
-                    order_participants = UserBasket.user_count(order_id)
+                    order_participants = user_basket_repo.user_count(order_id)
                     user_fee_share = item.order.order_fee / order_participants if order_participants > 0 else 0
                     total_spent += user_fee_share
                     processed_order_fees.add(order_id)
@@ -335,7 +340,7 @@ class UserService:
 
                     # Add fee share for this month (only once per order)
                     if order_id not in processed_order_fees:
-                        order_participants = UserBasket.user_count(order_id)
+                        order_participants = user_basket_repo.user_count(order_id)
                         user_fee_share = item.order.order_fee / order_participants if order_participants > 0 else 0
                         this_month_spent += user_fee_share
 
@@ -380,7 +385,8 @@ class UserService:
 
     # TODO: Move to OrderService
     @staticmethod
-    def get_user_spending_trends(user_id):
+    def get_user_spending_trends(db, user_id):
+        user_basket_repo = UserBasketRepository(db)
         try:
             months = 3
             # Calculate date range
@@ -417,7 +423,7 @@ class UserService:
                 # Add user's share of order fee (only once per order per month)
                 order_id = item.order.id
                 if order_id not in processed_order_fees[month_key]:
-                    order_participants = UserBasket.user_count(order_id)
+                    order_participants = user_basket_repo.user_count(order_id)
                     user_fee_share = item.order.order_fee / order_participants if order_participants > 0 else 0
                     monthly_spending[month_key] += user_fee_share
                     processed_order_fees[month_key].add(order_id)
@@ -439,6 +445,7 @@ class UserService:
     @staticmethod
     def get_user_vendor_breakdown(db, user_id):
         user_repo = UserRepository(db)
+        user_basket_repo = UserBasketRepository(db)
         try:
             all_user_items = UserBasket.find_user_orders(user_id)
 
@@ -459,7 +466,7 @@ class UserService:
                 # Add user's share of order fee (only once per order per vendor)
                 order_id = item.order.id
                 if order_id not in processed_order_fees[vendor_name]:
-                    order_participants = UserBasket.user_count(order_id)
+                    order_participants = user_basket_repo.user_count(order_id)
                     user_fee_share = item.order.order_fee / order_participants if order_participants > 0 else 0
                     vendor_spending[vendor_name] += user_fee_share
                     processed_order_fees[vendor_name].add(order_id)

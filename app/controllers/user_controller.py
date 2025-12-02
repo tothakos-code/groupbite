@@ -110,13 +110,13 @@ class UserController:
     @require_auth
     @handle_request
     def user_statistics(self, db, user_id):
-        stats = self.user_service.get_user_statistics(user_id)
+        stats = self.user_service.get_user_statistics(db, user_id)
         return { "statistics": stats }
 
     @require_auth
     @handle_request
     def user_spending_trends(self, db, user_id):
-        trends = self.user_service.get_user_spending_trends(user_id)
+        trends = self.user_service.get_user_spending_trends(db, user_id)
         return { "trends": trends }
 
     @require_auth

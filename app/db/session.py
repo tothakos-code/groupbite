@@ -46,7 +46,7 @@ class DatabaseManager:
         return self.SessionFactory()
 
     @contextmanager
-    def get_session_context(self) -> Generator[Session, None, None]:
+    def get_scoped_session_context(self) -> Generator[Session, None, None]:
         session = self.SessionFactory()
         try:
             yield session
@@ -58,6 +58,19 @@ class DatabaseManager:
         finally:
             session.close()
             self.SessionFactory.remove()
+
+    @contextmanager
+    def get_session_context(self) -> Generator[Session, None, None]:
+        session = sessionmaker(bind=self.engine)()
+        try:
+            yield session
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.exception("Session error, rolling back")
+            raise
+        finally:
+            session.close()
 
     def close_all_sessions(self):
         self.SessionFactory.remove()
@@ -79,6 +92,13 @@ def get_session() -> Session:
         raise RuntimeError("Database not initialized. Call init_db() first.")
     return db_manager.get_session()
 
+
+@contextmanager
+def get_scoped_session_context() -> Generator[Session, None, None]:
+    if db_manager is None:
+        raise RuntimeError("Database not initialized. Call init_db() first.")
+    with db_manager.get_scoped_session_context() as session:
+        yield session
 
 @contextmanager
 def get_session_context() -> Generator[Session, None, None]:

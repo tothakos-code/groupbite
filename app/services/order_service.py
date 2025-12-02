@@ -1,4 +1,5 @@
-from app.entities.user_basket import UserBasket
+
+from app.db.session import get_session_context
 from app.repositories.order_repository import OrderRepository
 from app.repositories.order_item_repository import OrderItemRepository
 from datetime import date
@@ -10,13 +11,18 @@ from app.entities.vendor import Vendor
 from app.event_manager import event_manager
 from dateutil.relativedelta import relativedelta
 from flask import session
+
+from app.repositories.user_basket_repository import UserBasketRepository
 from app.scheduler import reschedule_task
+from app.services.user_basket_service import UserBasketService
+from app.socketio_singleton import SocketioSingleton
 
 
 class OrderService:
 
-    def __init__(self, order_item_repository: OrderItemRepository):
+    def __init__(self, order_item_repository: OrderItemRepository, user_basket_service: UserBasketService):
         self.order_item_repo = order_item_repository
+        self.user_basket_service = user_basket_service
 
     @staticmethod
     def get_order_by_id(db, order_id: int) -> Optional[Order]:
@@ -51,7 +57,7 @@ class OrderService:
         }
 
     @staticmethod
-    def get_order_items(order, user_filter=None):
+    def get_order_items(order: Order, user_filter=None):
         if user_filter is not None:
             if not isinstance(user_filter, (list, tuple, set)):
                 user_filter = [user_filter]
@@ -141,8 +147,7 @@ class OrderService:
         order.order_fee = data["order_fee"]
         return order
 
-    @staticmethod
-    def add_to_basket(db, order_id, user_id, item_id, size_id):
+    def add_to_basket(self, db, order_id, user_id, item_id, size_id):
         order_repo = OrderRepository(db)
         order = order_repo.get_by_id( order_id)
         if not order:
@@ -157,7 +162,8 @@ class OrderService:
 
         event_manager.trigger_event("beforeAdd@" + order.vendor.name, data)
 
-        ok, result = UserBasket.add_item(
+        basket_item = self.user_basket_service.add_item(
+            db,
             user_id,
             item_id,
             size_id,
@@ -166,10 +172,9 @@ class OrderService:
 
         event_manager.trigger_event("afterAdd@" + order.vendor.name, data)
 
-        return ok, order
+        return basket_item
 
-    @staticmethod
-    def remove_from_basket(db, order_id, user_id, item_id, size_id):
+    def remove_from_basket(self, db, order_id, user_id, item_id, size_id):
         order_repo = OrderRepository(db)
         order = order_repo.get_by_id( order_id)
         if not order:
@@ -182,26 +187,31 @@ class OrderService:
             "size_id": size_id
         }
 
-        event_manager.trigger_event("beforeAdd@" + order.vendor.name, data)
+        event_manager.trigger_event("beforeRemove@" + order.vendor.name, data)
 
-        ok, result = UserBasket.remove_item(
+        basket_item = self.user_basket_service.remove_item(
+            db,
             user_id,
             item_id,
             size_id,
             order_id
         )
 
-        event_manager.trigger_event("afterAdd@" + order.vendor.name, data)
+        event_manager.trigger_event("afterRemove@" + order.vendor.name, data)
 
-        return ok, order
+        return basket_item
 
-    @staticmethod
-    def copy_basket(db, order_id, user_id, src_user_id):
+    def copy_basket(self, db, order_id, user_id, src_user_id):
         order_repo = OrderRepository(db)
-        UserBasket.clear_items(user_id, order_id)
-        for item in UserBasket.find_user_basket(src_user_id, order_id):
+        user_basket_repo = UserBasketRepository(db)
+        self.user_basket_service.clear_items(db, user_id, order_id)
+        for item in user_basket_repo.find_user_basket(order_id, src_user_id):
             for i in range(0, item.count):
-                UserBasket.add_item(user_id, str(item.menu_item_id), item.size_id, order_id)
+                try:
+                    self.user_basket_service.add_item(db, user_id, str(item.menu_item_id), item.size_id, order_id)
+                except ValueError as e:
+                    logging.error(e)
+                    continue
 
         order = order_repo.get_by_id(order_id)
         return order
@@ -394,7 +404,7 @@ class OrderService:
             order.total_price = order_price
 
             # Flush to get any database errors before final commit
-            db.flush()
+            # db.flush()
             return True
 
         except Exception as e:
@@ -410,3 +420,22 @@ class OrderService:
         order = order_repo.get_by_id(order_id)
         order.order_fee = new_fee
         return order
+
+    @staticmethod
+    def emit_update(data):
+        with get_session_context() as db:
+            order_repo = OrderRepository(db)
+            order = order_repo.get_by_id(data["order_id"])
+            socketio = SocketioSingleton.get_instance()
+            socketio.emit(
+                "be_order_update",
+                {"basket": order.get_order_items()},
+                to=f"{order.vendor_id}@{order.date_of_order}"
+            )
+            from app import VendorFactory
+            vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
+            socketio.emit(
+                "be_menu_update",
+                {"menus": vendor.get_menus(str(order.date_of_order))},
+                to=f"{order.vendor_id}@{order.date_of_order}"
+            )

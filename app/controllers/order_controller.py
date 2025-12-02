@@ -1,6 +1,8 @@
 from flask import Blueprint, request
 from flask_socketio import join_room, leave_room, rooms
 import logging
+
+from app.services.user_basket_service import UserBasketService
 from app.socketio_singleton import SocketioSingleton
 from app.entities.order import Order, BaseOrderSchema
 from app.entities.user_basket import UserBasket
@@ -13,8 +15,9 @@ socketio = SocketioSingleton.get_instance()
 
 class OrderController:
 
-    def __init__(self, order_service: OrderService):
+    def __init__(self, order_service: OrderService, user_basket_service: UserBasketService):
         self.order_service = order_service
+        self.user_basket_service = user_basket_service
         self.blueprint = self._create_blueprint()
         self._register_routes()
 
@@ -103,6 +106,7 @@ class OrderController:
     @handle_request
     def handle_copy_basket(self, db, order_id, user_id, src_user_id):
         order = self.order_service.copy_basket(db, order_id, user_id, src_user_id)
+        db.commit()
         vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
         socketio.emit(
             "be_order_update",
@@ -120,12 +124,15 @@ class OrderController:
     @validate_url_params(IDSchema())
     @handle_request
     def handle_add_to_basket(self, db, order_id, user_id, item_id, size_id):
-        ok, order = self.order_service.add_to_basket(db, order_id, user_id, item_id, size_id)
-
-        if ok:
+        basket_item = self.order_service.add_to_basket(db, order_id, user_id, item_id, size_id)
+        db.commit()
+        if basket_item:
+            order = basket_item.order
+            logging.info(basket_item)
+            logging.info(basket_item.order)
             socketio.emit(
                 "be_order_update",
-                { "basket": order.get_order_items() },
+                { "basket": self.order_service.get_order_items(order) },
                 to=f"{order.vendor_id}@{order.date_of_order}"
             )
             vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
@@ -142,42 +149,42 @@ class OrderController:
     @validate_url_params(IDSchema())
     @handle_request
     def handle_remove_from_basket(self, db, order_id, user_id, item_id, size_id):
-        ok, order = self.order_service.remove_from_basket(db,  order_id, user_id, item_id, size_id)
-
-        if ok:
-            socketio.emit(
-                "be_order_update",
-                { "basket": order.get_order_items() },
-                to=f"{order.vendor_id}@{order.date_of_order}"
-            )
-            vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
-            socketio.emit(
-                "be_menu_update",
-                { "menus": vendor.get_menus(str(order.date_of_order)) },
-                to=f"{order.vendor_id}@{order.date_of_order}"
-            )
-            return {"msg": "OK"}, 204
-        return {"error": "something went wrong."}, 500
+        self.order_service.remove_from_basket(db,  order_id, user_id, item_id, size_id)
+        db.commit()
+        order = self.order_service.get_order_by_id(db, order_id)
+        socketio.emit(
+            "be_order_update",
+            { "basket": self.order_service.get_order_items(order)  },
+            to=f"{order.vendor_id}@{order.date_of_order}"
+        )
+        vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
+        socketio.emit(
+            "be_menu_update",
+            { "menus": vendor.get_menus(str(order.date_of_order)) },
+            to=f"{order.vendor_id}@{order.date_of_order}"
+        )
+        return {"msg": "OK"}, 204
 
     @require_auth
     @validate_url_params(IDSchema())
     @handle_request
     def handle_clear_user_basket(self, db, order_id, user_id):
-        if UserBasket.clear_items(user_id, order_id):
-            order = self.order_service.get_order_by_id(db, order_id)
-            socketio.emit(
-                "be_order_update",
-                {"basket": order.get_order_items()},
-                to=f"{order.vendor_id}@{order.date_of_order}"
-            )
-            vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
-            socketio.emit(
-                "be_menu_update",
-                {"menus": vendor.get_menus(str(order.date_of_order))},
-                to=f"{order.vendor_id}@{order.date_of_order}"
-            )
-            return {"msg": "OK"}, 204
-        return {"error": "Order or User not found"}, 404
+        self.user_basket_service.clear_items(db, user_id, order_id)
+        db.commit()
+        order = self.order_service.get_order_by_id(db, order_id)
+        socketio.emit(
+            "be_order_update",
+            {"basket": self.order_service.get_order_items(order)},
+            to=f"{order.vendor_id}@{order.date_of_order}"
+        )
+        vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
+        socketio.emit(
+            "be_menu_update",
+            {"menus": vendor.get_menus(str(order.date_of_order))},
+            to=f"{order.vendor_id}@{order.date_of_order}"
+        )
+        return {"msg": "OK"}, 204
+
 
     @require_auth
     @validate_url_params(IDSchema())

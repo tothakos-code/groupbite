@@ -52,14 +52,6 @@ class Menu(Base):
     def __repr__(self):
         return f"Menu<{self.id},name={self.name},from_date={self.from_date},to_date={self.to_date},vendor_id={self.vendor_id}>"
 
-    def find(vendor_id, date):
-        stmt = select(Menu).where(
-            Menu.vendor_id == vendor_id,
-            Menu.from_date <= date,
-            Menu.to_date >= date
-        )
-        return session.execute(stmt).scalars().first()
-
     def find_all_active(vendor_id, date):
         stmt = select(Menu).where(
             Menu.active,
@@ -117,12 +109,6 @@ class Menu(Base):
 
         return session.execute(stmt).scalars().all()
 
-    def count_by_vendor_id(vendor_id):
-        stmt = select(func.count(Menu.id)).where(
-            Menu.vendor_id == vendor_id
-        )
-        return session.execute(stmt).scalars().first()
-
     def add(menu):
         session.add(menu)
         try:
@@ -137,71 +123,8 @@ class Menu(Base):
             session.rollback()
             return False
 
-    def activate(self):
-        self.active = True;
-        try:
-            session.commit()
-            return True
-        except exc.DataError as e:
-            logging.exception("DataError during Menu activation")
-            session.rollback()
-            return False
-        except Exception as e:
-            logging.exception("Unhadled exception happened, rolling back")
-            session.rollback()
-            return False
-
-    def deactivate(self):
-        self.active = False;
-        try:
-            session.commit()
-            return True
-        except exc.DataError as e:
-            logging.exception("DataError during Menu deactivation")
-            session.rollback()
-            return False
-        except Exception as e:
-            logging.exception("Unhadled exception happened, rolling back")
-            session.rollback()
-            return False
-
-    def update(self, name, from_date, to_date):
-        self.name = name
-        self.from_date = from_date
-        self.to_date = to_date
-        try:
-            session.commit()
-            return True
-        except exc.DataError as e:
-            logging.exception("DataError during Menu update")
-            session.rollback()
-            return False
-        except Exception as e:
-            logging.exception("Unhadled exception happened, rolling back")
-            session.rollback()
-            return False
-
-    def delete(self):
-        session.delete(self)
-        try:
-            session.commit()
-            return True
-        except exc.DataError as e:
-            logging.exception("DataError during Menu delete")
-            session.rollback()
-            return False
-        except exc.IntegrityError as e:
-            logging.exception("IntegrityError during Menu delete")
-            session.rollback()
-            return False
-        except Exception as e:
-            logging.exception("Unhadled exception happened, rolling back")
-            session.rollback()
-            return False
-
     @property
     def serialized(self):
-        from app.vendor_factory import VendorFactory
         return {
             "id": self.id,
             "name": self.name,

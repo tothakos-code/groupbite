@@ -1205,7 +1205,7 @@ const deleteMenu = async () => {
 
     const response = await menuStore.delete(selectedMenu.value.id)
 
-    if (response.status === 200) {
+    if (response.status === 204) {
       deleteDialog.value = false
       selectedMenu.value = null
       loadMenu()

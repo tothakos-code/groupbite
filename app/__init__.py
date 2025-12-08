@@ -13,7 +13,6 @@ import app.loader
 from app.controllers import main_blueprint
 from app.controllers import setting_blueprint
 from app.controllers import vendor_blueprint
-from app.controllers import menu_blueprint
 from app.controllers import item_blueprint
 from app.controllers import size_blueprint
 from app.controllers import statistics_blueprint

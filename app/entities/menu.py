@@ -47,7 +47,7 @@ class Menu(Base):
     to_date: Mapped[d] = mapped_column(insert_default=func.current_date(), nullable=True)
     vendor_id: Mapped[UUID] = mapped_column(ForeignKey("vendor.id"))
 
-    items: Mapped[List["MenuItem"]] = relationship(back_populates="menu", order_by="MenuItem.index")
+    items: Mapped[List["MenuItem"]] = relationship(back_populates="menu", cascade="all, delete", order_by="MenuItem.index")
 
     def __repr__(self):
         return f"Menu<{self.id},name={self.name},from_date={self.from_date},to_date={self.to_date},vendor_id={self.vendor_id}>"
@@ -75,10 +75,6 @@ class Menu(Base):
         )
 
         return session.execute(stmt).scalars().all()
-
-    # def find_by_date(date=d.today().strftime("%Y-%m-%d")):
-    #     stmt = select(Menu).where(Menu.date == date)
-    #     return session.execute(stmt).scalars().first()
 
     def find_by_id(menu_id):
         stmt = select(Menu).where(
@@ -202,68 +198,6 @@ class Menu(Base):
             logging.exception("Unhadled exception happened, rolling back")
             session.rollback()
             return False
-
-    # def fill_menu(vendor_id, date_to_fill, raw_item_list):
-    #     """Creates MenuItem's from a raw json list of items.
-    #
-    #     Parameters:
-    #     vendor_id (str): Vendor ID which menu to be filled
-    #     raw_item_list (Dict):
-    #
-    #     """
-    #     menu = Menu.find(vendor_id, date_to_fill)
-    #     if menu is None:
-    #         logging.error("Menu to fill not found!")
-    #         return
-    #     # TODO: Handlig items that got out of stock
-    #     for raw_menu_item in raw_item_list:
-    #         found = False
-    #         for item in menu.items:
-    #             if item.name == raw_menu_item["name"]:
-    #                 found = True
-    #                 break
-    #         if found:
-    #             continue
-    #
-    #         session.add(
-    #             MenuItem(
-    #                 menu_id=menu.id,
-    #                 name=raw_menu_item["name"],
-    #                 link=raw_menu_item["link"],
-    #                 size=raw_menu_item["size"],
-    #                 price=raw_menu_item["price"]
-    #             )
-    #         )
-    #     try:
-    #         session.commit()
-    #         return True
-    #     except exc.DataError as e:
-    #         logging.exception("DataError during Menu update")
-    #         session.rollback()
-    #         return False
-    #     except Exception as e:
-    #         logging.exception("Unhadled exception happened, rolling back")
-    #         session.rollback()
-    #         return False
-
-# TODO: Is this replaceable with Menu.add()?
-    # def create_menu(name, vendor, date, freq):
-    #     menu = Menu.find(vendor,date)
-    #     # TODO: Need to check that date corresponed to the frequency. This currently only works for daily types
-    #     if menu is not None:
-    #         return
-    #     session.add(Menu(name=name, vendor_id=vendor, date=date, freq_id=freq))
-    #     try:
-    #         session.commit()
-    #         return True
-    #     except exc.DataError as e:
-    #         logging.exception("DataError during Menu create")
-    #         session.rollback()
-    #         return False
-    #     except Exception as e:
-    #         logging.exception("Unhadled exception happened, rolling back")
-    #         session.rollback()
-    #         return False
 
     @property
     def serialized(self):

@@ -51,6 +51,9 @@ To quickly get started with the project, follow these steps:
     source env/bin/activate
     pip install -r requirements.txt
     ```
+  
+# Notice
+The backend depends on the `libpq` library, which must be installed on the system.
 
 4. Setup your frontend
 

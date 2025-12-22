@@ -4,14 +4,17 @@ import logging
 import requests
 
 from app.controllers import main_blueprint
-from app.socketio_singleton import SocketioSingleton
+from app.db.session import get_scoped_session_context
 from app.services.vendor_service import VendorService
+from app.socketio_singleton import SocketioSingleton
 
 
 
 from dotenv import load_dotenv
 from pathlib import Path
 from os import getenv
+
+from app.utils.decorators import handle_request
 
 dotenv_path = Path(".env")
 load_dotenv(dotenv_path=dotenv_path)
@@ -49,5 +52,5 @@ def get_vapid_public_key():
 
 @socketio.on("connect")
 def handle_connect(auth=None):
-    socketio.emit("be_vendors_update", VendorService.find_all_active())
-    pass
+    with get_scoped_session_context() as db:
+        socketio.emit("be_vendors_update", [v.serialized for v in VendorService.find_all_active(db)])

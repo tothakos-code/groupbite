@@ -3,15 +3,16 @@ from flask import Blueprint
 from app.controllers.menu_controller import MenuController
 from app.controllers.order_controller import OrderController
 from app.controllers.user_controller import UserController
+from app.controllers.vendor_controller import VendorController
 from app.services.menu_service import MenuService
 from app.services.order_service import OrderService
 from app.repositories.order_item_repository import OrderItemRepository
 from app.services.user_basket_service import UserBasketService
 from app.services.user_service import UserService
+from app.services.vendor_service import VendorService
 
 main_blueprint = Blueprint("main_controller", __name__, static_folder="../../frontend/dist", template_folder="../../frontend/dist")
 setting_blueprint = Blueprint("setting_controller", __name__, url_prefix="/api/setting")
-vendor_blueprint = Blueprint("vendor_controller", __name__, url_prefix="/api/vendor")
 item_blueprint = Blueprint("item_controller", __name__, url_prefix="/api/item")
 size_blueprint = Blueprint("size_controller", __name__, url_prefix="/api/size")
 webhook_blueprint = Blueprint("webhook_controller", __name__, url_prefix="/api/webhook")
@@ -30,11 +31,13 @@ def register_blueprints(app):
     menu_service = MenuService()
     menu_ctrl = MenuController(menu_service)
     app.register_blueprint(menu_ctrl.blueprint)
+    vendor_service = VendorService()
+    vendor_ctrl = VendorController(vendor_service)
+    app.register_blueprint(vendor_ctrl.blueprint)
 
     # this registering all routes for the blueprint
     from .main_controller import main_blueprint
     from .setting_controller import setting_blueprint
-    from .vendor_controller import vendor_blueprint
     from .item_controller import item_blueprint
     from .size_controller import size_blueprint
     from .webhook_controller import webhook_blueprint
@@ -43,7 +46,6 @@ def register_blueprints(app):
     # registering the blueprint in the app
     app.register_blueprint(main_blueprint)
     app.register_blueprint(setting_blueprint)
-    app.register_blueprint(vendor_blueprint)
     app.register_blueprint(item_blueprint)
     app.register_blueprint(size_blueprint)
     app.register_blueprint(webhook_blueprint)

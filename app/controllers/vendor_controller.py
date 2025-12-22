@@ -1,268 +1,234 @@
-from datetime import date, datetime
-from flask import Blueprint, request, session
 import logging
-import json
-import requests
+from datetime import datetime
+from uuid import UUID
 
-from app.base_vendor import BaseVendor
+from flask import Blueprint, request, session
 
-from app.controllers import vendor_blueprint
-from app.vendor_factory import VendorFactory
-
-from app.socketio_singleton import SocketioSingleton
-
-from app.services.vendor_service import VendorService
-from app.entities.vendor import Vendor, BaseVendorSchema
 from app.entities.menu import Menu
-from app.entities.webhook import Webhook
-from app.entities.user import User
+from app.entities.menu_item import MenuItem
 from app.entities.notification import Notification, NotificationType
-from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
+from app.entities.size import Size
+from app.entities.user import User
+from app.entities.vendor import BaseVendorSchema, Vendor, VendorType
+from app.entities.webhook import Webhook
+from app.repositories.vendor_repository import VendorRepository
+from app.services.vendor_service import VendorService
+from app.socketio_singleton import SocketioSingleton
+from app.utils.decorators import (
+    handle_request,
+    require_admin,
+    require_auth,
+    validate_data,
+    validate_url_params,
+)
 from app.utils.validators import IDSchema
 
 socketio = SocketioSingleton.get_instance()
 
-@vendor_blueprint.route("", methods=["GET"])
-@require_auth
-@require_admin
-def handle_get_all_vendors():
-    result = []
-    for a in Vendor.find_all():
-        result.append(a.serialized)
-    return {"data": result}, 200
 
-@vendor_blueprint.route("/<vendor_id>/activate", methods=["PUT"])
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_activation(vendor_id):
-    Vendor.find_by_id(vendor_id).activate()
-    logging.info(vendor_id + " vendor got activated")
+class VendorController:
+    def __init__(self, vendor_service: VendorService):
+        self.vendor_service = vendor_service
+        self.blueprint = self._create_blueprint()
+        self._register_routes()
 
-    socketio.emit("be_vendors_update", VendorService.find_all_active())
-    return { "msg": "OK" }, 200
+    def _create_blueprint(self) -> Blueprint:
+        return Blueprint("vendor_controller", __name__, url_prefix="/api/vendor")
 
-@vendor_blueprint.route("/<vendor_id>/deactivate", methods=["PUT"])
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_deactivation(vendor_id):
-    Vendor.find_by_id(vendor_id).deactivate()
-    logging.info(vendor_id + " vendor got deactivated")
-
-    socketio.emit("be_vendors_update", VendorService.find_all_active())
-    return { "msg": "OK" }, 200
-
-@vendor_blueprint.route("/<vendor_id>/notifications/<notification_type>/subscribe", methods=["POST"])
-@validate_url_params(IDSchema())
-@require_auth
-def handle_notification_subscribe(vendor_id, notification_type):
-    user_id = session.get('user_id')
-    notification_json = request.json["data"]
-    Notification.add(Notification(
-        vendor_id=vendor_id,
-        user_id=user_id,
-        notification_type=NotificationType(notification_type),
-        endpoint=notification_json["endpoint"],
-        p256dh=notification_json["keys"]["p256dh"],
-        auth=notification_json["keys"]["auth"]
-
-    ))
-    socketio.emit("be_user_update", User.get_one_by_id(user_id).serialized)
-
-    return { "msg": "OK" }, 200
-
-@vendor_blueprint.route("/<vendor_id>/notifications/<notification_type>/unsubscribe", methods=["DELETE"])
-@validate_url_params(IDSchema())
-@require_auth
-def handle_notification_unsubscribe(vendor_id, notification_type):
-    user_id = session.get('user_id')
-    notifications = Notification.find_by_vendor_id_user_id(vendor_id, user_id, NotificationType(notification_type))
-    for noti in notifications:
-        if noti.delete():
-            socketio.emit("be_user_update", User.get_one_by_id(user_id).serialized)
-            return { "msg": "OK" }, 200
-        else:
-            return { "error": "Someting went wrong" }, 500
-
-
-@vendor_blueprint.route("/<vendor_id>/notifications/<notification_type>", methods=["GET"])
-@validate_url_params(IDSchema())
-def handle_notification_status(vendor_id, notification_type):
-    user_id = session.get('user_id')
-    if not user_id:
-        return {
-            "data": {
-                 "status": False
-            }
-        }, 200
-    notification = Notification.find_by_pk(vendor_id, user_id, notification_type)
-    if notification:
-        return {
-            "data": {
-                 "status": True
-            }
-        }, 200
-    else:
-        return {
-            "data": {
-                 "status": False
-            }
-        }, 200
-
-
-
-
-@vendor_blueprint.route("", methods=["POST"])
-@validate_data(BaseVendorSchema())
-@require_auth
-@require_admin
-def handle_create(data):
-    vendor_json = request.json["data"]
-    logging.debug(vendor_json)
-
-    vendor_obj = BaseVendor(
-        vendor_json["name"],
-        settings=vendor_json["settings"]
+    def _register_routes(self):
+        bp = self.blueprint
+        bp.add_url_rule("", view_func=self.handle_get_all_vendors, methods=["GET"])
+        bp.add_url_rule(
+            "/<vendor_id>/activate", view_func=self.handle_activation, methods=["PUT"]
+        )
+        bp.add_url_rule(
+            "/<vendor_id>/deactivate",
+            view_func=self.handle_deactivation,
+            methods=["PUT"],
+        )
+        # ToDo: értesítése bekapcsolása / eszköz, vagy utána nézni hogy működik máshol
+        bp.add_url_rule(
+            "/<vendor_id>/notifications/<notification_type>/subscribe",
+            view_func=self.handle_notification_subscribe,
+            methods=["POST"],
+        )
+        bp.add_url_rule(
+            "/<vendor_id>/notifications/<notification_type>/unsubscribe",
+            view_func=self.handle_notification_unsubscribe,
+            methods=["DELETE"],
+        )
+        bp.add_url_rule(
+            "/<vendor_id>/notifications/<notification_type>",
+            view_func=self.handle_notification_status,
+            methods=["GET"],
+        )
+        bp.add_url_rule("", view_func=self.handle_create, methods=["POST"])
+        bp.add_url_rule(
+            "/<vendor_id>/scan", view_func=self.handle_run_scan, methods=["GET"]
+        )
+        bp.add_url_rule(
+            "/<vendor_id>/webhooks", view_func=self.handle_get_webhooks, methods=["GET"]
+        )
+        bp.add_url_rule(
+            "/<vendor_id>/settings",
+            view_func=self.handle_save_settings,
+            methods=["PUT"],
+        )
+        bp.add_url_rule(
+            "/<vendor_id>", view_func=self.handle_get_settings, methods=["GET"]
+        )
+        bp.add_url_rule(
+            "/<vendor_id>/menus", view_func=self.handle_menu_get, methods=["GET"]
+        )
+        # ToDo: update import, make export
+        bp.add_url_rule(
+            "/<vendor_id>/menus/import", view_func=self.import_menu, methods=["POST"]
         )
 
-    VendorFactory.register(vendor_obj)
+    @require_auth
+    @require_admin
+    @handle_request
+    def handle_get_all_vendors(self, db):
+        result = self.vendor_service.get_vendors(db)
+        return {"data": [v.serialized for v in result]}, 200
 
-    vendor_db = Vendor.find_by_id(vendor_obj.id)
-    return { "data": vendor_db.serialized }, 200
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_deactivation(self, db, vendor_id):
+        self.vendor_service.deactivate_vendor(db, vendor_id)
+        socketio.emit(
+            "be_vendors_update",
+            [v.serialized for v in self.vendor_service.find_all_active(db)],
+        )
+        return {"msg": "OK"}, 200
 
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_activation(self, db, vendor_id):
+        self.vendor_service.activate_vendor(db, vendor_id)
+        socketio.emit(
+            "be_vendors_update",
+            [v.serialized for v in self.vendor_service.find_all_active(db)],
+        )
+        return {"msg": "OK"}, 200
 
-@vendor_blueprint.route("/<vendor_id>/scan", methods=["GET"])
-@validate_url_params(IDSchema())
-def handle_run_scan(vendor_id):
-    menu_date = request.args.get('menu_date')
-    try:
-        datetime.strptime(menu_date, '%Y-%m-%d')
-    except ValueError as e:
-        menu_date = None
-    logging.info(menu_date)
-
-    vendor = VendorFactory.get_one_vendor_object(vendor_id)
-    try:
-        if menu_date != None:
-            vendor.scan(menu_date=menu_date)
-        else:
-            vendor.scan()
-    except NotImplementedError as e:
-        return { "error": f"Vendor {vendor_id} does not support automatic menu filling" }, 405
-    return { "msg": f"Vendor scan ran for {vendor_id} id" }, 201
-
-
-@vendor_blueprint.route("/<vendor_id>/webhooks", methods=["GET"])
-@validate_url_params(IDSchema())
-def handle_get_webhooks(vendor_id):
-    webhooks = Webhook.find_by_vendor_id(vendor_id)
-
-    return { "data": {"vendors": [wh.serialized for wh in webhooks]} }, 200
-
-
-@vendor_blueprint.route("/<vendor_id>", methods=["GET"])
-@validate_url_params(IDSchema())
-def handle_get_settings(vendor_id):
-    vendor = Vendor.find_by_id(vendor_id)
-
-    return { "data": vendor.serialized }, 200
-
-
-@vendor_blueprint.route("/<vendor_id>/settings", methods=["PUT"])
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_save_settings(vendor_id):
-    settings = request.json["data"]
-    vendor = Vendor.find_by_id(vendor_id)
-    vendor.update_settings(settings)
-    socketio.emit("be_vendors_update", VendorService.find_all_active())
-
-    return { "data": vendor.settings }, 200
-
-
-@vendor_blueprint.route("/<vendor_id>/menus", methods=["GET"])
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_menu_get(vendor_id):
-    try:
-        limit = int(request.args.get('limit'))
-        page = int(request.args.get('page'))
-    except ValueError as e:
-        limit = 10
-        page = 1
-    except TypeError as e:
-        limit = 10
-        page = 1
-
-    search = request.args.get('search')
-    active = request.args.get('active')
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-    offset = 0 if page is None else limit * (page - 1)
-
-    menus = Menu.find_by_vendor(vendor_id, limit, offset, search, active, date_from, date_to)
-    all_menus = Menu.find_by_vendor(vendor_id, None, 0, search, active, date_from, date_to)
-
-    total_count = len(all_menus)
-    result = [m.serialized for m in menus]
-    return { "data": {
-        "menus": result,
-        "page": page,
-        "limit": limit,
-        "total_count": total_count
-        }
-    }, 200
-
-@vendor_blueprint.route("/<vendor_id>/menus/import", methods=["POST"])
-@validate_url_params(IDSchema())
-def import_menu(vendor_id):
-    if "file" not in request.files:
-        return { "error": "No file part in the request" }, 400
-
-    json_file = request.files["file"]
-
-    if json_file.filename == "":
-        return { "error": "No file selected for uploading" }, 400
-
-    try:
-        file_content = json.loads(json_file.read())
-        for menu in file_content["menus"]:
-            menu_db = Menu(
-                name=menu["name"] if "name" in menu else "imported-" + datetime.now().strftime("%Y-%m-%d-%H:%M"),
+    @require_auth
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_notification_subscribe(self, db, vendor_id, notification_type):
+        # todo: Refactor after Notification Service
+        user_id = session.get("user_id")
+        notification_json = request.json["data"]
+        Notification.add(
+            Notification(
                 vendor_id=vendor_id,
-                from_date=menu["from_date"] if "from_date" in menu else date.today().strftime("%Y-%m-%d"),
-                to_date=menu["to_date"] if "to_date" in menu else date.today().strftime("%Y-%m-%d")
+                user_id=user_id,
+                notification_type=NotificationType(notification_type),
+                endpoint=notification_json["endpoint"],
+                p256dh=notification_json["keys"]["p256dh"],
+                auth=notification_json["keys"]["auth"],
             )
+        )
+        socketio.emit("be_user_update", User.get_one_by_id(user_id).serialized)
 
-            item_index = 0
-            for item in menu["items"]:
-                menu_item = MenuItem(
-                    name=item["name"],
-                    category=item["category"] if "category" in item else "",
-                    index=item["index"] if "index" in item else item_index
-                )
-                if "index" not in item:
-                    item_index+= 1
+        return {"msg": "OK"}, 200
 
-                size_index=0
-                for size in item["sizes"]:
-                    menu_item.sizes.append(Size(
-                        link="",
-                        name=size["name"],
-                        price=size["price"],
-                        index=size["index"] if "index" in size else size_index,
-                        quantity=size["quantity"] if "quantity" in size else -1,
-                        unlimited=size["unlimited"] if "unlimited" in size else True
-                    ))
-                    if "index" not in size:
-                        size_index+= 1
+    @validate_url_params(IDSchema())
+    @require_auth
+    def handle_notification_unsubscribe(self, vendor_id, notification_type):
+        # todo: Refactor after Notification Service
+        user_id = session.get("user_id")
+        notifications = Notification.find_by_vendor_id_user_id(
+            vendor_id, user_id, NotificationType(notification_type)
+        )
+        for noti in notifications:
+            if noti.delete():
+                socketio.emit("be_user_update", User.get_one_by_id(user_id).serialized)
+                return {"msg": "OK"}, 200
+            else:
+                return {"error": "Someting went wrong"}, 500
 
-                menu_db.items.append(menu_item)
-            Menu.add(menu_db)
+    @validate_url_params(IDSchema())
+    def handle_notification_status(self, vendor_id, notification_type):
+        # todo: Refactor after Notification Service
+        user_id = session.get("user_id")
+        if not user_id:
+            return {"data": {"status": False}}, 200
+        notification = Notification.find_by_pk(vendor_id, user_id, notification_type)
+        if notification:
+            return {"data": {"status": True}}, 200
+        else:
+            return {"data": {"status": False}}, 200
 
-    except Exception as e:
-        return { "error": "Failed to parse JSON file" }, 400
-    return { "msg": "OK" }, 201
+    @require_auth
+    @require_admin
+    @validate_data(BaseVendorSchema())
+    @handle_request
+    def handle_create(self, db, data):
+        vendor = self.vendor_service.create_vendor(db, data)
+        return {"data": vendor.serialized}, 200
+
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_run_scan(self, db, vendor_id):
+        menu_date = request.args.get("menu_date")
+        try:
+            datetime.strptime(menu_date, "%Y-%m-%d")
+        except ValueError as e:
+            menu_date = None
+        try:
+            self.vendor_service.scan_menu(db, vendor_id, menu_date)
+        except NotImplementedError as e:
+            return {
+                "error": f"Vendor {vendor_id} does not support automatic menu filling"
+            }, 405
+        return {"msg": f"Vendor scan ran for {vendor_id} id"}, 201
+
+    @validate_url_params(IDSchema())
+    def handle_get_webhooks(self, vendor_id):
+        webhooks = Webhook.find_by_vendor_id(vendor_id)
+
+        return {"data": {"vendors": [wh.serialized for wh in webhooks]}}, 200
+
+    @validate_url_params(IDSchema())
+    def handle_get_settings(self, vendor_id):
+        vendor = Vendor.find_by_id(vendor_id)
+        # Todo: There are public and private settings. Migrate to a vendor_setting table id,vendor_id,key,value,is_public,setting_type
+        return {"data": vendor.serialized}, 200
+
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_save_settings(self, db, vendor_id):
+        settings = request.json["data"]
+        vendor = Vendor.find_by_id(vendor_id)
+        vendor.update_settings(settings)
+        socketio.emit(
+            "be_vendors_update",
+            [v.serialized for v in VendorService.find_all_active(db)],
+        )
+
+        return {"data": vendor.settings}, 200
+
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_menu_get(self, db, vendor_id):
+        result = self.vendor_service.get_menus(db, vendor_id, request.args)
+        return {"data": result}, 200
+
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def import_menu(self, db, vendor_id):
+        self.vendor_service.import_menu(db, vendor_id, request.files)
+        return {"msg": "OK"}, 201

@@ -5,20 +5,17 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 from datetime import timedelta
 
-from app.services.vendor_service import VendorService
 from app.services.webhook_service import webhook_service
-from app.vendor_factory import VendorFactory
 import app.loader
 
 from app.controllers import main_blueprint
 from app.controllers import setting_blueprint
-from app.controllers import vendor_blueprint
 from app.controllers import item_blueprint
 from app.controllers import size_blueprint
 from app.controllers import statistics_blueprint
 
 from app.config import Config
-from app.db.session import init_db
+from app.db.session import init_db, get_scoped_session_context
 
 from os import scandir, makedirs, path
 import sys
@@ -93,10 +90,6 @@ def create_app(config: Config = Config(), debug=False) -> Flask:
     migrate_database(application)
     Session(application)
 
-
-    VendorFactory.load()
-    loader.load_plugins([d.path.replace("/",".") for d in scandir("plugins") if d.is_dir()])
-
     from app.socketio_singleton import SocketioSingleton
     socketio = SocketioSingleton.get_instance()
     socketio.init_app(
@@ -107,6 +100,8 @@ def create_app(config: Config = Config(), debug=False) -> Flask:
 
     # Initialize database
     init_db(config)
+    with get_scoped_session_context() as db:
+       loader.load_plugins(db, [d for d in scandir("plugins") if d.is_dir()])
 
     from app.controllers import register_blueprints
 

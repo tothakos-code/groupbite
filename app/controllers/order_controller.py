@@ -138,8 +138,12 @@ class OrderController:
             vendor = VendorServiceFactory.get_service(db, str(order.vendor_id))
             socketio.emit(
                 "be_menu_update",
-                { "menus": vendor.get_menus(str(order.date_of_order)) },
-                to=f"{order.vendor_id}@{order.date_of_order}"
+                {
+                    "menus": VendorService.get_menu_items(
+                        db, order.vendor_id, order.date_of_order
+                    )
+                },
+                to=f"{order.vendor_id}@{order.date_of_order}",
             )
             return {"msg": "OK"}, 201
         else:

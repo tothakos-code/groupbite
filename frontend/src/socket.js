@@ -30,7 +30,7 @@ socket.on("disconnect", () => {
 });
 
 socket.on("be_vendors_update", function(vendors) {
-  useVendorStore().vendors = JSON.parse(vendors);
+  useVendorStore().vendors = vendors;
   register_plugin_routes(router);
   useVendorStore().routesLoaded = true;
 });

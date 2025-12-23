@@ -51,7 +51,6 @@ class UserController:
         user = self.user_service.check_session(db, user_id)
         return { "data": user.serialized }, 200
 
-    # TODO: email templating engine with jinja2
     @handle_request
     def handle_reminder(self, db):
         email = request.args.get('email')

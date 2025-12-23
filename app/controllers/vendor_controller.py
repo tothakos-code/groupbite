@@ -197,8 +197,9 @@ class VendorController:
         return {"data": {"vendors": [wh.serialized for wh in webhooks]}}, 200
 
     @validate_url_params(IDSchema())
-    def handle_get_settings(self, vendor_id):
-        vendor = Vendor.find_by_id(vendor_id)
+    @handle_request
+    def handle_get_settings(self, db, vendor_id):
+        vendor = self.vendor_service.get_vendor(db, vendor_id)
         # Todo: There are public and private settings. Migrate to a vendor_setting table id,vendor_id,key,value,is_public,setting_type
         return {"data": vendor.serialized}, 200
 
@@ -208,8 +209,8 @@ class VendorController:
     @handle_request
     def handle_save_settings(self, db, vendor_id):
         settings = request.json["data"]
-        vendor = Vendor.find_by_id(vendor_id)
-        vendor.update_settings(settings)
+        vendor = self.vendor_service.get_vendor(db, vendor_id)
+        self.vendor_service.update_settings(vendor, settings)
         socketio.emit(
             "be_vendors_update",
             [v.serialized for v in VendorService.find_all_active(db)],

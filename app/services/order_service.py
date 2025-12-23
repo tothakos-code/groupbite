@@ -1,19 +1,20 @@
-
-from app.db.session import get_session_context
-from app.repositories.order_repository import OrderRepository
-from app.repositories.order_item_repository import OrderItemRepository
-from datetime import date
 import logging
+from datetime import date
 from typing import Optional
-from app.entities.order import Order, OrderState
-from app.entities.order_item import OrderItem
-from app.entities.vendor import Vendor
-from app.event_manager import event_manager
+
 from dateutil.relativedelta import relativedelta
 from flask import session
 
+from app.db.session import get_session_context
+from app.entities.order import Order, OrderState
+from app.entities.order_item import OrderItem
+from app.event_manager import event_manager
+from app.repositories.order_item_repository import OrderItemRepository
+from app.repositories.order_repository import OrderRepository
 from app.repositories.user_basket_repository import UserBasketRepository
+from app.repositories.vendor_repository import VendorRepository
 from app.scheduler import reschedule_task
+from app.services.mail_sender_service import EmailService
 from app.services.user_basket_service import UserBasketService
 from app.socketio_singleton import SocketioSingleton
 
@@ -28,6 +29,15 @@ class OrderService:
     def get_order_by_id(db, order_id: int) -> Optional[Order]:
         order_repo = OrderRepository(db)
         order = order_repo.get_by_id(order_id)
+        if not order:
+            logging.info(f"Order {order_id} not found")
+            raise ValueError(f"Order {order_id} not found")
+        return order
+
+    @staticmethod
+    def find_open_order_by_vendor(db, order_id, order_date):
+        order_repo = OrderRepository(db)
+        order = order_repo.find_open_order_by_date_for_a_vendor(order_id, order_date)
         if not order:
             logging.info(f"Order {order_id} not found")
             raise ValueError(f"Order {order_id} not found")
@@ -263,8 +273,7 @@ class OrderService:
             }
         }
 
-    @staticmethod
-    def email_order(db, order_id):
+    def email_order(self, db, order_id):
         order_repo = OrderRepository(db)
         order = order_repo.get_by_id(order_id)
         logging.info(f"Manual email send triggered by userID: {session.get("user_id")} for order {order_id}")
@@ -277,9 +286,9 @@ class OrderService:
 
         vendor = order.vendor
 
+        task_id = f"{str(vendor.id)}-closed"
         try:
             # Cancel the scheduled task for this vendor (if exists)
-            task_id = f"{str(vendor.id)}-closed"
             reschedule_task(task_id)
             logging.info(f"Scheduled task '{task_id}' rescheduled to next day due to manual trigger.")
         except KeyError:
@@ -294,6 +303,7 @@ class OrderService:
     @staticmethod
     def _last_7_days_statistics(db):
         order_repo = OrderRepository(db)
+        vendor_repo = VendorRepository(db)
 
         today = date.today()
         start_date = today - relativedelta(days=6)  # 6 days ago + today = 7 days
@@ -302,7 +312,7 @@ class OrderService:
         last_7_days = [(today - relativedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
         last_7_days.reverse()
 
-        vendors = Vendor.find_all_active()
+        vendors = vendor_repo.find_all_active()
         vendor_dict = {vendor.id: vendor.name for vendor in vendors}
 
         daily_data = order_repo.get_daily_sums(start_date, today, list(vendor_dict.keys()))
@@ -326,6 +336,7 @@ class OrderService:
     @staticmethod
     def _last_12_month_statistics(db):
         order_repo = OrderRepository(db)
+        vendor_repo = VendorRepository(db)
 
         today = date.today()
         start_date = today - relativedelta(months=11)  # 11 months ago + current month = 12 months
@@ -334,7 +345,7 @@ class OrderService:
         last_12_months = [(today - relativedelta(months=i)).strftime("%Y-%m") for i in range(12)]
         last_12_months.reverse()
 
-        vendors = Vendor.find_all_active()
+        vendors = vendor_repo.find_all_active()
         vendor_dict = {vendor.id: vendor.name for vendor in vendors}
 
         monthly_data = order_repo.get_monthly_sums(start_date, today, list(vendor_dict.keys()))

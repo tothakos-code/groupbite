@@ -7,6 +7,7 @@ from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import flag_modified
 
+from app.db.session import get_scoped_session_context
 from app.entities.menu import Menu
 from app.entities.menu_item import MenuItem
 from app.entities.notification import NotificationType
@@ -16,6 +17,7 @@ from app.entities.vendor import Vendor, VendorType
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.vendor_repository import VendorRepository
 from app.services.base_vendor_service import BaseVendorService
+from app.services.order_service import OrderService
 from app.services.vendor_service_factory import VendorServiceFactory
 from app.utils.vendor_settings_registry import VendorSettingsRegistry
 
@@ -25,8 +27,8 @@ class MenuItemRepository:
 
 
 class VendorService:
-    def __init__(self):
-        pass
+    def __init__(self, order_service: OrderService):
+        self.order_service = order_service
 
     @staticmethod
     def scan_menu(db, vendor_id, menu_date=None):
@@ -132,11 +134,11 @@ class VendorService:
         vendor_repo = VendorRepository(db)
         return vendor_repo.find_all_active()
 
-    def get_setting_value(self, key: str, default=None):
+    def get_setting_value(self, vendor: Vendor, key: str, default=None):
         """Safely get a setting value with fallback to default"""
         try:
-            if key in self.settings and "value" in self.settings[key]:
-                return self.settings[key]["value"]
+            if key in vendor.settings and "value" in vendor.settings[key]:
+                return vendor.settings[key]["value"]
         except (KeyError, TypeError):
             pass
 
@@ -147,24 +149,24 @@ class VendorService:
 
         return default
 
-    def set_setting_value(self, key: str, value: any) -> bool:
+    def set_setting_value(self, vendor: Vendor, key: str, value: any) -> bool:
         """Safely set a setting value with validation"""
         if not VendorSettingsRegistry.validate_setting(key, value):
             return False
 
-        if key not in self.settings:
+        if key not in vendor.settings:
             # Create from default if doesn't exist
             setting_def = VendorSettingsRegistry.get_setting_by_key(key)
             if setting_def:
-                self.settings[key] = setting_def.to_dict()
+                vendor.settings[key] = setting_def.to_dict()
             else:
                 return False
 
-        self.settings[key]["value"] = value
-        flag_modified(self, "settings")
+        vendor.settings[key]["value"] = value
+        flag_modified(vendor, "settings")
         return True
 
-    def update_settings(self, settings):
+    def update_settings(self, vendor, settings):
         """Update multiple settings with proper validation and scheduling"""
         # Validate all settings first
         for key, setting_data in settings.items():
@@ -177,75 +179,77 @@ class VendorService:
                 continue
 
         # Check for scheduler changes
-        self._handle_scheduler_changes(settings)
+        self._handle_scheduler_changes(vendor, settings)
 
         # Update settings
-        self.settings = settings
-        flag_modified(self, "settings")
+        vendor.settings = settings
+        flag_modified(vendor, "settings")
 
-    def _handle_scheduler_changes(self, new_settings):
+    def _handle_scheduler_changes(self, vendor, new_settings):
         """Handle scheduler task updates when settings change"""
         # Closure scheduler
         closure_active_changed = self.get_setting_value(
-            "closure_scheduler_active"
+            vendor, "closure_scheduler_active"
         ) != new_settings.get("closure_scheduler_active", {}).get("value")
         closure_time_changed = self.get_setting_value(
-            "closure_scheduler"
+            vendor, "closure_scheduler"
         ) != new_settings.get("closure_scheduler", {}).get(
             "value"
-        ) or self.get_setting_value("closure_scheduler_days") != new_settings.get(
-            "closure_scheduler_days", {}
-        ).get("value")
+        ) or self.get_setting_value(
+            vendor, "closure_scheduler_days"
+        ) != new_settings.get("closure_scheduler_days", {}).get("value")
 
         if closure_active_changed or closure_time_changed:
             from app.scheduler import cancel_task, schedule_task
 
-            cancel_task(str(self.id) + "-closure")
+            cancel_task(str(vendor.id) + "-closure")
 
             if new_settings.get("closure_scheduler_active", {}).get("value"):
                 time_value = new_settings.get("closure_scheduler", {}).get("value", "")
                 if ":" in time_value:
                     hh, mm = time_value.split(":")
                     schedule_task(
-                        str(self.id) + "-closure",
+                        str(vendor.id) + "-closure",
                         int(hh),
                         int(mm),
                         self.closure_wrapper,
                         new_settings.get("closure_scheduler_days", {}).get("value"),
+                        vendor=vendor,
                     )
 
         # Closed scheduler
         closed_active_changed = self.get_setting_value(
-            "closed_scheduler_active"
+            vendor, "closed_scheduler_active"
         ) != new_settings.get("closed_scheduler_active", {}).get("value")
         closed_time_changed = self.get_setting_value(
-            "closed_scheduler"
+            vendor, "closed_scheduler"
         ) != new_settings.get("closed_scheduler", {}).get(
             "value"
-        ) or self.get_setting_value("closed_scheduler_days") != new_settings.get(
-            "closed_scheduler_days", {}
-        ).get("value")
+        ) or self.get_setting_value(
+            vendor, "closed_scheduler_days"
+        ) != new_settings.get("closed_scheduler_days", {}).get("value")
 
         if closed_active_changed or closed_time_changed:
             from app.scheduler import cancel_task, schedule_task
 
-            cancel_task(str(self.id) + "-closed")
+            cancel_task(str(vendor.id) + "-closed")
 
             if new_settings.get("closed_scheduler_active", {}).get("value"):
                 time_value = new_settings.get("closed_scheduler", {}).get("value", "")
                 if ":" in time_value:
                     hh, mm = time_value.split(":")
                     schedule_task(
-                        str(self.id) + "-closed",
+                        str(vendor.id) + "-closed",
                         int(hh),
                         int(mm),
                         self.closed_wrapper,
                         new_settings.get("closed_scheduler_days", {}).get("value"),
+                        vendor=vendor,
                     )
 
         # Auto email order scheduler
         auto_email_changed = self.get_setting_value(
-            "auto_email_order"
+            vendor, "auto_email_order"
         ) != new_settings.get("auto_email_order", {}).get("value")
 
         if (
@@ -256,18 +260,17 @@ class VendorService:
             # Revert to previous values if SMTP not configured
             if "auto_email_order" in new_settings:
                 new_settings["auto_email_order"]["value"] = self.get_setting_value(
-                    "auto_email_order"
+                    vendor, "auto_email_order"
                 )
 
-    def update_setting(self, key, value):
+    def update_setting(self, vendor, key, value):
         if not VendorSettingsRegistry.validate_setting(key, value):
             return False
 
-        if not self.set_setting_value(key, value):
+        if not self.set_setting_value(vendor, key, value):
             return False
 
-    @staticmethod
-    def create_vendor(db, data) -> Vendor:
+    def create_vendor(self, db, data) -> Vendor:
         vendor = Vendor(
             id=uuid4(),
             name=data["name"],
@@ -279,20 +282,28 @@ class VendorService:
         vendor._validate_settings()
         VendorServiceFactory.register_vendor_service(vendor, BaseVendorService)
 
-        if vendor.get_setting_value("closure_scheduler_active"):
-            from app.scheduler import cancel_task, schedule_task
+        if self.get_setting_value(vendor, "closure_scheduler_active"):
+            from app.scheduler import schedule_task
 
             hh, mm = vendor.get_setting_value("closure_scheduler").split(":")
             schedule_task(
-                str(vendor.id) + "-closure", int(hh), int(mm), vendor.closure_wrapper
+                str(vendor.id) + "-closure",
+                int(hh),
+                int(mm),
+                self.closure_wrapper,
+                vendor=vendor,
             )
 
-        if vendor.get_setting_value("closed_scheduler_active"):
-            from app.scheduler import cancel_task, schedule_task
+        if self.get_setting_value(vendor, "closed_scheduler_active"):
+            from app.scheduler import schedule_task
 
             hh, mm = vendor.get_setting_value("closed_scheduler").split(":")
             schedule_task(
-                str(vendor.id) + "-closed", int(hh), int(mm), vendor.closed_wrapper
+                str(vendor.id) + "-closed",
+                int(hh),
+                int(mm),
+                self.closed_wrapper,
+                vendor=vendor,
             )
         return vendor
 

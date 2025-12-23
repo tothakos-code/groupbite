@@ -31,7 +31,7 @@ def register_blueprints(app):
     menu_service = MenuService()
     menu_ctrl = MenuController(menu_service)
     app.register_blueprint(menu_ctrl.blueprint)
-    vendor_service = VendorService()
+    vendor_service = VendorService(order_service)
     vendor_ctrl = VendorController(vendor_service)
     app.register_blueprint(vendor_ctrl.blueprint)
 

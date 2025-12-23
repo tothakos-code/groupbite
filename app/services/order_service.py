@@ -286,7 +286,7 @@ class OrderService:
             logging.info(f"Scheduled task '{task_id}' not found.")
 
         # Execute the email logic manually
-        if vendor.email_ordering_wrapper(order_id=order_id, manual=True):
+        if self.email_ordering_wrapper(order=order, manual=True):
             return {"msg": "Email sent and order closed manually"}, 200
         else:
             raise ValueError("Something went wrong during the action")
@@ -420,6 +420,74 @@ class OrderService:
         order = order_repo.get_by_id(order_id)
         order.order_fee = new_fee
         return order
+
+    @staticmethod
+    def send_in_mail(order):
+        from app.entities.user_basket import UserBasket
+
+        baskets = UserBasket.find_items_by_order(order.id)
+        if len(baskets) == 0:
+            logging.warning("The order is empty, email not sent")
+            return False
+
+        basket_sum = {}
+        for item in baskets:
+            if item.menu_item_id in basket_sum:
+                basket_sum[item.menu_item_id]["quantity"] += item.count
+            else:
+                basket_sum[item.menu_item_id] = {
+                    **item.basket_format,
+                    "quantity": item.count,
+                }
+
+        email_service = EmailService()
+        success = email_service.send_order(order, basket_sum)
+        if not success:
+            logging.error("Email could not be sent")
+            return False
+
+        logging.info(f"Order {order.id} sent in email!")
+        return True
+
+    def email_ordering_wrapper(self, order: Order, manual=False):
+        logging.info("Manual email ordering running")
+        from app.event_manager import event_manager
+
+        if not order:
+            logging.warning("Order not found")
+            return False
+
+        event_manager.trigger_event(
+            "beforeClose@" + order.vendor.name, {"order_id": order.id}
+        )
+        email_min_user = order.vendor.get_setting_value("email_min_user")
+        if manual or (
+            order.vendor.get_setting_value("auto_email_order")
+            and (email_min_user == 0 or email_min_user <= len(order.get_users()))
+        ):
+            order.change_state(OrderState.CLOSED)
+            self.send_in_mail(order)
+
+            event_manager.trigger_event(
+                "afterClose@" + order.vendor.name, {"order_id": order.id}
+            )
+
+            from app.socketio_singleton import SocketioSingleton
+
+            socketio = SocketioSingleton.get_instance()
+
+            socketio.emit(
+                "be_order_update",
+                {"order": order.serialized},
+                to=f"{order.vendor_id}@{order.date_of_order}",
+            )
+            return True
+        else:
+            logging.info("Minimum order requirements are not met")
+            event_manager.trigger_event(
+                "closeFailed@" + order.vendor.name, {"order_id": order.id}
+            )
+            return False
 
     @staticmethod
     def emit_update(data):

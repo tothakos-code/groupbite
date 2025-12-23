@@ -559,6 +559,7 @@
                       variant="outlined"
                       rows="4"
                       auto-grow
+                      class="code-textarea"
                     />
                   </v-col>
                 </v-row>
@@ -800,5 +801,11 @@ export default {
 
 .v-expansion-panel-text {
   padding: 0;
+}
+
+.code-textarea {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  line-height: 1.5;
 }
 </style>

@@ -60,20 +60,13 @@ class UserController:
 
         user = UserRepository(db).get_by_email(email)
         if user:
-            from app.services.mail_sender_service import send_mail
-            email_body = f"""
-    Kedves felhasználó!<br>
-    Erre az email címre egy bejelentkezési név emlékeztetőt kértek.<br>
-    <br>
-    Felhasználóneved: {user.username}<br>
-    <br>
-    Ha ezt az emlékeztetőt nem te kérted akkor lépj kapcsolatba az oldal üzemeltetőjével!<br>
-    Üdv,<br>
-    Groupbite
-    """
-            ok, msg = send_mail([user.email], [], "Groupbite: Bejelentkezési adat emlékeztető", email_body)
+            email_service = EmailService()
+            ok = email_service.send_username_reminder(user)
+
             if not ok:
-                return { "error": "Email szolgáltatás nem elérhető, küldés sikertelen" }, 200
+                return {
+                    "error": "Email szolgáltatás nem elérhető, küldés sikertelen"
+                }, 200
 
         return { "msg": "Email reminder sent" }, 200
 

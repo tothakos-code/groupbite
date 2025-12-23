@@ -276,63 +276,6 @@ class Order(Base):
                 session.expunge(item)
             return False
 
-# service?
-    def send_in_mail(self):
-        from app.services.mail_sender_service import send_mail
-        from app.entities.user_basket import UserBasket
-        baskets = UserBasket.find_items_by_order(self.id)
-        if len(baskets) == 0:
-            logging.warning("The order is empty, email not sent")
-            return False
-
-        basket_sum = {}
-        for item in baskets:
-            if item.menu_item_id in basket_sum:
-                basket_sum[item.menu_item_id]["quantity"] += item.count
-            else:
-                basket_sum[item.menu_item_id] = {**item.basket_format, "quantity": item.count}
-# utils/email templating
-        basket_template = ""
-        basket_categories = {}
-        for item in basket_sum.values():
-            pattern = self.vendor.get_setting_value("order_text_template")
-            line = pattern \
-                .replace("${quantity}", str(item["quantity"])) \
-                .replace("${item_name}", item["item_name"]) \
-                .replace("${size_name}", item["size_name"]) \
-                .replace("\\n", "<br>")
-            basket_template += line
-
-            if item["category"] not in basket_categories:
-                basket_categories[item["category"]] = ""
-            basket_categories[item["category"]] += line
-
-        email_template = self.vendor.get_setting_value("auto_email_order_template")
-        email_template = email_template.replace("${basket}", basket_template)
-        for category, value in basket_categories.items():
-            email_template = email_template.replace("${basket." + category + "}", basket_categories[category])
-        email_template = non_matched.sub("", email_template)
-
-        email_subject = self.vendor.get_setting_value("auto_email_subject")
-        email_subject = email_subject \
-            .replace("${vendor_name}", self.vendor.name) \
-            .replace("${date}", self.date_of_order.strftime("%Y.%m.%d"))
-
-        email_subject = non_matched.sub("", email_subject)
-
-        success, error = send_mail(
-            self.vendor.get_setting_value("auto_email_order_to"),
-            self.vendor.get_setting_value("auto_email_order_cc"),
-            email_subject,
-            email_template)
-        if not success:
-            logging.error("Email could not be sent")
-            return False
-
-        logging.info(f"Order {self.id} sent in email!")
-        return True
-
-
     @property
     def serialized(self):
         return {

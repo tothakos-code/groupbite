@@ -355,123 +355,78 @@ class VendorService:
         except Exception as e:
             raise ValueError("Failed to parse JSON file", e)
 
-    def closure_wrapper(self):
+    def closed_wrapper(self, vendor):
+        logging.info("Scheduled order 'CLOSED' state stepping running")
+        from app.entities.order import OrderState
+        from app.event_manager import event_manager
+
+        with get_scoped_session_context() as db:
+            order = self.order_service.find_open_order_by_vendor(
+                db, vendor.id, date.today()
+            )
+            if not order:
+                logging.info("Open order not found for state changing")
+                return
+            event_manager.trigger_event(
+                "beforeClose@" + order.vendor.name, {"order_id": order.id}
+            )
+
+            from app.socketio_singleton import SocketioSingleton
+
+            if self.get_setting_value(vendor, "auto_email_order"):
+                email_min_user = self.get_setting_value(vendor, "email_min_user")
+                if self.get_setting_value(vendor, "auto_email_order") and (
+                    email_min_user == 0 or email_min_user <= len(order.get_users())
+                ):
+                    logging.info("Scheduled email ordering running")
+
+                    self.order_service._change_state(db, order, OrderState.CLOSED)
+                    self.order_service.send_in_mail(order)
+                else:
+                    logging.info("Minimum order requirements are not met")
+                    event_manager.trigger_event(
+                        "closeFailed@" + vendor.name, {"order_id": order.id}
+                    )
+                    return False
+            else:
+                self.order_service._change_state(db, order, OrderState.CLOSED)
+
+            event_manager.trigger_event(
+                "afterClose@" + vendor.name, {"order_id": order.id}
+            )
+            socketio = SocketioSingleton.get_instance()
+            socketio.emit(
+                "be_order_update",
+                {"order": order.serialized},
+                to=f"{order.vendor_id}@{order.date_of_order}",
+            )
+
+    def closure_wrapper(self, vendor):
         logging.info("Scheduled order 'ORDER' state stepping running")
-        from app.entities.order import Order, OrderState
+        from app.entities.order import OrderState
         from app.event_manager import event_manager
         from app.services.notification_service import NotificationService
         from app.socketio_singleton import SocketioSingleton
 
-        order = Order.find_open_order_by_date_for_a_vendor(
-            self.id, date.today().strftime("%Y-%m-%d")
-        )
-        if not order:
-            logging.info("Open order not found for state changing")
-            return
-        event_manager.trigger_event("beforeOrder@" + self.name, {"order_id": order.id})
-
-        ok = order.change_state(OrderState.ORDER, None)
-        if not ok:
-            logging.error("Error during order close")
-
-        socketio = SocketioSingleton.get_instance()
-        socketio.emit("be_order_update", {"order": order.serialized})
-        NotificationService.send_vendor_notification(
-            self, order, NotificationType.REMINDER
-        )
-        event_manager.trigger_event("afterOrder@" + self.name, {"order_id": order.id})
-
-    def closed_wrapper(self):
-        logging.info("Scheduled order 'CLOSED' state stepping running")
-        from app.entities.order import Order, OrderState
-        from app.event_manager import event_manager
-
-        order = Order.find_open_order_by_date_for_a_vendor(
-            str(self.id), date.today().strftime("%Y-%m-%d")
-        )
-        if not order:
-            logging.info("Open order not found for state changing")
-            return
-        event_manager.trigger_event("beforeClose@" + self.name, {"order_id": order.id})
-
-        from app.socketio_singleton import SocketioSingleton
-
-        if self.get_setting_value("auto_email_order"):
-            email_min_user = self.get_setting_value("email_min_user")
-            if self.get_setting_value("auto_email_order") == True and (
-                email_min_user == 0 or email_min_user <= len(order.get_users())
-            ):
-                logging.info("Scheduled email ordering running")
-                email_sent = order.send_in_mail()
-                if email_sent:
-                    order.change_state(OrderState.CLOSED)
-                else:
-                    logging.info("There was an error sending the email.")
-                    return False
-            else:
-                logging.info("Minimum order requirements are not met")
-                event_manager.trigger_event(
-                    "closeFailed@" + order.vendor.name, {"order_id": order.id}
-                )
-                return False
-        else:
-            order.change_state(OrderState.CLOSED, None)
-
-        event_manager.trigger_event("afterClose@" + self.name, {"order_id": order.id})
-        socketio = SocketioSingleton.get_instance()
-        socketio.emit(
-            "be_order_update",
-            {"order": order.serialized},
-            to=f"{order.vendor_id}@{order.date_of_order}",
-        )
-
-    def email_ordering_wrapper(self, order_id=None, manual=False):
-        logging.info("Manual email ordering running")
-        from app.entities.order import Order, OrderState
-        from app.event_manager import event_manager
-
-        if not order_id:
-            order = Order.find_order_by_date_for_a_vendor(
-                str(self.id), date.today().strftime("%Y-%m-%d")
+        with get_scoped_session_context() as db:
+            order = self.order_service.find_open_order_by_vendor(
+                db, vendor.id, date.today()
             )
-        else:
-            order = Order.get_by_id(order_id)
-
-        if not order:
-            logging.warning("Order not found")
-            return False
-
-        event_manager.trigger_event(
-            "beforeClose@" + order.vendor.name, {"order_id": order.id}
-        )
-        email_min_user = self.get_setting_value("email_min_user")
-        if manual or (
-            self.get_setting_value("auto_email_order") == True
-            and (email_min_user == 0 or email_min_user <= len(order.get_users()))
-        ):
-            email_sent = order.send_in_mail()
-            if email_sent:
-                if not order.change_state(OrderState.CLOSED):
-                    return True
-                event_manager.trigger_event(
-                    "afterClose@" + order.vendor.name, {"order_id": order.id}
-                )
-
-                from app.socketio_singleton import SocketioSingleton
-
-                socketio = SocketioSingleton.get_instance()
-
-                socketio.emit(
-                    "be_order_update",
-                    {"order": order.serialized},
-                    to=f"{order.vendor_id}@{order.date_of_order}",
-                )
-                return True
-            else:
-                return False
-        else:
-            logging.info("Minimum order requirements are not met")
+            if not order:
+                logging.info("Open order not found for state changing")
+                return
             event_manager.trigger_event(
-                "closeFailed@" + order.vendor.name, {"order_id": order.id}
+                "beforeOrder@" + vendor.name, {"order_id": order.id}
             )
-            return False
+            ok = self.order_service._change_state(db, order, OrderState.ORDER)
+            if not ok:
+                logging.error("Error during order close")
+
+            socketio = SocketioSingleton.get_instance()
+            socketio.emit("be_order_update", {"order": order.serialized})
+            NotificationService.send_vendor_notification(
+                vendor, order, NotificationType.REMINDER
+            )
+            event_manager.trigger_event(
+                "afterOrder@" + vendor.name, {"order_id": order.id}
+            )

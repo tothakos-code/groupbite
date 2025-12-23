@@ -1,13 +1,79 @@
-import smtplib, ssl
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from app.entities.setting import Setting
 import logging
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from pathlib import Path
+
+from jinja2 import Environment, FileSystemLoader, Template
+
+from app.entities.order import Order
+from app.entities.setting import Setting
+from app.entities.user import User
 
 
+class EmailService:
+    def __init__(self):
+        template_dir = Path(__file__).parent.parent / "templates" / "emails"
+        self.env = Environment(loader=FileSystemLoader(template_dir))
 
-def send_mail(to, cc, subject, body, settings=None):
+    def render_template(self, template_name, **context):
+        template = self.env.get_template(template_name)
+        return template.render(**context)
 
+    def render_template_string(self, template_string, **context):
+        """Render template from string."""
+        template = Template(template_string)
+        return template.render(**context)
+
+    def send_username_reminder(self, user: User):
+        email_body = self.render_template(
+            "username_reminder.html", username=user.username
+        )
+
+        return send_mail(
+            to=user.email,
+            subject="Groupbite: Bejelentkezési adat emlékeztető",
+            body=email_body,
+        )
+
+    def send_order(self, order: Order, basket_sum):
+        items_by_category = {}
+        all_items = []
+        for item in basket_sum.values():
+            category = item["category"]
+            if category not in items_by_category:
+                items_by_category[category] = []
+            items_by_category[category].append(item)
+            all_items.append(item)
+
+        template = order.vendor.get_setting_value("auto_email_order_template")
+        email_body = self.render_template_string(
+            template, order=order, basket=all_items, categories=items_by_category
+        )
+
+        template = order.vendor.get_setting_value("auto_email_subject")
+        email_subject = self.render_template_string(
+            template, order=order, vendor=order.vendor
+        )
+        return send_mail(
+            to=order.vendor.get_setting_value("auto_email_order_to"),
+            subject=email_subject,
+            body=email_body,
+            cc=order.vendor.get_setting_value("auto_email_order_cc"),
+        )
+
+    def send_test_mail(self, to: list[str], settings: dict):
+        email_body = self.render_template("test_email.html")
+
+        return send_mail(
+            to=to,
+            subject="A message from GroupBite",
+            body=email_body,
+            settings=settings,
+        )
+
+
+def send_mail(to: list, subject: str, body, cc: list = [], settings=None):
     sender_email = Setting.get_value_by_key("smtp_sender_email")
     smtp_server = Setting.get_value_by_key("smtp_address")
     smtp_port = Setting.get_value_by_key("smtp_port")
@@ -23,24 +89,24 @@ def send_mail(to, cc, subject, body, settings=None):
         smtp_password = settings["smtp_password"]
         smtp_security = settings["smtp_security"]
 
-    if sender_email == "" :
+    if sender_email == "":
         return False, "sender_email can not be empty"
     if smtp_server == "":
         return False, "smtp_server can not be empty"
     if smtp_port == "":
         return False, "smpt_port can not be empty"
 
-
         # Create the email message
     msg = MIMEMultipart("alternative")
-    msg['From'] = sender_email
-    msg['To'] = ", ".join(to)
-    msg['Cc'] = ", ".join(cc)
-    msg['Subject'] = subject
+    msg["From"] = sender_email
+    msg["To"] = ", ".join(to)
+    msg["Cc"] = ", ".join(cc)
+    msg["Subject"] = subject
+    to_addresses = to + cc
 
     # Attach the email body
-    msg.attach(MIMEText("<p>" + body.replace("\r\n", "<br>").replace("\n", "<br>") + "</p>", 'html'))
-    msg.attach(MIMEText(body.replace("<br>", "\r\n"), 'plain'))
+    msg.attach(MIMEText(body, "plain"))
+    msg.attach(MIMEText(body, "html"))
 
     # Try to log in to server and send email
     try:
@@ -56,10 +122,8 @@ def send_mail(to, cc, subject, body, settings=None):
                 server.starttls()
                 logging.info("TLS mail in use")
 
-
-
         server.login(smtp_user, smtp_password)
-        server.sendmail(sender_email, to, msg.as_string())
+        server.sendmail(sender_email, to_addresses, msg.as_string())
         logging.info("Sending mail")
         success, error = True, None
     except Exception as e:

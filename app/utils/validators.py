@@ -38,14 +38,15 @@ def validate_vendor_id(vendor_id):
         raise ValidationError(f"Vendor with ID {vendor_id} does not exist.")
 
 def validate_webhook_id(webhook_id):
-    exists = Webhook.find_by_id((str(webhook_id))) is not None
+    with get_scoped_session_context() as db:
+        exists = WebhookRepository(db).find_by_id(webhook_id) is not None
     if not exists:
         raise ValidationError(f"Webhook with ID {webhook_id} does not exist.")
 
 def validate_menu_id(menu_id):
     exists = Menu.find_by_id(menu_id) is not None
     if not exists:
-        raise ValidationError(f"Vendor with ID {menu_id} does not exist.")
+        raise ValidationError(f"Menu with ID {menu_id} does not exist.")
 
 
 class IDSchema(Schema):

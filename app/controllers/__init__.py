@@ -4,12 +4,15 @@ from app.controllers.menu_controller import MenuController
 from app.controllers.order_controller import OrderController
 from app.controllers.user_controller import UserController
 from app.controllers.vendor_controller import VendorController
+from app.controllers.webhook_controller import WebhookController
+from app.event_manager import event_manager
 from app.services.menu_service import MenuService
 from app.services.order_service import OrderService
 from app.repositories.order_item_repository import OrderItemRepository
 from app.services.user_basket_service import UserBasketService
 from app.services.user_service import UserService
 from app.services.vendor_service import VendorService
+from app.services.webhook_service import WebhookService
 
 main_blueprint = Blueprint("main_controller", __name__, static_folder="../../frontend/dist", template_folder="../../frontend/dist")
 setting_blueprint = Blueprint("setting_controller", __name__, url_prefix="/api/setting")
@@ -31,8 +34,11 @@ def register_blueprints(app):
     menu_service = MenuService()
     menu_ctrl = MenuController(menu_service)
     app.register_blueprint(menu_ctrl.blueprint)
+    webhook_service = WebhookService(event_manager)
+    webhook_ctrl = WebhookController(webhook_service)
+    app.register_blueprint(webhook_ctrl.blueprint)
     vendor_service = VendorService(order_service)
-    vendor_ctrl = VendorController(vendor_service)
+    vendor_ctrl = VendorController(vendor_service, webhook_service)
     app.register_blueprint(vendor_ctrl.blueprint)
 
     # this registering all routes for the blueprint
@@ -40,7 +46,6 @@ def register_blueprints(app):
     from .setting_controller import setting_blueprint
     from .item_controller import item_blueprint
     from .size_controller import size_blueprint
-    from .webhook_controller import webhook_blueprint
     from .statistics_controller import statistics_blueprint
 
     # registering the blueprint in the app
@@ -48,5 +53,4 @@ def register_blueprints(app):
     app.register_blueprint(setting_blueprint)
     app.register_blueprint(item_blueprint)
     app.register_blueprint(size_blueprint)
-    app.register_blueprint(webhook_blueprint)
     app.register_blueprint(statistics_blueprint)

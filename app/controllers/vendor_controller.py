@@ -13,6 +13,7 @@ from app.entities.vendor import BaseVendorSchema, Vendor, VendorType
 from app.entities.webhook import Webhook
 from app.repositories.vendor_repository import VendorRepository
 from app.services.vendor_service import VendorService
+from app.services.webhook_service import WebhookService
 from app.socketio_singleton import SocketioSingleton
 from app.utils.decorators import (
     handle_request,
@@ -27,8 +28,9 @@ socketio = SocketioSingleton.get_instance()
 
 
 class VendorController:
-    def __init__(self, vendor_service: VendorService):
+    def __init__(self, vendor_service: VendorService, webhook_service: WebhookService):
         self.vendor_service = vendor_service
+        self.webhook_service = webhook_service
         self.blueprint = self._create_blueprint()
         self._register_routes()
 
@@ -190,9 +192,12 @@ class VendorController:
             }, 405
         return {"msg": f"Vendor scan ran for {vendor_id} id"}, 201
 
+    @require_auth
+    @require_admin
     @validate_url_params(IDSchema())
-    def handle_get_webhooks(self, vendor_id):
-        webhooks = Webhook.find_by_vendor_id(vendor_id)
+    @handle_request
+    def handle_get_webhooks(self, db, vendor_id):
+        webhooks = self.webhook_service.find_by_vendor_id(db, vendor_id)
 
         return {"data": {"vendors": [wh.serialized for wh in webhooks]}}, 200
 

@@ -1,76 +1,73 @@
-from flask import Blueprint, request
-import json
 import logging
 
-from app.entities.webhook import Webhook, WebhookType, BaseWebhookSchema, UpdateWebhookSchema
-from app.controllers import webhook_blueprint
-from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
+from flask import Blueprint, request
+
+from app.entities.webhook import (
+    BaseWebhookSchema,
+    UpdateWebhookSchema,
+)
+from app.services.webhook_service import WebhookService
+from app.utils.decorators import (
+    handle_request,
+    require_admin,
+    require_auth,
+    validate_data,
+    validate_url_params,
+)
 from app.utils.validators import IDSchema
 
 
-@webhook_blueprint.route("/test", methods=["POST"])
-@require_auth
-@require_admin
-def handle_webhook_test():
-    try:
+class WebhookController:
+    def __init__(self, webhook_service: WebhookService):
+        self.webhook_service = webhook_service
+        self.blueprint = self._create_blueprint()
+        self._register_routes()
+
+    def _create_blueprint(self) -> Blueprint:
+        return Blueprint("webhook_controller", __name__, url_prefix="/api/webhook")
+
+    def _register_routes(self):
+        bp = self.blueprint
+        bp.add_url_rule(
+            "/<webhook_id>", view_func=self.handle_webhook_delete, methods=["DELETE"]
+        )
+        bp.add_url_rule(
+            "/<webhook_id>", view_func=self.handle_webhook_update, methods=["PUT"]
+        )
+        bp.add_url_rule("/", view_func=self.handle_webhook_add, methods=["POST"])
+        bp.add_url_rule("/test", view_func=self.handle_webhook_test, methods=["POST"])
+
+    @require_auth
+    @require_admin
+    @handle_request
+    def handle_webhook_test(self, db):
         data = request.json["data"]
-        Webhook.validate_update_data(data)
-        Webhook.send_to_google_chat(data["url"], data["message_template"])
-    except Exception as e:
-        logging.exception(e)
-        return { "error": "Bad request" }, 400
+        self.webhook_service.test_webhook(data)
+        return {"msg": "OK", "data": data}, 200
 
-    return { "msg": "OK", "data": data }, 200
+    @require_auth
+    @require_admin
+    @validate_data(BaseWebhookSchema())
+    @handle_request
+    def handle_webhook_add(self, db, data):
+        webhook = self.webhook_service.add_webhook(db, data)
+        return {"msg": "OK", "data": webhook.serialized}, 201
 
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @validate_data(UpdateWebhookSchema())
+    @handle_request
+    def handle_webhook_update(self, db, data, webhook_id):
+        webhook = self.webhook_service.find_by_id(db, webhook_id)
+        webhook = self.webhook_service.update_webhook(db, webhook, data)
+        return {"msg": "OK"}, 200
 
-@webhook_blueprint.route("/", methods=["POST"])
-@validate_data(BaseWebhookSchema())
-@require_auth
-@require_admin
-def handle_webhook_add(data):
-    ok, webhook = Webhook.add(Webhook(
-        vendor_id = data["vendor_id"],
-        url = data["url"],
-        message_template = data["message_template"],
-        trigger_type = WebhookType(data["trigger_type"]),
-        scheduled_time = data["scheduled_time"],
-        event_types = data["event_types"],
-        ))
-
-    if not ok:
-        return { "error": "Bad request" }, 400
-
-    return { "msg": "OK", "data": webhook.serialized }, 201
-
-
-
-@webhook_blueprint.route("/<webhook_id>", methods=["PUT"])
-@validate_url_params(IDSchema())
-@validate_data(UpdateWebhookSchema())
-@require_auth
-@require_admin
-def handle_webhook_update(data, webhook_id):
-    webhook = Webhook.find_by_id(webhook_id)
-
-    if not webhook.update(
-        url=data["url"],
-        message_template=data["message_template"],
-        trigger_type=WebhookType(data["trigger_type"]),
-        scheduled_time=data["scheduled_time"],
-        scheduled_days=data["scheduled_days"],
-        event_types=data["event_types"],
-        is_active=data["is_active"]):
-        return { "error": "Bad request" }, 400
-
-    return { "msg": "OK" }, 200
-
-
-
-@webhook_blueprint.route("/<webhook_id>", methods=["DELETE"])
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_webhook_delete(webhook_id):
-    if not Webhook.find_by_id(webhook_id).delete():
-        return { "error": "IntegrityError" }, 400
-    return { "msg": "OK" }, 204
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_webhook_delete(self, db, webhook_id):
+        webhook = self.webhook_service.find_by_id(db, webhook_id)
+        self.webhook_service.delete_webhook(db, webhook)
+        return {"msg": "OK"}, 204

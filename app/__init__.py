@@ -20,7 +20,8 @@ from app.controllers import (
     statistics_blueprint,
 )
 from app.db.session import get_scoped_session_context, init_db
-from app.services.webhook_service import webhook_service
+from app.event_manager import event_manager
+from app.services.webhook_service import WebhookService
 
 dotenv_path = Path(".env")
 load_dotenv(dotenv_path=dotenv_path)
@@ -134,11 +135,11 @@ def create_app(config: Config = Config(), debug=False) -> Flask:
     with get_scoped_session_context() as db:
         loader.load_plugins(db, [d for d in scandir("plugins") if d.is_dir()])
 
-    from app.controllers import register_blueprints
+        from app.controllers import register_blueprints
 
-    register_blueprints(application)
+        register_blueprints(application)
 
-    webhook_service.register_all_webhooks_at_boot()
+        WebhookService(event_manager).register_all_webhooks_at_boot(db)
 
     logging.info("Initialization finished")
     return application

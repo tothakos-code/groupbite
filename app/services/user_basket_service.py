@@ -56,11 +56,10 @@ class UserBasketService:
 
         return basket_item
 
-    def clear_items(self, db, user_id, order_id):
+    @staticmethod
+    def clear_items(db, user_id, order_id):
         basket_repo = UserBasketRepository(db)
-        user_baskets = basket_repo.find_user_basket(order_id, user_id)
-        for basket_entry in user_baskets:
-            self.delete(db, basket_entry)
+        basket_repo.clear_items(order_id, user_id)
 
     @staticmethod
     def delete(db, basket_item):

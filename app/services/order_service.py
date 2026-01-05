@@ -384,10 +384,10 @@ class OrderService:
         return result, last_12_months
 
     def _change_state(self, db, order, new_state, user_id=None) -> bool:
-        order_repo = OrderRepository(db)
+        order_item_repo = OrderItemRepository(db)
         # If changing FROM CLOSED state to any other state, delete existing order items
         if order.state_id == OrderState.CLOSED and new_state != OrderState.CLOSED:
-            order_repo.delete_order_items(order)
+            order_item_repo.delete_order_items(order)
 
         old_state = order.state_id
         order.state_id = new_state
@@ -450,9 +450,9 @@ class OrderService:
 
     @staticmethod
     def send_in_mail(order):
-        from app.entities.user_basket import UserBasket
+        with get_session() as db:
+            baskets = UserBasketRepository(db).find_items_by_order(order.id)
 
-        baskets = UserBasket.find_items_by_order(order.id)
         if len(baskets) == 0:
             logging.warning("The order is empty, email not sent")
             return False

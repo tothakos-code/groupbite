@@ -1,6 +1,6 @@
 import logging
 
-from sqlalchemy import select, or_, cast, String, exc, func
+from sqlalchemy import String, cast, delete, func, or_, select
 from sqlalchemy.orm import selectinload
 
 from app.entities.order import Order
@@ -46,8 +46,16 @@ class UserBasketRepository:
         basket_item.count += 1
         self.db.flush()
 
-    @staticmethod
-    def find_user_orders(self, user_id, limit=None, offset=0, search=None, vendor_id=None, date_from=None, date_to=None):
+    def find_user_orders(
+        self,
+        user_id,
+        limit=None,
+        offset=0,
+        search=None,
+        vendor_id=None,
+        date_from=None,
+        date_to=None,
+    ):
         stmt = (
             select(OrderItem)
             .options(
@@ -82,27 +90,9 @@ class UserBasketRepository:
 
         return self.db.execute(stmt).scalars().all()
 
-    def find_user_order_vendors(self, user_id):
-        user_vendor_ids_subquery = (
-            select(Order.vendor_id)
-            .join(UserBasket, UserBasket.order_id == Order.id)
-            .where(UserBasket.user_id == user_id)
-            .distinct()
-            .subquery()
-        )
-
-        stmt = (
-            select(Vendor)
-            .where(Vendor.id.in_(select(user_vendor_ids_subquery.c.vendor_id)))
-            .order_by(Vendor.name)
-        )
-        return self.db.execute(stmt).scalars().all()
-
-
     def find_user_basket(self, order_id, user_id):
         stmt = select(UserBasket).where(
-            UserBasket.user_id == user_id,
-            UserBasket.order_id == order_id
+            UserBasket.user_id == user_id, UserBasket.order_id == order_id
         )
         return self.db.execute(stmt).scalars().all()
 
@@ -122,3 +112,13 @@ class UserBasketRepository:
             .group_by(UserBasket.order_id)
         )
         return self.db.execute(stmt).all()
+
+    def find_items_by_order(self, order_id):
+        stmt = select(UserBasket).where(UserBasket.order_id == order_id)
+        return self.db.execute(stmt).scalars().all()
+
+    def clear_items(self, user_id, order_id):
+        stmt = delete(UserBasket).where(
+            UserBasket.order_id == order_id, UserBasket.user_id == user_id
+        )
+        self.db.execute(stmt).scalars().all()

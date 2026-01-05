@@ -1,5 +1,7 @@
 from sqlalchemy import ForeignKey, select, exc, extract, Index, or_, func, and_, cast, String
 
+from app.entities.order import Order
+from app.entities.user_basket import UserBasket
 from app.entities.vendor import Vendor, VendorType
 
 
@@ -53,4 +55,20 @@ class VendorRepository:
 
     def get_by_name_and_type(self, vendor_name: str, vendor_type: VendorType):
         stmt = select(Vendor).where(Vendor.type == vendor_type, Vendor.name == vendor_name)
-        return self.db.execute(stmt).scalars().first()
+        return self.db.execute(stmt).scalars().first()    def find_vendors_by_user_orders(self, user_id):
+
+    def find_vendors_by_user_orders(self, user_id):
+        user_vendor_ids_subquery = (
+            select(Order.vendor_id)
+            .join(UserBasket, UserBasket.order_id == Order.id)
+            .where(UserBasket.user_id == user_id)
+            .distinct()
+            .subquery()
+        )
+
+        stmt = (
+            select(Vendor)
+            .where(Vendor.id.in_(select(user_vendor_ids_subquery.c.vendor_id)))
+            .order_by(Vendor.name)
+        )
+        return self.db.execute(stmt).scalars().all()

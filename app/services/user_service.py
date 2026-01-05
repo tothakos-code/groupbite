@@ -190,11 +190,15 @@ class UserService:
         date_to = args.get('date_to')
         offset = 0 if page is None else limit * (page - 1)
 
-        user_items = UserBasket.find_user_orders(user_id, limit, offset, search, vendor_id, date_from, date_to)
-        all_items = UserBasket.find_user_orders(user_id, None, 0, search, vendor_id, date_from, date_to)
+        order_item_repo = OrderItemRepository(db)
+        user_items = order_item_repo.find_user_order_items(
+            user_id, limit, offset, search, vendor_id, date_from, date_to
+        )
+        all_items = order_item_repo.find_user_order_items(
+            user_id, None, 0, search, vendor_id, date_from, date_to
+        )
 
-
-        vendors = UserBasket.find_user_order_vendors(user_id)
+        vendors = VendorRepository(db).find_vendors_by_user_orders(user_id)
         vendors_list = [{"id": vendor.id, "title": vendor.name} for vendor in vendors]
 
         all_order_ids = list(set(item.order_id for item in user_items))
@@ -266,8 +270,9 @@ class UserService:
     @staticmethod
     def get_user_statistics(db, user_id):
         user_basket_repo = UserBasketRepository(db)
+        order_item_repo = OrderItemRepository(db)
         try:
-            all_user_items = UserBasket.find_user_orders(user_id)
+            all_user_items = order_item_repo.find_user_order_items(user_id)
 
             if not all_user_items:
                 return {
@@ -446,8 +451,9 @@ class UserService:
     def get_user_vendor_breakdown(db, user_id):
         user_repo = UserRepository(db)
         user_basket_repo = UserBasketRepository(db)
+        order_item_repo = OrderItemRepository(db)
         try:
-            all_user_items = UserBasket.find_user_orders(user_id)
+            all_user_items = order_item_repo.find_user_order_items(user_id)
 
             vendor_spending = {}
             processed_order_fees = {}

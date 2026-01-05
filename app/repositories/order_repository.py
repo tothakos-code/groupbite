@@ -80,9 +80,6 @@ class OrderRepository:
 
         return self.db.execute(stmt).scalars().all()
 
-    def delete_order_items(self, order):
-        self.db.query(OrderItem).filter(OrderItem.order_id == order.id).delete()
-
     def save(self, order: Order):
         self.db.add(order)
 

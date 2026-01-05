@@ -16,8 +16,6 @@ from app.controllers import (
     item_blueprint,
     main_blueprint,
     setting_blueprint,
-    size_blueprint,
-    statistics_blueprint,
 )
 from app.db.session import get_session, init_db
 from app.event_manager import event_manager

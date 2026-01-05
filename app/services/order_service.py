@@ -23,9 +23,10 @@ from app.socketio_singleton import SocketioSingleton
 
 
 class OrderService:
-
-    def __init__(self, order_item_repository: OrderItemRepository, user_basket_service: UserBasketService):
-        self.order_item_repo = order_item_repository
+    def __init__(
+        self,
+        user_basket_service: UserBasketService,
+    ):
         self.user_basket_service = user_basket_service
 
     @staticmethod
@@ -421,7 +422,7 @@ class OrderService:
                     total_price=basket_item.size.price * basket_item.count
                 )
 
-                self.order_item_repo.save(db, order_item)
+                OrderItemRepository(db).save(order_item)
                 created_items.append(order_item)
                 order_price += order_item.total_price
 

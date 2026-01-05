@@ -1,59 +1,75 @@
-from flask import Blueprint, request
 import json
 import logging
 
-from app.entities.menu_item import MenuItem
-from app.entities.size import Size, BaseSizeSchema, UpdateSizeSchema
+from flask import Blueprint, request
+
 from app.controllers import size_blueprint
-from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
+from app.entities.menu_item import MenuItem
+from app.entities.size import BaseSizeSchema, Size, UpdateSizeSchema
+from app.repositories.size_repository import SizeRepository
+from app.services.size_service import SizeService
+from app.utils.decorators import (
+    handle_request,
+    require_admin,
+    require_auth,
+    validate_data,
+    validate_url_params,
+)
 from app.utils.validators import IDSchema
 
 
-@size_blueprint.route("", methods=["POST"])
-@validate_data(BaseSizeSchema())
-@require_auth
-@require_admin
-def handle_menu_item_size_add(data):
-    if not MenuItem.find_by_id(data["menu_item_id"]):
-        logging.warning("MenuItem not found")
-        return { "error": "MenuItem not found" }, 400
+class SizeController:
+    def __init__(self, size_service: SizeService) -> None:
+        self.size_service = size_service
+        self.blueprint = self._create_blueprint()
+        self._register_routes()
 
-    if not Size.add(Size(
-        menu_item_id = data["menu_item_id"],
-        link         = data["link"] if "link" in data else "",
-        name         = data["name"],
-        price        = data["price"],
-        quantity        = data["quantity"],
-        unlimited     = data["unlimited"])):
-        return { "error": "Bad request or somthing went wrong" }, 400
+    def _create_blueprint(self) -> Blueprint:
+        return Blueprint("size_controller", __name__, url_prefix="/api/size")
 
-    return { "msg": "OK" }, 201
+    def _register_routes(self):
+        bp = self.blueprint
+        bp.add_url_rule("", view_func=self.handle_menu_item_size_add, methods=["POST"])
+        bp.add_url_rule(
+            "<size_id>", view_func=self.handle_menu_item_size_update, methods=["PUT"]
+        )
+        bp.add_url_rule(
+            "<size_id>", view_func=self.handle_menu_item_size_delete, methods=["DELETE"]
+        )
 
+    @validate_data(BaseSizeSchema())
+    @require_auth
+    @require_admin
+    @handle_request
+    def handle_menu_item_size_add(self, db, data):
+        self.size_service.add_size(
+            db,
+            Size(
+                menu_item_id=data["menu_item_id"],
+                link=data["link"] if "link" in data else "",
+                name=data["name"],
+                price=data["price"],
+                quantity=data["quantity"],
+                unlimited=data["unlimited"],
+            ),
+        )
+        return {"msg": "OK"}, 201
 
-@size_blueprint.route("<size_id>", methods=["PUT"])
-@validate_url_params(IDSchema())
-@validate_data(UpdateSizeSchema())
-@require_auth
-@require_admin
-def handle_menu_item_size_update(data, size_id):
-    size_db = Size.find_by_id(size_id)
+    @validate_url_params(IDSchema())
+    @validate_data(UpdateSizeSchema())
+    @require_auth
+    @require_admin
+    @handle_request
+    def handle_menu_item_size_update(self, db, data, size_id):
+        size = SizeRepository(db).get_by_id(size_id)
+        size = self.size_service.update_size(db, size, data)
+        return {"data": json.dumps(size.serialized)}, 200
 
-    if not size_db.update(
-        data["name"],
-        data["price"],
-        data["quantity"],
-        data["unlimited"],
-        data["index"]):
-        return { "error": "Something went wrong" }, 400
-
-    return { "data": json.dumps(size_db.serialized) }, 200
-
-
-@size_blueprint.route("/<size_id>", methods=["DELETE"])
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_menu_item_size_delete(size_id):
-    if not Size.find_by_id(size_id).delete():
-        return { "error": "IntegrityError" }, 400
-    return { "msg": "OK" }, 200
+    @validate_url_params(IDSchema())
+    @require_auth
+    @require_admin
+    @handle_request
+    def handle_menu_item_size_delete(self, db, size_id):
+        size = SizeRepository(db).get_by_id(size_id)
+        size = self.size_service.delete_size(db, size)
+        return {"msg": "OK"}, 200

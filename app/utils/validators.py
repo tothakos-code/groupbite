@@ -28,7 +28,8 @@ def validate_item_id(item_id):
         raise ValidationError(f"Item with ID {item_id} does not exist.")
 
 def validate_size_id(size_id):
-    exists = Size.find_by_id(size_id) is not None
+    with get_session() as db:
+        exists = SizeRepository(db).get_by_id(str(size_id)) is not None
     if not exists:
         raise ValidationError(f"Size with ID {size_id} does not exist.")
 

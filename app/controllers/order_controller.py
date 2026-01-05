@@ -107,7 +107,9 @@ class OrderController:
     def handle_copy_basket(self, db, order_id, user_id, src_user_id):
         order = self.order_service.copy_basket(db, order_id, user_id, src_user_id)
         db.commit()
-        vendor = VendorServiceFactory.get_service(db, str(order.vendor_id))
+        menus = VendorService(self.order_service).get_menu_items(
+            db, order.vendor_id, str(order.date_of_order)
+        )
         socketio.emit(
             "be_order_update",
             { "basket": order.get_order_items() },
@@ -115,8 +117,8 @@ class OrderController:
         )
         socketio.emit(
             "be_menu_update",
-            { "menus": vendor.get_menus(str(order.date_of_order)) },
-            to=f"{order.vendor_id}@{order.date_of_order}"
+            {"menus": menus},
+            to=f"{order.vendor_id}@{order.date_of_order}",
         )
         return {"msg": "OK"}, 201
 
@@ -134,15 +136,12 @@ class OrderController:
                 "be_order_update",
                 { "basket": self.order_service.get_order_items(order) },
                 to=f"{order.vendor_id}@{order.date_of_order}"
+            menus = VendorService(self.order_service).get_menu_items(
+                db, order.vendor_id, str(order.date_of_order)
             )
-            vendor = VendorServiceFactory.get_service(db, str(order.vendor_id))
             socketio.emit(
                 "be_menu_update",
-                {
-                    "menus": VendorService.get_menu_items(
-                        db, order.vendor_id, order.date_of_order
-                    )
-                },
+                {"menus": menus},
                 to=f"{order.vendor_id}@{order.date_of_order}",
             )
             return {"msg": "OK"}, 201
@@ -160,12 +159,13 @@ class OrderController:
             "be_order_update",
             { "basket": self.order_service.get_order_items(order)  },
             to=f"{order.vendor_id}@{order.date_of_order}"
+        menus = VendorService(self.order_service).get_menu_items(
+            db, order.vendor_id, str(order.date_of_order)
         )
-        vendor = VendorServiceFactory.get_service(db, str(order.vendor_id))
         socketio.emit(
             "be_menu_update",
-            { "menus": vendor.get_menus(str(order.date_of_order)) },
-            to=f"{order.vendor_id}@{order.date_of_order}"
+            {"menus": menus},
+            to=f"{order.vendor_id}@{order.date_of_order}",
         )
         return {"msg": "OK"}, 204
 
@@ -179,13 +179,15 @@ class OrderController:
         socketio.emit(
             "be_order_update",
             {"basket": self.order_service.get_order_items(order)},
-            to=f"{order.vendor_id}@{order.date_of_order}"
+            to=f"{order.vendor_id}@{order.date_of_order}",
         )
-        vendor = VendorServiceFactory.get_service(db, str(order.vendor_id))
+        menus = VendorService(self.order_service).get_menu_items(
+            db, order.vendor_id, str(order.date_of_order)
+        )
         socketio.emit(
             "be_menu_update",
-            {"menus": vendor.get_menus(str(order.date_of_order))},
-            to=f"{order.vendor_id}@{order.date_of_order}"
+            {"menus": menus},
+            to=f"{order.vendor_id}@{order.date_of_order}",
         )
         return {"msg": "OK"}, 204
 
@@ -230,7 +232,7 @@ def handle_date_selection_change(data):
         if not ok:
             logging.error("Cannot create order")
             return {"error": "Cannot create order"}
-    with get_scoped_session_context() as db:
+    with get_session() as db:
         socketio.emit(
             "be_order_update",
             {"order": order.serialized, "basket": order.get_order_items()},

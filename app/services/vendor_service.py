@@ -22,10 +22,6 @@ from app.services.vendor_service_factory import VendorServiceFactory
 from app.utils.vendor_settings_registry import VendorSettingsRegistry
 
 
-class MenuItemRepository:
-    pass
-
-
 class VendorService:
     def __init__(self, order_service: OrderService):
         self.order_service = order_service
@@ -379,7 +375,8 @@ class VendorService:
                 logging.info("Open order not found for state changing")
                 return
             event_manager.trigger_event(
-                "beforeClose@" + order.vendor.name, {"order_id": order.id}
+                "beforeClose@" + order.vendor.name,
+                {"order_id": order.id, "order": order.serialized},
             )
 
             from app.socketio_singleton import SocketioSingleton
@@ -396,14 +393,16 @@ class VendorService:
                 else:
                     logging.info("Minimum order requirements are not met")
                     event_manager.trigger_event(
-                        "closeFailed@" + vendor.name, {"order_id": order.id}
+                        "closeFailed@" + vendor.name,
+                        {"order_id": order.id, "order": order.serialized},
                     )
                     return False
             else:
                 self.order_service._change_state(db, order, OrderState.CLOSED)
 
             event_manager.trigger_event(
-                "afterClose@" + vendor.name, {"order_id": order.id}
+                "afterClose@" + vendor.name,
+                {"order_id": order.id, "order": order.serialized},
             )
             socketio = SocketioSingleton.get_instance()
             socketio.emit(
@@ -427,7 +426,8 @@ class VendorService:
                 logging.info("Open order not found for state changing")
                 return
             event_manager.trigger_event(
-                "beforeOrder@" + vendor.name, {"order_id": order.id}
+                "beforeOrder@" + vendor.name,
+                {"order_id": order.id, "order": order.serialized},
             )
             ok = self.order_service._change_state(db, order, OrderState.ORDER)
             if not ok:
@@ -439,5 +439,6 @@ class VendorService:
                 vendor, order, NotificationType.REMINDER
             )
             event_manager.trigger_event(
-                "afterOrder@" + vendor.name, {"order_id": order.id}
+                "afterOrder@" + vendor.name,
+                {"order_id": order.id, "order": order.serialized},
             )

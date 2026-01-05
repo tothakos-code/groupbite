@@ -1,6 +1,7 @@
 from flask import Blueprint, request, session
 import re
 from app.repositories.user_repository import UserRepository
+from app.services.mail_sender_service import EmailService
 from app.services.user_service import UserService
 from app.socketio_singleton import SocketioSingleton
 from app.utils.decorators import validate_url_params, require_auth, require_admin, handle_request

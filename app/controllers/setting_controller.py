@@ -7,13 +7,13 @@ import re
 
 from app.controllers import setting_blueprint
 
-from app.services.mail_sender_service import send_mail
 from app.entities.setting import Setting
 from app.entities.user import User
 from app.utils.decorators import require_auth, require_admin
 from dotenv import load_dotenv
 from pathlib import Path
 from os import getenv
+from app.services.mail_sender_service import EmailService
 
 
 @setting_blueprint.route('/get-all', methods=['GET'])
@@ -64,6 +64,9 @@ def send_test_mail():
     if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", test_email):
         return {"error": "Not a valid email address."}, 415
 
-    if not send_mail([test_email], [], "A message from GroupBite", "<h1>This is a message from GroupBite</h1> <br><p>Hurray you succesfully sent an email from groupbite!</p>", request.json):
+    email_service = EmailService()
+    ok = email_service.send_test_mail([test_email], request.json)
+
+    if not ok:
         return {"error": "Error during email sending"}, 500
     return "Mail sent", 200

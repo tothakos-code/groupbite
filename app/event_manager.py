@@ -1,6 +1,10 @@
 import logging
 import threading
+
 import requests
+
+from app.services.mail_sender_service import EmailService
+
 
 class EventManager:
     def __init__(self):
@@ -35,15 +39,19 @@ class EventManager:
         def webhook_listener(data, *args, **kwargs):
             def send_request():
                 try:
-                    # Use message template if provided, otherwise send raw data
                     payload = data
                     if message_template:
-                        # Simple template replacement - you can enhance this
-                        payload = {"text": message_template.format(**data) if isinstance(data, dict) else message_template}
+                        payload = {
+                            "text": EmailService().render_template_string(
+                                message_template, **data
+                            )
+                        }
 
                     logging.debug(f"Sending webhook for event: {event_types}")
-                    headers = {'Content-Type': 'application/json'}
-                    response = requests.post(webhook_url, json=payload, headers=headers, timeout=5)
+                    headers = {"Content-Type": "application/json"}
+                    response = requests.post(
+                        webhook_url, json=payload, headers=headers, timeout=5
+                    )
                     response.raise_for_status()
                 except Exception as e:
                     logging.error(f"Webhook call failed for {webhook_url}: {e}")

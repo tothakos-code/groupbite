@@ -4,7 +4,6 @@ from app.entities.user import User
 from app.entities.user_basket import UserBasket
 from sqlalchemy import ForeignKey, select, exc, extract, Index, text, func, and_
 from typing import Optional
-from sqlalchemy import select
 from datetime import date
 from uuid import UUID
 

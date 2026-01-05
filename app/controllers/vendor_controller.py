@@ -228,7 +228,7 @@ class VendorController:
     @validate_url_params(IDSchema())
     @handle_request
     def handle_menu_get(self, db, vendor_id):
-        result = self.vendor_service.get_menus(db, vendor_id, request.args)
+        result = self.vendor_service.get_menu_items(db, vendor_id, request.args)
         return {"data": result}, 200
 
     @require_auth

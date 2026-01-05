@@ -9,9 +9,12 @@ from app.db.session import get_session
 from app.entities.order import Order, OrderState
 from app.entities.order_item import OrderItem
 from app.event_manager import event_manager
+from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.order_item_repository import OrderItemRepository
 from app.repositories.order_repository import OrderRepository
+from app.repositories.size_repository import SizeRepository
 from app.repositories.user_basket_repository import UserBasketRepository
+from app.repositories.user_repository import UserRepository
 from app.repositories.vendor_repository import VendorRepository
 from app.scheduler import reschedule_task
 from app.services.mail_sender_service import EmailService
@@ -124,10 +127,10 @@ class OrderService:
     def close_order(self, db, order_id):
         order_repo = OrderRepository(db)
         order = order_repo.get_by_id(order_id)
-        logging.info(f"Manual order triggered by userID: {session.get("user_id")} for order {order.id}")
-        trigger_data = {
-            "order_id": order_id
-        }
+        logging.info(
+            f"Manual order triggered by userID: {session.get('user_id')} for order {order.id}"
+        )
+        trigger_data = {"order_id": order_id, "order": order.serialized}
         event_manager.trigger_event("beforeClose@" + order.vendor.name, trigger_data)
         if order.state_id == OrderState.CLOSED:
             return {"msg": "Order is already closed"}, 400
@@ -159,25 +162,31 @@ class OrderService:
 
     def add_to_basket(self, db, order_id, user_id, item_id, size_id):
         order_repo = OrderRepository(db)
-        order = order_repo.get_by_id( order_id)
+        user_repo = UserRepository(db)
+        menu_item_repo = MenuItemRepository(db)
+        size_repo = SizeRepository(db)
+        order = order_repo.get_by_id(order_id)
+        user = user_repo.get_by_id(user_id)
+        item = menu_item_repo.get_by_id(order_id)
+        size = size_repo.get_by_id(size_id)
         if not order:
             return {"error": "Order not found"}, 400
 
         data = {
             "order_id": order_id,
+            "order": order.serialized,
             "user_id": user_id,
+            "user": user.serialized,
             "menu_item_id": item_id,
-            "size_id": size_id
+            "item": item.serialized,
+            "size_id": size_id,
+            "size": size.serialized,
         }
 
         event_manager.trigger_event("beforeAdd@" + order.vendor.name, data)
 
         basket_item = self.user_basket_service.add_item(
-            db,
-            user_id,
-            item_id,
-            size_id,
-            order_id
+            db, user_id, item_id, size_id, order_id
         )
 
         event_manager.trigger_event("afterAdd@" + order.vendor.name, data)
@@ -186,25 +195,31 @@ class OrderService:
 
     def remove_from_basket(self, db, order_id, user_id, item_id, size_id):
         order_repo = OrderRepository(db)
-        order = order_repo.get_by_id( order_id)
+        user_repo = UserRepository(db)
+        menu_item_repo = MenuItemRepository(db)
+        size_repo = SizeRepository(db)
+        order = order_repo.get_by_id(order_id)
+        user = user_repo.get_by_id(user_id)
+        item = menu_item_repo.get_by_id(order_id)
+        size = size_repo.get_by_id(size_id)
         if not order:
             return {"error": "Order not found"}, 400
 
         data = {
             "order_id": order_id,
+            "order": order.serialized,
             "user_id": user_id,
+            "user": user.serialized,
             "menu_item_id": item_id,
-            "size_id": size_id
+            "item": item.serialized,
+            "size_id": size_id,
+            "size": size.serialized,
         }
 
         event_manager.trigger_event("beforeRemove@" + order.vendor.name, data)
 
         basket_item = self.user_basket_service.remove_item(
-            db,
-            user_id,
-            item_id,
-            size_id,
-            order_id
+            db, user_id, item_id, size_id, order_id
         )
 
         event_manager.trigger_event("afterRemove@" + order.vendor.name, data)
@@ -469,7 +484,8 @@ class OrderService:
             return False
 
         event_manager.trigger_event(
-            "beforeClose@" + order.vendor.name, {"order_id": order.id}
+            "beforeClose@" + order.vendor.name,
+            {"order_id": order.id, "order": order.serialized},
         )
         email_min_user = order.vendor.get_setting_value("email_min_user")
         if manual or (
@@ -480,7 +496,8 @@ class OrderService:
             self.send_in_mail(order)
 
             event_manager.trigger_event(
-                "afterClose@" + order.vendor.name, {"order_id": order.id}
+                "afterClose@" + order.vendor.name,
+                {"order_id": order.id, "order": order.serialized},
             )
 
             from app.socketio_singleton import SocketioSingleton
@@ -496,7 +513,8 @@ class OrderService:
         else:
             logging.info("Minimum order requirements are not met")
             event_manager.trigger_event(
-                "closeFailed@" + order.vendor.name, {"order_id": order.id}
+                "closeFailed@" + order.vendor.name,
+                {"order_id": order.id, "order": order.serialized},
             )
             return False
 
@@ -509,12 +527,15 @@ class OrderService:
             socketio.emit(
                 "be_order_update",
                 {"basket": order.get_order_items()},
-                to=f"{order.vendor_id}@{order.date_of_order}"
+                to=f"{order.vendor_id}@{order.date_of_order}",
             )
-            from app import VendorFactory
-            vendor = VendorFactory.get_one_vendor_object(str(order.vendor_id))
+            from app.services.vendor_service import VendorService
+
+            menus = VendorService.get_menu_items(
+                db, order.vendor_id, str(order.date_of_order)
+            )
             socketio.emit(
                 "be_menu_update",
-                {"menus": vendor.get_menus(str(order.date_of_order))},
-                to=f"{order.vendor_id}@{order.date_of_order}"
+                {"menus": menus},
+                to=f"{order.vendor_id}@{order.date_of_order}",
             )

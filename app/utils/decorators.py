@@ -1,9 +1,9 @@
 from functools import wraps
 from marshmallow import ValidationError
 from flask import request, session
-from app.db.session import get_session_context, get_scoped_session_context
 import logging
 
+from app.db.session import get_session
 from app.repositories.user_repository import UserRepository
 
 
@@ -46,8 +46,8 @@ def require_auth(f):
 def require_admin(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        with get_session_context() as db:
             if not UserRepository(db).is_admin(session['user_id']):
+        with get_session() as db:
                 logging.warning("User unauthorized")
                 return { "error": "Unauthorized" }, 401
         return f(*args, **kwargs)
@@ -57,7 +57,7 @@ def handle_request(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         # this creates the request scoped database session
-        with get_scoped_session_context() as db:
+        with get_session() as db:
             try:
                 return f(self, db=db, *args, **kwargs)
             except ValueError as e:

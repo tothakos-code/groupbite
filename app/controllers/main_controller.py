@@ -4,7 +4,7 @@ import logging
 import requests
 
 from app.controllers import main_blueprint
-from app.db.session import get_scoped_session_context
+from app.db.session import get_session
 from app.services.vendor_service import VendorService
 from app.socketio_singleton import SocketioSingleton
 
@@ -52,5 +52,8 @@ def get_vapid_public_key():
 
 @socketio.on("connect")
 def handle_connect(auth=None):
-    with get_scoped_session_context() as db:
-        socketio.emit("be_vendors_update", [v.serialized for v in VendorService.find_all_active(db)])
+    with get_session() as db:
+        socketio.emit(
+            "be_vendors_update",
+            [v.serialized for v in VendorService.find_all_active(db)],
+        )

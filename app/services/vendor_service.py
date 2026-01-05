@@ -7,7 +7,7 @@ from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import flag_modified
 
-from app.db.session import get_scoped_session_context
+from app.db.session import get_session
 from app.entities.menu import Menu
 from app.entities.menu_item import MenuItem
 from app.entities.notification import NotificationType
@@ -371,7 +371,7 @@ class VendorService:
         from app.entities.order import OrderState
         from app.event_manager import event_manager
 
-        with get_scoped_session_context() as db:
+        with get_session() as db:
             order = self.order_service.find_open_order_by_vendor(
                 db, vendor.id, date.today()
             )
@@ -419,7 +419,7 @@ class VendorService:
         from app.services.notification_service import NotificationService
         from app.socketio_singleton import SocketioSingleton
 
-        with get_scoped_session_context() as db:
+        with get_session() as db:
             order = self.order_service.find_open_order_by_vendor(
                 db, vendor.id, date.today()
             )

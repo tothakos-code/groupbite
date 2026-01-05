@@ -1,6 +1,7 @@
 from app.entities.order import Order
 from app.entities.user import User
-from app.db.session import get_scoped_session_context
+from marshmallow import Schema, ValidationError, fields, validate
+from app.db.session import get_session
 from app.entities.menu_item import MenuItem
 from app.entities.size import Size
 from app.entities.vendor import Vendor
@@ -32,13 +33,13 @@ def validate_size_id(size_id):
         raise ValidationError(f"Size with ID {size_id} does not exist.")
 
 def validate_vendor_id(vendor_id):
-    with get_scoped_session_context() as db:
+    with get_session() as db:
         exists = VendorRepository(db).get_by_id((str(vendor_id))) is not None
     if not exists:
         raise ValidationError(f"Vendor with ID {vendor_id} does not exist.")
 
 def validate_webhook_id(webhook_id):
-    with get_scoped_session_context() as db:
+    with get_session() as db:
         exists = WebhookRepository(db).find_by_id(webhook_id) is not None
     if not exists:
         raise ValidationError(f"Webhook with ID {webhook_id} does not exist.")

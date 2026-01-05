@@ -1,8 +1,11 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session, scoped_session
-from contextlib import contextmanager
-from typing import Generator
 import logging
+from contextlib import contextmanager
+from pickle import GLOBAL
+from typing import Generator, Optional
+
+from flask import g, has_request_context
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from app.config import Config
 
@@ -19,7 +22,18 @@ class DatabaseManager:
     def __init__(self, config: Config):
         self.config = config
         self.engine = self._create_engine()
-        self.SessionFactory = self._create_session_factory()
+        # non scoped
+        self.session_factory: sessionmaker = sessionmaker(
+            bind=self.engine,
+            expire_on_commit=False,
+            autoflush=False,
+            autocommit=False,
+        )
+
+        # scoped
+        self.scoped_session_factory: scoped_session = scoped_session(
+            self.session_factory
+        )
 
     def _create_engine(self):
         """Create SQLAlchemy engine with proper configuration."""
@@ -29,80 +43,81 @@ class DatabaseManager:
             max_overflow=self.config.DB_MAX_OVERFLOW,
             pool_timeout=self.config.DB_POOL_TIMEOUT,
             pool_recycle=self.config.DB_POOL_RECYCLE,
-            pool_pre_ping=True,  # Verify connections before using
-            echo=False
+            pool_pre_ping=True,
+            echo=False,
         )
 
-    def _create_session_factory(self):
-        session_factory = sessionmaker(
-            bind=self.engine,
-            expire_on_commit=False,
-            autoflush=False,
-            autocommit=False
-        )
-        return scoped_session(session_factory)
+    def get_scoped_session(self) -> Session:
+        return self.scoped_session_factory()
 
-    def get_session(self) -> Session:
-        return self.SessionFactory()
-
-    @contextmanager
-    def get_scoped_session_context(self) -> Generator[Session, None, None]:
-        session = self.SessionFactory()
-        try:
-            yield session
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            logger.exception("Session error, rolling back")
-            raise
-        finally:
-            session.close()
-            self.SessionFactory.remove()
+    def get_nonscoped_session(self) -> Session:
+        return self.session_factory()
 
     @contextmanager
     def get_session_context(self) -> Generator[Session, None, None]:
-        session = sessionmaker(bind=self.engine)()
+        if has_request_context():
+            # In-request: reuse one session on g
+            if g is None:  # safety, should not happen if Flask is present
+                raise RuntimeError(
+                    "Flask request context present but flask.g unavailable."
+                )
+
+            session: Optional[Session] = getattr(g, "db_session", None)
+            if session is None:
+                session = self.get_scoped_session()
+                g.db_session = session
+
+            yield session
+            return
+
+        # Outside request: own the session lifecycle
+        session = self.get_nonscoped_session()
         try:
             yield session
             session.commit()
-        except Exception as e:
+        except Exception:
             session.rollback()
-            logger.exception("Session error, rolling back")
+            logger.exception("DB session error, rolling back")
             raise
         finally:
             session.close()
 
     def close_all_sessions(self):
-        self.SessionFactory.remove()
-        self.engine.dispose()
+        try:
+            self.scoped_session_factory.remove()
+        finally:
+            self.engine.dispose()
+
+    def init_flask(self, app):
+        @app.teardown_request
+        def request_end(exception):
+            session = getattr(g, "db_session", None)
+            if session is None:
+                return
+
+            try:
+                if exception is None:
+                    session.commit()
+                else:
+                    session.rollback()
+            finally:
+                self.scoped_session_factory.remove()
+                g.db_session = None
 
 
 # Global instance (initialized in app factory)
 db_manager: DatabaseManager = None
 
 
-def init_db(config: Config):
+def init_db(application, config: Config):
     global db_manager
     db_manager = DatabaseManager(config)
+    db_manager.init_flask(application)
     return db_manager
 
 
-def get_session() -> Session:
-    if db_manager is None:
-        raise RuntimeError("Database not initialized. Call init_db() first.")
-    return db_manager.get_session()
-
-
 @contextmanager
-def get_scoped_session_context() -> Generator[Session, None, None]:
-    if db_manager is None:
-        raise RuntimeError("Database not initialized. Call init_db() first.")
-    with db_manager.get_scoped_session_context() as session:
-        yield session
-
-@contextmanager
-def get_session_context() -> Generator[Session, None, None]:
-    if db_manager is None:
-        raise RuntimeError("Database not initialized. Call init_db() first.")
-    with db_manager.get_session_context() as session:
-        yield session
+def get_session() -> Generator[Session, None, None]:
+    global db_manager
+    with db_manager.get_session_context() as db:
+        yield db

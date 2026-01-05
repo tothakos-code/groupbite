@@ -5,7 +5,7 @@ from typing import Optional
 from dateutil.relativedelta import relativedelta
 from flask import session
 
-from app.db.session import get_session_context
+from app.db.session import get_session
 from app.entities.order import Order, OrderState
 from app.entities.order_item import OrderItem
 from app.event_manager import event_manager
@@ -502,7 +502,7 @@ class OrderService:
 
     @staticmethod
     def emit_update(data):
-        with get_session_context() as db:
+        with get_session() as db:
             order_repo = OrderRepository(db)
             order = order_repo.get_by_id(data["order_id"])
             socketio = SocketioSingleton.get_instance()

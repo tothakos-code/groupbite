@@ -19,7 +19,7 @@ from app.controllers import (
     size_blueprint,
     statistics_blueprint,
 )
-from app.db.session import get_scoped_session_context, init_db
+from app.db.session import get_session, init_db
 from app.event_manager import event_manager
 from app.services.webhook_service import WebhookService
 
@@ -131,8 +131,8 @@ def create_app(config: Config = Config(), debug=False) -> Flask:
     )
 
     # Initialize database
-    init_db(config)
-    with get_scoped_session_context() as db:
+    init_db(application, config)
+    with get_session() as db:
         loader.load_plugins(db, [d for d in scandir("plugins") if d.is_dir()])
 
         from app.controllers import register_blueprints

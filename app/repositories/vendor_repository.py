@@ -54,8 +54,10 @@ class VendorRepository:
         self.db.expunge(vendor)
 
     def get_by_name_and_type(self, vendor_name: str, vendor_type: VendorType):
-        stmt = select(Vendor).where(Vendor.type == vendor_type, Vendor.name == vendor_name)
-        return self.db.execute(stmt).scalars().first()    def find_vendors_by_user_orders(self, user_id):
+        stmt = select(Vendor).where(
+            Vendor.type == vendor_type, Vendor.name == vendor_name
+        )
+        return self.db.execute(stmt).scalars().first()
 
     def find_vendors_by_user_orders(self, user_id):
         user_vendor_ids_subquery = (

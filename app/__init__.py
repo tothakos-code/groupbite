@@ -13,7 +13,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 from app.config import Config
 from app.controllers import (
-    item_blueprint,
     main_blueprint,
     setting_blueprint,
 )

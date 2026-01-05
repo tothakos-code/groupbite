@@ -3,7 +3,6 @@ import logging
 
 from flask import Blueprint, request
 
-from app.controllers import size_blueprint
 from app.entities.menu_item import MenuItem
 from app.entities.size import BaseSizeSchema, Size, UpdateSizeSchema
 from app.repositories.size_repository import SizeRepository

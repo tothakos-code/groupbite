@@ -4,6 +4,7 @@ from typing import Optional
 from app.entities.menu import Menu
 from app.entities.menu_item import MenuItem
 from app.entities.size import Size
+from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.menu_repository import MenuRepository
 
 
@@ -100,10 +101,13 @@ class MenuService:
             page = None
 
         offset = 0 if page is None else limit * (page - 1)
-        search = args.get('search')
-        items = MenuItem.find_all_by_menu(menu_id, search, limit, offset)
+        search = args.get("search")
+        menu_item_repo = MenuItemRepository(db)
+        items = menu_item_repo.find_all_by_menu(menu_id, search, limit, offset)
 
-        total_count = MenuItem.count_by_menu_id(menu_id, search) if limit else len(items)
+        total_count = (
+            menu_item_repo.count_by_menu_id(menu_id, search) if limit else len(items)
+        )
         return {
             "items": [i.serialized for i in items],
             "page": page,

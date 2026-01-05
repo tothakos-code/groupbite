@@ -14,6 +14,7 @@ from app.entities.notification import NotificationType
 from app.entities.setting import Setting
 from app.entities.size import Size
 from app.entities.vendor import Vendor, VendorType
+from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.vendor_repository import VendorRepository
 from app.services.base_vendor_service import BaseVendorService
@@ -40,7 +41,9 @@ class VendorService:
         result = []
 
         for menu in menus:
-            items = MenuItem.find_all_by_menu_list([menu.id], filter, limit=100)
+            items = MenuItemRepository(db).find_all_by_menu_list(
+                [menu.id], filter, limit=100
+            )
 
             categorized_items = {}
             for item in items:

@@ -112,7 +112,7 @@
           class="me-4"
         >
           <v-chip
-            color="teal-darken-4"
+            :color="theme === 'light' ? 'teal-darken-4' : 'teal-lighten-1' "
             size="small"
             variant="tonal"
           >
@@ -148,6 +148,7 @@
 </template>
 
 <script>
+import { inject } from "vue";
 export default {
   name: 'InformativeOrderCard',
   props: {
@@ -161,6 +162,10 @@ export default {
     }
   },
   emits: ['click'],
+  setup() {
+    const { theme } = inject("theme");
+    return {theme}
+  },
   methods: {
     formatCurrency(amount) {
       return new Intl.NumberFormat('hu-HU', {

@@ -275,6 +275,9 @@ class OrderService:
             result[date_of_order][order.id]["sum"] = sum
 
             result[date_of_order][order.id]["user_count"] = len(order_participants)
+            result[date_of_order][order.id]["ordered"] = any(
+                str(user.id) == session.get("user_id") for user in order_participants
+            )
 
         return result
 

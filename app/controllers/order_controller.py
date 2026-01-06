@@ -90,10 +90,6 @@ class OrderController:
     def handle_order_history(self, db):
         date_from = request.json["date_from"]
         date_to = request.json["date_to"]
-        user_id = None
-        if "user_id" in request.json:
-            user_id = request.json["user_id"]
-
         result = self.order_service.get_history(db, date_from, date_to)
 
         return {"data": result}, 200

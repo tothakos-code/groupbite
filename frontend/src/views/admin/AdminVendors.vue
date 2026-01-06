@@ -4,9 +4,9 @@
     class="pa-2 pa-md-4"
   >
     <!-- Header with Actions -->
-    <v-row class="mb-4">
+    <v-row class="d-none d-sm-flex mb-4">
       <v-col
-        cols="12"
+        cols="6"
         md="8"
         class="d-flex align-center"
       >
@@ -15,7 +15,7 @@
         </h1>
       </v-col>
       <v-col
-        cols="12"
+        cols="6"
         md="4"
         class="d-flex justify-end ga-2"
       >
@@ -49,9 +49,9 @@
     </v-row>
 
     <!-- Mobile Actions (visible only on mobile) -->
-    <v-row class="d-md-none mb-4">
+    <v-row class="d-flex d-sm-none mb-4">
       <v-col
-        cols="12"
+        cols="6"
         class="d-flex ga-2"
       >
         <v-btn
@@ -78,8 +78,8 @@
 
     <!-- Mobile Cards View -->
     <v-row
-      v-if="!isLoading && $vuetify.display.mobile"
-      class="d-md-none"
+      v-if="!isLoading"
+      class="d-flex d-sm-none"
     >
       <v-col cols="12">
         <v-card
@@ -175,7 +175,7 @@
     <!-- Desktop Table View -->
     <v-row
       v-if="!isLoading"
-      class="d-none d-md-flex"
+      class="d-none d-sm-flex"
     >
       <v-col>
         <v-data-table

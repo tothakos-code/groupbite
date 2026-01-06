@@ -27,7 +27,7 @@
       <h1 class="col d-flex justify-content-start">
         Adminisztráció
       </h1>
-      <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-4">
+      <div class="row row-cols-2 row-cols-sm-2 row-cols-md-4 g-4">
         <div class="col">
           <div
             class="card"

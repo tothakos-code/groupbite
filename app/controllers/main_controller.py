@@ -1,20 +1,14 @@
 from datetime import date
-from flask import Blueprint, request, send_from_directory, render_template, session
-import logging
-import requests
+from os import getenv
+from pathlib import Path
 
-from app.controllers import main_blueprint
+import requests
+from dotenv import load_dotenv
+from flask import Blueprint, render_template, send_from_directory
+
 from app.db.session import get_session
 from app.services.vendor_service import VendorService
 from app.socketio_singleton import SocketioSingleton
-
-
-
-from dotenv import load_dotenv
-from pathlib import Path
-from os import getenv
-
-from app.utils.decorators import handle_request
 
 dotenv_path = Path(".env")
 load_dotenv(dotenv_path=dotenv_path)
@@ -23,32 +17,44 @@ VAPID_PUBLIC_KEY = getenv("VAPID_PUBLIC_KEY")
 
 socketio = SocketioSingleton.get_instance()
 
-@main_blueprint.route("/", defaults={"path": ""})
-@main_blueprint.route("/<path:path>")
-def catch_all(path):
 
-    if path.startswith(("service-worker.js")):
-        return send_from_directory(main_blueprint.static_folder, path)
+class MainController:
+    def __init__(self) -> None:
+        self.blueprint = self._create_blueprint()
+        self._register_routes()
 
-    if APP_ENV == "development":
-        # logging.debug("Redirecting to Frontned...")
-        # This is for developer mode only
-        return requests.get("http://127.0.0.1:8080/{0}".format(path)).text
+    def _create_blueprint(self) -> Blueprint:
+        return Blueprint(
+            "main_controller",
+            __name__,
+            static_folder="../../frontend/dist",
+            template_folder="../../frontend/dist",
+        )
 
-    if path.startswith(("css/", "js/", "styles.css")):
-        return send_from_directory(main_blueprint.static_folder, path)
+    def _register_routes(self):
+        bp = self.blueprint
+        bp.add_url_rule("/<path:path>", view_func=self.catch_all)
+        bp.add_url_rule(
+            "/vapid_public_key", view_func=self.get_vapid_public_key, methods=["GET"]
+        )
 
-    return render_template("index.html")
+    def catch_all(self, path):
+        if path.startswith(("service-worker.js")):
+            return send_from_directory(self.blueprint.static_folder, path)
 
+        if APP_ENV == "development":
+            # logging.debug("Redirecting to Frontned...")
+            # This is for developer mode only
+            return requests.get("http://127.0.0.1:8080/{0}".format(path)).text
 
-@main_blueprint.route("/cron/new_day_refresh")
-def cron_new_day_refresh():
-    socketio.emit("Refresh!")
-    return "Refreshed", 200
+        if path.startswith(("css/", "js/", "styles.css")):
+            return send_from_directory(self.blueprint.static_folder, path)
 
-@main_blueprint.route("/vapid_public_key")
-def get_vapid_public_key():
-    return VAPID_PUBLIC_KEY, 200
+        return render_template("index.html")
+
+    def get_vapid_public_key(self):
+        return VAPID_PUBLIC_KEY, 200
+
 
 @socketio.on("connect")
 def handle_connect(auth=None):

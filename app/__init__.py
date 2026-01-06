@@ -12,9 +12,6 @@ from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 
 from app.config import Config
-from app.controllers import (
-    main_blueprint,
-)
 from app.db.session import get_session, init_db
 from app.event_manager import event_manager
 from app.services.webhook_service import WebhookService

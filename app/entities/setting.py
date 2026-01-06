@@ -1,18 +1,6 @@
-import base64
-from os import getenv
-from pathlib import Path
-
-from cryptography.fernet import Fernet
-from dotenv import load_dotenv
 from sqlalchemy.orm import Mapped, mapped_column
 
-from . import Base, session
-
-dotenv_path = Path(".env")
-load_dotenv(dotenv_path=dotenv_path)
-
-FERNET_KEY = getenv("FERNET_KEY")
-cipher = Fernet(str.encode(FERNET_KEY))
+from . import Base
 
 
 class Setting(Base):

@@ -51,8 +51,8 @@ class OrderService:
     def get_all_order(db, args) -> Optional[dict]:
         order_repo = OrderRepository(db)
         try:
-            limit = int(args.get('limit'))
-            page = int(args.get('page'))
+            limit = int(args.get("limit"))
+            page = int(args.get("page"))
         except ValueError or TypeError:
             limit = 10
             page = 1
@@ -63,11 +63,11 @@ class OrderService:
         result = []
         for order in orders:
             result.append(order.serialized)
-        return  {
+        return {
             "items": result,
             "page": page,
             "limit": limit,
-            "total_count": total_count
+            "total_count": total_count,
         }
 
     @staticmethod
@@ -91,12 +91,11 @@ class OrderService:
                 continue
 
             if user_id_str not in result:
-                result[user_id_str] = {
-                    "user_id": user_id_str,
-                    "items": []
-                }
+                result[user_id_str] = {"user_id": user_id_str, "items": []}
 
-            result[user_id_str]["username"] = item.user.username if item.user else "Unknown"
+            result[user_id_str]["username"] = (
+                item.user.username if item.user else "Unknown"
+            )
 
             if order.state_id == OrderState.CLOSED:
                 item_data = {
@@ -107,7 +106,7 @@ class OrderService:
                     "price": item.unit_price,
                     "category": None,
                     "quantity": item.count,
-                    "total_price": item.total_price
+                    "total_price": item.total_price,
                 }
             else:
                 item_data = {
@@ -118,7 +117,7 @@ class OrderService:
                     "price": item.size.price,
                     "category": item.item.category,
                     "quantity": item.count,
-                    "total_price": item.size.price * item.count
+                    "total_price": item.size.price * item.count,
                 }
 
             result[user_id_str]["items"].append(item_data)
@@ -140,10 +139,14 @@ class OrderService:
         if not ok:
             logging.error(f"Order close error")
 
-        order.order_fee = trigger_data["order_fee"] if "order_fee" in trigger_data else order.vendor.settings["transport_price"]["value"]
+        order.order_fee = (
+            trigger_data["order_fee"]
+            if "order_fee" in trigger_data
+            else order.vendor.settings["transport_price"]["value"]
+        )
 
         event_manager.trigger_event("afterClose@" + order.vendor.name, trigger_data)
-        logging.info(f"Order closed successfully")
+        logging.info("Order closed successfully")
         return order
 
     def update_order(self, db, order_id, data) -> Order:
@@ -234,7 +237,9 @@ class OrderService:
         for item in user_basket_repo.find_user_basket(order_id, src_user_id):
             for i in range(0, item.count):
                 try:
-                    self.user_basket_service.add_item(db, user_id, str(item.menu_item_id), item.size_id, order_id)
+                    self.user_basket_service.add_item(
+                        db, user_id, str(item.menu_item_id), item.size_id, order_id
+                    )
                 except ValueError as e:
                     logging.error(e)
                     continue
@@ -269,30 +274,24 @@ class OrderService:
             sum += order.order_fee
             result[date_of_order][order.id]["sum"] = sum
 
-
             result[date_of_order][order.id]["user_count"] = len(order_participants)
 
         return result
-
 
     def get_statistics(self, db):
         year_result, year_labels = self._last_12_month_statistics(db)
         week_result, week_labels = self._last_7_days_statistics(db)
         return {
-            "year_data": {
-                "data": year_result,
-                "labels": year_labels
-            },
-            "week_data": {
-                "data": week_result,
-                "labels": week_labels
-            }
+            "year_data": {"data": year_result, "labels": year_labels},
+            "week_data": {"data": week_result, "labels": week_labels},
         }
 
     def email_order(self, db, order_id):
         order_repo = OrderRepository(db)
         order = order_repo.get_by_id(order_id)
-        logging.info(f"Manual email send triggered by userID: {session.get("user_id")} for order {order_id}")
+        logging.info(
+            f"Manual email send triggered by userID: {session.get('user_id')} for order {order_id}"
+        )
 
         if not order:
             raise ValueError(f"Order {order_id} not found")
@@ -306,7 +305,9 @@ class OrderService:
         try:
             # Cancel the scheduled task for this vendor (if exists)
             reschedule_task(task_id)
-            logging.info(f"Scheduled task '{task_id}' rescheduled to next day due to manual trigger.")
+            logging.info(
+                f"Scheduled task '{task_id}' rescheduled to next day due to manual trigger."
+            )
         except KeyError:
             logging.info(f"Scheduled task '{task_id}' not found.")
 
@@ -325,13 +326,17 @@ class OrderService:
         start_date = today - relativedelta(days=6)  # 6 days ago + today = 7 days
 
         # Generate day list
-        last_7_days = [(today - relativedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+        last_7_days = [
+            (today - relativedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)
+        ]
         last_7_days.reverse()
 
         vendors = vendor_repo.find_all_active()
         vendor_dict = {vendor.id: vendor.name for vendor in vendors}
 
-        daily_data = order_repo.get_daily_sums(start_date, today, list(vendor_dict.keys()))
+        daily_data = order_repo.get_daily_sums(
+            start_date, today, list(vendor_dict.keys())
+        )
 
         daily_lookup = {}
         for row in daily_data:
@@ -355,16 +360,22 @@ class OrderService:
         vendor_repo = VendorRepository(db)
 
         today = date.today()
-        start_date = today - relativedelta(months=11)  # 11 months ago + current month = 12 months
+        start_date = today - relativedelta(
+            months=11
+        )  # 11 months ago + current month = 12 months
 
         # Generate month list
-        last_12_months = [(today - relativedelta(months=i)).strftime("%Y-%m") for i in range(12)]
+        last_12_months = [
+            (today - relativedelta(months=i)).strftime("%Y-%m") for i in range(12)
+        ]
         last_12_months.reverse()
 
         vendors = vendor_repo.find_all_active()
         vendor_dict = {vendor.id: vendor.name for vendor in vendors}
 
-        monthly_data = order_repo.get_monthly_sums(start_date, today, list(vendor_dict.keys()))
+        monthly_data = order_repo.get_monthly_sums(
+            start_date, today, list(vendor_dict.keys())
+        )
 
         monthly_lookup = {}
         for row in monthly_data:
@@ -376,7 +387,7 @@ class OrderService:
             result[vendor_name] = {"data": []}
 
             for month in last_12_months:
-                year, month_num = month.split('-')
+                year, month_num = month.split("-")
                 lookup_key = f"{vendor_id}-{year}-{month_num}"
                 monthly_sum = monthly_lookup.get(lookup_key, 0)
                 result[vendor_name]["data"].append(monthly_sum)
@@ -419,7 +430,7 @@ class OrderService:
                     item_name=basket_item.item.name,
                     size_label=basket_item.size.name,
                     unit_price=basket_item.size.price,
-                    total_price=basket_item.size.price * basket_item.count
+                    total_price=basket_item.size.price * basket_item.count,
                 )
 
                 OrderItemRepository(db).save(order_item)
@@ -435,7 +446,7 @@ class OrderService:
             return True
 
         except Exception as e:
-            logging.exception("Error creating order items. "+ str(e))
+            logging.exception("Error creating order items. " + str(e))
             # Clean up any partially created items
             for item in created_items:
                 db.expunge(item)
@@ -479,6 +490,7 @@ class OrderService:
     def email_ordering_wrapper(self, order: Order, manual=False):
         logging.info("Manual email ordering running")
         from app.event_manager import event_manager
+        from app.services.vendor_service import VendorService
 
         if not order:
             logging.warning("Order not found")
@@ -488,36 +500,38 @@ class OrderService:
             "beforeClose@" + order.vendor.name,
             {"order_id": order.id, "order": order.serialized},
         )
-        email_min_user = order.vendor.get_setting_value("email_min_user")
-        if manual or (
-            order.vendor.get_setting_value("auto_email_order")
-            and (email_min_user == 0 or email_min_user <= len(order.get_users()))
-        ):
-            order.change_state(OrderState.CLOSED)
-            self.send_in_mail(order)
+        email_min_user = VendorService.get_setting_value(order.vendor, "email_min_user")
+        with get_session() as db:
+            order_user_count = len(OrderRepository(db).find_order_participants(order))
+            if manual or (
+                VendorService.get_setting_value(order.vendor, "auto_email_order")
+                and (email_min_user == 0 or email_min_user <= order_user_count)
+            ):
+                self._change_state(db, order, OrderState.CLOSED)
+                self.send_in_mail(order)
 
-            event_manager.trigger_event(
-                "afterClose@" + order.vendor.name,
-                {"order_id": order.id, "order": order.serialized},
-            )
+                event_manager.trigger_event(
+                    "afterClose@" + order.vendor.name,
+                    {"order_id": order.id, "order": order.serialized},
+                )
 
-            from app.socketio_singleton import SocketioSingleton
+                from app.socketio_singleton import SocketioSingleton
 
-            socketio = SocketioSingleton.get_instance()
+                socketio = SocketioSingleton.get_instance()
 
-            socketio.emit(
-                "be_order_update",
-                {"order": order.serialized},
-                to=f"{order.vendor_id}@{order.date_of_order}",
-            )
-            return True
-        else:
-            logging.info("Minimum order requirements are not met")
-            event_manager.trigger_event(
-                "closeFailed@" + order.vendor.name,
-                {"order_id": order.id, "order": order.serialized},
-            )
-            return False
+                socketio.emit(
+                    "be_order_update",
+                    {"order": order.serialized},
+                    to=f"{order.vendor_id}@{order.date_of_order}",
+                )
+                return True
+            else:
+                logging.info("Minimum order requirements are not met")
+                event_manager.trigger_event(
+                    "closeFailed@" + order.vendor.name,
+                    {"order_id": order.id, "order": order.serialized},
+                )
+                return False
 
     @staticmethod
     def emit_update(data):

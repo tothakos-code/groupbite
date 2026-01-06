@@ -1,15 +1,12 @@
-from sqlalchemy import Column, Text, Enum, select, update
-from uuid import UUID
-from . import Base, session
-from .size import Size
-import enum
-import logging
 from typing import List
-from sqlalchemy import ForeignKey, exc, func, or_
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
+
 from marshmallow import Schema, fields, validate
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from . import Base
+from .size import Size
+
 
 class BaseItemSchema(Schema):
     menu_id = fields.Int(required=True)
@@ -23,14 +20,17 @@ class UpdateItemSchema(BaseItemSchema):
     id = fields.Int(required=True)
     menu_id = fields.Int(required=True)
 
+
 class BulkUpdateItemSchema(Schema):
     items = fields.List(
-        fields.Nested({
-            'id': fields.Integer(required=True),
-            'index': fields.Integer(required=True, validate=validate.Range(min=0))
-        }),
+        fields.Nested(
+            {
+                "id": fields.Integer(required=True),
+                "index": fields.Integer(required=True, validate=validate.Range(min=0)),
+            }
+        ),
         required=True,
-        validate=validate.Length(min=1, max=1000)
+        validate=validate.Length(min=1, max=1000),
     )
 
 
@@ -44,7 +44,12 @@ class MenuItem(Base):
     index: Mapped[int]
     category: Mapped[str]
 
-    sizes: Mapped[List["Size"]] = relationship(back_populates="menu_item", cascade="all, delete-orphan", order_by="Size.index", passive_deletes=True)
+    sizes: Mapped[List["Size"]] = relationship(
+        back_populates="menu_item",
+        cascade="all, delete-orphan",
+        order_by="Size.index",
+        passive_deletes=True,
+    )
     orders: Mapped[List["UserBasket"]] = relationship(back_populates="item")
     menu: Mapped["Menu"] = relationship(back_populates="items")
 
@@ -60,5 +65,5 @@ class MenuItem(Base):
             "description": self.description,
             "index": self.index,
             "sizes": [size.serialized for size in self.sizes],
-            "category": self.category
+            "category": self.category,
         }

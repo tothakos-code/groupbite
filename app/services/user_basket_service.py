@@ -9,17 +9,16 @@ class UserBasketService:
         basket_repo = UserBasketRepository(db)
         size_repo = SizeRepository(db)
 
-        # Find basket item
-        basket_item = basket_repo.find_basket_item(order_id, user_id, menu_item_id, size_id)
+        basket_item = basket_repo.find_basket_item(
+            order_id, user_id, menu_item_id, size_id
+        )
         if not basket_item:
             raise ValueError("Item not found in basket")
 
-        # Return size to inventory if not unlimited
         size = size_repo.get_by_id(size_id)
         if not size.unlimited:
             size_repo.increment_quantity(size)
 
-        # Remove or decrement
         if basket_item.count == 1:
             basket_item = basket_repo.delete(basket_item)
         else:
@@ -32,25 +31,26 @@ class UserBasketService:
         basket_repo = UserBasketRepository(db)
         size_repo = SizeRepository(db)
 
-        # Find basket item
-        basket_item = basket_repo.find_basket_item(order_id, user_id, menu_item_id, size_id)
+        basket_item = basket_repo.find_basket_item(
+            order_id, user_id, menu_item_id, size_id
+        )
 
-        # Return size to inventory if not unlimited
         size = size_repo.get_by_id(size_id)
         if size.unlimited or size.quantity > 0:
             size_repo.decrement_quantity(size)
         else:
             raise ValueError("Item out of stock")
 
-        # Remove or decrement
         if not basket_item:
-            basket_item = basket_repo.add(UserBasket(
-                    user_id = user_id,
-                    menu_item_id = menu_item_id,
-                    size_id = size_id,
-                    order_id = order_id,
-                    count = 1
-                ))
+            basket_item = basket_repo.add(
+                UserBasket(
+                    user_id=user_id,
+                    menu_item_id=menu_item_id,
+                    size_id=size_id,
+                    order_id=order_id,
+                    count=1,
+                )
+            )
         else:
             basket_repo.increment_count(basket_item)
 

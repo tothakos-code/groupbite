@@ -1,17 +1,12 @@
-import logging
-
 from sqlalchemy import String, cast, delete, func, or_, select
 from sqlalchemy.orm import selectinload
 
 from app.entities.order import Order
 from app.entities.order_item import OrderItem
-from app.entities.size import Size
 from app.entities.user_basket import UserBasket
-from app.entities.vendor import Vendor
 
 
 class UserBasketRepository:
-
     def __init__(self, db):
         self.db = db
 
@@ -24,7 +19,7 @@ class UserBasketRepository:
             UserBasket.order_id == order_id,
             UserBasket.user_id == user_id,
             UserBasket.menu_item_id == menu_item_id,
-            UserBasket.size_id == size_id
+            UserBasket.size_id == size_id,
         )
         return self.db.execute(stmt).scalars().first()
 
@@ -60,7 +55,7 @@ class UserBasketRepository:
             select(OrderItem)
             .options(
                 selectinload(OrderItem.order).selectinload(Order.vendor),
-                selectinload(OrderItem.order)
+                selectinload(OrderItem.order),
             )
             .join(OrderItem.order)
             .where(OrderItem.user_id == user_id)
@@ -106,7 +101,7 @@ class UserBasketRepository:
         stmt = (
             select(
                 UserBasket.order_id,
-                func.count(func.distinct(UserBasket.user_id)).label('user_count')
+                func.count(func.distinct(UserBasket.user_id)).label("user_count"),
             )
             .where(UserBasket.order_id.in_(order_ids))
             .group_by(UserBasket.order_id)

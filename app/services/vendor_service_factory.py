@@ -1,12 +1,11 @@
 import logging
 
-from app.entities.vendor import VendorType, Vendor
+from app.entities.vendor import Vendor
 from app.repositories.vendor_repository import VendorRepository
 from app.services.base_vendor_service import BaseVendorService
 
 
 class VendorServiceFactory:
-
     _vendor_services = {}
 
     @classmethod

@@ -8,7 +8,6 @@ from jinja2 import Environment, FileSystemLoader, Template
 
 from app.db.session import get_session
 from app.entities.order import Order
-from app.entities.setting import Setting
 from app.entities.user import User
 from app.repositories.setting_repository import SettingRepository
 from app.services.encrypted_type import decrypt_value
@@ -40,6 +39,8 @@ class EmailService:
         )
 
     def send_order(self, order: Order, basket_sum):
+        from app.services.vendor_service import VendorService
+
         items_by_category = {}
         all_items = []
         for item in basket_sum.values():
@@ -49,20 +50,22 @@ class EmailService:
             items_by_category[category].append(item)
             all_items.append(item)
 
-        template = order.vendor.get_setting_value("auto_email_order_template")
+        template = VendorService.get_setting_value(
+            order.vendor, "auto_email_order_template"
+        )
         email_body = self.render_template_string(
             template, order=order, basket=all_items, categories=items_by_category
         )
 
-        template = order.vendor.get_setting_value("auto_email_subject")
+        template = VendorService.get_setting_value(order.vendor, "auto_email_subject")
         email_subject = self.render_template_string(
             template, order=order, vendor=order.vendor
         )
         return send_mail(
-            to=order.vendor.get_setting_value("auto_email_order_to"),
+            to=VendorService.get_setting_value(order.vendor, "auto_email_order_to"),
             subject=email_subject,
             body=email_body,
-            cc=order.vendor.get_setting_value("auto_email_order_cc"),
+            cc=VendorService.get_setting_value(order.vendor, "auto_email_order_cc"),
         )
 
     def send_test_mail(self, to: list[str], settings: dict):
@@ -101,7 +104,6 @@ def send_mail(to: list, subject: str, body, cc: list = [], settings=None):
     if smtp_port == "":
         return False, "smpt_port can not be empty"
 
-        # Create the email message
     msg = MIMEMultipart("alternative")
     msg["From"] = sender_email
     msg["To"] = ", ".join(to)
@@ -116,14 +118,11 @@ def send_mail(to: list, subject: str, body, cc: list = [], settings=None):
     # Try to log in to server and send email
     try:
         if smtp_port == 465 or smtp_security == "ssl":
-            # Use SSL for port 465
             server = smtplib.SMTP_SSL(smtp_server, smtp_port)
             logging.info("SSL mail in use")
         else:
-            # Use non-SSL connection first
             server = smtplib.SMTP(smtp_server, smtp_port)
             if smtp_port == 587 or smtp_security == "tls":
-                # Upgrade to a secure connection using STARTTLS for port 587
                 server.starttls()
                 logging.info("TLS mail in use")
 
@@ -133,7 +132,6 @@ def send_mail(to: list, subject: str, body, cc: list = [], settings=None):
         success, error = True, None
     except Exception as e:
         success, error = False, str(e)
-        # Print any error messages to stdout
         logging.error(e)
     finally:
         server.quit()

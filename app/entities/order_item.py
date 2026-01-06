@@ -1,17 +1,9 @@
-from sqlalchemy import Column, Text, Enum, select, delete
-from uuid import UUID, uuid4
-from . import Base, session
-from .size import Size
-from .menu_item import MenuItem
-from .user_basket import UserBasket
-import enum
-import logging
-from typing import List
-from sqlalchemy import ForeignKey, exc, func, or_, Index
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
-from marshmallow import Schema, fields
+from uuid import UUID
+
+from sqlalchemy import ForeignKey, Index
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from . import Base
 
 
 class OrderItem(Base):
@@ -37,20 +29,20 @@ class OrderItem(Base):
     user: Mapped["User"] = relationship()
 
     __table_args__ = (
-        Index('idx_orderitem_user_id', 'user_id'),
-        Index('idx_orderitem_order_id', 'order_id'),
-        Index('idx_orderitem_user_order', 'user_id', 'order_id'),
+        Index("idx_orderitem_user_id", "user_id"),
+        Index("idx_orderitem_order_id", "order_id"),
+        Index("idx_orderitem_user_order", "user_id", "order_id"),
         Index(
-            'idx_orderitem_item_name_gin',
-            'item_name',
-            postgresql_using='gin',
-            postgresql_ops={'item_name': 'gin_trgm_ops'}
+            "idx_orderitem_item_name_gin",
+            "item_name",
+            postgresql_using="gin",
+            postgresql_ops={"item_name": "gin_trgm_ops"},
         ),
         Index(
-            'idx_orderitem_size_label_gin',
-            'size_label',
-            postgresql_using='gin',
-            postgresql_ops={'size_label': 'gin_trgm_ops'}
+            "idx_orderitem_size_label_gin",
+            "size_label",
+            postgresql_using="gin",
+            postgresql_ops={"size_label": "gin_trgm_ops"},
         ),
     )
 

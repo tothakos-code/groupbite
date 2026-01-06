@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, select, exc, extract, Index, or_, func, and_, cast, String
+from sqlalchemy import select
 
 from app.entities.order import Order
 from app.entities.user_basket import UserBasket
@@ -6,7 +6,6 @@ from app.entities.vendor import Vendor, VendorType
 
 
 class VendorRepository:
-
     def __init__(self, db):
         self.db = db
 
@@ -23,9 +22,7 @@ class VendorRepository:
         return self.db.execute(stmt).scalars().all()
 
     def get_by_id(self, vendor_id):
-        stmt = select(Vendor).where(
-            Vendor.id == vendor_id
-        )
+        stmt = select(Vendor).where(Vendor.id == vendor_id)
 
         return self.db.execute(stmt).scalars().first()
 

@@ -1,14 +1,16 @@
-from app.entities.order_item import OrderItem
-from app.entities.order import Order, OrderState
-from app.entities.user import User
-from app.entities.user_basket import UserBasket
-from sqlalchemy import ForeignKey, select, exc, extract, Index, text, func, and_
-from typing import Optional
 from datetime import date
+from typing import Optional
 from uuid import UUID
 
-class OrderRepository:
+from sqlalchemy import and_, extract, func, select
 
+from app.entities.order import Order, OrderState
+from app.entities.order_item import OrderItem
+from app.entities.user import User
+from app.entities.user_basket import UserBasket
+
+
+class OrderRepository:
     def __init__(self, db):
         self.db = db
 
@@ -16,22 +18,17 @@ class OrderRepository:
         stmt = select(Order).where(Order.id == order_id)
         return self.db.execute(stmt).scalars().first()
 
-    def find_orders_between_dates(self,  start, end):
-        stmt = select(
-            Order
-        ).where(
-            Order.date_of_order.between(start, end)
-        )
+    def find_orders_between_dates(self, start, end):
+        stmt = select(Order).where(Order.date_of_order.between(start, end))
         return self.db.execute(stmt).scalars().all()
 
     def find_user_order_dates_between(self, user_id, start, end):
-        stmt = select(
-            Order
-        ).join(
-            Order.order_items
-        ).where(
-            OrderItem.user_id == user_id,
-            Order.date_of_order.between(start, end)
+        stmt = (
+            select(Order)
+            .join(Order.order_items)
+            .where(
+                OrderItem.user_id == user_id, Order.date_of_order.between(start, end)
+            )
         )
         return self.db.execute(stmt).scalars().all()
 
@@ -41,23 +38,26 @@ class OrderRepository:
             stmt = stmt.limit(limit).offset(offset)
         return self.db.execute(stmt).scalars().all()
 
-    def find_open_order_by_date_for_a_vendor(self, vendor_id: UUID, order_date: date = date.today()):
+    def find_open_order_by_date_for_a_vendor(
+        self, vendor_id: UUID, order_date: date = date.today()
+    ):
         stmt = select(Order).where(
             Order.vendor_id == vendor_id,
             Order.date_of_order == order_date,
-            Order.state_id != OrderState.CLOSED)
+            Order.state_id != OrderState.CLOSED,
+        )
         return self.db.execute(stmt).scalars().first()
 
-    def find_order_by_date_for_a_vendor(self, vendor_id: UUID, order_date: date = date.today()):
+    def find_order_by_date_for_a_vendor(
+        self, vendor_id: UUID, order_date: date = date.today()
+    ):
         stmt = select(Order).where(
-            Order.vendor_id == vendor_id,
-            Order.date_of_order == order_date)
+            Order.vendor_id == vendor_id, Order.date_of_order == order_date
+        )
         return self.db.execute(stmt).scalars().first()
 
     def find_order_between(self, date_from, date_to):
-        stmt = select(Order).where(
-            Order.date_of_order.between(date_from, date_to)
-        )
+        stmt = select(Order).where(Order.date_of_order.between(date_from, date_to))
         return self.db.execute(stmt).all()
 
     def find_order_participants(self, order):
@@ -80,27 +80,28 @@ class OrderRepository:
 
         return self.db.execute(stmt).scalars().all()
 
-    def save(self, order: Order):
+    def save(self, order: Order) -> Order:
         self.db.add(order)
+        self.db.flush()
+        return order
 
     def get_daily_sums(self, start_date: date, end_date: date, vendors_ids: list):
         daily_sums_query = (
             select(
                 Order.vendor_id,
                 Order.date_of_order,
-                func.coalesce(func.sum(Order.total_price), 0).label('daily_sum')  # Adjust column name as needed
+                func.coalesce(func.sum(Order.total_price), 0).label(
+                    "daily_sum"
+                ),  # Adjust column name as needed
             )
             .where(
                 and_(
                     Order.date_of_order >= start_date,
                     Order.date_of_order <= end_date,
-                    Order.vendor_id.in_(vendors_ids)
+                    Order.vendor_id.in_(vendors_ids),
                 )
             )
-            .group_by(
-                Order.vendor_id,
-                Order.date_of_order
-            )
+            .group_by(Order.vendor_id, Order.date_of_order)
         )
 
         return self.db.execute(daily_sums_query).all()
@@ -109,21 +110,23 @@ class OrderRepository:
         monthly_sums_query = (
             select(
                 Order.vendor_id,
-                extract('year', Order.date_of_order).label('year'),
-                extract('month', Order.date_of_order).label('month'),
-                func.coalesce(func.sum(Order.total_price), 0).label('monthly_sum')  # Adjust column name as needed
+                extract("year", Order.date_of_order).label("year"),
+                extract("month", Order.date_of_order).label("month"),
+                func.coalesce(func.sum(Order.total_price), 0).label(
+                    "monthly_sum"
+                ),  # Adjust column name as needed
             )
             .where(
                 and_(
                     Order.date_of_order >= start_date,
                     Order.date_of_order <= end_date,
-                    Order.vendor_id.in_(vendors_ids)
+                    Order.vendor_id.in_(vendors_ids),
                 )
             )
             .group_by(
                 Order.vendor_id,
-                extract('year', Order.date_of_order),
-                extract('month', Order.date_of_order)
+                extract("year", Order.date_of_order),
+                extract("month", Order.date_of_order),
             )
         )
 

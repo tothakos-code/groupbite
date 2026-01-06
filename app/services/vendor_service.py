@@ -4,18 +4,17 @@ from configparser import ParsingError
 from datetime import date, datetime
 from uuid import uuid4
 
-from sqlalchemy import select
 from sqlalchemy.orm.attributes import flag_modified
 
 from app.db.session import get_session
 from app.entities.menu import Menu
 from app.entities.menu_item import MenuItem
 from app.entities.notification import NotificationType
-from app.entities.setting import Setting
 from app.entities.size import Size
 from app.entities.vendor import Vendor, VendorType
 from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.menu_repository import MenuRepository
+from app.repositories.order_repository import OrderRepository
 from app.repositories.setting_repository import SettingRepository
 from app.repositories.vendor_repository import VendorRepository
 from app.services.base_vendor_service import BaseVendorService
@@ -87,10 +86,11 @@ class VendorService:
         date_to = args.get("date_to")
 
         offset = 0 if page is None else limit * (page - 1)
-        menus = Menu.find_by_vendor(
+        menu_repo = MenuRepository(db)
+        menus = menu_repo.find_by_vendor(
             vendor_id, limit, offset, search, active, date_from, date_to
         )
-        all_menus = Menu.find_by_vendor(
+        all_menus = menu_repo.find_by_vendor(
             vendor_id, None, 0, search, active, date_from, date_to
         )
 
@@ -134,7 +134,8 @@ class VendorService:
         vendor_repo = VendorRepository(db)
         return vendor_repo.find_all_active()
 
-    def get_setting_value(self, vendor: Vendor, key: str, default=None):
+    @staticmethod
+    def get_setting_value(vendor: Vendor, key: str, default=None):
         """Safely get a setting value with fallback to default"""
         try:
             if key in vendor.settings and "value" in vendor.settings[key]:
@@ -155,7 +156,6 @@ class VendorService:
             return False
 
         if key not in vendor.settings:
-            # Create from default if doesn't exist
             setting_def = VendorSettingsRegistry.get_setting_by_key(key)
             if setting_def:
                 vendor.settings[key] = setting_def.to_dict()
@@ -168,7 +168,6 @@ class VendorService:
 
     def update_settings(self, vendor, settings):
         """Update multiple settings with proper validation and scheduling"""
-        # Validate all settings first
         for key, setting_data in settings.items():
             if not isinstance(setting_data, dict) or "value" not in setting_data:
                 continue
@@ -178,10 +177,8 @@ class VendorService:
                 )
                 continue
 
-        # Check for scheduler changes
         self._handle_scheduler_changes(vendor, settings)
 
-        # Update settings
         vendor.settings = settings
         flag_modified(vendor, "settings")
 
@@ -278,7 +275,6 @@ class VendorService:
             type=VendorType.BASIC,
             settings=data.get("settings", {}),
         )
-        # Todo: Vendor factory review
         vendor = VendorRepository(db).save(vendor)
         vendor._validate_settings()
         VendorServiceFactory.register_vendor_service(vendor, BaseVendorService)
@@ -286,7 +282,7 @@ class VendorService:
         if self.get_setting_value(vendor, "closure_scheduler_active"):
             from app.scheduler import schedule_task
 
-            hh, mm = vendor.get_setting_value("closure_scheduler").split(":")
+            hh, mm = self.get_setting_value(vendor, "closure_scheduler").split(":")
             schedule_task(
                 str(vendor.id) + "-closure",
                 int(hh),
@@ -298,7 +294,7 @@ class VendorService:
         if self.get_setting_value(vendor, "closed_scheduler_active"):
             from app.scheduler import schedule_task
 
-            hh, mm = vendor.get_setting_value("closed_scheduler").split(":")
+            hh, mm = self.get_setting_value(vendor, "closed_scheduler").split(":")
             schedule_task(
                 str(vendor.id) + "-closed",
                 int(hh),
@@ -362,7 +358,7 @@ class VendorService:
                             size_index += 1
 
                     menu_db.items.append(menu_item)
-                Menu.add(menu_db)
+                MenuRepository(db).save(menu_db)
 
         except Exception as e:
             raise ValueError("Failed to parse JSON file", e)
@@ -388,8 +384,11 @@ class VendorService:
 
             if self.get_setting_value(vendor, "auto_email_order"):
                 email_min_user = self.get_setting_value(vendor, "email_min_user")
+                order_user_count = len(
+                    OrderRepository(db).find_order_participants(order)
+                )
                 if self.get_setting_value(vendor, "auto_email_order") and (
-                    email_min_user == 0 or email_min_user <= len(order.get_users())
+                    email_min_user == 0 or email_min_user <= order_user_count
                 ):
                     logging.info("Scheduled email ordering running")
 

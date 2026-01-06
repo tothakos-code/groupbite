@@ -103,12 +103,10 @@ class WebhookService:
     def _schedule_webhook(self, db, webhook):
         """Schedule a webhook for time-based execution"""
         try:
-            # Parse scheduled_time (assuming format "HH:MM")
             hour, minute = map(int, webhook.scheduled_time.split(":"))
             webhook_id = str(webhook.id)
 
             def webhook_task():
-                # Create webhook data
                 data = {
                     "webhook_id": webhook_id,
                     "vendor_id": str(webhook.vendor_id),
@@ -116,7 +114,6 @@ class WebhookService:
                     "trigger_type": "scheduled",
                 }
 
-                # Send webhook
                 try:
                     payload = data
                     if webhook.message_template:
@@ -128,7 +125,6 @@ class WebhookService:
                     )
                     response.raise_for_status()
 
-                    # Update last_executed timestamp
                     webhook.last_executed = datetime.utcnow()
                     db.commit()
 
@@ -176,13 +172,10 @@ class WebhookService:
         """Unregister a webhook from both events and scheduled tasks"""
         webhook_id_str = str(webhook_id)
 
-        # Unregister from event manager
         self.event_manager.unregister_webhook(webhook_id_str)
 
-        # Cancel scheduled task if exists
         cancel_task(webhook_id_str)
 
-        # Remove from active webhooks
         WebhookService._active_webhooks.discard(webhook_id_str)
 
         logging.info(f"Webhook {webhook_id} fully unregistered")
@@ -220,7 +213,6 @@ class WebhookService:
             is_active=data["is_active"],
         )
         webhook_repo = WebhookRepository(db)
-        # Unregister existing webhook
         if str(webhook.id) in WebhookService._active_webhooks:
             self.unregister_webhook(webhook.id)
 
@@ -236,27 +228,22 @@ class WebhookService:
     @staticmethod
     def validate_update_data(data):
         """Validate webhook update data"""
-        # URL validation
         if "url" in data:
             url = data["url"]
             if not url or not url.strip():
                 raise Exception("URL megadása kötelező")
 
-            # URL format validation
             url_pattern = re.compile(r"^https?://.+")
             if not url_pattern.match(url):
                 raise Exception("Érvényes URL-t adjon meg (http:// vagy https://)")
 
-        # Trigger type validation
         trigger_type = data.get("trigger_type")
         if trigger_type == WebhookType.TIME:
-            # Time validation for scheduled webhooks
             scheduled_time = data.get("scheduled_time")
             scheduled_days = data.get("scheduled_days")
             if not scheduled_time:
                 raise Exception("Időpont megadása kötelező")
 
-            # Time format validation (HH:MM)
             time_pattern = re.compile(r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
             if not time_pattern.match(scheduled_time):
                 raise Exception("Érvénytelen időformátum. Érvényes formátum: HH:MM")
@@ -267,7 +254,6 @@ class WebhookService:
                         "A 'scheduled_days' mezőnek listának kell lennie (pl. ['mon','tue','wed'])."
                     )
                 else:
-                    # Filter invalid and duplicate entries
                     clean_days = []
                     for d in scheduled_days:
                         if isinstance(d, str):
@@ -279,7 +265,6 @@ class WebhookService:
                                 and day not in clean_days
                             ):
                                 clean_days.append(day)
-                    # Store sanitized list (can be empty)
                     data["scheduled_days"] = clean_days
 
     @staticmethod
@@ -291,9 +276,8 @@ class WebhookService:
         response = requests.post(webhook_url, json=payload, headers=headers)
         if response.status_code != 200:
             raise Exception(f"Failed to send message: {response.text}")
-        else:
-            logging.info("Test Webhook message sent!")
 
     def test_webhook(self, webhook_data):
         self.validate_update_data(webhook_data)
         self.send_to_google_chat(webhook_data["url"], webhook_data["message_template"])
+        logging.info("Test Webhook message sent!")

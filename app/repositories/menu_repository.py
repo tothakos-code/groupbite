@@ -1,58 +1,58 @@
-import logging
+from sqlalchemy import (
+    String,
+    and_,
+    cast,
+    func,
+    or_,
+    select,
+)
 
 from app.entities.menu import Menu
-from sqlalchemy import ForeignKey, select, exc, extract, Index, or_, func, and_, cast, String
 
 
 class MenuRepository:
-
     def __init__(self, db):
         self.db = db
 
     def find_by_vendor_id(self, vendor_id, date):
         stmt = select(Menu).where(
-            Menu.vendor_id == vendor_id,
-            Menu.from_date <= date,
-            Menu.to_date >= date
+            Menu.vendor_id == vendor_id, Menu.from_date <= date, Menu.to_date >= date
         )
         return self.db.execute(stmt).scalars().first()
-
 
     def find_active_by_vendor_id(self, vendor_id, date):
         stmt = select(Menu).where(
             Menu.active,
             Menu.vendor_id == vendor_id,
-            or_(
-                Menu.from_date <= date,
-                Menu.from_date == None
-            ),
-            or_(
-                Menu.to_date >= date,
-                Menu.to_date == None
-            )
+            or_(Menu.from_date <= date, Menu.from_date == None),
+            or_(Menu.to_date >= date, Menu.to_date == None),
         )
 
         return self.db.execute(stmt).scalars().all()
 
     def get_by_id(self, menu_id):
-        stmt = select(Menu).where(
-            Menu.id == menu_id
-        )
+        stmt = select(Menu).where(Menu.id == menu_id)
 
         return self.db.execute(stmt).scalars().first()
 
-
-    def find_by_vendor(self, vendor_id, limit=None, offset=0, search=None, active=None, date_from=None, date_to=None):
-        stmt = select(Menu).where(
-            Menu.vendor_id == vendor_id
-        )
+    def find_by_vendor(
+        self,
+        vendor_id,
+        limit=None,
+        offset=0,
+        search=None,
+        active=None,
+        date_from=None,
+        date_to=None,
+    ):
+        stmt = select(Menu).where(Menu.vendor_id == vendor_id)
 
         if search:
             stmt = stmt.where(
                 or_(
                     Menu.name.ilike(f"%{search}%"),
                     cast(Menu.from_date, String).ilike(f"%{search}%"),
-                    cast(Menu.to_date, String).ilike(f"%{search}%")
+                    cast(Menu.to_date, String).ilike(f"%{search}%"),
                 )
             )
 
@@ -63,7 +63,7 @@ class MenuRepository:
             stmt = stmt.where(
                 and_(
                     or_(Menu.from_date == None, Menu.from_date <= date_to),
-                    or_(Menu.to_date == None, Menu.to_date >= date_from)
+                    or_(Menu.to_date == None, Menu.to_date >= date_from),
                 )
             )
 
@@ -76,15 +76,11 @@ class MenuRepository:
 
         return self.db.execute(stmt).scalars().all()
 
-
     def count_by_vendor_id(self, vendor_id):
-        stmt = select(func.count(Menu.id)).where(
-            Menu.vendor_id == vendor_id
-        )
+        stmt = select(func.count(Menu.id)).where(Menu.vendor_id == vendor_id)
         return self.db.execute(stmt).scalars().first()
 
-
-    def add(self, menu):
+    def save(self, menu):
         self.db.add(menu)
         self.db.flush()
         return menu

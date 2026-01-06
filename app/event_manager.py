@@ -34,8 +34,11 @@ class EventManager:
             except ValueError:
                 logging.warning(f"Listener not found for event {event}")
 
-    def register_webhook(self, webhook_id, event_types, webhook_url, message_template=None):
+    def register_webhook(
+        self, webhook_id, event_types, webhook_url, message_template=None
+    ):
         """Register a webhook as a listener to multiple events"""
+
         def webhook_listener(data, *args, **kwargs):
             def send_request():
                 try:
@@ -64,21 +67,22 @@ class EventManager:
 
         # Store webhook listener reference for later removal
         self.webhook_listeners[webhook_id] = {
-            'listener': webhook_listener,
-            'events': event_types
+            "listener": webhook_listener,
+            "events": event_types,
         }
 
     def unregister_webhook(self, webhook_id):
         """Unregister a webhook from all its events"""
         if webhook_id in self.webhook_listeners:
             webhook_info = self.webhook_listeners[webhook_id]
-            listener = webhook_info['listener']
-            events = webhook_info['events']
+            listener = webhook_info["listener"]
+            events = webhook_info["events"]
 
             for event_type in events:
                 self.unregister_listener(event_type, listener)
 
             del self.webhook_listeners[webhook_id]
             logging.debug(f"Webhook {webhook_id} unregistered from events {events}")
+
 
 event_manager = EventManager()

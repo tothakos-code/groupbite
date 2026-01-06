@@ -11,6 +11,7 @@ from app.entities.size import Size
 from app.entities.user import User
 from app.entities.vendor import BaseVendorSchema, Vendor, VendorType
 from app.entities.webhook import Webhook
+from app.repositories.user_repository import UserRepository
 from app.repositories.vendor_repository import VendorRepository
 from app.services.vendor_service import VendorService
 from app.services.webhook_service import WebhookService
@@ -135,13 +136,16 @@ class VendorController:
                 auth=notification_json["keys"]["auth"],
             )
         )
-        socketio.emit("be_user_update", User.get_one_by_id(user_id).serialized)
+        socketio.emit(
+            "be_user_update", UserRepository(db).get_by_id(user_id).serialized
+        )
 
         return {"msg": "OK"}, 200
 
     @validate_url_params(IDSchema())
     @require_auth
-    def handle_notification_unsubscribe(self, vendor_id, notification_type):
+    @handle_request
+    def handle_notification_unsubscribe(self, db, vendor_id, notification_type):
         # todo: Refactor after Notification Service
         user_id = session.get("user_id")
         notifications = Notification.find_by_vendor_id_user_id(
@@ -149,7 +153,10 @@ class VendorController:
         )
         for noti in notifications:
             if noti.delete():
-                socketio.emit("be_user_update", User.get_one_by_id(user_id).serialized)
+                socketio.emit(
+                    "be_user_update",
+                    UserRepository(db).get_by_id(user_id).serialized,
+                )
                 return {"msg": "OK"}, 200
             else:
                 return {"error": "Someting went wrong"}, 500

@@ -9,7 +9,6 @@ from app.repositories.menu_repository import MenuRepository
 
 
 class MenuService:
-
     def __init__(self):
         pass
 
@@ -66,7 +65,7 @@ class MenuService:
             vendor_id=orig_menu.vendor_id,
             from_date=orig_menu.from_date,
             to_date=orig_menu.to_date,
-            active=False
+            active=False,
         )
 
         for item in orig_menu.items:
@@ -74,18 +73,20 @@ class MenuService:
                 name=item.name,
                 category=item.category,
                 description=item.description,
-                index=item.index
+                index=item.index,
             )
 
             for size in item.sizes:
-                menu_item.sizes.append(Size(
-                    link=size.link,
-                    name=size.name,
-                    price=size.price,
-                    index=size.index,
-                    quantity=size.quantity,
-                    unlimited=size.unlimited
-                ))
+                menu_item.sizes.append(
+                    Size(
+                        link=size.link,
+                        name=size.name,
+                        price=size.price,
+                        index=size.index,
+                        quantity=size.quantity,
+                        unlimited=size.unlimited,
+                    )
+                )
 
             new_menu.items.append(menu_item)
         menu_repo.add(new_menu)
@@ -94,8 +95,8 @@ class MenuService:
     @staticmethod
     def get_menu_items(db, menu_id, args):
         try:
-            limit = int(args.get('limit'))
-            page = int(args.get('page'))
+            limit = int(args.get("limit"))
+            page = int(args.get("page"))
         except (ValueError, TypeError):
             limit = None
             page = None
@@ -112,5 +113,5 @@ class MenuService:
             "items": [i.serialized for i in items],
             "page": page,
             "limit": limit,
-            "total_count": total_count
+            "total_count": total_count,
         }

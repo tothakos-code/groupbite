@@ -52,7 +52,6 @@ class MenuItemService:
 
         items_to_update = data["items"]
 
-        # Extract item IDs for validation
         item_ids = [item["id"] for item in items_to_update]
 
         menu_item_repo = MenuItemRepository(db)
@@ -62,7 +61,6 @@ class MenuItemService:
 
         menu_items = menu_item_repo.get_by_ids(item_ids)
 
-        # Validate that all items exist
         if len(menu_items) != len(item_ids):
             found_ids = {item.id for item in menu_items}
             missing_ids = set(item_ids) - found_ids

@@ -6,9 +6,13 @@ from app.repositories.setting_repository import SettingRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.vendor_repository import VendorRepository
 from app.services.encrypted_type import encrypt_value
+from app.services.vendor_service import VendorService
 
 
 class SettingService:
+    def __init__(self, vendor_service: VendorService) -> None:
+        self.vendor_service = vendor_service
+
     def update_setting(self, db, key, value):
         setting = SettingRepository(db).get_setting_by_key(key)
         if setting:
@@ -18,7 +22,9 @@ class SettingService:
             elif setting.key == "smtp_address" and value == "":
                 vendors = VendorRepository(db).find_all()
                 for vendor in vendors:
-                    vendor.update_setting("auto_email_order", False)
+                    self.vendor_service.update_setting(
+                        vendor, "auto_email_order", False
+                    )
                 setting.value = value
             else:
                 setting.value = value

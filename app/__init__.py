@@ -14,7 +14,6 @@ from flask_sqlalchemy import SQLAlchemy
 from app.config import Config
 from app.controllers import (
     main_blueprint,
-    setting_blueprint,
 )
 from app.db.session import get_session, init_db
 from app.event_manager import event_manager

@@ -6,9 +6,12 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, Template
 
+from app.db.session import get_session
 from app.entities.order import Order
 from app.entities.setting import Setting
 from app.entities.user import User
+from app.repositories.setting_repository import SettingRepository
+from app.services.encrypted_type import decrypt_value
 
 
 class EmailService:
@@ -74,12 +77,14 @@ class EmailService:
 
 
 def send_mail(to: list, subject: str, body, cc: list = [], settings=None):
-    sender_email = Setting.get_value_by_key("smtp_sender_email")
-    smtp_server = Setting.get_value_by_key("smtp_address")
-    smtp_port = Setting.get_value_by_key("smtp_port")
-    smtp_user = Setting.get_value_by_key("smtp_user")
-    smtp_password = Setting.decrypt_value(Setting.get_value_by_key("smtp_password"))
-    smtp_security = Setting.get_value_by_key("smtp_security")
+    with get_session() as db:
+        setting_repo = SettingRepository(db)
+        sender_email = setting_repo.get_value_by_key("smtp_sender_email")
+        smtp_server = setting_repo.get_value_by_key("smtp_address")
+        smtp_port = setting_repo.get_value_by_key("smtp_port")
+        smtp_user = setting_repo.get_value_by_key("smtp_user")
+        smtp_password = decrypt_value(setting_repo.get_value_by_key("smtp_password"))
+        smtp_security = setting_repo.get_value_by_key("smtp_security")
 
     if settings != None:
         sender_email = settings["smtp_sender_email"]
@@ -132,4 +137,4 @@ def send_mail(to: list, subject: str, body, cc: list = [], settings=None):
         logging.error(e)
     finally:
         server.quit()
-        return success, error
+    return success, error

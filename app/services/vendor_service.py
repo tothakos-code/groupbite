@@ -16,6 +16,7 @@ from app.entities.size import Size
 from app.entities.vendor import Vendor, VendorType
 from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.menu_repository import MenuRepository
+from app.repositories.setting_repository import SettingRepository
 from app.repositories.vendor_repository import VendorRepository
 from app.services.base_vendor_service import BaseVendorService
 from app.services.order_service import OrderService
@@ -251,16 +252,17 @@ class VendorService:
             vendor, "auto_email_order"
         ) != new_settings.get("auto_email_order", {}).get("value")
 
-        if (
-            new_settings.get("auto_email_order", {}).get("value")
-            and Setting.get_value_by_key("smtp_address") == ""
-        ):
-            logging.warning("No SMTP server set")
-            # Revert to previous values if SMTP not configured
-            if "auto_email_order" in new_settings:
-                new_settings["auto_email_order"]["value"] = self.get_setting_value(
-                    vendor, "auto_email_order"
-                )
+        with get_session() as db:
+            if (
+                new_settings.get("auto_email_order", {}).get("value")
+                and SettingRepository(db).get_value_by_key("smtp_address") == ""
+            ):
+                logging.warning("No SMTP server set")
+                # Revert to previous values if SMTP not configured
+                if "auto_email_order" in new_settings:
+                    new_settings["auto_email_order"]["value"] = self.get_setting_value(
+                        vendor, "auto_email_order"
+                    )
 
     def update_setting(self, vendor, key, value):
         if not VendorSettingsRegistry.validate_setting(key, value):

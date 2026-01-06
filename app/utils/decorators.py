@@ -63,6 +63,8 @@ def handle_request(f):
             except ValueError as e:
                 logging.warning(f"Bad request in {f.__name__}: {e}")
                 return {"error": str(e)}, 400
+            except PermissionError as e:
+                return {"error": str(e)}, 401
             except Exception as e:
                 logging.exception(f"Internal server error in {f.__name__}: {e}")
                 return {"error": "Internal server error"}, 500

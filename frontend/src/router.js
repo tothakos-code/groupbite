@@ -1,44 +1,47 @@
 import { createRouter, createWebHistory } from "vue-router";
 const HomeView = () => import("./views/Home.vue");
 // const DashboardView = () => import("./views/dashboard/Dashboard.vue");
-const AdminHomeView = () => import( "./views/admin/AdminHome.vue");
-const MenuView = () => import( "./views/menu/MenuRender.vue");
+const AdminHomeView = () => import("./views/admin/AdminHome.vue");
+const MenuView = () => import("./views/menu/MenuRender.vue");
 const MenuLoading = () => import("./views/menu//MenuLoading.vue");
-const AdminSettingsView = () => import( "./views/admin/AdminSettings.vue");
-const VendorSettings = () => import( "./views/admin/vendor/VendorSettings.vue");
-const VendorMenuManager = () => import( "./views/admin/vendor/VendorMenuManager.vue");
-const AdminVendorsView = () => import( "./views/admin/AdminVendors.vue");
-const AdminOrdersView = () => import( "./views/admin/AdminOrders.vue");
-const AdminUsersView = () => import( "./views/admin/AdminUsers.vue");
-const VendorItemManager = () => import( "./views/admin/vendor/VendorItemManager.vue");
-const VendorAdd = () => import( "./components/VendorAdd.vue");
-const OrderHistoryView = () => import( "./views/history/OrderHistory.vue");
-const NotFound = () => import( "./components/NotFound.vue");
+const AdminSettingsView = () => import("./views/admin/AdminSettings.vue");
+const VendorSettings = () => import("./views/admin/vendor/VendorSettings.vue");
+const VendorMenuManager = () =>
+  import("./views/admin/vendor/VendorMenuManager.vue");
+const AdminVendorsView = () => import("./views/admin/AdminVendors.vue");
+const AdminOrdersView = () => import("./views/admin/AdminOrders.vue");
+const AdminUsersView = () => import("./views/admin/AdminUsers.vue");
+const VendorItemManager = () =>
+  import("./views/admin/vendor/VendorItemManager.vue");
+const VendorAdd = () => import("./components/VendorAdd.vue");
+const OrderHistoryView = () => import("./views/history/OrderHistory.vue");
+const VendorStatsView = () => import("./components/VendorStats.vue");
+const NotFound = () => import("./components/NotFound.vue");
 import { useAuth } from "@/stores/auth.js";
 import { useVendorStore } from "@/stores/vendor.js";
-import { watch } from 'vue';
+import { watch } from "vue";
 
 const authGuard = async (to, from, next) => {
   if (!useAuth().user) {
     await useAuth().checkSession();
-      if (!useAuth().isLoading && !useAuth().user?.admin) {
-        console.log("Nono, you can't do that");
-        return false
-      }
-    } else if (!useAuth().user?.admin) {
+    if (!useAuth().isLoading && !useAuth().user?.admin) {
+      console.log("Nono, you can't do that");
+      return false;
+    }
+  } else if (!useAuth().user?.admin) {
     console.log("Nono, you can't do that");
-    return false
+    return false;
   }
   console.log("Success: admin");
   next();
-}
+};
 
 const routes = [
   {
-    path: '/api/:pathMatch(.*)*',
+    path: "/api/:pathMatch(.*)*",
     beforeEnter: () => {
-      window.location.href = window.location.pathname
-    }
+      window.location.href = window.location.pathname;
+    },
   },
   {
     name: "home",
@@ -57,24 +60,24 @@ const routes = [
     beforeEnter: authGuard,
     children: [
       {
-        name:"settings",
+        name: "settings",
         path: "settings",
-        component: AdminSettingsView
+        component: AdminSettingsView,
       },
       {
-        name:"orders",
+        name: "orders",
         path: "orders",
-        component: AdminOrdersView
+        component: AdminOrdersView,
       },
       {
-        name:"users",
+        name: "users",
         path: "users",
-        component: AdminUsersView
+        component: AdminUsersView,
       },
       {
-        name:"vendorlist",
+        name: "vendorlist",
         path: "vendors",
-        component: AdminVendorsView
+        component: AdminVendorsView,
       },
       {
         path: ":id/config",
@@ -85,35 +88,50 @@ const routes = [
         component: VendorMenuManager,
       },
       {
-        name:"vendorItems",
+        name: "vendorItems",
         path: ":id/menu/:menuId",
-        component: VendorItemManager
+        component: VendorItemManager,
       },
       {
         path: "add",
-        component: VendorAdd
-      }
-    ]
+        component: VendorAdd,
+      },
+    ],
   },
   {
     name: "menu",
     path: "/menu",
-    component: MenuView
+    component: MenuView,
   },
   {
     name: "menu-loading",
     path: "/menu/:rest(.*)*",
-    component: MenuLoading
+    component: MenuLoading,
   },
   {
     name: "history",
     path: "/history",
-    component: OrderHistoryView
+    beforeEnter: async (to, from, next) => {
+      if (!useAuth().user) {
+        await useAuth().checkSession();
+        if (!useAuth().isLoading && !useAuth().isLoggedIn) {
+          console.log("Nono, you can't do that");
+          return next({ name: "home" });
+        }
+      }
+      next();
+    },
+    component: OrderHistoryView,
+  },
+  {
+    name: "stats",
+    path: "/stats",
+    component: VendorStatsView,
   },
   {
     name: "NotFound",
     path: "/:pathMatch(.*)*",
-    component: NotFound
+    component: NotFound,
   },
 ];
 const router = createRouter({
@@ -121,25 +139,27 @@ const router = createRouter({
   routes: routes,
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
-      return savedPosition
+      return savedPosition;
     } else {
-      return { top: 0, left: 0, behavior: 'smooth' }
+      return { top: 0, left: 0, behavior: "smooth" };
     }
   },
 });
 
 router.beforeEach((to, from, next) => {
-
   const vendorStore = useVendorStore();
   if (vendorStore.routesLoaded) {
-    next()
+    next();
   } else {
-    const stopWatching = watch(() => vendorStore.routesLoaded, (newValue) => {
-      if (newValue) {
-        stopWatching();
-        next();
-      }
-    });
+    const stopWatching = watch(
+      () => vendorStore.routesLoaded,
+      (newValue) => {
+        if (newValue) {
+          stopWatching();
+          next();
+        }
+      },
+    );
   }
 });
 

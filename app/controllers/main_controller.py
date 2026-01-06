@@ -4,7 +4,7 @@ from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
-from flask import Blueprint, render_template, send_from_directory
+from flask import Blueprint, Response, render_template, request, send_from_directory
 
 from app.db.session import get_session
 from app.services.vendor_service import VendorService
@@ -43,9 +43,19 @@ class MainController:
             return send_from_directory(self.blueprint.static_folder, path)
 
         if APP_ENV == "development":
-            # logging.debug("Redirecting to Frontned...")
-            # This is for developer mode only
-            return requests.get("http://127.0.0.1:8080/{0}".format(path)).text
+            upstream_url = f"http://127.0.0.1:8080/{path}"
+            r = requests.get(
+                upstream_url,
+                params=request.args,
+                stream=True,
+            )
+
+            headers = {}
+            for h in ("Content-Type", "Cache-Control", "ETag", "Last-Modified"):
+                if h in r.headers:
+                    headers[h] = r.headers[h]
+
+            return Response(r.content, status=r.status_code, headers=headers)
 
         if path.startswith(("css/", "js/", "styles.css")):
             return send_from_directory(self.blueprint.static_folder, path)

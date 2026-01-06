@@ -544,7 +544,7 @@ class OrderService:
             socketio = SocketioSingleton.get_instance()
             socketio.emit(
                 "be_order_update",
-                {"basket": order.get_order_items()},
+                {"basket": OrderService.get_order_items(order)},
                 to=f"{order.vendor_id}@{order.date_of_order}",
             )
             from app.services.vendor_service import VendorService

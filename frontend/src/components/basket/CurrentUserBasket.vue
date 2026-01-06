@@ -20,10 +20,16 @@
           </h3>
         </v-col>
         <v-col cols="auto">
-          <v-tooltip location="bottom">
-            <template #activator="{ p }">
+          <v-tooltip
+            open-on-hover
+            open-on-click
+            open-delay="500"
+            max-width="280"
+            location="top"
+          >
+            <template #activator="{ props }">
               <div
-                v-bind="p"
+                v-bind="props"
                 class="d-flex align-center"
               >
                 <v-icon
@@ -37,10 +43,11 @@
                 </span>
               </div>
             </template>
-            <span>
+
+            <div>
               A fizetendő összeg még változhat a rendelést leadó személyek számától.
               (Szállítási díjat több felé osztjuk)
-            </span>
+            </div>
           </v-tooltip>
         </v-col>
         <v-col
@@ -48,10 +55,16 @@
           cols="auto"
           class="ms-2"
         >
-          <v-tooltip location="bottom">
-            <template #activator="{ p }">
+          <v-tooltip
+            open-on-hover
+            open-on-click
+            open-delay="500"
+            max-width="280"
+            location="top"
+          >
+            <template #activator="{ props }">
               <v-btn
-                v-bind="p"
+                v-bind="props"
                 variant="outlined"
                 color="error"
                 size="small"
@@ -92,19 +105,42 @@
             </v-chip>
           </template>
 
-          <v-list-item-title class="font-weight-medium">
-            {{ item.item_name }}
-            <span
-              v-if="item.size_name"
-              class="text-medium-emphasis"
-            >
-              ({{ item.size_name }})
-            </span>
-          </v-list-item-title>
+          <v-tooltip
+            open-on-hover
+            open-on-click
+            open-delay="500"
+            max-width="280"
+            location="top"
+          >
+            <template #activator="{ props }">
+              <v-list-item-title
+                v-bind="props"
+                class="text-truncate"
+              >
+                {{ item.item_name }}
+                <span
+                  v-if="item.size_name"
+                  class="text-caption text-medium-emphasis"
+                >
+                  ({{ item.size_name }})
+                </span>
+              </v-list-item-title>
+            </template>
+
+            <div>
+              {{ item.item_name }}
+              <span
+                v-if="item.size_name"
+              >
+                ({{ item.size_name }})
+              </span>
+            </div>
+          </v-tooltip>
+
 
           <template #append>
             <div class="d-flex align-center">
-              <span class="text-h6 font-weight-bold me-3">
+              <span class="text-h6 font-weight-bold mx-2">
                 {{ item.price }} Ft
               </span>
               <v-btn
@@ -215,4 +251,7 @@ watch(() => props.userBasket, () => {
   border-radius: 8px;
   margin: 16px;
 }
+
+
+
 </style>

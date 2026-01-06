@@ -83,18 +83,41 @@
               </v-chip>
             </template>
 
-            <v-list-item-title class="text-body-2">
-              {{ item.item_name }}
-              <span
-                v-if="item.size_name"
-                class="text-caption text-medium-emphasis"
-              >
-                ({{ item.size_name }})
-              </span>
-            </v-list-item-title>
+            <v-tooltip
+              location="top"
+              open-on-hover
+              open-on-click
+              open-delay="500"
+              max-width="280"
+              :close-on-content-click="true"
+            >
+              <template #activator="{ props }">
+                <v-list-item-title
+                  v-bind="props"
+                  class="text-body-2"
+                >
+                  {{ item.item_name }}
+                  <span
+                    v-if="item.size_name"
+                    class="text-caption text-medium-emphasis"
+                  >
+                    ({{ item.size_name }})
+                  </span>
+                </v-list-item-title>
+              </template>
+
+              <div>
+                {{ item.item_name }}
+                <span
+                  v-if="item.size_name"
+                >
+                  ({{ item.size_name }})
+                </span>
+              </div>
+            </v-tooltip>
 
             <template #append>
-              <span class="text-body-2 font-weight-medium">
+              <span class="text-body-2 font-weight-medium ms-2">
                 {{ item.price }} Ft
               </span>
             </template>

@@ -286,7 +286,7 @@ def handle_date_selection_change(data):
 
         socketio.emit(
             "be_order_update",
-            {"order": order.serialized, "basket": order.get_order_items()},
+            {"order": order.serialized, "basket": OrderService.get_order_items(order)},
             to=request.sid,
         )
         socketio.emit(

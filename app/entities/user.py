@@ -1,8 +1,9 @@
 import enum
+from datetime import datetime
 from typing import List
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, Text
+from sqlalchemy import Boolean, DateTime, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -30,6 +31,10 @@ class User(Base):
     admin: Mapped[Boolean] = mapped_column(Boolean, nullable=False, default=False)
     settings: Mapped[dict] = mapped_column(JSONB)
     theme: Mapped[Theme] = mapped_column(default=Theme.LIGHT)
+    last_password_reset_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
 
     orders: Mapped[List["UserBasket"]] = relationship(back_populates="user")
     placed_orders: Mapped[List["Order"]] = relationship(back_populates="ordered_by")

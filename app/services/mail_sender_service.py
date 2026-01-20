@@ -33,7 +33,7 @@ class EmailService:
         )
 
         return send_mail(
-            to=user.email,
+            to=[user.email],
             subject="Groupbite: Bejelentkezési adat emlékeztető",
             body=email_body,
         )

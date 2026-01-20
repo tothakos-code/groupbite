@@ -1,4 +1,7 @@
+import logging
 import re
+from datetime import datetime, timedelta, timezone
+from venv import logger
 
 from flask import Blueprint, request, session
 
@@ -15,6 +18,8 @@ from app.utils.decorators import (
 from app.utils.validators import IDSchema
 
 socketio = SocketioSingleton.get_instance()
+
+COOLDOWN = timedelta(minutes=15)
 
 
 class UserController:
@@ -86,15 +91,23 @@ class UserController:
 
         user = UserRepository(db).get_by_email(email)
         if user:
+            now = datetime.now(timezone.utc)
+            last = user.last_password_reset_at
+            if last is not None and (now - last) < COOLDOWN:
+                # dont send email to prevent spam
+                return {"msg": "OK"}, 200
+
             email_service = EmailService()
             ok = email_service.send_username_reminder(user)
 
             if not ok:
-                return {
-                    "error": "Email szolgáltatás nem elérhető, küldés sikertelen"
-                }, 200
+                logging.error(
+                    "Mail service not available, cannot send username reminder"
+                )
+                return {"msg": "Something went wrong"}, 500
 
-        return {"msg": "Email reminder sent"}, 200
+            user.last_password_reset_at = now
+        return {"msg": "OK"}, 200
 
     @handle_request
     def handle_user_register(self, db):

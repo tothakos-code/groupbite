@@ -2,7 +2,7 @@ import logging
 
 from flask import Blueprint, request
 from flask_socketio import join_room, leave_room, rooms
-
+from datetime import date
 from app.db.session import get_session
 from app.entities.order import BaseOrderSchema, Order
 from app.repositories.order_repository import OrderRepository
@@ -279,7 +279,7 @@ def handle_date_selection_change(data):
             order = order_repo.save(
                 Order(
                     vendor_id=vendor.id,
-                    date_of_order=new_date,
+                    date_of_order=date.fromisoformat(new_date),
                     order_fee=vendor.settings["transport_price"]["value"],
                 )
             )

@@ -1091,7 +1091,11 @@ const submitJsonFile = async () => {
 
 const submitScan = async () => {
   try {
-    const response = await vendorStore.scan(route.params.id, scanDate.value.toISOString().split('T')[0])
+    const response = await vendorStore.scan(route.params.id, new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(scanDate.value))
 
     if (response.status === 201) {
       showScanPopup.value = false

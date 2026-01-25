@@ -33,12 +33,13 @@ class MainController:
 
     def _register_routes(self):
         bp = self.blueprint
+        bp.add_url_rule("/", view_func=self.catch_all)
         bp.add_url_rule("/<path:path>", view_func=self.catch_all)
         bp.add_url_rule(
             "/vapid_public_key", view_func=self.get_vapid_public_key, methods=["GET"]
         )
 
-    def catch_all(self, path):
+    def catch_all(self, path=""):
         if path.startswith(("service-worker.js")):
             return send_from_directory(self.blueprint.static_folder, path)
 

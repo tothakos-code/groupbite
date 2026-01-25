@@ -127,6 +127,9 @@ class OrderService:
     def close_order(self, db, order_id):
         order_repo = OrderRepository(db)
         order = order_repo.get_by_id(order_id)
+        if not order:
+            logging.info(f"Order {order_id} not found")
+            raise Exception("order not found")
         logging.info(
             f"Manual order triggered by userID: {session.get('user_id')} for order {order.id}"
         )
@@ -137,14 +140,14 @@ class OrderService:
 
         ok = self._change_state(db, order, OrderState.CLOSED)
         if not ok:
-            logging.error(f"Order close error")
+            logging.error("Order close error")
 
         order.order_fee = (
             trigger_data["order_fee"]
             if "order_fee" in trigger_data
             else order.vendor.settings["transport_price"]["value"]
         )
-
+        order.ordered_by = UserRepository(db).get_by_id(session.get("user_id"))
         event_manager.trigger_event("afterClose@" + order.vendor.name, trigger_data)
         logging.info("Order closed successfully")
         return order
@@ -303,7 +306,7 @@ class OrderService:
             raise ValueError(f"Order {order_id} is already closed, cannot send email")
 
         vendor = order.vendor
-
+        order.ordered_by = UserRepository(db).get_by_id(session.get("user_id"))
         task_id = f"{str(vendor.id)}-closed"
         try:
             # Cancel the scheduled task for this vendor (if exists)

@@ -1,14 +1,7 @@
 from marshmallow import Schema, ValidationError, fields, validate
 
 from app.db.session import get_session
-from app.entities.menu import Menu
-from app.entities.menu_item import MenuItem
 from app.entities.notification import NotificationType
-from app.entities.order import Order
-from app.entities.size import Size
-from app.entities.user import User
-from app.entities.vendor import Vendor
-from app.entities.webhook import Webhook
 from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.order_repository import OrderRepository

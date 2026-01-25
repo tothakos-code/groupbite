@@ -1,5 +1,4 @@
 import enum
-import re
 from datetime import date, datetime
 from typing import List
 from uuid import UUID
@@ -10,8 +9,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import Base
 from .vendor import Vendor
-
-non_matched = re.compile("\$\{.*?}")
 
 
 class BaseOrderSchema(Schema):
@@ -63,6 +60,7 @@ class Order(Base):
             "vendor": str(self.vendor.name),
             "state_id": str(self.state_id),
             "user_id": str(self.user_id),
+            "user": self.ordered_by.serialized if self.ordered_by else None,
             "date_of_order": self.date_of_order.strftime("%Y-%m-%d"),
             "order_time": self.order_time,
             "order_fee": self.order_fee,

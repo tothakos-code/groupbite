@@ -1,5 +1,5 @@
 from sqlalchemy import String, cast, delete, func, or_, select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.entities.order import Order
 from app.entities.order_item import OrderItem
@@ -109,7 +109,11 @@ class UserBasketRepository:
         return self.db.execute(stmt).all()
 
     def find_items_by_order(self, order_id):
-        stmt = select(UserBasket).where(UserBasket.order_id == order_id)
+        stmt = (
+            select(UserBasket)
+            .options(joinedload(UserBasket.item), joinedload(UserBasket.size))
+            .where(UserBasket.order_id == order_id)
+        )
         return self.db.execute(stmt).scalars().all()
 
     def clear_items(self, user_id, order_id):

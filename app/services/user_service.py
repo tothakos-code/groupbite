@@ -4,7 +4,9 @@ from collections import Counter
 from datetime import datetime, timedelta
 
 from flask import current_app, request, session
+from sqlalchemy import text
 
+from app.db.session import get_session
 from app.entities.order import Order
 from app.entities.user import User
 from app.repositories.order_item_repository import OrderItemRepository
@@ -29,7 +31,7 @@ class UserService:
             if user:
                 current_app.session_interface.regenerate(session)
                 session.modified = True
-                logging.info(f"User already {user.username} logged in!")
+                logging.info(f"{user.username} already logged in!")
                 return user
 
         username = request.json["username"]
@@ -74,12 +76,13 @@ class UserService:
 
     @staticmethod
     def check_session(db, user_id):
+        UserService.cleanup_expired_sessions()
         user_repo = UserRepository(db)
         if user_id:
             user = user_repo.get_by_id(user_id)
             current_app.session_interface.regenerate(session)
             session.modified = True
-            logging.info(f"User already {user.username} got a session!")
+            logging.info(f"{user.username} already  got a session!")
             return user
         else:
             raise ValueError(f"{user_id} nincs bejelentkezve!")
@@ -108,6 +111,16 @@ class UserService:
             "limit": limit,
             "total_count": total_count,
         }
+
+    @staticmethod
+    def cleanup_expired_sessions():
+        with get_session() as db:
+            db.execute(
+                text("DELETE FROM sessions WHERE expiry < :now"),
+                {"now": datetime.now()},
+            )
+            db.commit()
+            logging.info("Cleaned up expired sessions")
 
     def update_user(self, db, user_id, args):
         user_repo = UserRepository(db)

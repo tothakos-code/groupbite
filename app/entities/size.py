@@ -35,7 +35,10 @@ class Size(Base):
 
     menu_item: Mapped["MenuItem"] = relationship(back_populates="sizes")
     orders: Mapped["UserBasket"] = relationship(
-        back_populates="size", foreign_keys="[UserBasket.size_id]"
+        back_populates="size",
+        foreign_keys="[UserBasket.size_id]",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     __table_args__ = (UniqueConstraint("id", "menu_item_id", name="uq_size_item"),)

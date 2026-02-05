@@ -50,7 +50,11 @@ class MenuItem(Base):
         order_by="Size.index",
         passive_deletes=True,
     )
-    orders: Mapped[List["UserBasket"]] = relationship(back_populates="item")
+    orders: Mapped[List["UserBasket"]] = relationship(
+        back_populates="item",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
     menu: Mapped["Menu"] = relationship(back_populates="items")
 
     def __repr__(self):

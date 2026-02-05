@@ -12,8 +12,12 @@ class OrderItem(Base):
     id: Mapped[int] = mapped_column(primary_key=True, unique=True, nullable=False)
 
     order_id: Mapped[int] = mapped_column(ForeignKey("order.id"))
-    menu_item_id: Mapped[int] = mapped_column()
-    size_id: Mapped[int] = mapped_column()
+    menu_item_id: Mapped[int] = mapped_column(
+        ForeignKey("menu_item.id", ondelete="SET NULL"), nullable=True
+    )
+    size_id: Mapped[int] = mapped_column(
+        ForeignKey("size.id", ondelete="SET NULL"), nullable=True
+    )
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"))
 
     count: Mapped[int]

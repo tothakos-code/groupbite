@@ -16,9 +16,11 @@ class UserBasket(Base):
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"), primary_key=True)
     menu_item_id: Mapped[int] = mapped_column(
-        ForeignKey("menu_item.id"), primary_key=True
+        ForeignKey("menu_item.id", ondelete="CASCADE"), primary_key=True
     )
-    size_id: Mapped[int] = mapped_column(ForeignKey("size.id"), primary_key=True)
+    size_id: Mapped[int] = mapped_column(
+        ForeignKey("size.id", ondelete="CASCADE"), primary_key=True
+    )
     order_id: Mapped[int] = mapped_column(ForeignKey("order.id"), primary_key=True)
     count: Mapped[int]
 
@@ -32,6 +34,7 @@ class UserBasket(Base):
             ["size_id", "menu_item_id"],
             ["size.id", "size.menu_item_id"],
             name="fk_size_item",
+            ondelete="CASCADE",
         ),
         Index("idx_userbasket_user_id", "user_id"),
         Index("idx_userbasket_order_id", "order_id"),

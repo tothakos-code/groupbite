@@ -346,7 +346,7 @@ export default {
       try {
         const response = await this.itemStore.delete(item.id);
 
-        if (response.status === 200) {
+        if (response.status === 204) {
           this.showSnackbar('Étel sikeresen törölve');
           this.getItemList();
         }

@@ -142,7 +142,7 @@
         <!-- Virtual Scrolled Data Table for Normal Mode -->
         <template v-else>
           <!-- Table Header -->
-          <div class="v-data-table-header d-flex align-center pa-3 bg-grey-lighten-4">
+          <div class="v-data-table-header d-flex align-center pa-3 bg-secondary">
             <div
               class="me-2"
               style="width: 24px;"

@@ -77,10 +77,10 @@
               <v-btn
                 type="submit"
                 color="primary"
+                variant="elevated"
                 size="large"
                 :loading="loading"
                 :disabled="!isFormValid"
-                block
               >
                 <v-icon class="me-2">
                   mdi-plus

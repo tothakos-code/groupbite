@@ -3,7 +3,7 @@
     variant="flat"
     class="ma-4"
   >
-    <v-card-title class="text-subtitle-1 bg-surface-variant">
+    <v-card-title class="text-subtitle-1 bg-secondary">
       <v-icon class="me-2">
         mdi-resize
       </v-icon>
@@ -16,7 +16,7 @@
         :items="sizes"
         :sort-by="[{ key: 'index', order: 'asc' }]"
         item-key="id"
-        class="elevation-0"
+        class="elevation-0 bg-header"
         density="compact"
         no-data-text="Nincsenek méretek"
         hide-default-footer

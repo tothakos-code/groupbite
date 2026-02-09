@@ -46,6 +46,9 @@ class UserController:
             "/<user_id>", view_func=self.handle_user_update, methods=["PUT"]
         )
         bp.add_url_rule(
+            "/<user_id>/promote", view_func=self.handle_user_promote, methods=["PUT"]
+        )
+        bp.add_url_rule(
             "/<user_id>/orders",
             view_func=self.handle_user_order_history,
             methods=["GET"],
@@ -123,6 +126,13 @@ class UserController:
         user_data = request.json["data"]
         user = self.user_service.update_user(db, user_id, user_data)
         return {"data": user.serialized}, 200
+
+    @validate_url_params(IDSchema())
+    @require_auth
+    @handle_request
+    def handle_user_promote(self, db, user_id):
+        self.user_service.promote_user(db, user_id)
+        return {"msg": "OK"}, 200
 
     @validate_url_params(IDSchema())
     @handle_request

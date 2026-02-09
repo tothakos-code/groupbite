@@ -1,3 +1,5 @@
+from typing import List
+
 from marshmallow import Schema, fields
 from sqlalchemy import Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -34,7 +36,7 @@ class Size(Base):
     index: Mapped[int]
 
     menu_item: Mapped["MenuItem"] = relationship(back_populates="sizes")
-    orders: Mapped["UserBasket"] = relationship(
+    orders: Mapped[List["UserBasket"]] = relationship(
         back_populates="size",
         foreign_keys="[UserBasket.size_id]",
         cascade="all, delete-orphan",

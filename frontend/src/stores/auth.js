@@ -167,5 +167,21 @@ export const useAuth = defineStore("user", {
         this.isLoading = false;
       }
     },
+    async promote(user_id) {
+      this.isLoading = true;
+      try {
+        const response = await axios.put(`/api/user/${user_id}/promote`);
+        return response;
+      } catch (error) {
+        console.error("Failed to promote user", error);
+        notify({
+          type: "warn",
+          text: error.response.data.error,
+        });
+        return error.response;
+      } finally {
+        this.isLoading = false;
+      }
+    },
   },
 });

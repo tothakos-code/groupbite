@@ -398,19 +398,21 @@ const toggleAdminStatus = (user) => {
 
 const confirmToggleAdmin = async () => {
   try {
-    // TODO: Implement actual API call to toggle admin status
-    // Example: await auth.updateUserAdminStatus(selectedUser.value.id, !selectedUser.value.admin)
+    const response = await auth.promote(selectedUser.value.id)
 
-    selectedUser.value.admin = !selectedUser.value.admin
+    if (response.status === 200) {
 
-    const message = selectedUser.value.admin
-      ? `${selectedUser.value.username} admin jogosultságot kapott`
-      : `${selectedUser.value.username} admin jogosultsága elvéve`
+      selectedUser.value.admin = !selectedUser.value.admin
 
-    showSnackbar(message, 'success')
+      const message = selectedUser.value.admin
+        ? `${selectedUser.value.username} admin jogosultságot kapott`
+        : `${selectedUser.value.username} admin jogosultsága elvéve`
 
-    confirmDialog.value = false
-    selectedUser.value = null
+      showSnackbar(message, 'success')
+
+      confirmDialog.value = false
+      selectedUser.value = null
+    }
   } catch (error) {
     showSnackbar('Hiba történt a jogosultság módosítása során', 'error')
     console.error('Error toggling admin status:', error)

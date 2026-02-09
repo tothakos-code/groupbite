@@ -135,7 +135,6 @@ class UserService:
                 logging.info("Invalid user update: " + error)
                 raise ValueError(error)
 
-        if "username" in args:
             logging.info("Updating username in rooms")
             # Updating the username in every basket(room) a user is in
             for room_name, room in socketio.server.manager.rooms["/"].items():
@@ -150,6 +149,15 @@ class UserService:
                     )
 
         return user_to_update
+
+    @staticmethod
+    def promote_user(db, user_id):
+        user_repo = UserRepository(db)
+        user = user_repo.get_by_id(user_id)
+        if not user:
+            raise ValueError("User not found")
+        user.admin = not user.admin
+        return user_repo.save(user)
 
     @staticmethod
     def is_username_valid(db, username):

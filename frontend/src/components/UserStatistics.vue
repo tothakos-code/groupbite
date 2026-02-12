@@ -255,7 +255,7 @@
 </template>
 
 <script setup>
-import { ref, defineProps, onMounted } from 'vue'
+import { ref, defineProps, onMounted, watch } from 'vue'
 import axios from "axios";
 
 const props = defineProps({
@@ -263,6 +263,10 @@ const props = defineProps({
     type: String,
     required: true
   }
+})
+
+watch(() => props.userId, () => {
+  fetchStatistics();
 })
 
 const statistics = ref({

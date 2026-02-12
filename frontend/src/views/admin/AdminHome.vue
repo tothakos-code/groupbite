@@ -5,7 +5,7 @@
         <v-btn
           class="bg-primary my-auto"
           border="primary thin"
-          @click="openAdminHome()"
+          @click="navigateBack()"
         >
           vissza
           <svg
@@ -94,7 +94,7 @@ export default {
     mounted() {
     },
     methods: {
-      openAdminHome: function () {
+      navigateBack: function () {
         this.vendorStore.selectedVendor = undefined;
         window.history.back();
       },

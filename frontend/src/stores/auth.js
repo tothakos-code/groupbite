@@ -121,10 +121,10 @@ export const useAuth = defineStore("user", {
         this.isLoading = false;
       }
     },
-    async orders(querryParams) {
+    async orders(userId, querryParams) {
       this.isLoading = true;
       try {
-        const response = await axios.get(`/api/user/${this.user.id}/orders`, {
+        const response = await axios.get(`/api/user/${userId}/orders`, {
           params: querryParams,
         });
         return response;

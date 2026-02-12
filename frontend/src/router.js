@@ -73,6 +73,14 @@ const routes = [
         name: "users",
         path: "users",
         component: AdminUsersView,
+        children: [
+          {
+            name: "user-history",
+            path: ":userId/history",
+            component: OrderHistoryView,
+            props: true,
+          },
+        ],
       },
       {
         name: "vendorlist",
@@ -122,6 +130,10 @@ const routes = [
       next();
     },
     component: OrderHistoryView,
+    props: () => {
+      const auth = useAuth();
+      return { userId: auth.user.id };
+    },
   },
   {
     name: "stats",

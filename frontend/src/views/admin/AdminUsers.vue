@@ -1,6 +1,7 @@
 <template>
+  <router-view />
   <v-container
-    v-if="auth.isLoggedIn"
+    v-if="auth.isLoggedIn && !$route.params.userId"
     fluid
     class="pa-2 pa-md-4"
   >
@@ -259,35 +260,17 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <!-- Snackbar -->
-    <v-snackbar
-      v-model="snackbar.show"
-      :color="snackbar.color"
-      :timeout="4000"
-      :location="$vuetify.display.mobile ? 'top' : 'bottom end'"
-      :multi-line="$vuetify.display.mobile"
-    >
-      {{ snackbar.text }}
-      <template #actions>
-        <v-btn
-          color="white"
-          variant="text"
-          @click="snackbar.show = false"
-        >
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </template>
-    </v-snackbar>
   </v-container>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useAuth } from "@/stores/auth"
-
+import { useRouter } from 'vue-router'
+import { notify } from "@kyvg/vue3-notification";
 // Composables
 const auth = useAuth()
+const router = useRouter()
 
 // Reactive data
 const users = ref([])
@@ -297,11 +280,6 @@ const itemsPerPage = ref(10)
 const totalItems = ref(0)
 const confirmDialog = ref(false)
 const selectedUser = ref(null)
-const snackbar = ref({
-  show: false,
-  text: '',
-  color: 'success'
-})
 
 // Items per page options
 const itemsPerPageOptions = [
@@ -384,7 +362,10 @@ const refreshUsersList = async () => {
       }
     }
   } catch (error) {
-    showSnackbar('Hiba történt a felhasználók betöltése során', 'error')
+    notify({
+      type: "error",
+      text: 'Hiba történt a felhasználók betöltése során',
+    });
     console.error('Error fetching users:', error)
   } finally {
     isLoading.value = false
@@ -408,28 +389,29 @@ const confirmToggleAdmin = async () => {
         ? `${selectedUser.value.username} admin jogosultságot kapott`
         : `${selectedUser.value.username} admin jogosultsága elvéve`
 
-      showSnackbar(message, 'success')
-
+      notify({
+        type: "success",
+        text: message,
+      });
       confirmDialog.value = false
       selectedUser.value = null
     }
   } catch (error) {
-    showSnackbar('Hiba történt a jogosultság módosítása során', 'error')
+    notify({
+      type: "error",
+      text: 'Hiba történt a jogosultság módosítása során',
+    });
     console.error('Error toggling admin status:', error)
   }
 }
 
 const viewUserOrders = (user) => {
   console.log('View orders for user:', user.username)
-  showSnackbar(`${user.username} rendeléseinek megtekintése`, 'info')
-}
-
-const showSnackbar = (text, color = 'success') => {
-  snackbar.value = {
-    show: true,
-    text,
-    color
-  }
+  notify({
+    type: "info",
+    text: `${user.username} rendeléseinek megtekintése`,
+  });
+  router.push({ path:`/admin/users/${user.id}/history`})
 }
 
 // Lifecycle

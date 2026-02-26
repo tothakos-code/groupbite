@@ -7,7 +7,7 @@
     <!-- Header -->
     <v-row class="mb-4">
       <v-col>
-        <h1 class="text-h4 text-md-h3">
+        <h1 class="text-h5 text-md-h4">
           Rendelések
         </h1>
       </v-col>

@@ -34,7 +34,7 @@
               <span
                 v-if="!navCollapsed"
                 class="nav-title"
-              >{{ vendor.name }}</span>
+              >Beállítások</span>
               <v-btn
                 :icon="navCollapsed ? 'mdi-chevron-right' : 'mdi-chevron-left'"
                 variant="text"
@@ -49,121 +49,135 @@
               nav
               class="nav-list"
             >
-              <v-tooltip
+              <v-list-item
                 v-for="section in sections"
                 :key="section.id"
-                :text="section.label"
-                :disabled="!navCollapsed"
-                location="right"
+                :value="section.id"
+                :active="activeSection === section.id"
+                :active-color="section.color"
+                rounded="lg"
+                class="nav-item"
+                @click="scrollToSection(section.id)"
               >
-                <template #activator="{ props }">
-                  <v-list-item
-                    v-bind="props"
-                    :value="section.id"
-                    :active="activeSection === section.id"
-                    :active-color="section.color"
-                    rounded="lg"
-                    class="nav-item"
-                    @click="activeSection = section.id"
-                  >
-                    <template #prepend>
-                      <v-icon :color="activeSection === section.id ? section.color : ''">
-                        {{ section.icon }}
-                      </v-icon>
-                    </template>
-                    <v-list-item-title
-                      v-if="!navCollapsed"
-                      class="nav-item-title"
-                    >
-                      {{ section.label }}
-                    </v-list-item-title>
-                  </v-list-item>
+                <template #prepend>
+                  <v-icon :color="activeSection === section.id ? section.color : ''">
+                    {{ section.icon }}
+                  </v-icon>
                 </template>
-              </v-tooltip>
+                <v-list-item-title
+                  v-if="!navCollapsed"
+                  class="nav-item-title"
+                >
+                  {{ section.label }}
+                </v-list-item-title>
+
+                <template
+                  v-if="navCollapsed && activeSection === section.id"
+                  #append
+                >
+                  <span
+                    class="active-dot"
+                    :style="{ background: `rgb(var(--v-theme-${section.color}))` }"
+                  />
+                </template>
+              </v-list-item>
             </v-list>
 
-            <!-- Save / Reset pinned to bottom -->
+            <!-- Save button pinned to bottom of nav -->
             <div class="nav-footer">
               <v-divider class="mb-3" />
               <v-tooltip
-                text="Mentés"
-                :disabled="!navCollapsed"
+                :text="navCollapsed ? 'Mentés' : ''"
                 location="right"
               >
                 <template #activator="{ props }">
                   <v-btn
                     v-bind="props"
                     color="primary"
-                    :icon="navCollapsed"
+                    :icon="navCollapsed ? 'mdi-content-save' : undefined"
+                    :prepend-icon="navCollapsed ? undefined : 'mdi-content-save'"
                     :loading="saving"
                     :block="!navCollapsed"
                     size="small"
-                    class="mb-2"
                     @click="saveSettings"
                   >
-                    <v-icon :start="!navCollapsed">
-                      mdi-content-save
-                    </v-icon>
                     <span v-if="!navCollapsed">Mentés</span>
-                  </v-btn>
-                </template>
-              </v-tooltip>
-
-              <v-tooltip
-                text="Visszaállítás"
-                :disabled="!navCollapsed"
-                location="right"
-              >
-                <template #activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    color="primary"
-                    variant="outlined"
-                    :icon="navCollapsed"
-                    :block="!navCollapsed"
-                    size="small"
-                    @click="resetForm"
-                  >
-                    <v-icon :start="!navCollapsed">
-                      mdi-refresh
-                    </v-icon>
-                    <span v-if="!navCollapsed">Visszaállítás</span>
                   </v-btn>
                 </template>
               </v-tooltip>
             </div>
           </nav>
 
-          <!-- Main Content — only the active section is rendered -->
-          <main class="settings-content">
-            <transition
-              name="fade"
-              mode="out-in"
+          <!-- Main Content -->
+          <main
+            ref="contentRef"
+            class="settings-content"
+            @scroll="onContentScroll"
+          >
+            <section
+              id="section-general"
+              class="settings-section"
             >
-              <div :key="activeSection">
-                <GeneralSettings
-                  v-if="activeSection === 'general'"
-                  :settings="vendor.settings"
-                />
-                <UiSettings
-                  v-else-if="activeSection === 'ui'"
-                  :settings="vendor.settings"
-                />
-                <OrderTimingSettings
-                  v-else-if="activeSection === 'timing'"
-                  :settings="vendor.settings"
-                  :smtp-status="smtpStatus"
-                />
-                <AutoEmailSettings
-                  v-else-if="activeSection === 'email'"
-                  :settings="vendor.settings"
-                />
-                <WebhookSettings
-                  v-else-if="activeSection === 'webhook'"
-                  :vendor-id="vendor.id"
-                />
-              </div>
-            </transition>
+              <GeneralSettings :settings="vendor.settings" />
+            </section>
+
+            <section
+              id="section-ui"
+              class="settings-section"
+            >
+              <UiSettings :settings="vendor.settings" />
+            </section>
+
+            <section
+              id="section-timing"
+              class="settings-section"
+            >
+              <OrderTimingSettings
+                :settings="vendor.settings"
+                :smtp-status="smtpStatus"
+              />
+            </section>
+
+            <section
+              id="section-email"
+              class="settings-section"
+            >
+              <AutoEmailSettings :settings="vendor.settings" />
+            </section>
+
+            <section
+              id="section-webhook"
+              class="settings-section"
+            >
+              <WebhookSettings :vendor-id="vendor.id" />
+            </section>
+
+            <!-- Bottom Action Bar -->
+            <v-card
+              elevation="2"
+              class="mb-4"
+            >
+              <v-card-actions class="pa-4">
+                <v-btn
+                  color="primary"
+                  size="large"
+                  prepend-icon="mdi-content-save"
+                  :loading="saving"
+                  @click="saveSettings"
+                >
+                  Mentés
+                </v-btn>
+                <v-spacer />
+                <v-btn
+                  color="secondary"
+                  variant="outlined"
+                  prepend-icon="mdi-refresh"
+                  @click="resetForm"
+                >
+                  Visszaállítás
+                </v-btn>
+              </v-card-actions>
+            </v-card>
           </main>
         </div>
       </v-form>
@@ -176,7 +190,7 @@ import { useVendorStore } from '@/stores/vendor'
 import { useAuth } from '@/stores/auth'
 import { ref } from 'vue'
 import axios from 'axios'
-import WebhookSettings from '@/components/vendor-settings/WebhookSettings.vue'
+import WebhookSettings from '@/components/vendor/WebhookSettings.vue'
 import GeneralSettings from '@/components/vendor-settings/GeneralSettings.vue'
 import UiSettings from '@/components/vendor-settings/UiSettings.vue'
 import OrderTimingSettings from '@/components/vendor-settings/OrderTimingSettings.vue'
@@ -195,7 +209,8 @@ export default {
     const auth = useAuth()
     const vendorStore = useVendorStore()
     const form = ref()
-    return { auth, vendorStore, form }
+    const contentRef = ref()
+    return { auth, vendorStore, form, contentRef }
   },
   data() {
     return {
@@ -207,11 +222,11 @@ export default {
       navCollapsed: false,
       activeSection: 'general',
       sections: [
-        { id: 'general', label: 'Általános',            icon: 'mdi-cog',          color: 'primary'   },
-        { id: 'ui',      label: 'Felhasználói felület', icon: 'mdi-palette',       color: 'primary' },
-        { id: 'timing',  label: 'Időzítés',             icon: 'mdi-clock-outline', color: 'primary'   },
-        { id: 'email',   label: 'Automatikus email',    icon: 'mdi-email-fast',    color: 'primary'   },
-        { id: 'webhook', label: 'Webhook',              icon: 'mdi-webhook',       color: 'primary'      },
+        { id: 'general', label: 'Általános',             icon: 'mdi-cog',           color: 'primary'   },
+        { id: 'ui',      label: 'Felhasználói felület',  icon: 'mdi-palette',        color: 'secondary' },
+        { id: 'timing',  label: 'Időzítés',              icon: 'mdi-clock-outline',  color: 'warning'   },
+        { id: 'email',   label: 'Automatikus email',     icon: 'mdi-email-fast',     color: 'success'   },
+        { id: 'webhook', label: 'Webhook',               icon: 'mdi-webhook',        color: 'info'      },
       ],
     }
   },
@@ -256,6 +271,29 @@ export default {
       }
     },
 
+    scrollToSection(id) {
+      this.activeSection = id
+      const container = this.$refs.contentRef
+      const el = container?.querySelector(`#section-${id}`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    },
+
+    onContentScroll() {
+      const container = this.$refs.contentRef
+      if (!container) return
+      // Walk sections in reverse; highlight the last one whose top is within view
+      for (const section of [...this.sections].reverse()) {
+        const el = container.querySelector(`#section-${section.id}`)
+        if (!el) continue
+        if (el.offsetTop - container.scrollTop <= 80) {
+          this.activeSection = section.id
+          break
+        }
+      }
+    },
+
     async saveSettings() {
       try {
         const { valid } = await this.$refs.form.validate()
@@ -290,11 +328,12 @@ export default {
 
 .settings-container {
   display: flex;
-  height: calc(100vh - 64px); /* adjust to your app toolbar height */
+  /* Subtract your app's top bar height — adjust 64px as needed */
+  height: calc(100vh - 64px);
   overflow: hidden;
 }
 
-/* ── Sidebar ─────────────────────────────────────────── */
+/* ── Sidebar navigation ──────────────────────────────── */
 .settings-nav {
   display: flex;
   flex-direction: column;
@@ -328,8 +367,13 @@ export default {
   white-space: nowrap;
 }
 
+.collapse-btn {
+  flex-shrink: 0;
+}
+
 .nav-list {
   flex: 1;
+  overflow-y: auto;
   padding: 4px 8px;
 }
 
@@ -343,32 +387,30 @@ export default {
   white-space: nowrap;
 }
 
+.active-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: block;
+  margin-left: 4px;
+}
+
 .nav-footer {
   padding: 8px 10px 16px;
 }
 
-/* ── Content panel ───────────────────────────────────── */
+/* ── Main scrollable content ─────────────────────────── */
 .settings-content {
   flex: 1;
   overflow-y: auto;
   padding: 16px 20px;
 }
 
-/* ── Fade transition between panels ─────────────────── */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-.fade-enter-from {
-  opacity: 0;
-  transform: translateX(8px);
-}
-.fade-leave-to {
-  opacity: 0;
-  transform: translateX(-8px);
+.settings-section {
+  scroll-margin-top: 16px;
 }
 
-/* ── Mobile ──────────────────────────────────────────── */
+/* ── Mobile: auto-collapse sidebar ──────────────────── */
 @media (max-width: 768px) {
   .settings-nav {
     width: 64px;

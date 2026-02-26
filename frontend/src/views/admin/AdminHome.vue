@@ -1,122 +1,205 @@
 <template>
-  <div class="">
-    <div class="row ms-2 mt-2">
-      <div class="col-auto ">
+  <div class="admin-layout">
+    <!-- Left Sidebar -->
+    <nav
+      class="admin-nav"
+      :class="{ 'admin-nav--collapsed': navCollapsed }"
+    >
+      <div class="nav-header">
+        <span
+          v-if="!navCollapsed"
+          class="nav-title"
+        >Adminisztráció</span>
         <v-btn
-          class="bg-primary my-auto"
-          border="primary thin"
-          @click="navigateBack()"
+          :icon="navCollapsed ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+          variant="text"
+          size="small"
+          @click="navCollapsed = !navCollapsed"
+        />
+      </div>
+
+      <v-list
+        density="compact"
+        nav
+        class="nav-list"
+      >
+        <v-tooltip
+          v-for="item in menuItems"
+          :key="item.path"
+          :text="item.label"
+          :disabled="!navCollapsed"
+          location="right"
         >
-          vissza
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            fill="currentColor"
-            class="bi bi-arrow-clockwise"
-            viewBox="0 0 16 16"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"
-            />
-            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
-          </svg>
-        </v-btn>
+          <template #activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              :active="isActive(item.path)"
+              :active-color="item.color"
+              rounded="lg"
+              class="nav-item"
+              @click="navigate(item.path)"
+            >
+              <template #prepend>
+                <v-icon :color="isActive(item.path) ? item.color : ''">
+                  {{ item.icon }}
+                </v-icon>
+              </template>
+              <v-list-item-title
+                v-if="!navCollapsed"
+                class="nav-item-title"
+              >
+                {{ item.label }}
+              </v-list-item-title>
+            </v-list-item>
+          </template>
+        </v-tooltip>
+      </v-list>
+
+      <!-- Back button pinned to bottom -->
+      <div class="nav-footer">
+        <v-divider class="mb-3" />
+        <v-tooltip
+          text="Vissza"
+          :disabled="!navCollapsed"
+          location="right"
+        >
+          <template #activator="{ props }">
+            <v-btn
+              v-bind="props"
+              color="primary"
+              variant="outlined"
+              :icon="navCollapsed"
+              :block="!navCollapsed"
+              size="small"
+              @click="navigateBack"
+            >
+              <v-icon :start="!navCollapsed">
+                mdi-arrow-left
+              </v-icon>
+              <span v-if="!navCollapsed">Vissza</span>
+            </v-btn>
+          </template>
+        </v-tooltip>
       </div>
-      <h1 class="col d-flex justify-content-start">
-        Adminisztráció
-      </h1>
-      <div class="row row-cols-2 row-cols-sm-2 row-cols-md-4 g-4">
-        <div class="col">
-          <div
-            class="card"
-            @click="openAdminVendors()"
-          >
-            <div class="card-body">
-              Üzlet kezelő
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div
-            class="card"
-            @click="openAdminUsers()"
-          >
-            <div class="card-body">
-              Felhasználók
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div
-            class="card"
-            @click="openAdminOrders()"
-          >
-            <div class="card-body">
-              Rendelések
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div
-            class="card"
-            @click="openAdminSettings()"
-          >
-            <div class="card-body">
-              Beállítások
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <router-view />
+    </nav>
+
+    <!-- Main Content -->
+    <main class="admin-content">
+      <router-view />
+    </main>
   </div>
 </template>
 
 <script>
-import { useAuth } from "@/stores/auth";
-import { useVendorStore } from "@/stores/vendor";
+import { useAuth } from '@/stores/auth'
+import { useVendorStore } from '@/stores/vendor'
 
 export default {
-    name: "AdminView",
-    setup() {
-      const auth = useAuth();
-      const vendorStore = useVendorStore();
-      return {
-        auth,
-        vendorStore
-      }
-    },
-    data() {
-      return {}
-    },
-    mounted() {
-    },
-    methods: {
-      navigateBack: function () {
-        this.vendorStore.selectedVendor = undefined;
-        window.history.back();
-      },
-      openAdminOrders: function () {
-        this.vendorStore.selectedVendor = undefined;
-        this.$router.push({ path:`/admin/orders`})
-      },
-      openAdminUsers: function () {
-        this.vendorStore.selectedVendor = undefined;
-        this.$router.push({ path:`/admin/users`})
-      },
-      openAdminVendors: function () {
-        this.vendorStore.selectedVendor = undefined;
-        this.$router.push({ path:`/admin/vendors`})
-      },
-      openAdminSettings: function () {
-        this.vendorStore.selectedVendor = undefined;
-        this.$router.push({ path:`/admin/settings`})
-      }
+  name: 'AdminView',
+  setup() {
+    const auth = useAuth()
+    const vendorStore = useVendorStore()
+    return { auth, vendorStore }
+  },
+  data() {
+    return {
+      navCollapsed: false,
+      menuItems: [
+        { label: 'Üzlet kezelő',  path: '/admin/vendors',  icon: 'mdi-store',          color: 'primary'   },
+        { label: 'Felhasználók',  path: '/admin/users',    icon: 'mdi-account-group',  color: 'primary' },
+        { label: 'Rendelések',    path: '/admin/orders',   icon: 'mdi-clipboard-list', color: 'primary'   },
+        { label: 'Beállítások',   path: '/admin/settings', icon: 'mdi-cog',            color: 'primary'      },
+      ],
     }
-};
+  },
+  methods: {
+    isActive(path) {
+      return this.$route.path.startsWith(path)
+    },
+    navigate(path) {
+      this.vendorStore.selectedVendor = undefined
+      this.$router.push({ path })
+    },
+    navigateBack() {
+      this.vendorStore.selectedVendor = undefined
+      window.history.back()
+    },
+  },
+}
 </script>
 
 <style scoped>
+.admin-layout {
+  display: flex;
+  height: calc(100vh - 64px); /* adjust to your app toolbar height */
+  overflow: hidden;
+}
+
+/* ── Sidebar ─────────────────────────────────────────── */
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  width: 220px;
+  min-width: 220px;
+  background: rgb(var(--v-theme-surface));
+  border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  transition: width 0.25s ease, min-width 0.25s ease;
+  overflow: hidden;
+}
+
+.admin-nav--collapsed {
+  width: 64px;
+  min-width: 64px;
+}
+
+.nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 10px 6px;
+  min-height: 52px;
+}
+
+.nav-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(var(--v-theme-on-surface), 0.45);
+  white-space: nowrap;
+}
+
+.nav-list {
+  flex: 1;
+  padding: 4px 8px;
+}
+
+.nav-item {
+  margin-bottom: 2px;
+}
+
+.nav-item-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.nav-footer {
+  padding: 8px 10px 16px;
+}
+
+/* ── Content panel ───────────────────────────────────── */
+.admin-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+/* ── Mobile ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .admin-nav {
+    width: 64px;
+    min-width: 64px;
+  }
+}
 </style>

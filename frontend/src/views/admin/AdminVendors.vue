@@ -10,7 +10,7 @@
         md="8"
         class="d-flex align-center"
       >
-        <h1 class="text-h4 text-md-h3">
+        <h1 class="text-h4 text-md-h4">
           Üzlet kezelő
         </h1>
       </v-col>

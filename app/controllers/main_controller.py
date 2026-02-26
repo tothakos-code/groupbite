@@ -1,4 +1,3 @@
-from datetime import date
 from os import getenv
 from pathlib import Path
 

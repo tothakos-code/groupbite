@@ -1,6 +1,5 @@
 import json
 import logging
-from configparser import ParsingError
 from datetime import date, datetime
 from uuid import uuid4
 

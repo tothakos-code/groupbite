@@ -1,18 +1,10 @@
-import logging
 from datetime import datetime
-from uuid import UUID
 
 from flask import Blueprint, request, session
 
-from app.entities.menu import Menu
-from app.entities.menu_item import MenuItem
 from app.entities.notification import Notification, NotificationType
-from app.entities.size import Size
-from app.entities.user import User
-from app.entities.vendor import BaseVendorSchema, Vendor, VendorType
-from app.entities.webhook import Webhook
+from app.entities.vendor import BaseVendorSchema
 from app.repositories.user_repository import UserRepository
-from app.repositories.vendor_repository import VendorRepository
 from app.services.vendor_service import VendorService
 from app.services.webhook_service import WebhookService
 from app.socketio_singleton import SocketioSingleton

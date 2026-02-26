@@ -1,9 +1,7 @@
 import json
-import logging
 
-from flask import Blueprint, request
+from flask import Blueprint
 
-from app.entities.menu_item import MenuItem
 from app.entities.size import BaseSizeSchema, Size, UpdateSizeSchema
 from app.repositories.size_repository import SizeRepository
 from app.services.size_service import SizeService

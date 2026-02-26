@@ -1,5 +1,3 @@
-import logging
-
 from flask import Blueprint, request
 
 from app.entities.webhook import (

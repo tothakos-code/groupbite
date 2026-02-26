@@ -1,8 +1,9 @@
 import logging
+from datetime import date
 
 from flask import Blueprint, request
 from flask_socketio import join_room, leave_room, rooms
-from datetime import date
+
 from app.db.session import get_session
 from app.entities.order import BaseOrderSchema, Order
 from app.repositories.order_repository import OrderRepository
@@ -10,7 +11,6 @@ from app.repositories.vendor_repository import VendorRepository
 from app.services.order_service import OrderService
 from app.services.user_basket_service import UserBasketService
 from app.services.vendor_service import VendorService
-from app.services.vendor_service_factory import VendorServiceFactory
 from app.socketio_singleton import SocketioSingleton
 from app.utils.decorators import (
     handle_request,

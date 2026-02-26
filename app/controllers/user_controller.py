@@ -1,7 +1,6 @@
 import logging
 import re
 from datetime import datetime, timedelta, timezone
-from venv import logger
 
 from flask import Blueprint, request, session
 

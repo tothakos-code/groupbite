@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 
 from sqlalchemy import func, or_, select, update

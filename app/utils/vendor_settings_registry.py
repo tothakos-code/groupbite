@@ -1,37 +1,63 @@
-from typing import List, Dict, Any, Union
-from dataclasses import dataclass, field
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
+CURRENT_SCHEMA_VERSION = 1
+
+
+class Visibility:
+    PUBLIC = "public"
+    PRIVATE = "private"
+
 
 @dataclass
-class BaseSetting:
-    name: str
+class BaseSetting(ABC):
+    key: str
+    labelKey: str
     section: str
+    visibility: str = Visibility.PUBLIC
 
     @abstractmethod
-    def get_default_value(self) -> Any:
-        pass
+    def get_default_value(self) -> Any: ...
 
     @abstractmethod
-    def get_type(self) -> str:
-        pass
+    def get_type(self) -> str: ...
 
-    def to_dict(self) -> Dict[str, Any]:
+    def validate(self, value: Any) -> bool:
+        raise NotImplementedError
+
+    def to_registry_dict(self) -> Dict[str, Any]:
+        """Schema descriptor — NOT stored per-vendor."""
         return {
-            "name": self.name,
+            "key": self.key,
             "type": self.get_type(),
-            "value": self.get_default_value(),
-            "section": self.section
+            "default": self.get_default_value(),
+            "labelKey": self.labelKey,
+            "section": self.section,
+            "visibility": self.visibility,
         }
+
 
 @dataclass
 class StringSetting(BaseSetting):
     default_value: str = ""
+    max_length: Optional[int] = None
 
     def get_default_value(self) -> str:
         return self.default_value
 
     def get_type(self) -> str:
         return "STR"
+
+    def validate(self, value: Any) -> bool:
+        if not isinstance(value, str):
+            return False
+        if self.max_length and len(value) > self.max_length:
+            return False
+        return True
+
 
 @dataclass
 class TextAreaSetting(BaseSetting):
@@ -43,15 +69,35 @@ class TextAreaSetting(BaseSetting):
     def get_type(self) -> str:
         return "STRBOX"
 
+    def validate(self, value: Any) -> bool:
+        return isinstance(value, str)
+
+
 @dataclass
 class IntegerSetting(BaseSetting):
     default_value: int = 0
+    min_value: Optional[int] = None
+    max_value: Optional[int] = None
 
     def get_default_value(self) -> int:
         return self.default_value
 
     def get_type(self) -> str:
         return "INT"
+
+    def validate(self, value: Any) -> bool:
+        if isinstance(value, str):
+            if not value.isdigit():
+                return False
+            value = int(value)
+        if not isinstance(value, int):
+            return False
+        if self.min_value is not None and value < self.min_value:
+            return False
+        if self.max_value is not None and value > self.max_value:
+            return False
+        return True
+
 
 @dataclass
 class BooleanSetting(BaseSetting):
@@ -63,182 +109,198 @@ class BooleanSetting(BaseSetting):
     def get_type(self) -> str:
         return "BOOL"
 
+    def validate(self, value: Any) -> bool:
+        return isinstance(value, bool)
+
+
 @dataclass
 class ListSetting(BaseSetting):
     default_value: List[Any] = field(default_factory=list)
 
     def get_default_value(self) -> List[Any]:
-        return self.default_value.copy()
+        return list(self.default_value)
 
     def get_type(self) -> str:
         return "LIST"
 
+    def validate(self, value: Any) -> bool:
+        return isinstance(value, list)
+
+
 class VendorSettingsRegistry:
-    """Registry for all vendor settings with type safety and validation"""
+    """
+    Single source of truth for all vendor settings.
+    """
+
+    _settings: Dict[str, BaseSetting] = {}
 
     TITLE = StringSetting(
-        name="Cím",
-        section="general"
-    )
-
-    LINK = StringSetting(
-        name="Eredeti oldal elérhetősége",
-        section="general"
-    )
-
-    COMMENT_EXAMPLE = StringSetting(
-        name="Rendelés megjegyzés példa",
-        section="general"
-    )
-
-    TRANSPORT_PRICE = IntegerSetting(
-        name="Szállítási díj",
+        key="title",
+        labelKey="vendor.settings.title",
         section="general",
-        default_value=0
+        visibility=Visibility.PUBLIC,
     )
-
+    LINK = StringSetting(
+        key="link",
+        labelKey="vendor.settings.link",
+        section="general",
+        visibility=Visibility.PUBLIC,
+    )
+    COMMENT_EXAMPLE = StringSetting(
+        key="comment_example",
+        labelKey="vendor.settings.comment_example",
+        section="general",
+        visibility=Visibility.PUBLIC,
+    )
+    TRANSPORT_PRICE = IntegerSetting(
+        key="transport_price",
+        labelKey="vendor.settings.transport_price",
+        section="general",
+        visibility=Visibility.PUBLIC,
+        default_value=0,
+        min_value=0,
+    )
     ENABLE_FULL_AUTOMATIC_ORDER = BooleanSetting(
-        name="Teljes automatikus rendelés engedélyezése",
+        key="enable_full_automatic_order",
+        labelKey="vendor.settings.enable_full_automatic_order",
         section="order-types",
-        default_value=False
+        visibility=Visibility.PUBLIC,
+        default_value=False,
     )
-
     ENABLE_EMAIL_ORDER = BooleanSetting(
-        name="Email rendelés engedélyezése",
+        key="enable_email_order",
+        labelKey="vendor.settings.enable_email_order",
         section="order-types",
-        default_value=False
+        visibility=Visibility.PUBLIC,
+        default_value=False,
     )
-
     ENABLE_MANUAL_ORDER = BooleanSetting(
-        name="Manuális rendelés engedélyezése",
+        key="enable_manual_order",
+        labelKey="vendor.settings.enable_manual_order",
         section="order-types",
-        default_value=True
+        visibility=Visibility.PUBLIC,
+        default_value=True,
     )
-
     SHOW_NOTIFICATION_BUTTON = BooleanSetting(
-        name="Értesítési gomb megjelenítése",
+        key="show_notification_button",
+        labelKey="vendor.settings.show_notification_button",
         section="ui",
-        default_value=True
+        visibility=Visibility.PUBLIC,
+        default_value=True,
     )
-
     CLOSED_SCHEDULER_ACTIVE = BooleanSetting(
-        name="Időzített lezárás ",
+        key="closed_scheduler_active",
+        labelKey="vendor.settings.closed_scheduler_active",
         section="order",
-        default_value=False
+        visibility=Visibility.PRIVATE,
+        default_value=False,
     )
-
     CLOSED_SCHEDULER = StringSetting(
-        name="Rendelés automatikus lezárása (formátum: hh:mm)",
-        section="order"
+        key="closed_scheduler",
+        labelKey="vendor.settings.closed_scheduler",
+        section="order",
+        visibility=Visibility.PRIVATE,
     )
-
     CLOSED_SCHEDULER_DAYS = ListSetting(
-        name="Időzített napok",
+        key="closed_scheduler_days",
+        labelKey="vendor.settings.closed_scheduler_days",
         section="order",
-        default_value=[]
+        visibility=Visibility.PRIVATE,
     )
-
     CLOSURE_SCHEDULER_ACTIVE = BooleanSetting(
-        name="Időzített figyelmeztetés lezárás elött",
+        key="closure_scheduler_active",
+        labelKey="vendor.settings.closure_scheduler_active",
         section="order",
-        default_value=False
+        visibility=Visibility.PRIVATE,
+        default_value=False,
     )
-
     CLOSURE_SCHEDULER = StringSetting(
-        name="Rendelés automatikus zárás figyelmeztetés (formátum: hh:mm)",
-        section="order"
+        key="closure_scheduler",
+        labelKey="vendor.settings.closure_scheduler",
+        section="order",
+        visibility=Visibility.PRIVATE,
     )
-
     CLOSURE_SCHEDULER_DAYS = ListSetting(
-        name="Időzített napok",
+        key="closure_scheduler_days",
+        labelKey="vendor.settings.closure_scheduler_days",
         section="order",
-        default_value=[]
+        visibility=Visibility.PRIVATE,
     )
-
     ORDER_TEXT_TEMPLATE = StringSetting(
-        name="Rendelés szöveg sor minta",
+        key="order_text_template",
+        labelKey="vendor.settings.order_text_template",
         section="order",
-        default_value="${quantity}x ${item_name} ${size_name}\\n"
+        visibility=Visibility.PRIVATE,
+        default_value="${quantity}x ${item_name} ${size_name}\\n",
     )
-
     AUTO_EMAIL_ORDER = BooleanSetting(
-        name="Rendelés záráskor emailben küldés",
+        key="auto_email_order",
+        labelKey="vendor.settings.auto_email_order",
         section="auto-order",
-        default_value=False
+        visibility=Visibility.PRIVATE,
+        default_value=False,
     )
-
     EMAIL_MIN_USER = IntegerSetting(
-        name="Automatikus rendelés minimum részvevő felhasználó",
+        key="email_min_user",
+        labelKey="vendor.settings.email_min_user",
         section="auto-order",
-        default_value=3
+        visibility=Visibility.PRIVATE,
+        default_value=3,
+        min_value=1,
     )
-
     AUTO_EMAIL_ORDER_TO = ListSetting(
-        name="Automatikus rendelés címzett",
-        section="auto-order"
-    )
-
-    AUTO_EMAIL_ORDER_CC = ListSetting(
-        name="Automatikus rendelés másolatot kap",
-        section="auto-order"
-    )
-
-    AUTO_EMAIL_SUBJECT = StringSetting(
-        name="Automatikus rendelés email tárgy",
+        key="auto_email_order_to",
+        labelKey="vendor.settings.auto_email_order_to",
         section="auto-order",
-        default_value="${vendor_name} rendelés - ${date}"
+        visibility=Visibility.PRIVATE,
     )
-
+    AUTO_EMAIL_ORDER_CC = ListSetting(
+        key="auto_email_order_cc",
+        labelKey="vendor.settings.auto_email_order_cc",
+        section="auto-order",
+        visibility=Visibility.PRIVATE,
+    )
+    AUTO_EMAIL_SUBJECT = StringSetting(
+        key="auto_email_subject",
+        labelKey="vendor.settings.auto_email_subject",
+        section="auto-order",
+        visibility=Visibility.PRIVATE,
+        default_value="${vendor_name} rendelés - ${date}",
+    )
     AUTO_EMAIL_ORDER_TEMPLATE = TextAreaSetting(
-        name="Automatikus rendelés üzenet sablon",
-        section="auto-order"
+        key="auto_email_order_template",
+        labelKey="vendor.settings.auto_email_order_template",
+        section="auto-order",
+        visibility=Visibility.PRIVATE,
     )
 
     @classmethod
-    def get_all_settings(cls) -> Dict[str, BaseSetting]:
-        """Get all settings as a dictionary"""
-        settings = {}
-        for attr_name in dir(cls):
-            attr = getattr(cls, attr_name)
-            if isinstance(attr, BaseSetting):
-                key = attr_name.lower()
-                settings[key] = attr
-        return settings
+    def _iter(cls) -> Dict[str, BaseSetting]:
+        if not cls._settings:
+            cls._settings = {
+                v.key: v for k, v in vars(cls).items() if isinstance(v, BaseSetting)
+            }
+        return cls._settings
 
     @classmethod
-    def get_default_settings_dict(cls) -> Dict[str, Dict[str, Any]]:
-        """Get all settings as the legacy dictionary format"""
-        settings = {}
-        for attr_name in dir(cls):
-            attr = getattr(cls, attr_name)
-            if isinstance(attr, BaseSetting):
-                key = attr_name.lower()
-                settings[key] = attr.to_dict()
-        return settings
+    def get_all(cls) -> Dict[str, BaseSetting]:
+        return cls._iter()
 
     @classmethod
-    def validate_setting(cls, key: str, value: Any) -> bool:
-        """Validate a setting value against its type"""
-        settings = cls.get_all_settings()
-        if key not in settings:
+    def get(cls, key: str) -> Optional[BaseSetting]:
+        return cls._iter().get(key)
+
+    @classmethod
+    def defaults(cls) -> Dict[str, Any]:
+        return {k: s.get_default_value() for k, s in cls._iter().items()}
+
+    @classmethod
+    def validate_value(cls, key: str, value: Any) -> bool:
+        setting = cls.get(key)
+        if setting is None:
             return False
-
-        setting = settings[key]
-        expected_type = type(setting.get_default_value())
-
-        if isinstance(setting, StringSetting) or isinstance(setting, TextAreaSetting):
-            return isinstance(value, str)
-        elif isinstance(setting, IntegerSetting):
-            return isinstance(value, int) or (isinstance(value, str) and value.isdigit())
-        elif isinstance(setting, BooleanSetting):
-            return isinstance(value, bool)
-        elif isinstance(setting, ListSetting):
-            return isinstance(value, list)
-
-        return True
+        return setting.validate(value)
 
     @classmethod
-    def get_setting_by_key(cls, key: str) -> BaseSetting:
-        """Get a setting definition by key"""
-        settings = cls.get_all_settings()
-        return settings.get(key)
+    def public_keys(cls) -> List[str]:
+        return [k for k, s in cls._iter().items() if s.visibility == Visibility.PUBLIC]

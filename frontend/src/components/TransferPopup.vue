@@ -424,7 +424,7 @@
               A különböző extra díjak összegét írd be valuta nélkül
             </p>
             <p class="text-body-2 mb-3">
-              Az alapértelmezett beállított díj: {{ vendorStore.selectedVendor.settings.transport_price.value }}
+              Az alapértelmezett beállított díj: {{ vendorStore.selectedVendor.settings.transport_price }}
             </p>
 
             <v-text-field
@@ -506,12 +506,12 @@ export default {
       confirmSemiAuto: false,
       orderItems: [],
       psid: "",
-      transport_price: unref(useVendorStore().selectedVendor.settings.transport_price.value)
+      transport_price: unref(useVendorStore().selectedVendor.settings.transport_price)
     }
   },
   computed: {
     orderDesc() {
-      return this.vendorStore.selectedVendor.settings.comment_example.value
+      return this.vendorStore.selectedVendor.settings.comment_example
     },
     tickedItemsCount() {
       return this.orderItems.filter(item => item.tick && !item.deleted).length;
@@ -644,7 +644,7 @@ export default {
         if (result) {
           this.showFinish = true;
         }
-        
+
       });
     },
     processItemChanges(newItemMap, oldItemsMap) {
@@ -743,7 +743,7 @@ export default {
         if (item.deleted) {
           continue
         }
-        orderText += this.vendorStore.selectedVendor.settings.order_text_template.value
+        orderText += this.vendorStore.selectedVendor.settings.order_text_template
           .replace("${quantity}", item.quantity)
           .replace("${item_name}", item.item_name)
           .replace("${size_name}", item.size_name)

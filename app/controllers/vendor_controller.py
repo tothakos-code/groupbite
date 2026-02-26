@@ -204,23 +204,26 @@ class VendorController:
     @handle_request
     def handle_get_settings(self, db, vendor_id):
         vendor = self.vendor_service.get_vendor(db, vendor_id)
-        # Todo: There are public and private settings. Migrate to a vendor_setting table id,vendor_id,key,value,is_public,setting_type
-        return {"data": vendor.serialized}, 200
+        return {"data": vendor.public_serialized}, 200
 
     @require_auth
     @require_admin
     @validate_url_params(IDSchema())
     @handle_request
     def handle_save_settings(self, db, vendor_id):
-        settings = request.json["data"]
+        data = request.json["data"]
         vendor = self.vendor_service.get_vendor(db, vendor_id)
-        self.vendor_service.update_settings(vendor, settings)
+        errors = self.vendor_service.update_settings(vendor, data)
+        if errors:
+            return {"errors": errors}, 422
+        db.commit()
         socketio.emit(
             "be_vendors_update",
             [v.serialized for v in VendorService.find_all_active(db)],
         )
+        from app.utils.vendor_settings import load_vendor_settings
 
-        return {"data": vendor.settings}, 200
+        return {"data": load_vendor_settings(vendor)}, 200
 
     @require_auth
     @require_admin

@@ -3,8 +3,6 @@ import logging
 from datetime import date, datetime
 from uuid import uuid4
 
-from sqlalchemy.orm.attributes import flag_modified
-
 from app.db.session import get_session
 from app.entities.menu import Menu
 from app.entities.menu_item import MenuItem
@@ -19,7 +17,10 @@ from app.repositories.vendor_repository import VendorRepository
 from app.services.base_vendor_service import BaseVendorService
 from app.services.order_service import OrderService
 from app.services.vendor_service_factory import VendorServiceFactory
-from app.utils.vendor_settings_registry import VendorSettingsRegistry
+from app.utils.vendor_settings import (
+    get_setting_value,
+    save_vendor_settings,
+)
 
 
 class VendorService:
@@ -134,52 +135,33 @@ class VendorService:
         return vendor_repo.find_all_active()
 
     @staticmethod
-    def get_setting_value(vendor: Vendor, key: str, default=None):
-        """Safely get a setting value with fallback to default"""
-        try:
-            if key in vendor.settings and "value" in vendor.settings[key]:
-                return vendor.settings[key]["value"]
-        except (KeyError, TypeError):
-            pass
+    def get_setting_value(vendor, key: str, default=None):
+        return get_setting_value(vendor, key, default)
 
-        # Fallback to registry default
-        setting_def = VendorSettingsRegistry.get_setting_by_key(key)
-        if setting_def:
-            return setting_def.get_default_value()
+    def set_setting_value(self, vendor, key: str, value) -> bool:
+        errors = save_vendor_settings(vendor, {key: value})
+        return len(errors) == 0
 
-        return default
-
-    def set_setting_value(self, vendor: Vendor, key: str, value: any) -> bool:
-        """Safely set a setting value with validation"""
-        if not VendorSettingsRegistry.validate_setting(key, value):
-            return False
-
-        if key not in vendor.settings:
-            setting_def = VendorSettingsRegistry.get_setting_by_key(key)
-            if setting_def:
-                vendor.settings[key] = setting_def.to_dict()
+    def update_settings(self, vendor, settings: dict):
+        normalised = {}
+        for key, v in settings.items():
+            if isinstance(v, dict) and "value" in v:
+                normalised[key] = v["value"]
             else:
-                return False
+                normalised[key] = v
 
-        vendor.settings[key]["value"] = value
-        flag_modified(vendor, "settings")
-        return True
+        self._handle_scheduler_changes(vendor, normalised)
+        errors = save_vendor_settings(vendor, normalised)
+        if errors:
+            import logging
 
-    def update_settings(self, vendor, settings):
-        """Update multiple settings with proper validation and scheduling"""
-        for key, setting_data in settings.items():
-            if not isinstance(setting_data, dict) or "value" not in setting_data:
-                continue
-            if not VendorSettingsRegistry.validate_setting(key, setting_data["value"]):
-                logging.warning(
-                    f"Invalid setting value for {key}: {setting_data['value']}"
-                )
-                continue
+            logging.getLogger(__name__).warning(
+                "Settings validation errors: %s", errors
+            )
+        return errors
 
-        self._handle_scheduler_changes(vendor, settings)
-
-        vendor.settings = settings
-        flag_modified(vendor, "settings")
+    def update_setting(self, vendor, key, value) -> bool:
+        return self.set_setting_value(vendor, key, value)
 
     def _handle_scheduler_changes(self, vendor, new_settings):
         """Handle scheduler task updates when settings change"""
@@ -259,13 +241,6 @@ class VendorService:
                     new_settings["auto_email_order"]["value"] = self.get_setting_value(
                         vendor, "auto_email_order"
                     )
-
-    def update_setting(self, vendor, key, value):
-        if not VendorSettingsRegistry.validate_setting(key, value):
-            return False
-
-        if not self.set_setting_value(vendor, key, value):
-            return False
 
     def create_vendor(self, db, data) -> Vendor:
         vendor = Vendor(

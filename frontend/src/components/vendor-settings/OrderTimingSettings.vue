@@ -17,12 +17,12 @@
           csak bizonos napjain fusson.
         </div>
         <DayScheduler
-          v-model:active="settings.closed_scheduler_active.value"
-          v-model:time="settings.closed_scheduler.value"
-          v-model:days="settings.closed_scheduler_days.value"
-          :active-label="settings.closed_scheduler_active.name"
+          v-model:active="settings.closed_scheduler_active"
+          v-model:time="settings.closed_scheduler"
+          v-model:days="settings.closed_scheduler_days"
+          :active-label="$t('vendor.settings.closed_scheduler_active')"
           active-icon="mdi-clock-end"
-          :time-label="settings.closed_scheduler.name"
+          :time-label="$t('vendor.settings.closed_scheduler')"
         />
       </div>
 
@@ -36,12 +36,12 @@
           csak bizonos napjain fusson.
         </div>
         <DayScheduler
-          v-model:active="settings.closure_scheduler_active.value"
-          v-model:time="settings.closure_scheduler.value"
-          v-model:days="settings.closure_scheduler_days.value"
-          :active-label="settings.closure_scheduler_active.name"
+          v-model:active="settings.closure_scheduler_active"
+          v-model:time="settings.closure_scheduler"
+          v-model:days="settings.closure_scheduler_days"
+          :active-label="$t('vendor.settings.closure_scheduler_active')"
           active-icon="mdi-clock-alert"
-          :time-label="settings.closure_scheduler.name"
+          :time-label="$t('vendor.settings.closure_scheduler')"
         />
       </div>
 
@@ -77,10 +77,10 @@
             lg="4"
           >
             <v-checkbox
-              v-model="settings.auto_email_order.value"
+              v-model="settings.auto_email_order"
               color="success"
-              :label="settings.auto_email_order.name"
-              :disabled="!smtpStatus || !settings.closed_scheduler_active.value"
+              :label="$t('vendor.settings.auto_email_order')"
+              :disabled="!smtpStatus || !settings.closed_scheduler_active"
               prepend-icon="mdi-email-fast"
               hide-details
             />
@@ -91,9 +91,9 @@
             lg="4"
           >
             <v-text-field
-              v-model.number="settings.email_min_user.value"
-              :label="settings.email_min_user.name"
-              :disabled="!settings.auto_email_order.value"
+              v-model.number="settings.email_min_user"
+              :label="$t('vendor.settings.email_min_user')"
+              :disabled="!settings.auto_email_order"
               :rules="numberRules"
               type="number"
               prepend-icon="mdi-account-multiple"
@@ -117,8 +117,8 @@
         <v-row>
           <v-col cols="12">
             <v-textarea
-              v-model="settings.order_text_template.value"
-              :label="settings.order_text_template.name"
+              v-model="settings.order_text_template"
+              :label="$t('vendor.settings.order_text_template')"
               prepend-icon="mdi-text-box"
               variant="outlined"
               rows="3"

@@ -11,9 +11,9 @@
     </v-card-title>
     <v-card-text class="pa-4">
       <v-checkbox
-        v-model="settings.show_notification_button.value"
+        v-model="settings.show_notification_button"
         color="primary"
-        label="Értesítési gomb megjelenítése"
+        :label="$t('vendor.settings.show_notification_button')"
         prepend-icon="mdi-bell"
         hide-details
       />
@@ -26,9 +26,9 @@
         md="4"
       >
         <v-checkbox
-          v-model="settings.enable_full_automatic_order.value"
+          v-model="settings.enable_full_automatic_order"
           color="success"
-          label="Teljes automatikus rendelés"
+          :label="$t('vendor.settings.enable_full_automatic_order')"
           prepend-icon="mdi-robot"
           hide-details
         />
@@ -38,9 +38,9 @@
         md="4"
       >
         <v-checkbox
-          v-model="settings.enable_email_order.value"
+          v-model="settings.enable_email_order"
           color="info"
-          label="Email rendelés"
+          :label="$t('vendor.settings.enable_email_order')"
           prepend-icon="mdi-email"
           hide-details
         />
@@ -50,9 +50,9 @@
         md="4"
       >
         <v-checkbox
-          v-model="settings.enable_manual_order.value"
+          v-model="settings.enable_manual_order"
           color="warning"
-          label="Manuális rendelés"
+          :label="$t('vendor.settings.enable_manual_order')"
           prepend-icon="mdi-hand-back-right"
           hide-details
         />

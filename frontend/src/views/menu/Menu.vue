@@ -132,10 +132,10 @@ export default {
       return this.vendorStore.selectedVendor.id
     },
     vendorTitle() {
-      return this.vendorStore.selectedVendor.settings.title.value
+      return this.vendorStore.selectedVendor.settings.title
     },
     vendorLink() {
-      return this.vendorStore.selectedVendor.settings.link.value
+      return this.vendorStore.selectedVendor.settings.link
     },
     vendorSettings() {
       return this.vendorStore.selectedVendor.settings

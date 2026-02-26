@@ -3,11 +3,10 @@ from typing import List
 from uuid import UUID
 
 from marshmallow import Schema, fields
-from sqlalchemy import Boolean, event
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.utils.vendor_settings_registry import VendorSettingsRegistry
+from app.utils.vendor_serrings_registry import VendorSettingsRegistry
 
 from . import Base
 
@@ -69,18 +68,24 @@ class Vendor(Base):
 
     @property
     def serialized(self):
+        from app.utils.vendor_settings import load_vendor_settings
+
         return {
             "id": str(self.id),
             "name": self.name,
             "active": self.active,
             "type": str(self.type),
-            "settings": self.settings,
+            "settings": load_vendor_settings(self),  # merged, values-only
         }
 
+    @property
+    def public_serialized(self):
+        from app.utils.vendor_settings import public_settings
 
-def validate_before_save(mapper, connection, target):
-    target._validate_settings()
-
-
-event.listen(Vendor, "before_insert", validate_before_save)
-event.listen(Vendor, "before_update", validate_before_save)
+        return {
+            "id": str(self.id),
+            "name": self.name,
+            "active": self.active,
+            "type": str(self.type),
+            "settings": public_settings(self),
+        }

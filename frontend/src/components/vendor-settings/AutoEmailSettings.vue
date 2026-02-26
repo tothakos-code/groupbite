@@ -11,7 +11,7 @@
     </v-card-title>
     <v-card-text class="pa-4">
       <v-expand-transition>
-        <div v-if="settings.auto_email_order.value">
+        <div v-if="settings.auto_email_order">
           <v-divider class="my-4" />
 
           <v-row>
@@ -20,10 +20,10 @@
               md="6"
             >
               <v-combobox
-                v-model="settings.auto_email_order_to.value"
+                v-model="settings.auto_email_order_to"
                 chips
                 multiple
-                :label="settings.auto_email_order_to.name"
+                :label="$t('vendor.settings.auto_email_order_to')"
                 :rules="[(v) => validateEmails(v, true)]"
                 prepend-icon="mdi-email-outline"
                 variant="outlined"
@@ -45,10 +45,10 @@
               md="6"
             >
               <v-combobox
-                v-model="settings.auto_email_order_cc.value"
+                v-model="settings.auto_email_order_cc"
                 chips
                 multiple
-                :label="settings.auto_email_order_cc.name"
+                :label="$t('vendor.settings.auto_email_order_cc')"
                 :rules="[validateEmails]"
                 prepend-icon="mdi-email-multiple-outline"
                 variant="outlined"
@@ -70,8 +70,8 @@
           <v-row>
             <v-col cols="12">
               <v-text-field
-                v-model="settings.auto_email_subject.value"
-                :label="settings.auto_email_subject.name"
+                v-model="settings.auto_email_subject"
+                :label="$t('vendor.settings.auto_email_subject')"
                 prepend-icon="mdi-format-title"
                 variant="outlined"
                 density="comfortable"
@@ -82,8 +82,8 @@
           <v-row>
             <v-col cols="12">
               <v-textarea
-                v-model="settings.auto_email_order_template.value"
-                :label="settings.auto_email_order_template.name"
+                v-model="settings.auto_email_order_template"
+                :label="$t('vendor.settings.auto_email_order_template')"
                 prepend-icon="mdi-file-document-edit"
                 variant="outlined"
                 rows="4"

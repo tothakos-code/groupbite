@@ -29,7 +29,8 @@ import router from "./router.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 // import "bootstrap/dist/js/bootstrap.min.js";
 import { socket, state } from "@/socket";
-import vuetify from '@/plugins/vuetify';
+import vuetify from "@/plugins/vuetify";
+import i18n from "@/plugins/i18n";
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -37,6 +38,7 @@ const pinia = createPinia();
 app.use(router);
 app.use(pinia);
 app.use(vuetify);
+app.use(i18n);
 app.use(VueCookies);
 app.use(Notifications);
 app.use(VueClipboard, {
@@ -44,13 +46,15 @@ app.use(VueClipboard, {
   appendToBody: true,
 });
 
-
 export async function regWorker() {
   try {
-    const registration = await navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
+    const registration = await navigator.serviceWorker.register(
+      "/service-worker.js",
+      { scope: "/" },
+    );
     return registration;
   } catch (error) {
-    console.error('Service worker registration failed:', error);
+    console.error("Service worker registration failed:", error);
     throw error;
   }
 }
@@ -66,14 +70,12 @@ export async function requestNotificationPermission() {
   }
 }
 
-
-Date.prototype.getAdjustedDay = function() {
+Date.prototype.getAdjustedDay = function () {
   var day = this.getDay();
-  return (day === 0) ? 6 : day - 1;
+  return day === 0 ? 6 : day - 1;
 };
 
-
-Date.prototype.getWeek = function() {
+Date.prototype.getWeek = function () {
   var date = new Date(this.getTime());
   date.setHours(0, 0, 0, 0);
   // Thursday in current week decides the year.
@@ -81,13 +83,20 @@ Date.prototype.getWeek = function() {
   // January 4 is always in week 1.
   var week1 = new Date(date.getFullYear(), 0, 4);
   // Adjust to Thursday in week 1 and count number of weeks from date to week1.
-  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
-                        - 3 + week1.getAdjustedDay()) / 7);
-}
+  return (
+    1 +
+    Math.round(
+      ((date.getTime() - week1.getTime()) / 86400000 -
+        3 +
+        week1.getAdjustedDay()) /
+        7,
+    )
+  );
+};
 
-Date.prototype.toISODate = function() {
-  return this.toISOString().split("T")[0]
+Date.prototype.toISODate = function () {
+  return this.toISOString().split("T")[0];
 };
 app.mount("#app");
 
-export { socket, state }
+export { socket, state };

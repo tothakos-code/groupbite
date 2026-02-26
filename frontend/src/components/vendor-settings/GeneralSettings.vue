@@ -16,8 +16,8 @@
           md="6"
         >
           <v-text-field
-            v-model="settings.title.value"
-            :label="settings.title.name"
+            v-model="settings.title"
+            :label="$t('vendor.settings.title')"
             prepend-icon="mdi-format-title"
             variant="outlined"
             required
@@ -29,8 +29,8 @@
           md="6"
         >
           <v-text-field
-            v-model="settings.link.value"
-            :label="settings.link.name"
+            v-model="settings.link"
+            :label="$t('vendor.settings.link')"
             prepend-icon="mdi-link"
             variant="outlined"
             density="comfortable"
@@ -44,8 +44,8 @@
           md="6"
         >
           <v-text-field
-            v-model="settings.comment_example.value"
-            :label="settings.comment_example.name"
+            v-model="settings.comment_example"
+            :label="$t('vendor.settings.comment_example')"
             prepend-icon="mdi-comment-text"
             variant="outlined"
             density="comfortable"
@@ -56,8 +56,8 @@
           md="6"
         >
           <v-text-field
-            v-model.number="settings.transport_price.value"
-            :label="settings.transport_price.name"
+            v-model.number="settings.transport_price"
+            :label="$t('vendor.settings.transport_price')"
             prepend-icon="mdi-currency-eur"
             :rules="transportPriceRules"
             type="number"

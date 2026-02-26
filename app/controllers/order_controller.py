@@ -280,7 +280,9 @@ def handle_date_selection_change(data):
                 Order(
                     vendor_id=vendor.id,
                     date_of_order=date.fromisoformat(new_date),
-                    order_fee=vendor.settings["transport_price"]["value"],
+                    order_fee=VendorService.get_setting_value(
+                        vendor, "transport_price"
+                    ),
                 )
             )
 

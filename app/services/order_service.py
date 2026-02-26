@@ -19,6 +19,7 @@ from app.repositories.vendor_repository import VendorRepository
 from app.scheduler import reschedule_task
 from app.services.mail_sender_service import EmailService
 from app.services.user_basket_service import UserBasketService
+from app.services.vendor_service import VendorService
 from app.socketio_singleton import SocketioSingleton
 
 
@@ -145,7 +146,7 @@ class OrderService:
         order.order_fee = (
             trigger_data["order_fee"]
             if "order_fee" in trigger_data
-            else order.vendor.settings["transport_price"]["value"]
+            else VendorService.get_setting_value(order.vendor, "transport_price")
         )
         order.ordered_by = UserRepository(db).get_by_id(session.get("user_id"))
         event_manager.trigger_event("afterClose@" + order.vendor.name, trigger_data)

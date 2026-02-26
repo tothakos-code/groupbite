@@ -1,0 +1,24 @@
+{
+  "vendor": {
+    "settings": {
+      "title": "Cím",
+      "link": "Eredeti oldal elérhetősége",
+      "comment_example": "Rendelés megjegyzés példa",
+      "transport_price": "Szállítási díj",
+      "enable_full_automatic_order": "Teljes automatikus rendelés engedélyezése",
+      "enable_email_order": "Email rendelés engedélyezése",
+      "enable_manual_order": "Manuális rendelés engedélyezése",
+      "show_notification_button": "Értesítési gomb megjelenítése",
+      "closed_scheduler_active": "Időzített lezárás",
+      "closure_scheduler_active": "Időzített figyelmeztetés lezárás elött",
+      "closed_scheduler": "Rendelés automatikus lezárása (formátum: hh:mm)",
+      "closed_scheduler_days": "Időzített napok",
+      "email_min_user": "Automatikus rendelés minimum résztvevő felhasználó",
+      "auto_email_order": "Rendelés záráskor emailben küldés",
+      "auto_email_order_to": "Automatikus rendelés címzett",
+      "auto_email_order_cc": "Automatikus rendelés másolatot kap",
+      "auto_email_subject": "Automatikus rendelés email tárgy",
+      "auto_email_order_template": "Automatikus rendelés üzenet sablon"
+    }
+  }
+}

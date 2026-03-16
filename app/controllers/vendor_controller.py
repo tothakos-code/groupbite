@@ -48,6 +48,11 @@ class VendorController:
             methods=["POST"],
         )
         bp.add_url_rule(
+            "/<vendor_id>/notifications/<notification_type>/unsubscribe/device",
+            view_func=self.handle_notification_unsubscribe_device,
+            methods=["DELETE"],
+        )
+        bp.add_url_rule(
             "/<vendor_id>/notifications/<notification_type>/unsubscribe",
             view_func=self.handle_notification_unsubscribe,
             methods=["DELETE"],
@@ -149,26 +154,43 @@ class VendorController:
             vendor_id, user_id, NotificationType(notification_type)
         )
         for noti in notifications:
-            if noti.delete():
-                socketio.emit(
-                    "be_user_update",
-                    UserRepository(db).get_by_id(user_id).serialized,
-                )
-                return {"msg": "OK"}, 200
-            else:
-                return {"error": "Someting went wrong"}, 500
+            noti.delete()
+        socketio.emit(
+            "be_user_update",
+            UserRepository(db).get_by_id(user_id).serialized,
+        )
+        return {"msg": "OK"}, 200
+
+    @validate_url_params(IDSchema())
+    @require_auth
+    @handle_request
+    def handle_notification_unsubscribe_device(self, db, vendor_id, notification_type):
+        user_id = session.get("user_id")
+        endpoint = request.json.get("endpoint")
+        if not endpoint:
+            return {"error": "endpoint required"}, 400
+        notification = Notification.find_by_pk(vendor_id, user_id, endpoint)
+        if notification:
+            notification.delete()
+        socketio.emit(
+            "be_user_update",
+            UserRepository(db).get_by_id(user_id).serialized,
+        )
+        return {"msg": "OK"}, 200
 
     @validate_url_params(IDSchema())
     def handle_notification_status(self, vendor_id, notification_type):
         # todo: Refactor after Notification Service
         user_id = session.get("user_id")
         if not user_id:
-            return {"data": {"status": False}}, 200
-        notification = Notification.find_by_pk(vendor_id, user_id, notification_type)
-        if notification:
-            return {"data": {"status": True}}, 200
-        else:
-            return {"data": {"status": False}}, 200
+            return {"data": {"subscribed": False, "device_subscribed": False}}, 200
+        notifications = Notification.find_by_vendor_id_user_id(
+            vendor_id, user_id, NotificationType(notification_type)
+        )
+        endpoint = request.args.get("endpoint")
+        subscribed = len(notifications) > 0
+        device_subscribed = any(n.endpoint == endpoint for n in notifications) if endpoint else False
+        return {"data": {"subscribed": subscribed, "device_subscribed": device_subscribed}}, 200
 
     @require_auth
     @require_admin

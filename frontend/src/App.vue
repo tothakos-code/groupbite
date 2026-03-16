@@ -66,7 +66,8 @@
               }"
               elevation="8"
               rounded="lg"
-              min-width="400"
+              min-width="300"
+              max-width="500"
             >
               <!-- Header Section -->
               <v-card-item class="pb-2">
@@ -118,7 +119,7 @@
 
               <!-- Message Content -->
               <v-card-text class="pt-0 pb-3">
-                <div class="text-body-2 notification-message">
+                <div class="text-body-2 notification-message" style="word-break: break-word; white-space: normal;">
                   {{ props.item.text }}
                 </div>
               </v-card-text>

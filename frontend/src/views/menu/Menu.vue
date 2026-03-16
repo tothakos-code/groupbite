@@ -16,8 +16,47 @@
           :vendor-link="vendorLink"
           :notification-status="notificationStatus"
           @subscribe="handleSubscribe"
-          @unsubscribe="handleUnsubscribe"
+          @unsubscribe-requested="handleUnsubscribeRequested"
         />
+
+        <!-- New device notification dialog -->
+        <Popup
+          title="Értesítések"
+          :show-modal="showNewDeviceDialog"
+          cancel-text="Nem"
+          confirm-text="Igen"
+          @cancel="handleNewDeviceDecline"
+          @confirm="handleNewDeviceSubscribe"
+        >
+          Más eszközön be van kapcsolva az értesítés ehhez az üzlethez. Bekapcsolod ezen az eszközön is?
+        </Popup>
+
+        <!-- Unsubscribe scope dialog -->
+        <Popup
+          title="Értesítés kikapcsolása"
+          :show-modal="showUnsubscribeDialog"
+          :confirm-btn="false"
+          :cancel-btn="true"
+          @cancel="showUnsubscribeDialog = false"
+        >
+          <p>Csak ezen az eszközön kapcsolod ki, vagy minden eszközön?</p>
+          <div class="d-flex justify-center gap-2 mt-2">
+            <v-btn
+              variant="outlined"
+              color="primary"
+              @click="handleUnsubscribeDevice"
+            >
+              Csak ezen az eszközön
+            </v-btn>
+            <v-btn
+              color="primary"
+              variant="elevated"
+              @click="handleUnsubscribeAll"
+            >
+              Minden eszközön
+            </v-btn>
+          </div>
+        </Popup>
         <v-row
           class="m-0 p-2"
         >
@@ -91,10 +130,12 @@
 import UnifiedBasket from "@/components/basket/UnifiedBasket.vue";
 import MenuList from "@/components/MenuList.vue";
 import MenuHeader from '@/components/menu/MenuHeader.vue'
+import Popup from '@/components/Popup.vue'
 import { useAuth } from "@/stores/auth";
 import { useVendorStore } from "@/stores/vendor";
 import { useOrderStore } from "@/stores/order";
 import { useDisplay } from 'vuetify'
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
   name: "MenuView",
@@ -102,6 +143,7 @@ export default {
     UnifiedBasket,
     MenuList,
     MenuHeader,
+    Popup,
   },
   setup() {
     const auth = useAuth();
@@ -118,7 +160,10 @@ export default {
   },
   data() {
     return {
-      mobileNav: "menu"
+      mobileNav: "menu",
+      deviceEndpoint: null,
+      showNewDeviceDialog: false,
+      showUnsubscribeDialog: false,
     };
   },
   computed: {
@@ -140,26 +185,79 @@ export default {
     vendorSettings() {
       return this.vendorStore.selectedVendor.settings
     },
+    hasAnyVendorNotification() {
+      if (!this.auth.isLoggedIn) return false;
+      return Object.values(this.auth.user.notifications).some(
+        n => n.vendor_id == this.vendorStore.selectedVendor.id
+      );
+    },
     notificationStatus() {
-      let response = false;
-      if (!this.auth.isLoggedIn) {
-        return response;
-      }
-      Object.values(this.auth.user.notifications).forEach(notification => {
-        if(notification.vendor_id == this.vendorStore.selectedVendor.id) {
-          response = true;
-        }
-      })
-      return response;
+      if (!this.auth.isLoggedIn || !this.deviceEndpoint) return false;
+      return Object.values(this.auth.user.notifications).some(
+        n => n.vendor_id == this.vendorStore.selectedVendor.id && n.endpoint == this.deviceEndpoint
+      );
     },
   },
+  async mounted() {
+    await this.refreshDeviceEndpoint();
+    this.checkNewDevice();
+  },
   methods: {
-    handleSubscribe: function () {
-      this.vendorStore.subscribe()
+    async refreshDeviceEndpoint() {
+      try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        const reg = await navigator.serviceWorker.getRegistration('/');
+        if (!reg) return;
+        const sub = await reg.pushManager.getSubscription();
+        this.deviceEndpoint = sub ? sub.endpoint : null;
+      } catch (e) {
+        this.deviceEndpoint = null;
+      }
     },
-    handleUnsubscribe: function () {
-      this.vendorStore.unsubscribe()
-    }
+    checkNewDevice() {
+      if (!this.auth.isLoggedIn) return;
+      if (this.hasAnyVendorNotification && !this.notificationStatus) {
+        this.showNewDeviceDialog = true;
+      }
+    },
+    async handleSubscribe(opts = {}) {
+      if (opts.blocked) {
+        notify({ type: "warn", text: "Az értesítések le vannak tiltva a böngészőben. Engedélyezd a böngésző beállításaiban." });
+        return;
+      }
+      await this.vendorStore.subscribe();
+      await this.refreshDeviceEndpoint();
+    },
+    handleUnsubscribeRequested() {
+      this.showUnsubscribeDialog = true;
+    },
+    async handleUnsubscribeDevice() {
+      this.showUnsubscribeDialog = false;
+      await this.vendorStore.unsubscribeDevice(this.deviceEndpoint);
+      this.deviceEndpoint = null;
+    },
+    async handleUnsubscribeAll() {
+      this.showUnsubscribeDialog = false;
+      await this.vendorStore.unsubscribe();
+      this.deviceEndpoint = null;
+    },
+    async handleNewDeviceSubscribe() {
+      this.showNewDeviceDialog = false;
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'denied') {
+        notify({ type: "warn", text: "Az értesítések le vannak tiltva a böngészőben. Engedélyezd a böngésző beállításaiban." });
+        return;
+      }
+      if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return;
+      }
+      await this.vendorStore.subscribe();
+      await this.refreshDeviceEndpoint();
+    },
+    handleNewDeviceDecline() {
+      this.showNewDeviceDialog = false;
+    },
   }
 };
 </script>

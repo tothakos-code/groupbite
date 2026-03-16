@@ -100,5 +100,6 @@ class Notification(Base):
         return {
             "vendor_id": str(self.vendor_id),
             "user_id": str(self.user_id),
-            "notification_type": str(self.notification_type)
+            "notification_type": str(self.notification_type),
+            "endpoint": self.endpoint
         }

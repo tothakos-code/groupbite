@@ -26,11 +26,11 @@ const authGuard = async (to, from, next) => {
     await useAuth().checkSession();
     if (!useAuth().isLoading && !useAuth().user?.admin) {
       console.log("Nono, you can't do that");
-      return false;
+      return next({ name: "home" });
     }
   } else if (!useAuth().user?.admin) {
     console.log("Nono, you can't do that");
-    return false;
+    return next({ name: "home" });
   }
   console.log("Success: admin");
   next();

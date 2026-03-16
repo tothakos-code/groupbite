@@ -3,10 +3,11 @@ from typing import List
 from uuid import UUID
 
 from marshmallow import Schema, fields
+from sqlalchemy import Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.utils.vendor_serrings_registry import VendorSettingsRegistry
+from app.utils.vendor_settings_registry import VendorSettingsRegistry
 
 from . import Base
 
@@ -75,7 +76,7 @@ class Vendor(Base):
             "name": self.name,
             "active": self.active,
             "type": str(self.type),
-            "settings": load_vendor_settings(self),  # merged, values-only
+            "settings": load_vendor_settings(self),
         }
 
     @property

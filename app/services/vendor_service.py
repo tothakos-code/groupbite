@@ -1,6 +1,8 @@
 import json
 import logging
-from datetime import date, datetime
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
+from typing import Callable
 from uuid import uuid4
 
 from app.db.session import get_session
@@ -21,6 +23,15 @@ from app.utils.vendor_settings import (
     get_setting_value,
     save_vendor_settings,
 )
+
+
+@dataclass
+class _SchedulerSpec:
+    task_id_suffix: str
+    active_key: str
+    time_key: str
+    days_key: str
+    callback: Callable
 
 
 class VendorService:
@@ -163,84 +174,92 @@ class VendorService:
     def update_setting(self, vendor, key, value) -> bool:
         return self.set_setting_value(vendor, key, value)
 
-    def _handle_scheduler_changes(self, vendor, new_settings):
-        """Handle scheduler task updates when settings change"""
-        # Closure scheduler
-        closure_active_changed = self.get_setting_value(
-            vendor, "closure_scheduler_active"
-        ) != new_settings.get("closure_scheduler_active", {}).get("value")
-        closure_time_changed = self.get_setting_value(
-            vendor, "closure_scheduler"
-        ) != new_settings.get("closure_scheduler", {}).get(
-            "value"
-        ) or self.get_setting_value(
-            vendor, "closure_scheduler_days"
-        ) != new_settings.get("closure_scheduler_days", {}).get("value")
+    def _handle_scheduler_changes(self, vendor, new_settings: dict):
+        from app.scheduler import cancel_task, schedule_task
 
-        if closure_active_changed or closure_time_changed:
-            from app.scheduler import cancel_task, schedule_task
+        specs = [
+            _SchedulerSpec(
+                "closure",
+                "closure_scheduler_active",
+                "closure_scheduler",
+                "closure_scheduler_days",
+                self.closure_wrapper,
+            ),
+            _SchedulerSpec(
+                "closed",
+                "closed_scheduler_active",
+                "closed_scheduler",
+                "closed_scheduler_days",
+                self.closed_wrapper,
+            ),
+            _SchedulerSpec(
+                "scan",
+                "menu_scan_active",
+                "menu_scan_time",
+                "menu_scan_days",
+                self.scan_wrapper,
+            ),
+        ]
 
-            cancel_task(str(vendor.id) + "-closure")
+        for spec in specs:
+            self._sync_scheduler(vendor, new_settings, spec, cancel_task, schedule_task)
 
-            if new_settings.get("closure_scheduler_active", {}).get("value"):
-                time_value = new_settings.get("closure_scheduler", {}).get("value", "")
-                if ":" in time_value:
-                    hh, mm = time_value.split(":")
-                    schedule_task(
-                        str(vendor.id) + "-closure",
-                        int(hh),
-                        int(mm),
-                        self.closure_wrapper,
-                        new_settings.get("closure_scheduler_days", {}).get("value"),
-                        vendor=vendor,
-                    )
+        self._handle_auto_email_guard(vendor, new_settings)
 
-        # Closed scheduler
-        closed_active_changed = self.get_setting_value(
-            vendor, "closed_scheduler_active"
-        ) != new_settings.get("closed_scheduler_active", {}).get("value")
-        closed_time_changed = self.get_setting_value(
-            vendor, "closed_scheduler"
-        ) != new_settings.get("closed_scheduler", {}).get(
-            "value"
-        ) or self.get_setting_value(
-            vendor, "closed_scheduler_days"
-        ) != new_settings.get("closed_scheduler_days", {}).get("value")
+    def _sync_scheduler(
+        self,
+        vendor,
+        new_settings: dict,
+        spec: _SchedulerSpec,
+        cancel_task,
+        schedule_task,
+    ):
+        old_active = self.get_setting_value(vendor, spec.active_key)
+        old_time = self.get_setting_value(vendor, spec.time_key)
+        old_days = self.get_setting_value(vendor, spec.days_key)
 
-        if closed_active_changed or closed_time_changed:
-            from app.scheduler import cancel_task, schedule_task
+        new_active = new_settings.get(spec.active_key, old_active)
+        new_time = new_settings.get(spec.time_key, old_time)
+        new_days = new_settings.get(spec.days_key, old_days)
 
-            cancel_task(str(vendor.id) + "-closed")
+        changed = (
+            (old_active != new_active)
+            or (old_time != new_time)
+            or (old_days != new_days)
+        )
+        if not changed:
+            return
 
-            if new_settings.get("closed_scheduler_active", {}).get("value"):
-                time_value = new_settings.get("closed_scheduler", {}).get("value", "")
-                if ":" in time_value:
-                    hh, mm = time_value.split(":")
-                    schedule_task(
-                        str(vendor.id) + "-closed",
-                        int(hh),
-                        int(mm),
-                        self.closed_wrapper,
-                        new_settings.get("closed_scheduler_days", {}).get("value"),
-                        vendor=vendor,
-                    )
+        task_id = f"{vendor.id}-{spec.task_id_suffix}"
+        cancel_task(task_id)
 
-        # Auto email order scheduler
-        auto_email_changed = self.get_setting_value(
-            vendor, "auto_email_order"
-        ) != new_settings.get("auto_email_order", {}).get("value")
+        if new_active and isinstance(new_time, str) and ":" in new_time:
+            try:
+                hh, mm = new_time.split(":")
+                schedule_task(
+                    task_id, int(hh), int(mm), spec.callback, new_days, vendor=vendor
+                )
+            except ValueError:
+                logging.warning(
+                    "Invalid time format for %s: %r", spec.time_key, new_time
+                )
+
+    def _handle_auto_email_guard(self, vendor, new_settings: dict):
+        old_active = self.get_setting_value(vendor, "auto_email_order")
+        new_active = new_settings.get("auto_email_order", old_active)
+
+        if not new_active or new_active == old_active:
+            return
 
         with get_session() as db:
-            if (
-                new_settings.get("auto_email_order", {}).get("value")
-                and SettingRepository(db).get_value_by_key("smtp_address") == ""
-            ):
-                logging.warning("No SMTP server set")
-                # Revert to previous values if SMTP not configured
-                if "auto_email_order" in new_settings:
-                    new_settings["auto_email_order"]["value"] = self.get_setting_value(
-                        vendor, "auto_email_order"
-                    )
+            smtp_set = SettingRepository(db).get_value_by_key("smtp_address")
+
+        if not smtp_set:
+            logging.warning(
+                "Vendor %s: auto_email_order enabled but no SMTP server configured — reverting.",
+                vendor.id,
+            )
+            new_settings["auto_email_order"] = old_active
 
     def create_vendor(self, db, data) -> Vendor:
         vendor = Vendor(
@@ -419,4 +438,29 @@ class VendorService:
             event_manager.trigger_event(
                 "afterOrder@" + vendor.name,
                 {"order_id": order.id, "order": order.serialized},
+            )
+
+    def scan_wrapper(self, vendor):
+        logging.info("Scheduled menu scan running")
+        from app.event_manager import event_manager
+
+        days_ahead = self.get_setting_value(vendor, "menu_scan_days_ahead") or 1
+
+        with get_session() as db:
+            event_manager.trigger_event(
+                "beforeScan@" + vendor.name,
+                {"vendor_id": vendor.id, "vendor": vendor.serialized},
+            )
+
+            service = VendorServiceFactory.get_service(db, vendor.id)
+            for day_offset in range(1, days_ahead + 1):
+                scan_date = (date.today() + timedelta(days=day_offset)).strftime(
+                    "%Y-%m-%d"
+                )
+                logging.info("Scanning menu for %s (day +%d)", scan_date, day_offset)
+                service.scan(db, menu_date=scan_date)
+
+            event_manager.trigger_event(
+                "afterScan@" + vendor.name,
+                {"vendor_id": vendor.id, "vendor": vendor.serialized},
             )

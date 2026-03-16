@@ -273,6 +273,36 @@ class VendorSettingsRegistry:
         section="auto-order",
         visibility=Visibility.PRIVATE,
     )
+    MENU_SCAN_ACTIVE = BooleanSetting(
+        key="menu_scan_active",
+        labelKey="vendor.settings.menu_scan_active",
+        section="menu-scan",
+        visibility=Visibility.PRIVATE,
+        default_value=False,
+    )
+    MENU_SCAN_TIME = StringSetting(
+        key="menu_scan_time",
+        labelKey="vendor.settings.menu_scan_time",
+        section="menu-scan",
+        visibility=Visibility.PRIVATE,
+        default_value="",
+    )
+    MENU_SCAN_DAYS = ListSetting(
+        key="menu_scan_days",
+        labelKey="vendor.settings.menu_scan_days",
+        section="menu-scan",
+        visibility=Visibility.PRIVATE,
+        default_value=[],
+    )
+    MENU_SCAN_DAYS_AHEAD = IntegerSetting(
+        key="menu_scan_days_ahead",
+        labelKey="vendor.settings.menu_scan_days_ahead",
+        section="menu-scan",
+        visibility=Visibility.PRIVATE,
+        default_value=1,
+        min_value=1,
+        max_value=14,
+    )
 
     @classmethod
     def _iter(cls) -> Dict[str, BaseSetting]:

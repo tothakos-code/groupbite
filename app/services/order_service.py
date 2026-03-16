@@ -19,7 +19,6 @@ from app.repositories.vendor_repository import VendorRepository
 from app.scheduler import reschedule_task
 from app.services.mail_sender_service import EmailService
 from app.services.user_basket_service import UserBasketService
-from app.services.vendor_service import VendorService
 from app.socketio_singleton import SocketioSingleton
 
 
@@ -142,6 +141,7 @@ class OrderService:
         ok = self._change_state(db, order, OrderState.CLOSED)
         if not ok:
             logging.error("Order close error")
+        from app.services.vendor_service import VendorService
 
         order.order_fee = (
             trigger_data["order_fee"]

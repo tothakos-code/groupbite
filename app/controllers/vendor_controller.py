@@ -66,6 +66,11 @@ class VendorController:
         )
         bp.add_url_rule(
             "/<vendor_id>/settings",
+            view_func=self.handle_get_full_settings,
+            methods=["GET"],
+        )
+        bp.add_url_rule(
+            "/<vendor_id>/settings",
             view_func=self.handle_save_settings,
             methods=["PUT"],
         )
@@ -205,6 +210,14 @@ class VendorController:
     def handle_get_settings(self, db, vendor_id):
         vendor = self.vendor_service.get_vendor(db, vendor_id)
         return {"data": vendor.public_serialized}, 200
+
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_get_full_settings(self, db, vendor_id):
+        vendor = self.vendor_service.get_vendor(db, vendor_id)
+        return {"data": vendor.serialized}, 200
 
     @require_auth
     @require_admin

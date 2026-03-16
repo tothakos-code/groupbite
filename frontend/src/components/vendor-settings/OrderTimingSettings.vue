@@ -47,6 +47,45 @@
 
       <v-divider class="my-6" />
 
+      <div class="mb-6">
+        <div class="text-body-2 text-medium-emphasis mb-3">
+          Menü automatikus szinkronizálás ütemezése. A szinkronizálás a beállított
+          időpontban fut és a megadott számú napra előre tölti be a menüt. Hasznos
+          ha a forrás API csak bizonyos napokon (pl. hétfő reggel) érhető el a
+          következő heti adatokkal.
+        </div>
+        <DayScheduler
+          v-model:active="settings.menu_scan_active"
+          v-model:time="settings.menu_scan_time"
+          v-model:days="settings.menu_scan_days"
+          :active-label="$t('vendor.settings.menu_scan_active')"
+          active-icon="mdi-calendar-sync"
+          :time-label="$t('vendor.settings.menu_scan_time')"
+        />
+        <v-row class="mt-3">
+          <v-col
+            cols="12"
+            md="6"
+            lg="4"
+          >
+            <v-text-field
+              v-model.number="settings.menu_scan_days_ahead"
+              :label="$t('vendor.settings.menu_scan_days_ahead')"
+              :disabled="!settings.menu_scan_active"
+              type="number"
+              :rules="[(v) => (v >= 1 && v <= 14) || '1 és 14 közötti érték adható meg']"
+              prepend-icon="mdi-calendar-range"
+              variant="outlined"
+              density="comfortable"
+              hint="Pl. 7 = egy hétre előre (max. 14)"
+              persistent-hint
+            />
+          </v-col>
+        </v-row>
+      </div>
+
+      <v-divider class="my-6" />
+
       <!-- SMTP Warning Alert -->
       <v-alert
         v-if="!smtpStatus"

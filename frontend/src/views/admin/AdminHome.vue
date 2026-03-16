@@ -34,7 +34,7 @@
             <v-list-item
               v-bind="props"
               :active="isActive(item.path)"
-              :active-color="item.color"
+              :color="item.color"
               rounded="lg"
               class="nav-item"
               @click="navigate(item.path)"

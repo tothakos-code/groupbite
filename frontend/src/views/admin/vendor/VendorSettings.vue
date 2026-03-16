@@ -61,7 +61,7 @@
                     v-bind="props"
                     :value="section.id"
                     :active="activeSection === section.id"
-                    :active-color="section.color"
+                    :color="section.color"
                     rounded="lg"
                     class="nav-item"
                     @click="activeSection = section.id"
@@ -222,7 +222,7 @@ export default {
     async getSettings() {
       try {
         this.isLoading = true
-        const response = await this.vendorStore.fetchVendor(this.$route.params.id)
+        const response = await this.vendorStore.fetchVendorSettings(this.$route.params.id)
         this.vendor = response.data.data
         this.initializeNewSettings()
         this.originalVendor = JSON.parse(JSON.stringify(this.vendor))

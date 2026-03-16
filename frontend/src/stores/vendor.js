@@ -106,6 +106,18 @@ export const useVendorStore = defineStore("vendor", {
         this.isLoading = false;
       }
     },
+    async fetchVendorSettings(vendorId) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/vendor/${vendorId}/settings`);
+        return response
+      } catch (error) {
+        console.error("Failed to get vendor settings:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async fetchWebhooks(vendorId) {
       this.isLoading = true;
       try {

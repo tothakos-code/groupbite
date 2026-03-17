@@ -67,6 +67,7 @@ class UserService:
             return {"error": email_error}
         user = User(username=username, email=email, settings={}, password="")
         user_repo.save(user)
+        db.flush()
         logging.info(f"User {user.username} created!")
 
         session["user_id"] = user.id

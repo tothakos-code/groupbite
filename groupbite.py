@@ -36,6 +36,13 @@ def run():
         debug=False
     )
 
+@cli.command("init")
+def init():
+    """Generate VAPID keys, Fernet key, and SECRET_KEY; write them to .env."""
+    from app.vapid import main as vapid_main
+    vapid_main()
+
+
 @cli.command("migrate")
 def migrate():
     """Generate a new Alembic migration based on model changes."""

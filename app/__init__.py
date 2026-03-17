@@ -109,7 +109,7 @@ def create_app(config: Config = Config(), debug=False) -> Flask:
         )
         return response
 
-    application.config["SECRET_KEY"] = "secret!"
+    application.config["SECRET_KEY"] = getenv("SECRET_KEY", "secret!")
     application.config["SQLALCHEMY_DATABASE_URI"] = DB_URL
     application.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 

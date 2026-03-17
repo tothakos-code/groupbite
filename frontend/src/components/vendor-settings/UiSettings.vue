@@ -17,6 +17,13 @@
         prepend-icon="mdi-bell"
         hide-details
       />
+      <v-checkbox
+        v-model="settings.show_favourites"
+        color="primary"
+        :label="$t('vendor.settings.show_favourites')"
+        prepend-icon="mdi-star"
+        hide-details
+      />
     </v-card-text>
     <v-divider class="my-4" />
     Rendelés opciók engedélyezése

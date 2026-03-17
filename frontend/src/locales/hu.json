@@ -9,6 +9,7 @@
       "enable_email_order": "Email rendelés engedélyezése",
       "enable_manual_order": "Manuális rendelés engedélyezése",
       "show_notification_button": "Értesítési gomb megjelenítése",
+      "show_favourites": "Kedvencek engedélyezése",
       "closed_scheduler_active": "Időzített lezárás",
       "closure_scheduler_active": "Időzített figyelmeztetés lezárás elött",
       "closed_scheduler": "Rendelés automatikus lezárása (formátum: hh:mm)",

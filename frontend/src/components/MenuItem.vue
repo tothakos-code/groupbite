@@ -20,7 +20,7 @@
             </p>
           </div>
           <v-btn
-            v-if="auth.isLoggedIn"
+            v-if="auth.isLoggedIn && vendorStore.selectedVendor?.settings?.show_favourites !== false"
             :icon="isFavourite ? 'mdi-star' : 'mdi-star-outline'"
             :color="isFavourite ? 'warning' : 'default'"
             variant="text"

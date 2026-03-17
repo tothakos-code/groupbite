@@ -241,6 +241,7 @@ export default {
         enable_email_order:          { name: 'Email rendelés engedélyezése',               value: false },
         enable_manual_order:         { name: 'Manuális rendelés engedélyezése',            value: true  },
         show_notification_button:    { name: 'Értesítési gomb megjelenítése',              value: true  },
+        show_favourites:             { name: 'Kedvencek megjelenítése',                    value: true  },
       }
       Object.keys(defaults).forEach((key) => {
         if (!this.vendor.settings[key]) this.vendor.settings[key] = defaults[key]

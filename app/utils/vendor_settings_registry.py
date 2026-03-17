@@ -188,6 +188,13 @@ class VendorSettingsRegistry:
         visibility=Visibility.PUBLIC,
         default_value=True,
     )
+    SHOW_FAVOURITES = BooleanSetting(
+        key="show_favourites",
+        labelKey="vendor.settings.show_favourites",
+        section="ui",
+        visibility=Visibility.PUBLIC,
+        default_value=True,
+    )
     CLOSED_SCHEDULER_ACTIVE = BooleanSetting(
         key="closed_scheduler_active",
         labelKey="vendor.settings.closed_scheduler_active",

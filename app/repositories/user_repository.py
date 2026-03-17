@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.entities.order import Order
 from app.entities.user import User
@@ -11,7 +11,7 @@ class UserRepository:
         self.db = db
 
     def get_by_username(self, username):
-        stmt = select(User).where(User.username == username)
+        stmt = select(User).where(func.lower(User.username) == username.lower())
         return self.db.execute(stmt).scalars().first()
 
     def find_all(self, limit=None, offset=0):

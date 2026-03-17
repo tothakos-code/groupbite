@@ -36,7 +36,10 @@ export const useAuth = defineStore("user", {
         });
         return response;
       } catch (error) {
-        console.log("Error during login:" + error);
+        notify({
+          type: "warn",
+          text: error.response?.data?.error ?? "Sikertelen bejelentkezés.",
+        });
         this.isLoading = false;
         return error.response;
       }

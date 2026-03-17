@@ -40,7 +40,7 @@ class UserService:
             logging.error(
                 f"Error during login: {username} user does not exist, cannot log in."
             )
-            raise ValueError(f"{username} felhasználó nem létezik!")
+            raise ValueError("Hibás felhasználónév vagy jelszó.")
         session["user_id"] = user_to_login.id
 
         logging.info(f"User {user_to_login.username} logged in!")
@@ -86,7 +86,7 @@ class UserService:
             logging.info(f"{user.username} already  got a session!")
             return user
         else:
-            raise ValueError(f"{user_id} nincs bejelentkezve!")
+            raise ValueError("Nincs bejelentkezett felhasználó.")
 
     @staticmethod
     def get_users(db, args):

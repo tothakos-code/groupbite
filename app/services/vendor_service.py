@@ -199,6 +199,13 @@ class VendorService:
                 "menu_scan_days",
                 self.scan_wrapper,
             ),
+            _SchedulerSpec(
+                "favourite-notification",
+                "favourite_notification_active",
+                "favourite_notification_time",
+                "favourite_notification_days",
+                self.favourite_notification_wrapper,
+            ),
         ]
 
         for spec in specs:
@@ -432,13 +439,19 @@ class VendorService:
 
             socketio = SocketioSingleton.get_instance()
             socketio.emit("be_order_update", {"order": order.serialized})
-            NotificationService.send_vendor_notification(
-                vendor, order, NotificationType.REMINDER
-            )
+            include_favourite = bool(self.get_setting_value(vendor, "favourite_notification_on_order"))
+            NotificationService.send_order_notifications(db, vendor, order, include_favourite)
             event_manager.trigger_event(
                 "afterOrder@" + vendor.name,
                 {"order_id": order.id, "order": order.serialized},
             )
+
+    def favourite_notification_wrapper(self, vendor):
+        logging.info("Scheduled favourite notification running")
+        from app.services.favourite_service import FavouriteService
+
+        with get_session() as db:
+            FavouriteService.send_favourite_notifications(db, vendor)
 
     def scan_wrapper(self, vendor):
         logging.info("Scheduled menu scan running")

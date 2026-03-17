@@ -1,5 +1,6 @@
 from flask import Blueprint
 
+from app.controllers.favourite_controller import FavouriteController
 from app.controllers.item_controller import MenuItemController
 from app.controllers.main_controller import MainController
 from app.controllers.menu_controller import MenuController
@@ -10,6 +11,7 @@ from app.controllers.user_controller import UserController
 from app.controllers.vendor_controller import VendorController
 from app.controllers.webhook_controller import WebhookController
 from app.event_manager import event_manager
+from app.services.favourite_service import FavouriteService
 from app.services.menu_item_service import MenuItemService
 from app.services.menu_service import MenuService
 from app.services.order_service import OrderService
@@ -35,6 +37,7 @@ def register_blueprints(app):
     vendor_service = VendorService(order_service)
     setting_service = SettingService(vendor_service)
     webhook_service = WebhookService(event_manager)
+    favourite_service = FavouriteService()
 
     menu_item_ctrl = MenuItemController(menu_item_service)
     menu_ctrl = MenuController(menu_service)
@@ -44,6 +47,7 @@ def register_blueprints(app):
     vendor_ctrl = VendorController(vendor_service, webhook_service)
     setting_ctrl = SettingController(setting_service)
     webhook_ctrl = WebhookController(webhook_service)
+    favourite_ctrl = FavouriteController(favourite_service)
     main_ctrl = MainController()
 
     app.register_blueprint(menu_item_ctrl.blueprint)
@@ -54,4 +58,5 @@ def register_blueprints(app):
     app.register_blueprint(vendor_ctrl.blueprint)
     app.register_blueprint(setting_ctrl.blueprint)
     app.register_blueprint(webhook_ctrl.blueprint)
+    app.register_blueprint(favourite_ctrl.blueprint)
     app.register_blueprint(main_ctrl.blueprint)

@@ -132,7 +132,7 @@ class VendorController:
             Notification(
                 vendor_id=vendor_id,
                 user_id=user_id,
-                notification_type=NotificationType(notification_type),
+                notification_types=[NotificationType(notification_type)],
                 endpoint=notification_json["endpoint"],
                 p256dh=notification_json["keys"]["p256dh"],
                 auth=notification_json["keys"]["auth"],
@@ -150,11 +150,7 @@ class VendorController:
     def handle_notification_unsubscribe(self, db, vendor_id, notification_type):
         # todo: Refactor after Notification Service
         user_id = session.get("user_id")
-        notifications = Notification.find_by_vendor_id_user_id(
-            vendor_id, user_id, NotificationType(notification_type)
-        )
-        for noti in notifications:
-            noti.delete()
+        Notification.remove_type_for_user(vendor_id, user_id, NotificationType(notification_type))
         socketio.emit(
             "be_user_update",
             UserRepository(db).get_by_id(user_id).serialized,
@@ -169,9 +165,7 @@ class VendorController:
         endpoint = request.json.get("endpoint")
         if not endpoint:
             return {"error": "endpoint required"}, 400
-        notification = Notification.find_by_pk(vendor_id, user_id, endpoint)
-        if notification:
-            notification.delete()
+        Notification.remove_type_for_device(vendor_id, user_id, endpoint, NotificationType(notification_type))
         socketio.emit(
             "be_user_update",
             UserRepository(db).get_by_id(user_id).serialized,

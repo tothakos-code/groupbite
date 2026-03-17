@@ -303,6 +303,34 @@ class VendorSettingsRegistry:
         min_value=1,
         max_value=14,
     )
+    FAVOURITE_NOTIFICATION_ON_ORDER = BooleanSetting(
+        key="favourite_notification_on_order",
+        labelKey="vendor.settings.favourite_notification_on_order",
+        section="favourite",
+        visibility=Visibility.PRIVATE,
+        default_value=True,
+    )
+    FAVOURITE_NOTIFICATION_ACTIVE = BooleanSetting(
+        key="favourite_notification_active",
+        labelKey="vendor.settings.favourite_notification_active",
+        section="favourite",
+        visibility=Visibility.PRIVATE,
+        default_value=False,
+    )
+    FAVOURITE_NOTIFICATION_TIME = StringSetting(
+        key="favourite_notification_time",
+        labelKey="vendor.settings.favourite_notification_time",
+        section="favourite",
+        visibility=Visibility.PRIVATE,
+        default_value="",
+    )
+    FAVOURITE_NOTIFICATION_DAYS = ListSetting(
+        key="favourite_notification_days",
+        labelKey="vendor.settings.favourite_notification_days",
+        section="favourite",
+        visibility=Visibility.PRIVATE,
+        default_value=[],
+    )
 
     @classmethod
     def _iter(cls) -> Dict[str, BaseSetting]:

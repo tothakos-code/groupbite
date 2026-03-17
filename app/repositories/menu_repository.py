@@ -30,6 +30,15 @@ class MenuRepository:
 
         return self.db.execute(stmt).scalars().all()
 
+    def find_upcoming_by_vendor_id(self, vendor_id, from_date):
+        """Returns all active menus that have not yet expired (to_date >= from_date or open-ended)."""
+        stmt = select(Menu).where(
+            Menu.active,
+            Menu.vendor_id == vendor_id,
+            or_(Menu.to_date >= from_date, Menu.to_date == None),
+        )
+        return self.db.execute(stmt).scalars().all()
+
     def get_by_id(self, menu_id):
         stmt = select(Menu).where(Menu.id == menu_id)
 

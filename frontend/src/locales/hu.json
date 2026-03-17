@@ -22,7 +22,11 @@
       "menu_scan_active": "Menü automatikus szinkronizálás engedélyezése",
       "menu_scan_time": "Szinkronizálás időpontja (formátum: hh:mm)",
       "menu_scan_days": "Szinkronizálás napjai",
-      "menu_scan_days_ahead": "Hány napra előre szinkronizáljon"
+      "menu_scan_days_ahead": "Hány napra előre szinkronizáljon",
+      "favourite_notification_on_order": "Kedvenc értesítés küldése rendelés indításakor",
+      "favourite_notification_active": "Kedvenc értesítés időzítve",
+      "favourite_notification_time": "Kedvenc értesítés időpontja (formátum: hh:mm)",
+      "favourite_notification_days": "Kedvenc értesítés napjai"
     }
   }
 }

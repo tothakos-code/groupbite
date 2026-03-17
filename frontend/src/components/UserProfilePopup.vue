@@ -19,6 +19,47 @@
         aria-describedby="basic-addon1"
       >
     </div>
+
+    <hr>
+    <h6 class="mt-3 mb-2">
+      <v-icon
+        size="small"
+        color="warning"
+      >
+        mdi-star
+      </v-icon>
+      Kedvencek
+    </h6>
+    <div
+      v-if="groupedFavourites.length === 0"
+      class="text-medium-emphasis small"
+    >
+      Még nincs kedvenc. A menün a ★ ikonra kattintva adhatsz hozzá.
+    </div>
+    <div
+      v-for="group in groupedFavourites"
+      :key="group.vendorId"
+      class="mb-3"
+    >
+      <div class="fw-bold small mb-1">
+        {{ group.vendorName }}
+      </div>
+      <div
+        v-for="fav in group.items"
+        :key="fav.id"
+        class="d-flex align-items-center justify-content-between mb-1"
+      >
+        <span class="small">{{ fav.item_name }}</span>
+        <v-btn
+          icon="mdi-close"
+          size="x-small"
+          variant="text"
+          color="error"
+          @click="removeFavourite(group.vendorId, fav.id)"
+        />
+      </div>
+    </div>
+
     <!--
     <span class="input-group-radio">Felület szine:</span>
     <div class="d-flex justify-content-around m-2">
@@ -88,6 +129,8 @@
 <script>
 import Popup from "./Popup.vue";
 import { useAuth } from "@/stores/auth";
+import { useFavouritesStore } from "@/stores/favourites";
+import { useVendorStore } from "@/stores/vendor";
 
 export default {
   name: "UserProfilePopup",
@@ -100,17 +143,51 @@ export default {
   emits: ["cancel", "confirm"],
   setup() {
     const auth = useAuth();
-    return { auth };
+    const favouritesStore = useFavouritesStore();
+    const vendorStore = useVendorStore();
+    return { auth, favouritesStore, vendorStore };
   },
   data() {
     return {
       username: this.auth.user.username,
       theme: "",
-      ui_color: ""
+      ui_color: "",
+      allFavourites: [],
     }
   },
-
+  computed: {
+    groupedFavourites() {
+      const groups = {};
+      for (const fav of this.allFavourites) {
+        if (!groups[fav.vendor_id]) {
+          const vendor = this.vendorStore.vendors.find(v => v.id === fav.vendor_id);
+          groups[fav.vendor_id] = {
+            vendorId: fav.vendor_id,
+            vendorName: vendor?.name ?? fav.vendor_id,
+            items: [],
+          };
+        }
+        groups[fav.vendor_id].items.push(fav);
+      }
+      return Object.values(groups);
+    },
+  },
+  watch: {
+    show(val) {
+      if (val) this.loadAllFavourites();
+    },
+  },
+  mounted() {
+    this.loadAllFavourites();
+  },
   methods: {
+    async loadAllFavourites() {
+      this.allFavourites = await this.favouritesStore.fetchAllFavourites();
+    },
+    async removeFavourite(vendorId, favouriteId) {
+      await this.favouritesStore.removeFavourite(vendorId, favouriteId);
+      this.allFavourites = this.allFavourites.filter(f => f.id !== favouriteId);
+    },
     updateUser: function() {
       let user_update_obj = {};
       user_update_obj.id = this.auth.user.id

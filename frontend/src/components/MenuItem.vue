@@ -19,6 +19,15 @@
               {{ item.description }}
             </p>
           </div>
+          <v-btn
+            v-if="auth.isLoggedIn"
+            :icon="isFavourite ? 'mdi-star' : 'mdi-star-outline'"
+            :color="isFavourite ? 'warning' : 'default'"
+            variant="text"
+            size="small"
+            class="ms-1"
+            @click.stop="toggleFavourite"
+          />
           <v-chip
             v-if="item.category"
             size="small"
@@ -144,6 +153,8 @@
 <script>
 import { useAuth } from "@/stores/auth";
 import { useOrderStore } from "@/stores/order";
+import { useFavouritesStore } from "@/stores/favourites";
+import { useVendorStore } from "@/stores/vendor";
 
 export default {
   name: "MenuItem",
@@ -157,10 +168,19 @@ export default {
   setup() {
     const auth = useAuth();
     const order = useOrderStore();
+    const favourites = useFavouritesStore();
+    const vendorStore = useVendorStore();
     return {
       auth,
-      order
+      order,
+      favourites,
+      vendorStore,
     }
+  },
+  computed: {
+    isFavourite() {
+      return this.favourites.isMatched(this.item.id);
+    },
   },
   methods: {
     handleOrder(itemId, sizeId) {
@@ -168,6 +188,20 @@ export default {
 
       // Optional: Show a brief success feedback
       this.$emit('item-added', { itemId, sizeId });
+    },
+
+    async toggleFavourite() {
+      const vendorId = this.vendorStore.selectedVendor?.id;
+      if (!vendorId) return;
+      if (this.isFavourite) {
+        const favouriteId = this.favourites.getMatchedFavouriteId(this.item.id);
+        await this.favourites.removeFavourite(vendorId, favouriteId);
+      } else {
+        await this.favourites.addFavourite(vendorId, this.item.name);
+        const menuDate = this.order.order?.date_of_order ?? null;
+        await this.favourites.fetchMatches(vendorId, menuDate);
+        await this.favourites.ensureFavouriteNotificationsEnabled(vendorId);
+      }
     },
 
     formatPrice(price) {

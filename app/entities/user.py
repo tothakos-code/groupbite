@@ -39,6 +39,7 @@ class User(Base):
     orders: Mapped[List["UserBasket"]] = relationship(back_populates="user")
     placed_orders: Mapped[List["Order"]] = relationship(back_populates="ordered_by")
     notifications: Mapped[List["Notification"]] = relationship(back_populates="user")
+    favourites: Mapped[List["UserFavourite"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"User<id={self.id},username={self.username}>"

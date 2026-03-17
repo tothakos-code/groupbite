@@ -7,6 +7,7 @@ import { useOrderStore } from "@/stores/order"
 import { useMenuStore } from "@/stores/menu"
 import { useVendorStore } from "@/stores/vendor"
 import { useAuth } from "@/stores/auth"
+import { useFavouritesStore } from "@/stores/favourites"
 
 export const state = reactive({
   connected: false,
@@ -55,6 +56,13 @@ socket.on("be_menu_update", function(data) {
     menuStore.menus = data.menus;
   }
 
+  const auth = useAuth();
+  const vendorStore = useVendorStore();
+  const orderStore = useOrderStore();
+  if (auth.isLoggedIn && vendorStore.selectedVendor) {
+    const menuDate = orderStore.order?.date_of_order ?? null;
+    useFavouritesStore().fetchMatches(vendorStore.selectedVendor.id, menuDate);
+  }
 });
 
 socket.on("Refresh!", function() {

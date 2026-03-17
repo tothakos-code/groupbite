@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from flask import Blueprint, request, session
 
 from app.repositories.user_repository import UserRepository
+from app.services.favourite_service import FavouriteService
 from app.services.mail_sender_service import EmailService
 from app.services.user_service import UserService
 from app.socketio_singleton import SocketioSingleton
@@ -55,6 +56,9 @@ class UserController:
         bp.add_url_rule("/", view_func=self.handle_get_users, methods=["GET"])
         bp.add_url_rule(
             "/<user_id>/statistics", view_func=self.user_statistics, methods=["GET"]
+        )
+        bp.add_url_rule(
+            "/favourites", view_func=self.handle_get_all_favourites, methods=["GET"]
         )
         bp.add_url_rule(
             "/<user_id>/spending-trends",
@@ -138,6 +142,13 @@ class UserController:
     def handle_user_order_history(self, db, user_id):
         orders = self.user_service.get_user_history(db, user_id, request.args)
         return {"data": orders}, 200
+
+    @require_auth
+    @handle_request
+    def handle_get_all_favourites(self, db):
+        user_id = session.get("user_id")
+        favourites = FavouriteService.get_all_favourites(db, user_id)
+        return {"data": [f.serialized for f in favourites]}, 200
 
     @require_auth
     @require_admin

@@ -27,6 +27,18 @@ def create_database_migration(app):
         alembic_cfg.set_main_option("sqlalchemy.url", app.config["SQLALCHEMY_DATABASE_URI"])
         command.revision(alembic_cfg, message="auto_migration", autogenerate=True)
 
+def downgrade_database_migration(app, revision: str = "-1"):
+    """Downgrade the database by the given revision (default: one step back)."""
+    with app.app_context():
+        logging.info(f"Downgrading database to revision: {revision}...")
+        alembic_cfg = Config()
+        alembic_cfg.set_main_option("script_location", "db/migrations")
+        alembic_cfg.set_main_option("config_file_name", "alembic.ini")
+        alembic_cfg.set_main_option("sqlalchemy.url", app.config["SQLALCHEMY_DATABASE_URI"])
+        command.downgrade(alembic_cfg, revision)
+        logging.info("Database downgrade complete.")
+
+
 def migrate_database(app):
     """Automatically applies database migrations on startup."""
     with app.app_context():

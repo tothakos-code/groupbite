@@ -65,4 +65,5 @@ class Order(Base):
             "order_time": self.order_time,
             "order_fee": self.order_fee,
             "total_price": self.total_price,
+            "item_count": len(self.items),
         }

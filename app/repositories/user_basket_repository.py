@@ -121,3 +121,8 @@ class UserBasketRepository:
             UserBasket.order_id == order_id, UserBasket.user_id == user_id
         )
         self.db.execute(stmt).scalars().all()
+
+    def clear_order_items(self, order_id):
+        stmt = delete(UserBasket).where(UserBasket.order_id == order_id)
+        self.db.execute(stmt)
+        self.db.expire_all()

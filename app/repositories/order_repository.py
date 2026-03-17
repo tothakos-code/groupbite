@@ -85,6 +85,10 @@ class OrderRepository:
         self.db.flush()
         return order
 
+    def delete(self, order: Order):
+        self.db.delete(order)
+        self.db.flush()
+
     def get_daily_sums(self, start_date: date, end_date: date, vendors_ids: list):
         daily_sums_query = (
             select(

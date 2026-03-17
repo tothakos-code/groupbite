@@ -265,6 +265,18 @@ export const useOrderStore = defineStore("order", {
         return error.response
       }
     },
+    async delete(orderId) {
+      this.isLoading = true;
+      try {
+        const response = await axios.delete(`/api/order/${orderId}`);
+        return response
+      } catch (error) {
+        console.error("Failed to delete order:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async sendOrderEmail() {
       try {
         const response = axios.post(`/api/order/${this.order.id}/send-email`, { "data": {

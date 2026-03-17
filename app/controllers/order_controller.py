@@ -85,6 +85,9 @@ class OrderController:
         bp.add_url_rule(
             "/statistics", view_func=self.handle_get_statistics, methods=["GET"]
         )
+        bp.add_url_rule(
+            "/<int:order_id>", view_func=self.handle_delete_order, methods=["DELETE"]
+        )
 
     @handle_request
     def handle_order_history(self, db):
@@ -248,6 +251,14 @@ class OrderController:
             {"order": order.serialized},
             to=f"{order.vendor_id}@{order.date_of_order}",
         )
+        return {"msg": "OK"}, 200
+
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_delete_order(self, db, order_id):
+        self.order_service.delete_order(db, order_id)
         return {"msg": "OK"}, 200
 
     @require_auth

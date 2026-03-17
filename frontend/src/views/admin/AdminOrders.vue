@@ -689,15 +689,12 @@ const canDeleteOrder = (order) => {
     return false
   }
 
-  // Check if order is older than 1 week
-  const orderDate = new Date(order.date_of_order)
+  const isEmpty = order.item_count === 0
   const oneWeekAgo = new Date()
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  const isOld = new Date(order.date_of_order) < oneWeekAgo
 
-  // TODO: Check if order is empty (no items)
-  const isEmpty = false // This should be determined based on order items
-
-  return isEmpty || orderDate < oneWeekAgo
+  return isEmpty || isOld
 }
 
 const confirmDeleteOrder = (order) => {
@@ -707,15 +704,15 @@ const confirmDeleteOrder = (order) => {
 
 const deleteOrder = async () => {
   try {
-    // TODO: Implement actual delete API call
-    // await orderStore.delete(selectedOrder.value.id)
-
-    console.log('Delete order:', selectedOrder.value.id)
-    showSnackbar(`#${selectedOrder.value.id} rendelés törlése - még nem implementált`, 'warning')
-
-    deleteDialog.value = false
-    selectedOrder.value = null
-    // refreshOrdersList()
+    const response = await orderStore.delete(selectedOrder.value.id)
+    if (response.status === 200) {
+      showSnackbar(`#${selectedOrder.value.id} rendelés sikeresen törölve`, 'success')
+      deleteDialog.value = false
+      selectedOrder.value = null
+      refreshOrdersList()
+    } else {
+      showSnackbar('Hiba történt a rendelés törlése során', 'error')
+    }
   } catch (error) {
     showSnackbar('Hiba történt a rendelés törlése során', 'error')
     console.error('Error deleting order:', error)

@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import date, timedelta
 from typing import Optional
 
 from dateutil.relativedelta import relativedelta
@@ -123,6 +123,24 @@ class OrderService:
             result[user_id_str]["items"].append(item_data)
 
         return result
+
+    @staticmethod
+    def delete_order(db, order_id: int):
+        from app.repositories.user_basket_repository import UserBasketRepository
+        order_repo = OrderRepository(db)
+        user_basket_repo = UserBasketRepository(db)
+        order = order_repo.get_by_id(order_id)
+        if not order:
+            raise ValueError(f"Order {order_id} not found")
+        if order.state_id == OrderState.CLOSED:
+            raise ValueError("Closed orders cannot be deleted")
+        if order.order_items:
+            raise ValueError("Order has order items but is not closed — data inconsistency")
+        if order.items and order.date_of_order >= date.today() - timedelta(weeks=1):
+            raise ValueError("Cannot delete a non-empty order less than a week old")
+        user_basket_repo.clear_order_items(order_id)
+        db.flush()
+        order_repo.delete(order)
 
     def close_order(self, db, order_id):
         order_repo = OrderRepository(db)

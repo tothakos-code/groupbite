@@ -14,9 +14,15 @@ module.exports = defineConfig({
   },
   productionSourceMap: true,
   lintOnSave: true,
+  devServer: {
+    host: "0.0.0.0",
+    port: 8080,
+    historyApiFallback: true,
+    allowedHosts: "all",
+  },
   configureWebpack: {
     devServer: {
-      historyApiFallback: true
+      historyApiFallback: true,
     },
     mode: 'development',
     optimization: {

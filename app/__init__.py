@@ -32,12 +32,17 @@ LOG_FILE = "logs/groupbite.log"
 
 def initialize_logging():
     makedirs(path.dirname(LOG_FILE), exist_ok=True)
-    handler = TimedRotatingFileHandler(
+    formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s")
+
+    file_handler = TimedRotatingFileHandler(
         LOG_FILE, when="midnight", interval=1, backupCount=31, encoding="utf-8"
     )
-    formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s")
-    handler.setFormatter(formatter)
-    logging.basicConfig(handlers=[handler], level=logging.NOTSET)
+    file_handler.setFormatter(formatter)
+
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+
+    logging.basicConfig(handlers=[file_handler, stream_handler], level=logging.NOTSET)
 
     class LoggerWriter:
         def __init__(self, level):

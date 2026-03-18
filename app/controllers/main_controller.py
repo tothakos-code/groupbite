@@ -13,6 +13,7 @@ dotenv_path = Path(".env")
 load_dotenv(dotenv_path=dotenv_path)
 APP_ENV = getenv("APP_ENV")
 VAPID_PUBLIC_KEY = getenv("VAPID_PUBLIC_KEY")
+FRONTEND_DEV_URL = getenv("FRONTEND_DEV_URL", "http://127.0.0.1:8080")
 
 socketio = SocketioSingleton.get_instance()
 
@@ -43,7 +44,7 @@ class MainController:
             return send_from_directory(self.blueprint.static_folder, path)
 
         if APP_ENV == "development":
-            upstream_url = f"http://127.0.0.1:8080/{path}"
+            upstream_url = f"{FRONTEND_DEV_URL}/{path}"
             r = requests.get(
                 upstream_url,
                 params=request.args,

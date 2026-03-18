@@ -26,7 +26,6 @@ class UserBasketRepository:
     def delete(self, basket_item):
         self.db.delete(basket_item)
         self.db.flush()
-        self.db.expunge(basket_item)
 
     def add(self, basket_item):
         self.db.add(basket_item)
@@ -120,7 +119,7 @@ class UserBasketRepository:
         stmt = delete(UserBasket).where(
             UserBasket.order_id == order_id, UserBasket.user_id == user_id
         )
-        self.db.execute(stmt).scalars().all()
+        self.db.execute(stmt)
 
     def clear_order_items(self, order_id):
         stmt = delete(UserBasket).where(UserBasket.order_id == order_id)

@@ -119,7 +119,10 @@
 
               <!-- Message Content -->
               <v-card-text class="pt-0 pb-3">
-                <div class="text-body-2 notification-message" style="word-break: break-word; white-space: normal;">
+                <div
+                  class="text-body-2 notification-message"
+                  style="word-break: break-word; white-space: normal;"
+                >
                   {{ props.item.text }}
                 </div>
               </v-card-text>

@@ -193,7 +193,7 @@ class OrderService:
         size_repo = SizeRepository(db)
         order = order_repo.get_by_id(order_id)
         user = user_repo.get_by_id(user_id)
-        item = menu_item_repo.get_by_id(order_id)
+        item = menu_item_repo.get_by_id(item_id)
         size = size_repo.get_by_id(size_id)
         if not order:
             return {"error": "Order not found"}, 400
@@ -226,7 +226,7 @@ class OrderService:
         size_repo = SizeRepository(db)
         order = order_repo.get_by_id(order_id)
         user = user_repo.get_by_id(user_id)
-        item = menu_item_repo.get_by_id(order_id)
+        item = menu_item_repo.get_by_id(item_id)
         size = size_repo.get_by_id(size_id)
         if not order:
             return {"error": "Order not found"}, 400

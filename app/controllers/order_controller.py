@@ -144,6 +144,7 @@ class OrderController:
             {
                 "order": order.serialized,
             },
+            to=f"{order.vendor_id}@{order.date_of_order}",
         )
         return {"msg": "OK"}, 200
 
@@ -158,7 +159,7 @@ class OrderController:
         )
         socketio.emit(
             "be_order_update",
-            {"basket": order.get_order_items()},
+            {"basket": self.order_service.get_order_items(order)},
             to=f"{order.vendor_id}@{order.date_of_order}",
         )
         socketio.emit(
@@ -178,6 +179,7 @@ class OrderController:
         db.commit()
         if basket_item:
             order = basket_item.order
+            db.expire(order, ["items"])
             logging.info(basket_item)
             logging.info(basket_item.order)
             socketio.emit(
@@ -204,6 +206,7 @@ class OrderController:
         self.order_service.remove_from_basket(db, order_id, user_id, item_id, size_id)
         db.commit()
         order = self.order_service.get_order_by_id(db, order_id)
+        db.expire(order, ["items"])
         socketio.emit(
             "be_order_update",
             {"basket": self.order_service.get_order_items(order)},
@@ -226,6 +229,7 @@ class OrderController:
         self.user_basket_service.clear_items(db, user_id, order_id)
         db.commit()
         order = self.order_service.get_order_by_id(db, order_id)
+        db.expire(order, ["items"])
         socketio.emit(
             "be_order_update",
             {"basket": self.order_service.get_order_items(order)},

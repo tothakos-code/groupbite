@@ -59,7 +59,7 @@ class UserBasketService:
     @staticmethod
     def clear_items(db, user_id, order_id):
         basket_repo = UserBasketRepository(db)
-        basket_repo.clear_items(order_id, user_id)
+        basket_repo.clear_items(user_id, order_id)
 
     @staticmethod
     def delete(db, basket_item):

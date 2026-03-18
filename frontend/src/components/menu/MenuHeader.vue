@@ -80,9 +80,9 @@
 
         <TransferPopup
           v-if="vendorSettings.enable_email_order || vendorSettings.enable_full_automatic_order || vendorSettings.enable_manual_order"
-          :enable_email_order="vendorSettings.enable_email_order"
-          :enable_full_automatic_order="vendorSettings.enable_full_automatic_order"
-          :enable_manual_order="vendorSettings.enable_manual_order"
+          :enable-email-order="vendorSettings.enable_email_order"
+          :enable-full-automatic-order="vendorSettings.enable_full_automatic_order"
+          :enable-manual-order="vendorSettings.enable_manual_order"
         />
       </div>
     </v-col>

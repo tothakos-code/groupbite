@@ -161,10 +161,10 @@ export default {
   props: {
     item: {
       type: Object,
-      required: true,
       default: () => ({})
     },
   },
+  emits: ['item-added'],
   setup() {
     const auth = useAuth();
     const order = useOrderStore();

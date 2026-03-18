@@ -27,9 +27,9 @@
             max-width="280"
             location="top"
           >
-            <template #activator="{ props }">
+            <template #activator="{ props: activatorProps }">
               <div
-                v-bind="props"
+                v-bind="activatorProps"
                 class="d-flex align-center"
               >
                 <v-icon
@@ -62,9 +62,9 @@
             max-width="280"
             location="top"
           >
-            <template #activator="{ props }">
+            <template #activator="{ props: activatorProps }">
               <v-btn
-                v-bind="props"
+                v-bind="activatorProps"
                 variant="outlined"
                 color="error"
                 size="small"
@@ -112,9 +112,9 @@
             max-width="280"
             location="top"
           >
-            <template #activator="{ props }">
+            <template #activator="{ props: activatorProps }">
               <v-list-item-title
-                v-bind="props"
+                v-bind="activatorProps"
                 class="text-truncate"
               >
                 {{ item.item_name }}

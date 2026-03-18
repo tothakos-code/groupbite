@@ -143,20 +143,20 @@
               <div :key="activeSection">
                 <GeneralSettings
                   v-if="activeSection === 'general'"
-                  :settings="vendor.settings"
+                  v-model:settings="vendor.settings"
                 />
                 <UiSettings
                   v-else-if="activeSection === 'ui'"
-                  :settings="vendor.settings"
+                  v-model:settings="vendor.settings"
                 />
                 <OrderTimingSettings
                   v-else-if="activeSection === 'timing'"
-                  :settings="vendor.settings"
+                  v-model:settings="vendor.settings"
                   :smtp-status="smtpStatus"
                 />
                 <AutoEmailSettings
                   v-else-if="activeSection === 'email'"
-                  :settings="vendor.settings"
+                  v-model:settings="vendor.settings"
                 />
                 <WebhookSettings
                   v-else-if="activeSection === 'webhook'"

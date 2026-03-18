@@ -11,14 +11,14 @@
     </v-card-title>
     <v-card-text class="pa-4">
       <v-checkbox
-        v-model="settings.show_notification_button"
+        v-model="localSettings.show_notification_button"
         color="primary"
         :label="$t('vendor.settings.show_notification_button')"
         prepend-icon="mdi-bell"
         hide-details
       />
       <v-checkbox
-        v-model="settings.show_favourites"
+        v-model="localSettings.show_favourites"
         color="primary"
         :label="$t('vendor.settings.show_favourites')"
         prepend-icon="mdi-star"
@@ -33,7 +33,7 @@
         md="4"
       >
         <v-checkbox
-          v-model="settings.enable_full_automatic_order"
+          v-model="localSettings.enable_full_automatic_order"
           color="success"
           :label="$t('vendor.settings.enable_full_automatic_order')"
           prepend-icon="mdi-robot"
@@ -45,7 +45,7 @@
         md="4"
       >
         <v-checkbox
-          v-model="settings.enable_email_order"
+          v-model="localSettings.enable_email_order"
           color="info"
           :label="$t('vendor.settings.enable_email_order')"
           prepend-icon="mdi-email"
@@ -57,7 +57,7 @@
         md="4"
       >
         <v-checkbox
-          v-model="settings.enable_manual_order"
+          v-model="localSettings.enable_manual_order"
           color="warning"
           :label="$t('vendor.settings.enable_manual_order')"
           prepend-icon="mdi-hand-back-right"
@@ -75,6 +75,31 @@ export default {
     settings: {
       type: Object,
       required: true,
+    },
+  },
+  emits: ['update:settings'],
+  data() {
+    return {
+      // Deep clone so we own the copy and don't mutate the prop directly.
+      // Spread ({...this.settings}) would only shallow-copy, leaving nested
+      // arrays/objects as shared references.
+      localSettings: JSON.parse(JSON.stringify(this.settings)),
+    }
+  },
+  watch: {
+    localSettings: {
+      deep: true,
+      handler(v) {
+        this.$emit('update:settings', JSON.parse(JSON.stringify(v))) // deep clone before emitting
+      },
+    },
+    settings: {
+      deep: true,
+      handler(v) {
+        if (JSON.stringify(v) !== JSON.stringify(this.localSettings)) {
+          this.localSettings = JSON.parse(JSON.stringify(v))
+        }
+      },
     },
   },
 }

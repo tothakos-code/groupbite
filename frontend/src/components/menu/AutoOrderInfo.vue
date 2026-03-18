@@ -1,9 +1,9 @@
 <template>
   <div class="d-flex align-items-center gap-2">
     <v-tooltip location="bottom">
-      <template #activator="{ props }">
+      <template #activator="{ props: activatorProps }">
         <span
-          v-bind="props"
+          v-bind="activatorProps"
           class="text-button font-weight-bold"
         >
           Határidő: {{ deadline }}
@@ -13,9 +13,9 @@
     </v-tooltip>
 
     <v-tooltip location="bottom">
-      <template #activator="{ props }">
+      <template #activator="{ props: activatorProps }">
         <v-icon
-          v-bind="props"
+          v-bind="activatorProps"
           :color="isConditionMet ? 'success' : 'warning'"
           :icon="isConditionMet ? 'mdi-clock-check-outline' : 'mdi-clock-alert-outline'"
         />

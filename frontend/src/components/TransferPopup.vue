@@ -43,7 +43,7 @@
               class="d-flex flex-column align-center justify-center py-6 px-3 text-center cursor-pointer hover:shadow-md transition"
               color="success"
               variant="elevated"
-              :disabled="!enable_full_automatic_order"
+              :disabled="!enableFullAutomaticOrder"
               @click="startFullAutoOrder"
             >
               <v-icon size="48">
@@ -68,7 +68,7 @@
               color="info"
               variant="elevated"
               :loading="emailSending"
-              :disabled="!enable_email_order"
+              :disabled="!enableEmailOrder"
               @click="confirmSemiAuto = true; optionDialogVisible = false"
             >
               <v-icon size="48">
@@ -92,7 +92,7 @@
               class="fill-height d-flex flex-column align-center justify-center py-6 px-3 text-center cursor-pointer hover:shadow-md transition"
               color="primary"
               variant="elevated"
-              :disabled="!enable_manual_order"
+              :disabled="!enableManualOrder"
               @click="startManualOrder"
             >
               <v-icon size="48">
@@ -471,15 +471,15 @@ import { unref } from "vue";
 export default {
   name: "TransferPopup",
   props: {
-    enable_email_order: {
+    enableEmailOrder: {
       type: Boolean,
       default: false
     },
-    enable_manual_order: {
+    enableManualOrder: {
       type: Boolean,
       default: false
     },
-    enable_full_automatic_order: {
+    enableFullAutomaticOrder: {
       type: Boolean,
       default: false
     },

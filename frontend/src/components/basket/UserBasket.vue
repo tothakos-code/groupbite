@@ -91,9 +91,9 @@
               max-width="280"
               :close-on-content-click="true"
             >
-              <template #activator="{ props }">
+              <template #activator="{ props: activatorProps }">
                 <v-list-item-title
-                  v-bind="props"
+                  v-bind="activatorProps"
                   class="text-body-2"
                 >
                   {{ item.item_name }}

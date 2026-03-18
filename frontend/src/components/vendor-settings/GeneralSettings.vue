@@ -16,7 +16,7 @@
           md="6"
         >
           <v-text-field
-            v-model="settings.title"
+            v-model="localSettings.title"
             :label="$t('vendor.settings.title')"
             prepend-icon="mdi-format-title"
             variant="outlined"
@@ -29,7 +29,7 @@
           md="6"
         >
           <v-text-field
-            v-model="settings.link"
+            v-model="localSettings.link"
             :label="$t('vendor.settings.link')"
             prepend-icon="mdi-link"
             variant="outlined"
@@ -44,7 +44,7 @@
           md="6"
         >
           <v-text-field
-            v-model="settings.comment_example"
+            v-model="localSettings.comment_example"
             :label="$t('vendor.settings.comment_example')"
             prepend-icon="mdi-comment-text"
             variant="outlined"
@@ -56,7 +56,7 @@
           md="6"
         >
           <v-text-field
-            v-model.number="settings.transport_price"
+            v-model.number="localSettings.transport_price"
             :label="$t('vendor.settings.transport_price')"
             prepend-icon="mdi-currency-eur"
             :rules="transportPriceRules"
@@ -81,8 +81,13 @@ export default {
       required: true,
     },
   },
+  emits: ['update:settings'],
   data() {
     return {
+      // Deep clone so we own the copy and don't mutate the prop directly.
+      // Spread ({...this.settings}) would only shallow-copy, leaving nested
+      // arrays/objects as shared references.
+      localSettings: JSON.parse(JSON.stringify(this.settings)),
       transportPriceRules: [
         (v) =>
           (v !== null && v !== undefined && v !== '') ||
@@ -91,6 +96,22 @@ export default {
         (v) => /^\d+$/.test(v) || 'Csak szám lehetséges',
       ],
     }
+  },
+  watch: {
+    localSettings: {
+      deep: true,
+      handler(v) {
+        this.$emit('update:settings', JSON.parse(JSON.stringify(v))) // deep clone before emitting
+      },
+    },
+    settings: {
+      deep: true,
+      handler(v) {
+        if (JSON.stringify(v) !== JSON.stringify(this.localSettings)) {
+          this.localSettings = JSON.parse(JSON.stringify(v))
+        }
+      },
+    },
   },
 }
 </script>

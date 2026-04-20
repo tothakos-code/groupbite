@@ -17,6 +17,7 @@
         </h2>
       </v-col>
     </v-row>
+
     <!-- Add New Item Form -->
     <ItemForm
       v-model="newItem"
@@ -49,13 +50,13 @@
       @enter-reorder-mode="enterReorderMode"
       @exit-reorder-mode="exitReorderMode"
       @reorder-items="reorderItems"
-      @edit-size="editSize"
       @update-size="updateSize"
       @cancel-size-edit="cancelSizeEdit"
       @add-size="newSize"
       @duplicate-size="duplicateSize"
       @delete-size="deleteSize"
       @reorder-sizes="reorderSizes"
+      @bulk-update-sizes="bulkSaveSizes"
     />
 
     <!-- Pagination -->
@@ -128,16 +129,11 @@ export default {
     const itemStore = useItemStore();
     const sizeStore = useSizeStore();
     const vendorStore = useVendorStore();
-    return {
-      auth,
-      menuStore,
-      itemStore,
-      sizeStore,
-      vendorStore
-    }
+    return { auth, menuStore, itemStore, sizeStore, vendorStore };
   },
   data() {
     return {
+      savedSearchState: null,
       newItem: {
         name: "",
         description: "",
@@ -154,16 +150,15 @@ export default {
       limit: null,
       currentPage: 1,
       totalCount: 0,
-      savedSearchState: null,
       snackbar: {
         show: false,
         text: '',
         color: 'success'
       }
-    }
+    };
   },
   mounted() {
-    this.getItemList()
+    this.getItemList();
   },
   methods: {
     showSnackbar(text, color = 'success') {
@@ -172,7 +167,7 @@ export default {
 
     handlePageChange(page) {
       this.currentPage = page;
-      this.getItemList()
+      this.getItemList();
     },
 
     async getItemList() {
@@ -267,8 +262,6 @@ export default {
 
         if (response.status === 201) {
           const newItemId = response.data.data.id;
-
-          // Copy sizes
           for (const size of sizes) {
             const sizeData = { ...size };
             delete sizeData.id;
@@ -276,7 +269,6 @@ export default {
             sizeData.menu_item_id = newItemId;
             await this.sizeStore.add(sizeData);
           }
-
           this.showSnackbar('Étel sikeresen duplikálva');
           this.getItemList();
         }
@@ -327,7 +319,6 @@ export default {
 
         if (response.status === 201) {
           const newItemId = response.data.data.id;
-
           for (const size of sizes) {
             const sizeData = { ...size };
             delete sizeData.isEditing;
@@ -335,7 +326,6 @@ export default {
             sizeData.menu_item_id = newItemId;
             await this.sizeStore.add(sizeData);
           }
-
           this.showSnackbar('Étel sikeresen másolva');
           this.showCopyPopup = false;
           this.getItemList();
@@ -348,7 +338,6 @@ export default {
     async deleteItem(item) {
       try {
         const response = await this.itemStore.delete(item.id);
-
         if (response.status === 204) {
           this.showSnackbar('Étel sikeresen törölve');
           this.getItemList();
@@ -393,7 +382,6 @@ export default {
         }
 
         await this.itemStore.bulkUpdateIndices(changedItems);
-
         this.showSnackbar(`${changedItems.length} elem sorrendje sikeresen frissítve`);
       } catch (error) {
         console.error('Bulk update error:', error);
@@ -421,26 +409,13 @@ export default {
       }
     },
 
-    editSize(itemId, size) {
-      const itemIndex = this.items.findIndex(item => item.id === itemId);
-      if (itemIndex !== -1) {
-        const sizeIndex = this.items[itemIndex].sizes.findIndex(s => s.id === size.id);
-        if (sizeIndex !== -1) {
-          this.items[itemIndex].sizes[sizeIndex] = { ...size, isEditing: true };
-        }
-      }
-    },
-
     cancelSizeEdit(itemId, size) {
       const itemIndex = this.items.findIndex(item => item.id === itemId);
       if (itemIndex !== -1) {
         const sizeIndex = this.items[itemIndex].sizes.findIndex(s => s.id === size.id);
         if (sizeIndex !== -1) {
           if (size.id === -1) {
-            // Remove new size if cancelled
             this.items[itemIndex].sizes.splice(sizeIndex, 1);
-          } else {
-            this.items[itemIndex].sizes[sizeIndex] = { ...size, isEditing: false };
           }
         }
       }
@@ -507,6 +482,24 @@ export default {
         this.getItemList();
       } catch (error) {
         this.showSnackbar('Hiba történt a sorrend frissítése során', 'error');
+      }
+    },
+
+    async bulkSaveSizes(sizes) {
+      try {
+        await this.sizeStore.bulkUpdate(
+          sizes.map(s => ({
+            id: s.sizeId,
+            name: s.name,
+            price: s.price,
+            unlimited: s.unlimited,
+            quantity: s.quantity
+          }))
+        );
+        this.showSnackbar(`${sizes.length} méret sikeresen frissítve`);
+        await this.getItemList();
+      } catch (error) {
+        this.showSnackbar('Hiba történt a mentés során', 'error');
       }
     }
   }

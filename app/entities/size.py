@@ -1,6 +1,6 @@
 from typing import List
 
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
 from sqlalchemy import Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,6 +19,22 @@ class BaseSizeSchema(Schema):
 
 class UpdateSizeSchema(BaseSizeSchema):
     id = fields.Int(required=True)
+
+
+class BulkUpdateSizeSchema(Schema):
+    sizes = fields.List(
+        fields.Nested(
+            {
+                "id": fields.Integer(required=True),
+                "name": fields.Str(required=True),
+                "price": fields.Int(required=True),
+                "quantity": fields.Int(required=True),
+                "unlimited": fields.Bool(required=True),
+            }
+        ),
+        required=True,
+        validate=validate.Length(min=1, max=5000),
+    )
 
 
 class Size(Base):

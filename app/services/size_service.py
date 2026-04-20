@@ -36,3 +36,7 @@ class SizeService:
     def delete_size(db, size):
         size_repo = SizeRepository(db)
         size_repo.delete(size)
+
+    @staticmethod
+    def bulk_update_sizes(db, data):
+        return SizeRepository(db).bulk_update(data["sizes"])

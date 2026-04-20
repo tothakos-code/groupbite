@@ -50,6 +50,26 @@ export const useSizeStore = defineStore("size", {
         this.isLoading = false;
       }
     },
+    async bulkUpdate(sizes) {
+      this.isLoading = true;
+      try {
+        const response = await axios.put(`/api/size/bulk`, { "data": { sizes } });
+        notify({
+          type: "info",
+          text: "Méretek frissítése sikeres!",
+        });
+        return response;
+      } catch (error) {
+        console.error("Failed to bulk update sizes:", error.response?.data?.error);
+        notify({
+          type: "error",
+          text: "Méretek frissítése nem sikerült!",
+        });
+        return error.response;
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async add(data) {
       this.isLoading = true;
       try {

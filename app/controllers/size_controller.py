@@ -2,7 +2,7 @@ import json
 
 from flask import Blueprint
 
-from app.entities.size import BaseSizeSchema, Size, UpdateSizeSchema
+from app.entities.size import BaseSizeSchema, BulkUpdateSizeSchema, Size, UpdateSizeSchema
 from app.repositories.size_repository import SizeRepository
 from app.services.size_service import SizeService
 from app.utils.decorators import (
@@ -32,6 +32,9 @@ class SizeController:
         )
         bp.add_url_rule(
             "<size_id>", view_func=self.handle_menu_item_size_delete, methods=["DELETE"]
+        )
+        bp.add_url_rule(
+            "/bulk", view_func=self.handle_bulk_update_sizes, methods=["PUT"]
         )
 
     @validate_data(BaseSizeSchema())
@@ -70,3 +73,11 @@ class SizeController:
         size = SizeRepository(db).get_by_id(size_id)
         size = self.size_service.delete_size(db, size)
         return {"msg": "OK"}, 200
+
+    @validate_data(BulkUpdateSizeSchema())
+    @require_auth
+    @require_admin
+    @handle_request
+    def handle_bulk_update_sizes(self, db, data):
+        updated = self.size_service.bulk_update_sizes(db, data)
+        return {"msg": "OK", "updated_count": len(updated)}, 200

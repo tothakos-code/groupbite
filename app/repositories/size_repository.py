@@ -3,6 +3,7 @@ from sqlalchemy import select
 from app.entities.size import Size
 
 
+
 class SizeRepository:
     def __init__(self, db):
         self.db = db
@@ -36,6 +37,22 @@ class SizeRepository:
         size.index = index
         self.db.flush()
         return size
+
+    def bulk_update(self, sizes_data):
+        ids = [s["id"] for s in sizes_data]
+        sizes = {
+            s.id: s
+            for s in self.db.execute(select(Size).where(Size.id.in_(ids))).scalars().all()
+        }
+        for data in sizes_data:
+            size = sizes.get(data["id"])
+            if size:
+                size.name = data["name"]
+                size.price = data["price"]
+                size.quantity = data["quantity"]
+                size.unlimited = data["unlimited"]
+        self.db.flush()
+        return list(sizes.values())
 
     def find_all_by_menu_item(self, menu_item_id, desc=False):
         stmt = select(Size).where(Size.menu_item_id == menu_item_id)

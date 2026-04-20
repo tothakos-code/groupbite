@@ -561,6 +561,11 @@ export default {
       } else {
         this.exitReorderMode();
       }
+    },
+    items(newVal) {
+      if (this.reorderMode) {
+        this.initReorderMode();
+      }
     }
   },
   mounted() {
@@ -617,15 +622,11 @@ export default {
     },
 
     async saveReorderChanges() {
-      // Update indices based on current order
-      this.$emit('reorder-items', this.reorderItems);
-      const updatedItems = this.reorderItems.map((item, index) => ({
+      const updatedItems = this.reorderItems.map((item, i) => ({
         ...item,
-        index: index + 1
+        index: i + 1
       }));
-
-      // Emit bulk update event
-      this.$emit('bulk-update-indices', updatedItems);
+      this.$emit('reorder-items', updatedItems);
     },
 
     initReorderMode() {

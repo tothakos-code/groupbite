@@ -46,6 +46,8 @@
       @move-item="showMoveDialog"
       @copy-item="showCopyDialog"
       @delete-item="deleteItem"
+      @enter-reorder-mode="enterReorderMode"
+      @exit-reorder-mode="exitReorderMode"
       @reorder-items="reorderItems"
       @edit-size="editSize"
       @update-size="updateSize"
@@ -152,6 +154,7 @@ export default {
       limit: null,
       currentPage: 1,
       totalCount: 0,
+      savedSearchState: null,
       snackbar: {
         show: false,
         text: '',
@@ -355,30 +358,43 @@ export default {
       }
     },
 
+    async enterReorderMode() {
+      this.savedSearchState = {
+        searchString: this.searchString,
+        currentPage: this.currentPage,
+        limit: this.limit
+      };
+      this.searchString = '';
+      this.currentPage = 1;
+      this.limit = null;
+      await this.getItemList();
+    },
+
+    async exitReorderMode() {
+      if (this.savedSearchState) {
+        this.searchString = this.savedSearchState.searchString;
+        this.currentPage = this.savedSearchState.currentPage;
+        this.limit = this.savedSearchState.limit;
+        this.savedSearchState = null;
+      }
+      await this.getItemList();
+    },
+
     async reorderItems(items) {
       try {
-        const changedItems = [];
-
-        items.forEach((item, index) => {
-          const newIndex = index + 1; // 1-based indexing
-          if (item.index !== newIndex) {
-            changedItems.push({
-              id: item.id,
-              index: newIndex
-            });
-          }
-        });
+        const originalIndexMap = Object.fromEntries(this.items.map(i => [i.id, i.index]));
+        const changedItems = items
+          .filter(item => originalIndexMap[item.id] !== item.index)
+          .map(item => ({ id: item.id, index: item.index }));
 
         if (changedItems.length === 0) {
           this.showSnackbar('Nincs változás a sorrendben');
           return;
         }
 
-        // Call bulk update API
         await this.itemStore.bulkUpdateIndices(changedItems);
 
         this.showSnackbar(`${changedItems.length} elem sorrendje sikeresen frissítve`);
-        this.getItemList();
       } catch (error) {
         console.error('Bulk update error:', error);
         this.showSnackbar('Hiba történt a sorrend frissítése során', 'error');

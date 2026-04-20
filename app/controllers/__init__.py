@@ -1,36 +1,62 @@
 from flask import Blueprint
-from flask_restful import Api
 
-main_blueprint = Blueprint("main_controller", __name__, static_folder="../../frontend/dist", template_folder="../../frontend/dist")
-setting_blueprint = Blueprint("setting_controller", __name__, url_prefix="/api/setting")
-vendor_blueprint = Blueprint("vendor_controller", __name__, url_prefix="/api/vendor")
-menu_blueprint = Blueprint("menu_controller", __name__, url_prefix="/api/menu")
-item_blueprint = Blueprint("item_controller", __name__, url_prefix="/api/item")
-size_blueprint = Blueprint("size_controller", __name__, url_prefix="/api/size")
-order_blueprint = Blueprint("order_controller", __name__, url_prefix="/api/order")
-user_blueprint = Blueprint("user_controller", __name__, url_prefix="/api/user")
-webhook_blueprint = Blueprint("webhook_controller", __name__, url_prefix="/api/webhook")
+from app.controllers.favourite_controller import FavouriteController
+from app.controllers.item_controller import MenuItemController
+from app.controllers.main_controller import MainController
+from app.controllers.menu_controller import MenuController
+from app.controllers.order_controller import OrderController
+from app.controllers.setting_controller import SettingController
+from app.controllers.size_controller import SizeController
+from app.controllers.user_controller import UserController
+from app.controllers.vendor_controller import VendorController
+from app.controllers.webhook_controller import WebhookController
+from app.event_manager import event_manager
+from app.services.favourite_service import FavouriteService
+from app.services.menu_item_service import MenuItemService
+from app.services.menu_service import MenuService
+from app.services.order_service import OrderService
+from app.services.setting_service import SettingService
+from app.services.size_service import SizeService
+from app.services.user_basket_service import UserBasketService
+from app.services.user_service import UserService
+from app.services.vendor_service import VendorService
+from app.services.webhook_service import WebhookService
+
+statistics_blueprint = Blueprint(
+    "statistics_controller", __name__, url_prefix="/api/statistics"
+)
 
 
 def register_blueprints(app):
-    # this registering all routes for the blueprint
-    from .main_controller import main_blueprint
-    from .setting_controller import setting_blueprint
-    from .vendor_controller import vendor_blueprint
-    from .menu_controller import menu_blueprint
-    from .item_controller import item_blueprint
-    from .size_controller import size_blueprint
-    from .order_controller import order_blueprint
-    from .user_controller import user_blueprint
-    from .webhook_controller import webhook_blueprint
+    user_basket_service = UserBasketService()
+    menu_item_service = MenuItemService()
+    menu_service = MenuService()
+    order_service = OrderService(user_basket_service)
+    size_service = SizeService()
+    user_service = UserService(user_basket_service)
+    vendor_service = VendorService(order_service)
+    setting_service = SettingService(vendor_service)
+    webhook_service = WebhookService(event_manager)
+    favourite_service = FavouriteService()
 
-    # registering the blueprint in the app
-    app.register_blueprint(main_blueprint)
-    app.register_blueprint(setting_blueprint)
-    app.register_blueprint(vendor_blueprint)
-    app.register_blueprint(menu_blueprint)
-    app.register_blueprint(item_blueprint)
-    app.register_blueprint(size_blueprint)
-    app.register_blueprint(order_blueprint)
-    app.register_blueprint(user_blueprint)
-    app.register_blueprint(webhook_blueprint)
+    menu_item_ctrl = MenuItemController(menu_item_service)
+    menu_ctrl = MenuController(menu_service)
+    order_ctrl = OrderController(order_service, user_basket_service)
+    size_ctrl = SizeController(size_service)
+    user_ctrl = UserController(user_service)
+    vendor_ctrl = VendorController(vendor_service, webhook_service)
+    setting_ctrl = SettingController(setting_service)
+    webhook_ctrl = WebhookController(webhook_service)
+    favourite_ctrl = FavouriteController(favourite_service)
+    main_ctrl = MainController()
+
+    app.register_blueprint(menu_item_ctrl.blueprint)
+    app.register_blueprint(menu_ctrl.blueprint)
+    app.register_blueprint(order_ctrl.blueprint)
+    app.register_blueprint(size_ctrl.blueprint)
+    app.register_blueprint(user_ctrl.blueprint)
+    app.register_blueprint(vendor_ctrl.blueprint)
+    app.register_blueprint(setting_ctrl.blueprint)
+    app.register_blueprint(webhook_ctrl.blueprint)
+    app.register_blueprint(favourite_ctrl.blueprint)
+    app.register_blueprint(main_ctrl.blueprint)

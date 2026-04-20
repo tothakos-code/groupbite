@@ -1,24 +1,23 @@
 import axios from "axios";
-import { defineStore } from "pinia"
+import { defineStore } from "pinia";
 import { notify } from "@kyvg/vue3-notification";
 
-
 export const useAuth = defineStore("user", {
-  state: () => ({ user: null, isLoggedIn: false, isLoading: true}),
+  state: () => ({ user: null, isLoggedIn: false, isLoading: true }),
   getters: {
     getUserColor() {
       // TODO: implement user setings, this is not excist yet
       // if (state.isLoggedIn) {
       //   return this.auth.user.ui_color;
       // }
-      return "primary"
+      return "primary";
     },
   },
   actions: {
     async login(username) {
       try {
         const response = await axios.post(`/api/user/login`, {
-            "username": username
+          username: username,
         });
         if (response.data.error) {
           notify({
@@ -35,12 +34,14 @@ export const useAuth = defineStore("user", {
           type: "info",
           text: "Sikeresen bejelentkeztél.",
         });
-        return response
+        return response;
       } catch (error) {
-        console.log("Error during login:" + error);
+        notify({
+          type: "warn",
+          text: error.response?.data?.error ?? "Sikertelen bejelentkezés.",
+        });
         this.isLoading = false;
-        return error.response
-
+        return error.response;
       }
     },
     async logout() {
@@ -63,15 +64,14 @@ export const useAuth = defineStore("user", {
       } catch (error) {
         console.log("Error during logout:" + error);
         this.isLoading = false;
-
       }
     },
     async register(username, email) {
       try {
         const response = await axios.post(`/api/user/register`, {
-            "username": username,
-            "email": email
-          });
+          username: username,
+          email: email,
+        });
         if (response.data.error) {
           notify({
             type: "warn",
@@ -79,7 +79,7 @@ export const useAuth = defineStore("user", {
           });
           return;
         }
-        this.user = response.data.data
+        this.user = response.data.data;
         notify({
           type: "info",
           text: "Felhasználói fiók létrehozva és bejelentkeztetve.",
@@ -89,31 +89,24 @@ export const useAuth = defineStore("user", {
       } catch (error) {
         console.log("Error during login:" + error);
         this.isLoading = false;
-
       }
     },
     async checkSession() {
       try {
         const response = await axios.get(`/api/user/checkSession`);
-        if (response.data.error) {
-          console.log(response.data.error);
-          return;
-        }
-
         this.user = response.data.data;
         this.isLoading = false;
         this.isLoggedIn = true;
       } catch (error) {
-        console.log("Error during session check:" + error);
         this.isLoading = false;
-
+        this.isLoggedIn = false;
       }
     },
     async sendReminder(email) {
       try {
-        const response = await axios.get(`/api/user/reminder`,
-          { "params": {"email": email} }
-        );
+        const response = await axios.get(`/api/user/reminder`, {
+          params: { email: email },
+        });
         if (response.data.error) {
           notify({
             type: "warn",
@@ -129,19 +122,18 @@ export const useAuth = defineStore("user", {
       } catch (error) {
         console.log("Error during reminder send:" + error);
         this.isLoading = false;
-
       }
     },
-    async orders(querryParams) {
+    async orders(userId, querryParams) {
       this.isLoading = true;
       try {
-        const response = await axios.get(`/api/user/${this.user.id}/orders`,
-          { "params": querryParams }
-        );
-        return response
+        const response = await axios.get(`/api/user/${userId}/orders`, {
+          params: querryParams,
+        });
+        return response;
       } catch (error) {
         console.error("Failed to get orders", error);
-        return error.response
+        return error.response;
       } finally {
         this.isLoading = false;
       }
@@ -149,11 +141,13 @@ export const useAuth = defineStore("user", {
     async fetchAll(querryParams) {
       this.isLoading = true;
       try {
-        const response = await axios.get(`/api/user/`, { "params": querryParams });
-        return response
+        const response = await axios.get(`/api/user/`, {
+          params: querryParams,
+        });
+        return response;
       } catch (error) {
         console.error("Failed to get users:", error.response.data.error);
-        return error.response
+        return error.response;
       } finally {
         this.isLoading = false;
       }
@@ -161,18 +155,36 @@ export const useAuth = defineStore("user", {
     async update(data) {
       this.isLoading = true;
       try {
-        const response = await axios.put(`/api/user/${this.user.id}`, { "data": data });
-        return response
+        const response = await axios.put(`/api/user/${this.user.id}`, {
+          data: data,
+        });
+        return response;
       } catch (error) {
         console.error("Failed to update user", error);
         notify({
           type: "warn",
           text: error.response.data.error,
         });
-        return error.response
+        return error.response;
       } finally {
         this.isLoading = false;
       }
-    }
-  }
-})
+    },
+    async promote(user_id) {
+      this.isLoading = true;
+      try {
+        const response = await axios.put(`/api/user/${user_id}/promote`);
+        return response;
+      } catch (error) {
+        console.error("Failed to promote user", error);
+        notify({
+          type: "warn",
+          text: error.response.data.error,
+        });
+        return error.response;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+  },
+});

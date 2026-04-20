@@ -3,7 +3,7 @@
     variant="flat"
     class="ma-4"
   >
-    <v-card-title class="text-subtitle-1 bg-surface-variant">
+    <v-card-title class="text-subtitle-1 bg-secondary">
       <v-icon class="me-2">
         mdi-resize
       </v-icon>
@@ -13,18 +13,19 @@
     <v-card-text class="pa-0">
       <v-data-table
         :headers="headers"
-        :items="sizes"
+        :items="mergedSizes"
         :sort-by="[{ key: 'index', order: 'asc' }]"
         item-key="id"
-        class="elevation-0"
+        class="elevation-0 bg-header"
         density="compact"
         no-data-text="Nincsenek méretek"
         hide-default-footer
       >
-        <!-- Index column with drag handle -->
+        <!-- Index / drag handle -->
         <template #item.index="{ item }">
           <div class="d-flex align-center">
             <v-icon
+              v-if="item.id !== -1"
               class="drag-handle me-2 text-medium-emphasis"
               size="small"
               style="cursor: grab;"
@@ -35,56 +36,118 @@
           </div>
         </template>
 
-        <!-- Name column -->
+        <!-- Name -->
         <template #item.name="{ item }">
+          <!-- New unsaved size: plain input -->
           <v-text-field
-            v-if="item.isEditing"
+            v-if="item.id === -1"
             v-model="item.name"
             variant="outlined"
             density="compact"
             hide-details
             placeholder="Méret neve"
           />
-          <span
+          <!-- Existing: click-to-edit -->
+          <div
             v-else
-            class="font-weight-medium"
-          >{{ item.name }}</span>
+            class="editable-cell"
+            @click="startEdit(item, 'name')"
+          >
+            <v-text-field
+              v-if="isEditing(item.id, 'name')"
+              v-model="editingValue"
+              variant="outlined"
+              density="compact"
+              hide-details
+              autofocus
+              class="editable-input"
+              @blur="commitEdit(item)"
+              @keyup.enter="commitEdit(item)"
+              @keyup.escape="cancelEdit()"
+              @click.stop
+            />
+            <span
+              v-else
+              class="editable-value font-weight-medium"
+              :class="{ 'dirty-value': isDirty(item.id) }"
+            >
+              {{ item.name }}
+              <v-icon
+                size="x-small"
+                class="edit-hint ms-1"
+              >
+                mdi-pencil-outline
+              </v-icon>
+            </span>
+          </div>
         </template>
 
-        <!-- Price column -->
+        <!-- Price -->
         <template #item.price="{ item }">
           <v-text-field
-            v-if="item.isEditing"
+            v-if="item.id === -1"
             v-model.number="item.price"
             variant="outlined"
             density="compact"
             hide-details
             type="number"
             min="0"
-            step="0.01"
             suffix="Ft"
           />
-          <span
+          <div
             v-else
-            class="font-weight-medium"
-          >{{ formatPrice(item.price) }}</span>
+            class="editable-cell"
+            @click="startEdit(item, 'price')"
+          >
+            <v-text-field
+              v-if="isEditing(item.id, 'price')"
+              v-model.number="editingValue"
+              variant="outlined"
+              density="compact"
+              hide-details
+              type="number"
+              min="0"
+              suffix="Ft"
+              autofocus
+              class="editable-input price-input"
+              @blur="commitEdit(item)"
+              @keyup.enter="commitEdit(item)"
+              @keyup.escape="cancelEdit()"
+              @click.stop
+            />
+            <span
+              v-else
+              class="editable-value font-weight-medium"
+              :class="{ 'dirty-value': isDirty(item.id) }"
+            >
+              {{ formatPrice(item.price) }}
+              <v-icon
+                size="x-small"
+                class="edit-hint ms-1"
+              >
+                mdi-pencil-outline
+              </v-icon>
+            </span>
+          </div>
         </template>
 
-        <!-- Unlimited column -->
+        <!-- Unlimited -->
         <template #item.unlimited="{ item }">
           <v-checkbox
-            v-model="item.unlimited"
-            :readonly="!item.isEditing"
+            :model-value="item.unlimited"
             hide-details
             density="compact"
             color="primary"
+            @update:model-value="(val) => item.id !== -1
+              ? $emit('size-field-changed', { sizeId: item.id, itemId, field: 'unlimited', value: val })
+              : (item.unlimited = val)"
           />
         </template>
 
-        <!-- Quantity column -->
+        <!-- Quantity -->
         <template #item.quantity="{ item }">
           <v-text-field
-            v-if="item.isEditing && !item.unlimited"
+            v-if="item.id === -1 && !item.unlimited"
             v-model.number="item.quantity"
             variant="outlined"
             density="compact"
@@ -93,12 +156,52 @@
             min="0"
             placeholder="Mennyiség"
           />
-          <span
-            v-else-if="!item.unlimited"
-            class="font-weight-medium"
+          <div
+            v-else-if="item.id !== -1"
+            class="editable-cell"
+            :class="{ 'non-editable': item.unlimited }"
+            @click="!item.unlimited && startEdit(item, 'quantity')"
           >
-            {{ item.quantity }}
-          </span>
+            <v-text-field
+              v-if="isEditing(item.id, 'quantity') && !item.unlimited"
+              v-model.number="editingValue"
+              variant="outlined"
+              density="compact"
+              hide-details
+              type="number"
+              min="0"
+              autofocus
+              class="editable-input"
+              @blur="commitEdit(item)"
+              @keyup.enter="commitEdit(item)"
+              @keyup.escape="cancelEdit()"
+              @click.stop
+            />
+            <v-chip
+              v-else-if="item.unlimited"
+              color="success"
+              size="small"
+              variant="outlined"
+            >
+              <v-icon start>
+                mdi-infinity
+              </v-icon>
+              Végtelen
+            </v-chip>
+            <span
+              v-else
+              class="editable-value"
+              :class="{ 'dirty-value': isDirty(item.id) }"
+            >
+              {{ item.quantity }}
+              <v-icon
+                size="x-small"
+                class="edit-hint ms-1"
+              >
+                mdi-pencil-outline
+              </v-icon>
+            </span>
+          </div>
           <v-chip
             v-else
             color="success"
@@ -112,26 +215,10 @@
           </v-chip>
         </template>
 
-        <!-- Actions column -->
+        <!-- Actions -->
         <template #item.actions="{ item }">
           <div class="d-flex gap-1">
-            <!-- Edit/Save/Cancel buttons -->
-            <template v-if="!item.isEditing">
-              <v-tooltip text="Szerkesztés">
-                <template #activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    icon="mdi-pencil"
-                    size="x-small"
-                    variant="text"
-                    color="primary"
-                    @click="$emit('edit-size', item)"
-                  />
-                </template>
-              </v-tooltip>
-            </template>
-
-            <template v-else>
+            <template v-if="item.id === -1">
               <v-tooltip text="Mentés">
                 <template #activator="{ props }">
                   <v-btn
@@ -144,7 +231,6 @@
                   />
                 </template>
               </v-tooltip>
-
               <v-tooltip text="Mégse">
                 <template #activator="{ props }">
                   <v-btn
@@ -158,34 +244,32 @@
                 </template>
               </v-tooltip>
             </template>
-
-            <!-- Duplicate button -->
-            <v-tooltip text="Duplikálás">
-              <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon="mdi-content-duplicate"
-                  size="x-small"
-                  variant="text"
-                  color="info"
-                  @click="$emit('duplicate-size', item)"
-                />
-              </template>
-            </v-tooltip>
-
-            <!-- Delete button -->
-            <v-tooltip text="Törlés">
-              <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon="mdi-delete"
-                  size="x-small"
-                  variant="text"
-                  color="error"
-                  @click="confirmDelete(item)"
-                />
-              </template>
-            </v-tooltip>
+            <template v-else>
+              <v-tooltip text="Duplikálás">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-content-duplicate"
+                    size="x-small"
+                    variant="text"
+                    color="info"
+                    @click="$emit('duplicate-size', item)"
+                  />
+                </template>
+              </v-tooltip>
+              <v-tooltip text="Törlés">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-delete"
+                    size="x-small"
+                    variant="text"
+                    color="error"
+                    @click="confirmDelete(item)"
+                  />
+                </template>
+              </v-tooltip>
+            </template>
           </div>
         </template>
       </v-data-table>
@@ -203,11 +287,9 @@
           </v-icon>
           Méret törlése
         </v-card-title>
-
         <v-card-text>
           Biztosan törölni szeretné a(z) <strong>{{ sizeToDelete?.name }}</strong> méretet?
         </v-card-text>
-
         <v-card-actions>
           <v-spacer />
           <v-btn
@@ -241,28 +323,49 @@ export default {
     sizes: {
       type: Array,
       default: () => []
+    },
+    sizeEdits: {
+      type: Object,
+      default: () => ({})
     }
   },
   emits: [
-    'edit-size',
     'update-size',
     'cancel-size-edit',
     'duplicate-size',
     'delete-size',
-    'reorder-sizes'
+    'reorder-sizes',
+    'size-field-changed'
   ],
   data() {
     return {
+      editingCell: null,  // { sizeId, field }
+      editingValue: null,
       deleteDialog: false,
       sizeToDelete: null,
       headers: [
         { title: 'Sorrend', key: 'index', sortable: false, width: '100px' },
         { title: 'Méret', key: 'name', sortable: false },
-        { title: 'Ár', key: 'price', sortable: false, width: '120px' },
+        { title: 'Ár', key: 'price', sortable: false, width: '150px' },
         { title: 'Végtelen', key: 'unlimited', sortable: false, width: '100px' },
-        { title: 'Mennyiség', key: 'quantity', sortable: false, width: '120px' },
-        { title: 'Műveletek', key: 'actions', sortable: false, width: '180px' }
+        { title: 'Mennyiség', key: 'quantity', sortable: false, width: '140px' },
+        { title: 'Műveletek', key: 'actions', sortable: false, width: '100px' }
       ]
+    };
+  },
+  computed: {
+    mergedSizes() {
+      return this.sizes.map(size => {
+        const edit = this.sizeEdits[size.id];
+        if (!edit) return size;
+        return {
+          ...size,
+          name: edit.name,
+          price: edit.price,
+          unlimited: edit.unlimited,
+          quantity: edit.quantity
+        };
+      });
     }
   },
   mounted() {
@@ -272,6 +375,38 @@ export default {
     this.initDragAndDrop();
   },
   methods: {
+    isEditing(sizeId, field) {
+      return this.editingCell?.sizeId === sizeId && this.editingCell.field === field;
+    },
+
+    isDirty(sizeId) {
+      return !!this.sizeEdits[sizeId];
+    },
+
+    startEdit(size, field) {
+      this.editingCell = { sizeId: size.id, field };
+      // Start from the committed value (edit or original)
+      this.editingValue = this.sizeEdits[size.id]?.[field] ?? size[field];
+    },
+
+    commitEdit(size) {
+      if (!this.editingCell) return;
+      const { field } = this.editingCell;
+      this.$emit('size-field-changed', {
+        sizeId: size.id,
+        itemId: this.itemId,
+        field,
+        value: this.editingValue
+      });
+      this.editingCell = null;
+      this.editingValue = null;
+    },
+
+    cancelEdit() {
+      this.editingCell = null;
+      this.editingValue = null;
+    },
+
     formatPrice(price) {
       return new Intl.NumberFormat('hu-HU', {
         style: 'currency',
@@ -297,14 +432,11 @@ export default {
       this.$nextTick(() => {
         const tableBody = this.$el.querySelector('tbody');
         if (!tableBody) return;
-
-        // Clean up existing sortable before initializing new one
         this.cleanupSortable();
         this.initSortable(tableBody);
       });
     },
 
-    // Add this method to store cleanup functions
     cleanupSortable() {
       if (this.sortableCleanup) {
         this.sortableCleanup();
@@ -315,44 +447,34 @@ export default {
     initSortable(container) {
       let draggedElement = null;
       let placeholder = null;
-      const eventHandlers = new Map(); // Store event handlers for cleanup
+      const eventHandlers = new Map();
 
       const rows = container.querySelectorAll('tr');
-
       rows.forEach(row => {
         const dragHandle = row.querySelector('.drag-handle');
         if (!dragHandle) return;
 
         const mouseDownHandler = (e) => {
           e.preventDefault();
-
-          // Clean up any existing placeholders in the DOM
           container.querySelectorAll('.drag-placeholder').forEach(p => p.remove());
-
           draggedElement = row;
-
-          // Create placeholder
           placeholder = row.cloneNode(true);
           placeholder.style.opacity = '0.5';
           placeholder.style.backgroundColor = '#f5f5f5';
           placeholder.classList.add('drag-placeholder');
-
           row.style.opacity = '0.8';
           row.style.transform = 'scale(1.02)';
           row.style.zIndex = '1000';
-
           document.addEventListener('mousemove', onMouseMove);
           document.addEventListener('mouseup', onMouseUp);
         };
 
         dragHandle.addEventListener('mousedown', mouseDownHandler);
-        // Store the handler for cleanup
         eventHandlers.set(dragHandle, mouseDownHandler);
       });
 
       const onMouseMove = (e) => {
         if (!draggedElement) return;
-
         const afterElement = this.getDragAfterElement(container, e.clientY);
         if (afterElement == null) {
           container.appendChild(placeholder);
@@ -362,86 +484,53 @@ export default {
       };
 
       const cleanup = () => {
-        // Remove placeholder from DOM if it exists
-        if (placeholder && placeholder.parentNode) {
-          placeholder.remove();
-        }
-
-        // Reset dragged element styles
+        if (placeholder?.parentNode) placeholder.remove();
         if (draggedElement) {
           draggedElement.style.opacity = '';
           draggedElement.style.transform = '';
           draggedElement.style.zIndex = '';
         }
-
-        // Reset variables
         draggedElement = null;
         placeholder = null;
-
-        // Remove event listeners
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
       };
 
       const onMouseUp = () => {
-        if (!draggedElement || !placeholder) {
-          cleanup();
-          return;
-        }
-
-        // Replace placeholder with dragged element
+        if (!draggedElement || !placeholder) { cleanup(); return; }
         placeholder.parentNode.insertBefore(draggedElement, placeholder);
         placeholder.remove();
 
-        // Get new order and emit reorder event
-        const newOrder = Array.from(container.querySelectorAll('tr:not(.drag-placeholder)')).map((row, index) => {
-          const sizeId = parseInt(row.dataset.sizeId);
-          const size = this.sizes.find(s => s.id === sizeId);
-          if (size) {
-            return { ...size, index };
-          }
-          return null;
-        }).filter(Boolean);
+        const newOrder = Array.from(container.querySelectorAll('tr:not(.drag-placeholder)'))
+          .map((row, index) => {
+            const sizeId = parseInt(row.dataset.sizeId);
+            const size = this.mergedSizes.find(s => s.id === sizeId);
+            return size ? { ...size, index } : null;
+          })
+          .filter(Boolean);
 
         this.$emit('reorder-sizes', newOrder);
-
         cleanup();
       };
 
-      // Store cleanup function for this sortable instance
       this.sortableCleanup = () => {
-        // Remove all event listeners
-        eventHandlers.forEach((handler, element) => {
-          element.removeEventListener('mousedown', handler);
-        });
+        eventHandlers.forEach((handler, el) => el.removeEventListener('mousedown', handler));
         eventHandlers.clear();
-
-        // Clean up any remaining placeholders
         container.querySelectorAll('.drag-placeholder').forEach(p => p.remove());
-
-        // Remove document event listeners if they exist
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
       };
     },
 
     getDragAfterElement(container, y) {
-      // Exclude both dragging elements and placeholders
-      const draggableElements = [...container.querySelectorAll('tr:not(.dragging):not(.drag-placeholder)')];
-
-      return draggableElements.reduce((closest, child) => {
+      const els = [...container.querySelectorAll('tr:not(.dragging):not(.drag-placeholder)')];
+      return els.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
-
-        if (offset < 0 && offset > closest.offset) {
-          return { offset: offset, element: child };
-        } else {
-          return closest;
-        }
+        return offset < 0 && offset > closest.offset ? { offset, element: child } : closest;
       }, { offset: Number.NEGATIVE_INFINITY }).element;
     },
 
-    // Add this to component's beforeDestroy/unmounted lifecycle
     beforeDestroy() {
       this.cleanupSortable();
     }
@@ -457,6 +546,51 @@ export default {
 
 .drag-handle:active {
   cursor: grabbing;
+}
+
+.editable-cell {
+  cursor: pointer;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.non-editable {
+  cursor: default;
+}
+
+.editable-value {
+  padding: 4px 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.15s;
+}
+
+.editable-value:hover {
+  background-color: rgba(var(--v-theme-primary), 0.08);
+}
+
+.edit-hint {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.editable-value:hover .edit-hint {
+  opacity: 0.4;
+}
+
+.dirty-value {
+  color: #E65100;
+  font-weight: 600;
+}
+
+.editable-input {
+  min-width: 90px;
+}
+
+.price-input {
+  min-width: 120px;
 }
 
 :deep(.v-data-table) {

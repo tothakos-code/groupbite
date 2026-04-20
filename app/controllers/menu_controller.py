@@ -1,141 +1,94 @@
-from flask import Blueprint, request
-from datetime import date, timedelta, datetime
+from flask import request, Blueprint
 import json
 import logging
 
-from app.controllers import menu_blueprint
-from app.entities.menu import Menu, BaseMenuSchema, UpdateMenuSchema
-from app.entities.menu_item import MenuItem
-from app.entities.size import Size
-from app.services.vendor_service import VendorService
-from app.vendor_factory import VendorFactory
-from app.base_vendor import BaseVendor
-from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin
+from app.entities.menu import BaseMenuSchema, UpdateMenuSchema
+from app.services.menu_service import MenuService
+from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin, handle_request
 from app.utils.validators import IDSchema
 
 
-@menu_blueprint.route("/<menu_id>", methods=["GET"])
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_menu_get_items(menu_id):
-    try:
-        limit = int(request.args.get('limit'))
-        page = int(request.args.get('page'))
-    except (ValueError, TypeError):
-        limit = None
-        page = None
+class MenuController:
 
-    offset = 0 if page is None else limit * (page - 1)
-    search = request.args.get('search')
-    items = MenuItem.find_all_by_menu(menu_id, search, limit, offset)
+    def __init__(self, menu_service: MenuService):
+        self.menu_service = menu_service
+        self.blueprint = self._create_blueprint()
+        self._register_routes()
 
-    total_count = MenuItem.count_by_menu_id(menu_id, search) if limit else len(items)
+    def _create_blueprint(self) -> Blueprint:
+        return Blueprint("menu_controller", __name__, url_prefix="/api/menu")
 
-    result = []
+    def _register_routes(self):
+        bp = self.blueprint
+        # TODO: change to GET and use query params
+        bp.add_url_rule("/<menu_id>", view_func=self.handle_menu_get_items, methods=["GET"])
+        bp.add_url_rule("/<menu_id>", view_func=self.handle_menu_update, methods=["PUT"])
+        bp.add_url_rule("/<int:menu_id>", view_func=self.handle_menu_delete, methods=["DELETE"])
+        bp.add_url_rule("/<menu_id>/duplicate", view_func=self.handle_menu_duplicate, methods=["POST"])
+        bp.add_url_rule("/", view_func=self.handle_menu_add, methods=["POST"])
+        bp.add_url_rule("/<menu_id>/activate", view_func=self.handle_activation, methods=["GET"])
+        bp.add_url_rule("/<menu_id>/deactivate", view_func=self.handle_deactivation, methods=["GET"])
 
-    return { "data": {
-        "items": [i.serialized for i in items],
-        "page": page,
-        "limit": limit,
-        "total_count": total_count
-        }
-    }, 200
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_menu_get_items(self, db, menu_id):
+        items = self.menu_service.get_menu_items(db, menu_id, request.args)
+        return { "data": items }, 200
 
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @validate_data(UpdateMenuSchema())
+    @handle_request
+    def handle_menu_update(self, db, data, menu_id):
+        from_date = data["from_date"] if "from_date" in data else None
+        to_date = data["to_date"] if "to_date" in data else None
+        menu = self.menu_service.update_menu(db, menu_id, data["name"], from_date, to_date)
 
-@menu_blueprint.route("/<menu_id>", methods=["PUT"])
-@validate_data(UpdateMenuSchema())
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_menu_update(data, menu_id):
-    menu_db = Menu.find_by_id(menu_id)
-    from_date = data["from_date"] if "from_date" in data else None
-    to_date = data["to_date"] if "to_date" in data else None
-    if not menu_db.update(data["name"], from_date, to_date):
-        return { "error": "Bad request" }, 400
-
-    return { "data": json.dumps(menu_db.serialized) }, 200
+        return { "data": json.dumps(menu.serialized) }, 200
 
 
-@menu_blueprint.route("/<menu_id>", methods=["DELETE"])
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_menu_delete(menu_id):
-    if not Menu.find_by_id(menu_id).delete():
-        return { "error": "IntegrityError" }, 400
-    return { "msg": "OK" }, 200
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_menu_delete(self, db, menu_id):
+        self.menu_service.delete_menu(db, menu_id)
+        return { "msg": "OK" }, 204
 
 
-@menu_blueprint.route("/<menu_id>/duplicate", methods=["POST"])
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_menu_duplicate(menu_id):
-    original_menu = Menu.find_by_id(menu_id)
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_menu_duplicate(self, db, menu_id):
+        self.menu_service.duplicate_menu(db, menu_id)
+        return { "msg": "OK" }, 200
 
-    menu_db = Menu(
-        name=original_menu.name+"-copy",
-        vendor_id=original_menu.vendor_id,
-        from_date=original_menu.from_date,
-        to_date=original_menu.to_date,
-        active=False
-    )
+    @require_auth
+    @require_admin
+    @validate_data(BaseMenuSchema())
+    @handle_request
+    def handle_menu_add(self, db, data):
+        self.menu_service.add_menu(db, name=data["name"], vendor_id=data["vendor_id"])
+        return { "msg": "OK" }, 201
 
-    for item in original_menu.items:
-        menu_item = MenuItem(
-            name=item.name,
-            category=item.category,
-            description=item.description,
-            index=item.index
-        )
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_activation(self, db, menu_id):
+        menu = self.menu_service.activate_menu(db, menu_id)
+        logging.info(str(menu.id) + " vendor got activated")
+        return { "msg": "OK" }, 200
 
-        for size in item.sizes:
-            menu_item.sizes.append(Size(
-                link=size.link,
-                name=size.name,
-                price=size.price,
-                index=size.index,
-                quantity=size.quantity,
-                unlimited=size.unlimited
-            ))
-
-
-        menu_db.items.append(menu_item)
-    if not Menu.add(menu_db):
-        return { "error": "Bad request" }, 400
-    return { "msg": "OK" }, 200
-
-
-@menu_blueprint.route("", methods=["POST"])
-@validate_data(BaseMenuSchema())
-@require_auth
-@require_admin
-def handle_menu_add(data):
-    if not Menu.add(Menu(name=data["name"], vendor_id=data["vendor_id"])):
-        return { "error": "Bad request" }, 400
-    return { "msg": "OK" }, 201
-
-
-@menu_blueprint.route("/<menu_id>/activate", methods=["GET"])
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_activation(menu_id):
-    menu = Menu.find_by_id(menu_id)
-    menu.activate()
-    logging.info(menu_id + " vendor got activated")
-    return { "msg": "OK" }, 200
-
-
-@menu_blueprint.route("/<menu_id>/deactivate", methods=["GET"])
-@validate_url_params(IDSchema())
-@require_auth
-@require_admin
-def handle_deactivation(menu_id):
-    menu = Menu.find_by_id(menu_id)
-    menu.deactivate()
-    logging.info(menu_id + " vendor got deactivated")
-
-    return { "msg": "OK" }, 200
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_deactivation(self, db, menu_id):
+        menu = self.menu_service.deactivate_menu(db, menu_id)
+        logging.info(str(menu.id) + " vendor got deactivated")
+        return { "msg": "OK" }, 200

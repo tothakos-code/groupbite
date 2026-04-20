@@ -1,69 +1,66 @@
-from datetime import date
-from flask import Blueprint, request, send_from_directory, render_template, session
-import logging
-import json
-import requests
 import re
 
-from app.controllers import setting_blueprint
+from flask import Blueprint, request
 
-from app.services.mail_sender_service import send_mail
-from app.entities.setting import Setting
-from app.entities.user import User
-from app.utils.decorators import require_auth, require_admin
-from dotenv import load_dotenv
-from pathlib import Path
-from os import getenv
+from app.repositories.setting_repository import SettingRepository
+from app.services.mail_sender_service import EmailService
+from app.services.setting_service import SettingService
+from app.utils.decorators import handle_request, require_admin, require_auth
 
 
-@setting_blueprint.route('/get-all', methods=['GET'])
-@require_auth
-@require_admin
-def get_all_settings():
-    return Setting.get_all_settings_as_kv()
+class SettingController:
+    def __init__(self, setting_service: SettingService) -> None:
+        self.setting_service = setting_service
+        self.blueprint = self._create_blueprint()
+        self._register_routes()
 
-@setting_blueprint.route('/get/<key>', methods=['GET'])
-def get_setting(key):
-    setting = Setting.get_setting_by_key(key)
-    if setting:
-        if setting.category != "application":
-            if 'user_id' not in session:
-                logging.warning("User not authenticated")
-                return { "error": "Unauthorized" }, 401
-            from app.entities.user import User
-            if not User.is_admin(session['user_id']):
-                logging.warning("User unauthorized")
-                return { "error": "Unauthorized" }, 401
+    def _create_blueprint(self) -> Blueprint:
+        return Blueprint("setting_controller", __name__, url_prefix="/api/setting")
 
-            return {setting.key: setting.value}, 200
-        else:
-            return {setting.key: setting.value}
-    return {"error": "Setting not found"}, 404
+    def _register_routes(self):
+        bp = self.blueprint
+        bp.add_url_rule("/get-all", view_func=self.get_all_settings, methods=["GET"])
+        bp.add_url_rule("/get/<key>", view_func=self.get_setting, methods=["GET"])
+        bp.add_url_rule("/set", view_func=self.update_setting, methods=["PUT"])
+        bp.add_url_rule(
+            "/mail/send-test", view_func=self.send_test_mail, methods=["POST"]
+        )
 
-@setting_blueprint.route('/set', methods=['PUT'])
-@require_auth
-@require_admin
-def update_setting():
-    data = request.json
-    logging.info(data)
-    result = {"error": {}}
-    for key, value in data.items():
+    @require_auth
+    @require_admin
+    @handle_request
+    def get_all_settings(self, db):
+        return SettingRepository(db).get_all_settings_as_kv()
 
-        if not Setting.update_setting(key, value):
-            result["error"][key] = "Setting not found"
-    if result["error"] == {}:
-        return {"message": "Setting updated successfully"}
-    return result, 404
+    @handle_request
+    def get_setting(self, db, key):
+        setting = self.setting_service.get_setting(db, key)
+        return {setting.key: setting.value}
 
+    @require_auth
+    @require_admin
+    @handle_request
+    def update_setting(self, db):
+        data = request.json
+        result = {"error": {}}
+        for key, value in data.items():
+            if not self.setting_service.update_setting(db, key, value):
+                result["error"][key] = "Setting not found"
+        if result["error"] == {}:
+            return {"message": "Setting updated successfully"}
+        return result, 404
 
-@setting_blueprint.route("/mail/send-test", methods=['POST'])
-@require_auth
-@require_admin
-def send_test_mail():
-    test_email = request.json["test-email"]
-    if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", test_email):
-        return {"error": "Not a valid email address."}, 415
+    @require_auth
+    @require_admin
+    @handle_request
+    def send_test_mail(self, db):
+        test_email = request.json["test-email"]
+        if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", test_email):
+            raise ValueError("Not a valid email address.")
 
-    if not send_mail([test_email], [], "A message from GroupBite", "<h1>This is a message from GroupBite</h1> <br><p>Hurray you succesfully sent an email from groupbite!</p>", request.json):
-        return {"error": "Error during email sending"}, 500
-    return "Mail sent", 200
+        email_service = EmailService()
+        ok = email_service.send_test_mail([test_email], request.json)
+
+        if not ok:
+            raise Exception("Error during email sending")
+        return {"message": "Mail sent"}, 200

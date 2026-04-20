@@ -1,12 +1,9 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-from sqlalchemy.orm import DeclarativeBase
-# from sqlalchemy.ext.declarative import declarative_base
-from dotenv import load_dotenv
-from pathlib import Path
 from os import getenv
+from pathlib import Path
 
-
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, Session
 
 dotenv_path = Path(".env")
 load_dotenv(dotenv_path=dotenv_path)

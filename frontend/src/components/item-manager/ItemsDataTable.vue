@@ -15,7 +15,36 @@
           Ételek listája
         </h2>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-center">
+          <!-- Unsaved size changes indicator + actions -->
+          <template v-if="dirtyCount > 0 && !reorderMode">
+            <v-chip
+              size="small"
+              color="deep-orange"
+              variant="elevated"
+            >
+              {{ dirtyCount }} méret módosítva
+            </v-chip>
+            <v-btn
+              color="success"
+              variant="elevated"
+              size="small"
+              prepend-icon="mdi-content-save-all"
+              @click="saveAllSizes"
+            >
+              Mentés
+            </v-btn>
+            <v-btn
+              color="white"
+              variant="outlined"
+              size="small"
+              prepend-icon="mdi-undo-variant"
+              @click="discardAllSizes"
+            >
+              Visszaállítás
+            </v-btn>
+          </template>
+
           <!-- Reorder Mode Toggle -->
           <v-btn
             :color="reorderMode ? 'success' : 'dark'"
@@ -142,7 +171,7 @@
         <!-- Virtual Scrolled Data Table for Normal Mode -->
         <template v-else>
           <!-- Table Header -->
-          <div class="v-data-table-header d-flex align-center pa-3 bg-grey-lighten-4">
+          <div class="v-data-table-header d-flex align-center pa-3 bg-secondary">
             <div
               class="me-2"
               style="width: 24px;"
@@ -193,15 +222,22 @@
                 >
                   <!-- Expand Icon -->
                   <div
-                    class="me-2"
-                    style="width: 24px;"
+                    class="me-2 d-flex align-center"
+                    style="width: 32px;"
                   >
-                    <v-btn
-                      :icon="expanded.has(item.id) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
-                      size="small"
-                      variant="text"
-                      density="compact"
-                    />
+                    <v-badge
+                      :model-value="dirtyItemIds.has(item.id)"
+                      color="deep-orange"
+                      dot
+                      floating
+                    >
+                      <v-btn
+                        :icon="expanded.has(item.id) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
+                        size="small"
+                        variant="text"
+                        density="compact"
+                      />
+                    </v-badge>
                   </div>
 
                   <!-- ID -->
@@ -221,6 +257,7 @@
                       variant="outlined"
                       density="compact"
                       hide-details
+                      @click.stop=""
                     />
                     <span
                       v-else
@@ -238,6 +275,7 @@
                       variant="outlined"
                       density="compact"
                       hide-details
+                      @click.stop=""
                     />
                     <span v-else>{{ item.description || '-' }}</span>
                   </div>
@@ -252,6 +290,7 @@
                       variant="outlined"
                       density="compact"
                       hide-details
+                      @click.stop=""
                     />
                     <v-chip
                       v-else
@@ -402,12 +441,13 @@
                   <SizesTable
                     :item-id="item.id"
                     :sizes="item.sizes"
-                    @edit-size="(size) => $emit('edit-size', item.id, size)"
+                    :size-edits="sizeEdits"
                     @update-size="(size) => $emit('update-size', item.id, size)"
                     @cancel-size-edit="(size) => $emit('cancel-size-edit', item.id, size)"
                     @duplicate-size="(size) => $emit('duplicate-size', item.id, size)"
                     @delete-size="(size) => $emit('delete-size', item.id, size)"
                     @reorder-sizes="(sizes) => $emit('reorder-sizes', item.id, sizes)"
+                    @size-field-changed="handleSizeFieldChanged"
                   />
                 </div>
               </div>
@@ -488,19 +528,19 @@ export default {
     'copy-item',
     'delete-item',
     'reorder-items',
-    'edit-size',
     'update-size',
     'cancel-size-edit',
     'add-size',
     'duplicate-size',
     'delete-size',
     'reorder-sizes',
+    'bulk-update-sizes',
     'enter-reorder-mode',
-    'exit-reorder-mode',
-    'bulk-update-indices'
+    'exit-reorder-mode'
   ],
   data() {
     return {
+      sizeEdits: {},
       sortBy: 'index',
       sortOrder: 'asc',
       deleteDialog: false,
@@ -537,18 +577,24 @@ export default {
         const valA = a[this.sortBy];
         const valB = b[this.sortBy];
 
-        // Special numeric sort for 'index'
         if (this.sortBy === 'index') {
-          return this.sortOrder === 'asc'
-            ? valA - valB
-            : valB - valA;
+          return this.sortOrder === 'asc' ? valA - valB : valB - valA;
         }
 
-        // Default string comparison
         return this.sortOrder === 'asc'
           ? String(valA).localeCompare(String(valB))
           : String(valB).localeCompare(String(valA));
       });
+    },
+
+    dirtyCount() {
+      return Object.keys(this.sizeEdits).length;
+    },
+
+    dirtyItemIds() {
+      const ids = new Set();
+      Object.values(this.sizeEdits).forEach(e => ids.add(e.itemId));
+      return ids;
     }
   },
   watch: {
@@ -558,6 +604,13 @@ export default {
       } else {
         this.exitReorderMode();
       }
+    },
+    items(newVal) {
+      if (this.reorderMode) {
+        this.initReorderMode();
+      }
+      // Clear dirty edits after any server reload
+      this.sizeEdits = {};
     }
   },
   mounted() {
@@ -614,15 +667,11 @@ export default {
     },
 
     async saveReorderChanges() {
-      // Update indices based on current order
-      this.$emit('reorder-items', this.reorderItems);
-      const updatedItems = this.reorderItems.map((item, index) => ({
+      const updatedItems = this.reorderItems.map((item, i) => ({
         ...item,
-        index: index + 1
+        index: i + 1
       }));
-
-      // Emit bulk update event
-      this.$emit('bulk-update-indices', updatedItems);
+      this.$emit('reorder-items', updatedItems);
     },
 
     initReorderMode() {
@@ -777,6 +826,56 @@ export default {
 
       // Force reactivity update
       this.$forceUpdate();
+    },
+
+    handleSizeFieldChanged({ sizeId, itemId, field, value }) {
+      const item = this.items.find(i => i.id === itemId);
+      const size = item?.sizes.find(s => s.id === sizeId);
+      if (!size) return;
+
+      const existing = this.sizeEdits[sizeId];
+      const updated = existing
+        ? { ...existing, [field]: value }
+        : {
+            itemId,
+            original: { name: size.name, price: size.price, unlimited: size.unlimited, quantity: size.quantity },
+            name: size.name,
+            price: size.price,
+            unlimited: size.unlimited,
+            quantity: size.quantity,
+            [field]: value
+          };
+
+      const o = updated.original;
+      const isChanged =
+        updated.name !== o.name ||
+        Number(updated.price) !== Number(o.price) ||
+        updated.unlimited !== o.unlimited ||
+        Number(updated.quantity) !== Number(o.quantity);
+
+      if (isChanged) {
+        this.sizeEdits = { ...this.sizeEdits, [sizeId]: updated };
+      } else {
+        const next = { ...this.sizeEdits };
+        delete next[sizeId];
+        this.sizeEdits = next;
+      }
+    },
+
+    saveAllSizes() {
+      const sizes = Object.entries(this.sizeEdits).map(([sizeId, edit]) => ({
+        sizeId: Number(sizeId),
+        itemId: edit.itemId,
+        name: edit.name,
+        price: edit.price,
+        unlimited: edit.unlimited,
+        quantity: edit.quantity
+      }));
+      this.$emit('bulk-update-sizes', sizes);
+    },
+
+    discardAllSizes() {
+      this.sizeEdits = {};
     },
 
     confirmDelete(item) {

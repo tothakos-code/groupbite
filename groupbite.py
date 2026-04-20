@@ -3,7 +3,7 @@ import click
 import eventlet
 eventlet.monkey_patch(thread=True, time=True)
 
-from app import create_app, create_migration
+from app import create_app, create_migration, downgrade_migration
 from app import loader
 from app.socketio_singleton import SocketioSingleton
 
@@ -36,11 +36,26 @@ def run():
         debug=False
     )
 
+@cli.command("init")
+def init():
+    """Generate VAPID keys, Fernet key, and SECRET_KEY; write them to .env."""
+    from app.vapid import main as vapid_main
+    vapid_main()
+
+
 @cli.command("migrate")
 def migrate():
     """Generate a new Alembic migration based on model changes."""
     create_migration()
     print(f"Migration generated.")
+
+
+@cli.command("downgrade")
+@click.argument("revision", default="-1")
+def downgrade(revision):
+    """Downgrade the database. REVISION defaults to -1 (one step back), or pass a specific revision ID."""
+    downgrade_migration(revision)
+    print(f"Downgrade to '{revision}' complete.")
 
 
 if __name__ == "__main__":

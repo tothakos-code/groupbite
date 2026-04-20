@@ -11,7 +11,7 @@
         Előző rendeléseid és statisztikáid
       </p>
     </div>
-    <UserStatistics :user-id="auth.user.id" />
+    <UserStatistics :user-id="userId" />
     <!-- Search and Filter Section -->
     <v-card
       class="mb-4"
@@ -340,10 +340,16 @@ import { useAuth } from "@/stores/auth.js";
 import { reactive } from 'vue'
 
 export default {
-  name: "UserMenu",
+  name: "OrderHistory",
   components: {
     UserStatistics,
     Paginator
+  },
+  props: {
+    userId: {
+      type: String,
+      required: true
+    },
   },
   setup() {
     const auth = useAuth();
@@ -373,6 +379,11 @@ export default {
     },
 
   },
+  watch: {
+    userId() {
+      this.loadUserHistory();
+    }
+  },
   mounted() {
     this.loadUserHistory()
   },
@@ -392,7 +403,7 @@ export default {
         params['date_from'] = this.dateRange[0].toISODate()
         params['date_to'] = this.dateRange[this.dateRange.length - 1].toISODate()
       }
-      this.auth.orders(params)
+      this.auth.orders(this.userId, params)
         .then(response => {
             this.orderHistoryList = response.data.data.items;
             this.vendorOptions = response.data.data.vendors;

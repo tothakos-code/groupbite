@@ -5,6 +5,7 @@ app/controllers/__pycache__
 app/services/__pycache__
 app/utils/__pycache__
 db/data/
+db/data.backup/
 db/migrations/__pycache__
 db/migrations/versions/__pycache__
 .env

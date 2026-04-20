@@ -27,10 +27,28 @@ self.addEventListener('push', (event) => {
         body: data.body || 'No message',
         icon: data.icon,
         image: data.image,
-        tag: 'push-notification'
+        tag: data.tag || 'push-notification',
+        data: { url: data.url || '/' },
       })
     );
   } catch (error) {
     console.error('Error processing push event:', error);
   }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('navigate' in client && 'focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    })
+  );
 });

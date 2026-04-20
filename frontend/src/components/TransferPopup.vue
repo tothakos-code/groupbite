@@ -43,7 +43,7 @@
               class="d-flex flex-column align-center justify-center py-6 px-3 text-center cursor-pointer hover:shadow-md transition"
               color="success"
               variant="elevated"
-              :disabled="!enable_full_automatic_order"
+              :disabled="!enableFullAutomaticOrder"
               @click="startFullAutoOrder"
             >
               <v-icon size="48">
@@ -68,8 +68,8 @@
               color="info"
               variant="elevated"
               :loading="emailSending"
-              :disabled="!enable_email_order"
-              @click="confirmSemiAuto = true"
+              :disabled="!enableEmailOrder"
+              @click="confirmSemiAuto = true; optionDialogVisible = false"
             >
               <v-icon size="48">
                 mdi-email-fast-outline
@@ -92,7 +92,7 @@
               class="fill-height d-flex flex-column align-center justify-center py-6 px-3 text-center cursor-pointer hover:shadow-md transition"
               color="primary"
               variant="elevated"
-              :disabled="!enable_manual_order"
+              :disabled="!enableManualOrder"
               @click="startManualOrder"
             >
               <v-icon size="48">
@@ -424,7 +424,7 @@
               A különböző extra díjak összegét írd be valuta nélkül
             </p>
             <p class="text-body-2 mb-3">
-              Az alapértelmezett beállított díj: {{ vendorStore.selectedVendor.settings.transport_price.value }}
+              Az alapértelmezett beállított díj: {{ vendorStore.selectedVendor.settings.transport_price }}
             </p>
 
             <v-text-field
@@ -471,15 +471,15 @@ import { unref } from "vue";
 export default {
   name: "TransferPopup",
   props: {
-    enable_email_order: {
+    enableEmailOrder: {
       type: Boolean,
       default: false
     },
-    enable_manual_order: {
+    enableManualOrder: {
       type: Boolean,
       default: false
     },
-    enable_full_automatic_order: {
+    enableFullAutomaticOrder: {
       type: Boolean,
       default: false
     },
@@ -506,12 +506,12 @@ export default {
       confirmSemiAuto: false,
       orderItems: [],
       psid: "",
-      transport_price: unref(useVendorStore().selectedVendor.settings.transport_price.value)
+      transport_price: unref(useVendorStore().selectedVendor.settings.transport_price)
     }
   },
   computed: {
     orderDesc() {
-      return this.vendorStore.selectedVendor.settings.comment_example.value
+      return this.vendorStore.selectedVendor.settings.comment_example
     },
     tickedItemsCount() {
       return this.orderItems.filter(item => item.tick && !item.deleted).length;
@@ -553,7 +553,7 @@ export default {
             // Safely get category values, default to empty string if missing
             const categoryA = a.category || '';
             const categoryB = b.category || '';
-            
+
             // Sort by category first, then by name
             const categoryCompare = categoryA.localeCompare(categoryB);
             if (categoryCompare !== 0) return categoryCompare;
@@ -638,8 +638,13 @@ export default {
     async confirmAndSendEmail() {
       this.confirmSemiAuto = false;
       this.optionDialogVisible = false;
-      await this.sendOrderEmail().then(() => {
-        this.showFinish = true;
+      this.showSpinner = true;
+      await this.sendOrderEmail().then((result) => {
+        this.showSpinner = false;
+        if (result) {
+          this.showFinish = true;
+        }
+
       });
     },
     processItemChanges(newItemMap, oldItemsMap) {
@@ -738,7 +743,7 @@ export default {
         if (item.deleted) {
           continue
         }
-        orderText += this.vendorStore.selectedVendor.settings.order_text_template.value
+        orderText += this.vendorStore.selectedVendor.settings.order_text_template
           .replace("${quantity}", item.quantity)
           .replace("${item_name}", item.item_name)
           .replace("${size_name}", item.size_name)
@@ -787,6 +792,7 @@ export default {
     },
     async sendOrderEmail() {
       this.emailSending = true;
+      let result = true;
       try {
         await this.orderStore.sendOrderEmail()
 
@@ -801,9 +807,11 @@ export default {
           text: "Hiba történt az email küldése során.",
         });
         console.error('Email sending error:', error);
+        result = false;
       } finally {
         this.emailSending = false;
       }
+      return result;
     }
   }
 }

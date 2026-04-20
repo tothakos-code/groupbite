@@ -1,7 +1,7 @@
 import axios from "axios";
 import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
-import { requestNotificationPermission } from "@/main";
+import { regWorker } from "@/main";
 import { useAuth } from "@/stores/auth";
 
 export const useVendorStore = defineStore("vendor", {
@@ -106,6 +106,18 @@ export const useVendorStore = defineStore("vendor", {
         this.isLoading = false;
       }
     },
+    async fetchVendorSettings(vendorId) {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`/api/vendor/${vendorId}/settings`);
+        return response
+      } catch (error) {
+        console.error("Failed to get vendor settings:", error.response.data.error);
+        return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
     async fetchWebhooks(vendorId) {
       this.isLoading = true;
       try {
@@ -195,7 +207,9 @@ export const useVendorStore = defineStore("vendor", {
         return;
       }
       try {
-        await requestNotificationPermission();
+        // Permission is already granted by the UI layer before calling this action.
+        // Just ensure the service worker is registered.
+        await regWorker();
 
         const publicKey = await axios.get("/vapid_public_key");
         const registration = await navigator.serviceWorker.ready;
@@ -234,10 +248,19 @@ export const useVendorStore = defineStore("vendor", {
         return;
       }
       try {
+        // Also unsubscribe from the browser push manager
+        try {
+          const reg = await navigator.serviceWorker.getRegistration('/');
+          if (reg) {
+            const sub = await reg.pushManager.getSubscription();
+            if (sub) await sub.unsubscribe();
+          }
+        } catch (e) { /* ignore, server-side unsubscribe still proceeds */ }
+
         const response = await axios.delete(`/api/vendor/${this.selectedVendor.id}/notifications/reminder/unsubscribe`)
         notify({
           type: "info",
-          text: `Kikapcsoltad a(z) ${this.selectedVendor.name} értesítést!`,
+          text: `Kikapcsoltad a(z) ${this.selectedVendor.name} értesítést minden eszközön!`,
         });
         return response
       } catch (error) {
@@ -247,6 +270,37 @@ export const useVendorStore = defineStore("vendor", {
           text: "Értesítés kikapcsolás nem sikerült!",
         });
         return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async unsubscribeDevice(endpoint) {
+      const auth = useAuth()
+      if (!auth.isLoggedIn) return;
+      try {
+        // Unsubscribe from browser push manager if it matches this device
+        try {
+          const reg = await navigator.serviceWorker.getRegistration('/');
+          if (reg) {
+            const sub = await reg.pushManager.getSubscription();
+            if (sub && sub.endpoint === endpoint) await sub.unsubscribe();
+          }
+        } catch (e) { /* ignore */ }
+
+        await axios.delete(
+          `/api/vendor/${this.selectedVendor.id}/notifications/reminder/unsubscribe/device`,
+          { data: { endpoint } }
+        );
+        notify({
+          type: "info",
+          text: `Kikapcsoltad a(z) ${this.selectedVendor.name} értesítést ezen az eszközön!`,
+        });
+      } catch (error) {
+        console.error("Failed to unsubscribe device from notification:", error);
+        notify({
+          type: "error",
+          text: "Értesítés kikapcsolás nem sikerült!",
+        });
       } finally {
         this.isLoading = false;
       }

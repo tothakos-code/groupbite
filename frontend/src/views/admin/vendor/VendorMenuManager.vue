@@ -1,642 +1,1248 @@
 <template>
-  <div class="">
-    <div class="row ms-2">
-      <div class="">
+  <v-container
+    v-if="auth.isLoggedIn"
+    fluid
+    class="pa-2 pa-md-4"
+  >
+    <!-- Header -->
+    <v-row class="mb-4">
+      <v-col>
+        <h1 class="text-h4 text-md-h3">
+          Menü kezelés
+        </h1>
+      </v-col>
+    </v-row>
+
+    <!-- Create Menu Section -->
+    <v-row class="mb-4">
+      <v-col>
+        <v-card
+          elevation="2"
+          class="pa-4"
+        >
+          <v-card-title class="text-h6 pa-0 mb-3">
+            Új menü létrehozása
+          </v-card-title>
+
+          <v-row class="align-center">
+            <v-col
+              cols="12"
+              md="6"
+            >
+              <v-text-field
+                v-model="newMenu.name"
+                label="Név"
+                variant="outlined"
+                density="compact"
+                hide-details
+              />
+            </v-col>
+            <v-col
+              cols="12"
+              md="6"
+            >
+              <div class="d-flex flex-wrap ga-2">
+                <v-btn
+                  color="primary"
+                  variant="flat"
+                  prepend-icon="mdi-plus"
+                  @click="addMenu()"
+                >
+                  Létrehoz
+                </v-btn>
+                <v-btn
+                  color="primary"
+                  variant="outlined"
+                  prepend-icon="mdi-import"
+                  @click="openImportPopup()"
+                >
+                  Importálás
+                </v-btn>
+                <v-btn
+                  v-if="selectedVendor.type === 'plugin'"
+                  color="primary"
+                  variant="outlined"
+                  prepend-icon="mdi-qrcode-scan"
+                  @click="openScanPopup()"
+                >
+                  Scan
+                </v-btn>
+              </div>
+            </v-col>
+          </v-row>
+        </v-card>
+      </v-col>
+    </v-row>
+    <v-card
+      class="mb-4"
+      elevation="1"
+    >
+      <v-card-text>
+        <v-row>
+          <!-- Search Input -->
+          <v-col
+            cols="12"
+            md="6"
+          >
+            <v-text-field
+              v-model="searchQuery"
+              label="Keresés..."
+              placeholder="Keress étel névre, rendelésre, vagy üzletre"
+              prepend-inner-icon="mdi-magnify"
+              variant="outlined"
+              density="compact"
+              clearable
+              @input="debounceSearch"
+            />
+          </v-col>
+
+          <!-- Active Filter -->
+          <v-col
+            cols="12"
+            md="4"
+          >
+            <v-checkbox
+              v-model="searchActive"
+              label="Csak aktív menük"
+              variant="outlined"
+              density="compact"
+              clearable
+              color="primary"
+              prepend-inner-icon="mdi-store"
+              @update:model-value="applyFilters"
+            />
+          </v-col>
+
+          <!-- Date Range Filter -->
+          <v-col
+            cols="12"
+            md="2"
+          >
+            <v-menu
+              v-model="dateMenu"
+              :close-on-content-click="false"
+              transition="scale-transition"
+              offset-y
+              min-width="auto"
+            >
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  variant="outlined"
+                  color="primary"
+                  size="small"
+                  block
+                >
+                  <v-icon
+                    small
+                    class="mr-1"
+                  >
+                    mdi-calendar
+                  </v-icon>
+                  Dátum tartomány
+                </v-btn>
+              </template>
+              <v-card>
+                <v-card-text>
+                  <v-date-picker
+                    v-model="dateRange"
+                    multiple="range"
+                    title="Dátum szűrés"
+                    @update:model-value="applyDateFilter"
+                  />
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn
+                    text
+                    @click="clearDateFilter"
+                  >
+                    Üres
+                  </v-btn>
+                  <v-btn
+                    text
+                    @click="dateMenu = false"
+                  >
+                    Bezár
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-menu>
+          </v-col>
+        </v-row>
+
+        <!-- Active Filters -->
         <div
-          class="row my-2"
+          v-if="hasActiveFilters"
+          class="mt-3"
         >
-          <div class="col-auto">
-            <label for="name">
-              Név:
-            </label>
-            <input
-              v-model="newMenu.name"
-              class="form-control"
-              type="text"
-              name="name"
+          <v-chip-group>
+            <v-chip
+              v-if="searchQuery"
+              closable
+              color="primary"
+              variant="outlined"
+              @click:close="clearSearch"
             >
-          </div>
+              <v-icon
+                small
+                class="mr-1"
+              >
+                mdi-magnify
+              </v-icon>
+              Keresés: "{{ searchQuery }}"
+            </v-chip>
+
+            <v-chip
+              v-if="searchActive"
+              closable
+              color="primary"
+              variant="outlined"
+              @click:close="clearActive"
+            >
+              <v-icon
+                small
+                class="mr-1"
+              >
+                mdi-store
+              </v-icon>
+              {{ searchActive }}
+            </v-chip>
+
+            <v-chip
+              v-if="dateRange && dateRange.length > 1"
+              closable
+              color="primary"
+              variant="outlined"
+              @click:close="clearDateFilter"
+            >
+              <v-icon
+                small
+                class="mr-1"
+              >
+                mdi-calendar
+              </v-icon>
+              {{ formatDateRange(dateRange) }}
+            </v-chip>
+
+            <v-chip
+              v-if="hasActiveFilters"
+              color="error"
+              variant="outlined"
+              @click="clearAllFilters"
+            >
+              <v-icon
+                small
+                class="mr-1"
+              >
+                mdi-close
+              </v-icon>
+              Szűrések törlése
+            </v-chip>
+          </v-chip-group>
         </div>
-        <v-btn
-          class="bg-primary"
-          type="button"
-          name="save"
-          @click="addMenu()"
+      </v-card-text>
+    </v-card>
+    <!-- Mobile Cards View -->
+    <v-row
+      v-if="!isLoading && $vuetify.display.mobile"
+      class="d-md-none"
+    >
+      <v-col cols="12">
+        <v-card
+          v-for="[id, menu] in menulist"
+          :key="id"
+          class="mb-3"
+          elevation="2"
         >
-          Létrehoz
-        </v-btn>
-        <v-btn
-          class="ms-2 bg-primary"
-          type="button"
-          name="save"
-          @click="openImportPopup()"
-        >
-          Importálás
-        </v-btn>
-        <v-btn
-          v-if="selectedVendor.type === 'plugin'"
-          class="ms-2 bg-primary"
-          type="button"
-          name="save"
-          @click="openScanPopup()"
-        >
-          Scan
-        </v-btn>
-      </div>
-      <div
-        class="row mt-2"
-      >
-        <div class="col-2">
-          <label for="itemName">
-            Keresés:
-          </label>
-          <input
-            v-model.trim="searchString"
-            type="text"
-            name="itemName"
-            class="form-control"
-          >
-        </div>
-        <v-btn
-          class="bg-primary align-self-end col-auto"
-          type="button"
-          name="save"
-          @click="search()"
-        >
-          keresés
-        </v-btn>
-      </div>
-    </div>
-    <div class="">
-      <table class="table table-striped table-hover ">
-        <thead>
-          <tr class="">
-            <th
-              scope="col"
-              class="col-auto"
-            >
-              #
-            </th>
-            <th
-              scope="col"
-              class="col-2"
-            >
-              Név
-            </th>
-            <th
-              scope="col"
-              class="col-2"
-            >
-              Dátumtól
-            </th>
-            <th
-              scope="col"
-              class="col-2"
-            >
-              Dátumig
-            </th>
-            <th
-              scope="col"
-              class="col-auto"
-            >
-              Aktív
-            </th>
-            <th
-              scope="col"
-              class="col-5"
-            >
-              Műveletek
-            </th>
-          </tr>
-        </thead>
-        <tbody
-          v-if="!isLoading"
-          class="table-group-divider"
-        >
-          <tr
-            v-for="[i, menu] in menulist"
-            :key="i"
-            class=""
-          >
-            <th
-              scope="row"
-              class="col-auto"
-            >
-              {{ menu.id }}
-            </th>
-            <td class="col-2">
-              <input
+          <v-card-text class="pb-2">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <div class="text-subtitle-1 font-weight-bold">
+                #{{ menu.id }}
+              </div>
+              <v-chip
+                :color="menu.active ? 'success' : 'default'"
+                size="small"
+                variant="flat"
+              >
+                {{ menu.active ? 'Aktív' : 'Inaktív' }}
+              </v-chip>
+            </div>
+
+            <div class="text-body-2 mb-2">
+              <strong>Név:</strong>
+              <v-text-field
                 v-if="menu.isEditing"
                 v-model="menu.name"
-                class="form-control"
-                type="text"
-              >
-              <span v-else>
-                {{ menu.name }}
-              </span>
-            </td>
-            <td class="col-2">
-              <input
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="mt-1"
+              />
+              <span v-else>{{ menu.name }}</span>
+            </div>
+
+            <div class="text-body-2 mb-2">
+              <strong>Dátumtól:</strong>
+              <v-text-field
                 v-if="menu.isEditing"
                 v-model="menu.from_date"
-                class="form-control"
-                type="text"
-              >
-              <span v-else>
-                {{ menu.from_date }}
-              </span>
-            </td>
-            <td class="col-2">
-              <input
+                variant="outlined"
+                density="compact"
+                hide-details
+                type="date"
+                class="mt-1"
+              />
+              <span v-else>{{ menu.from_date || '-' }}</span>
+            </div>
+
+            <div class="text-body-2 mb-3">
+              <strong>Dátumig:</strong>
+              <v-text-field
                 v-if="menu.isEditing"
                 v-model="menu.to_date"
-                class="form-control"
-                type="text"
-              >
-              <span v-else>
-                {{ menu.to_date }}
-              </span>
-            </td>
-            <td class="col-auto">
-              {{ menu.active }}
-            </td>
-            <td class="col row">
-              <div
-                class="btn col-auto text-primary"
-                title="Üzlet elérhetőség ki/be kapcsolása"
+                variant="outlined"
+                density="compact"
+                hide-details
+                type="date"
+                class="mt-1"
+              />
+              <span v-else>{{ menu.to_date || '-' }}</span>
+            </div>
+          </v-card-text>
+
+          <v-card-actions class="pt-0">
+            <!-- Normal state buttons -->
+            <div
+              v-if="!menu.isEditing"
+              class="d-flex ga-2 flex-wrap"
+            >
+              <v-btn
+                :color="menu.active ? 'warning' : 'success'"
+                variant="text"
+                size="small"
+                :prepend-icon="menu.active ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off'"
                 @click="toggleActivation(menu)"
               >
-                <svg
-                  v-if="menu.active"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="currentColor"
-                  class="bi bi-toggle-on"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-                </svg>
-                <svg
-                  v-else
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="currentColor"
-                  class="bi bi-toggle-off"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-                </svg>
-              </div>
-              <div
-                v-if="!menu.isEditing"
-                class="col-auto"
+                {{ menu.active ? 'Kikapcsol' : 'Bekapcsol' }}
+              </v-btn>
+              <v-btn
+                color="primary"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-pencil"
+                @click="edit(menu.id)"
               >
-                <v-btn
-                  type="button"
-                  name="button"
-                  title="Szerkesztés"
-                  class="bg-primary me-1 mt-1"
-                  icon
-                  size="small"
-                  border="primary thin"
-                  rounded
-                  varian="text"
-                  @click="edit(menu.id)"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    class="bi bi-pen"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z" />
-                  </svg>
-                </v-btn>
-              </div>
-              <div
-                v-if="menu.isEditing"
-                class="col-auto"
+                Szerkesztés
+              </v-btn>
+              <v-btn
+                color="info"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-eye"
+                @click="openItemManager(menu.id)"
               >
-                <v-btn
-                  type="button"
-                  name="button"
-                  title="Mentés"
-                  class="bg-primary me-1 mt-1"
-                  icon
-                  size="small"
-                  border="primary thin"
-                  rounded
-                  varian="text"
-                  @click="updateMenu(menu.id)"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    class="bi bi-floppy"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M11 2H9v3h2z" />
-                    <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z" />
-                  </svg>
-                </v-btn>
-              </div>
-              <div
-                v-if="menu.isEditing"
-                class="col-auto"
+                Termékek
+              </v-btn>
+              <v-btn
+                color="secondary"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-content-copy"
+                @click="duplicateMenu(menu.id)"
               >
-                <v-btn
-                  type="button"
-                  name="button"
-                  title="Mégse"
-                  class="bg-primary me-1 mt-1"
-                  icon
-                  size="small"
-                  border="primary thin"
-                  rounded
-                  varian="text"
-                  @click="cancelEdit(menu.id)"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    class="bi bi-x"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
-                  </svg>
-                </v-btn>
-              </div>
-              <div
-                v-if="!menu.isEditing"
-                class="col-auto"
+                Duplikál
+              </v-btn>
+              <v-btn
+                color="error"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-delete"
+                @click="confirmDeleteMenu(menu)"
               >
-                <v-btn
-                  type="button"
-                  name="button"
-                  title="Törlés"
-                  class="bg-primary me-1 mt-1"
-                  icon
-                  size="small"
-                  border="primary thin"
-                  rounded
-                  varian="text"
-                  @click="deleteMenu(menu.id)"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    class="bi bi-trash"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
-                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
-                  </svg>
-                </v-btn>
-              </div>
-              <div
-                v-if="!menu.isEditing"
-                class="col-auto"
-              >
-                <v-btn
-                  type="button"
-                  name="button"
-                  title="Duplikál"
-                  class="bg-primary me-1 mt-1"
-                  icon
-                  size="small"
-                  border="primary thin"
-                  rounded
-                  varian="text"
-                  @click="duplicateMenu(menu.id)"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    class="bi bi-copy"
-                    viewBox="0 0 16 16"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"
-                    />
-                  </svg>
-                </v-btn>
-              </div>
-              <div
-                v-if="!menu.isEditing"
-                class="col-auto"
-              >
-                <v-btn
-                  type="button"
-                  name="button"
-                  title="Items"
-                  class="bg-primary me-1 mt-1"
-                  icon
-                  size="small"
-                  border="primary thin"
-                  rounded
-                  varian="text"
-                  @click="openItemManger(menu.id)"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    class="bi bi-menu-button-wide"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M2 12a.5.5 0 00.5.5h6a.5.5 0 000-1h-6a.5.5 0 00-.5.5Zm0-5a.5.5 0 00.5.5h9a.5.5 0 000-1h-9A.5.5 0 002 7M1 4V2A1 1 0 012 1H14a1 1 0 011 1V4Zm14 6v3a1 1 0 01-1 1H2A1 1 0 011 13V10M1 5H15V9H1ZM0 13a2 2 0 002 2H14a2 2 0 002-2V2A2 2 0 0014 0H2A2 2 0 000 2ZM2 2.5a.5.5 0 00.5.5h5.5a.5.5 0 000-1h-5.5A.5.5 0 002 2.5" />
-                  </svg>
-                </v-btn>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-        <div
-          v-else
-          class="row text-center"
-        >
-          <div
-            class="spinner-border"
-            role="status"
-          >
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      </table>
-      <Paginator
-        :total-pages="Math.ceil(totalCount/limit)"
-        :current-page="currentPage"
-        :range="5"
-        @page-change="handlePageChange"
-      />
+                Törlés
+              </v-btn>
+            </div>
 
-      <Popup
-        title="Menü importlálsa JSON fájlból"
-        :show-modal="showImportPopup"
-        confirm-text="Küldés"
-        @cancel="showImportPopup=false"
-        @confirm="submitJsonFile()"
-      >
-        <p>
-          A JSON fájlnak követnie kell egy meghatárotzott struktúrát. Bővebben lásd a dokumentációban(bal alsó sarok <span class="fst-italic">i</span> ikon).
-        </p>
-        <div class="mb-3">
-          <label
-            for="importJson"
-            class="form-label"
-          >JSON fájl:</label>
-          <input
-            id="importJson"
-            class="form-control"
-            type="file"
-            @change="handleFileUpload( $event )"
-          >
+            <!-- Edit state buttons -->
+            <div
+              v-else
+              class="d-flex ga-2"
+            >
+              <v-btn
+                color="success"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-content-save"
+                @click="updateMenu(menu.id)"
+              >
+                Mentés
+              </v-btn>
+              <v-btn
+                color="grey"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-close"
+                @click="cancelEdit(menu.id)"
+              >
+                Mégse
+              </v-btn>
+            </div>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Desktop Table View -->
+    <v-row
+      class="d-none d-md-flex"
+    >
+      <v-col>
+        <v-data-table
+          :headers="headers"
+          :items="Array.from(menulist.values())"
+          :loading="isLoading"
+          loading-text="Adatok betöltése"
+          :items-per-page="limit"
+          :items-per-page-options="itemsPerPageOptions"
+          :items-length="totalCount"
+          class="elevation-1"
+          hover
+          fixed-header
+          @update:items-per-page="updateItemsPerPage"
+          @update:page="handlePageChange"
+        >
+          <!-- ID column -->
+          <template #item.id="{ item }">
+            <span class="font-weight-bold">#{{ item.id }}</span>
+          </template>
+
+          <!-- Name column -->
+          <template #item.name="{ item }">
+            <v-text-field
+              v-if="item.isEditing"
+              v-model="item.name"
+              variant="outlined"
+              density="compact"
+              hide-details
+            />
+            <span v-else>{{ item.name }}</span>
+          </template>
+
+          <!-- From date column -->
+          <template #item.from_date="{ item }">
+            <v-text-field
+              v-if="item.isEditing"
+              v-model="item.from_date"
+              variant="outlined"
+              density="compact"
+              hide-details
+              type="date"
+              style="width: 160px;"
+            />
+            <span v-else>{{ item.from_date || '-' }}</span>
+          </template>
+
+          <!-- To date column -->
+          <template #item.to_date="{ item }">
+            <v-text-field
+              v-if="item.isEditing"
+              v-model="item.to_date"
+              variant="outlined"
+              density="compact"
+              hide-details
+              type="date"
+              style="width: 160px;"
+            />
+            <span v-else>{{ item.to_date || '-' }}</span>
+          </template>
+
+          <!-- Active column -->
+          <template #item.active="{ item }">
+            <v-chip
+              :color="item.active ? 'success' : 'default'"
+              size="small"
+              variant="flat"
+            >
+              {{ item.active ? 'Aktív' : 'Inaktív' }}
+            </v-chip>
+          </template>
+
+          <!-- Actions column -->
+          <template #item.actions="{ item }">
+            <div
+              v-if="!item.isEditing"
+              class="d-flex ga-1"
+            >
+              <v-tooltip text="Aktiválás ki/be">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    :icon="item.active ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off'"
+                    :color="item.active ? 'warning' : 'success'"
+                    variant="text"
+                    size="small"
+                    @click="toggleActivation(item)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip text="Szerkesztés">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-pencil"
+                    color="primary"
+                    variant="text"
+                    size="small"
+                    @click="edit(item.id)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip text="Termékek kezelése">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-eye"
+                    color="info"
+                    variant="text"
+                    size="small"
+                    @click="openItemManager(item.id)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip text="Duplikálás">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-content-copy"
+                    color="secondary"
+                    variant="text"
+                    size="small"
+                    @click="duplicateMenu(item.id)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip text="Törlés">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-delete"
+                    color="error"
+                    variant="text"
+                    size="small"
+                    @click="confirmDeleteMenu(item)"
+                  />
+                </template>
+              </v-tooltip>
+            </div>
+
+            <div
+              v-else
+              class="d-flex ga-1"
+            >
+              <v-tooltip text="Mentés">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-content-save"
+                    color="success"
+                    variant="text"
+                    size="small"
+                    @click="updateMenu(item.id)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip text="Mégse">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-close"
+                    color="grey"
+                    variant="text"
+                    size="small"
+                    @click="cancelEdit(item.id)"
+                  />
+                </template>
+              </v-tooltip>
+            </div>
+          </template>
+
+          <!-- Custom bottom pagination -->
+          <template #bottom>
+            <div class="d-flex justify-space-between align-center pa-4">
+              <div class="text-body-2 text-medium-emphasis">
+                {{ paginationText }}
+              </div>
+              <div class="d-flex align-center ga-4">
+                <v-select
+                  v-model="limit"
+                  :items="itemsPerPageOptions"
+                  label="Elemek száma"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  style="min-width: 120px;"
+                />
+                <v-pagination
+                  v-model="currentPage"
+                  :length="Math.ceil(totalCount / limit)"
+                  :total-visible="$vuetify.display.mobile ? 5 : 7"
+                  size="small"
+                />
+              </div>
+            </div>
+          </template>
+        </v-data-table>
+      </v-col>
+    </v-row>
+
+    <!-- Mobile Pagination -->
+    <v-row
+      v-if="!isLoading && $vuetify.display.mobile"
+      class="d-md-none"
+    >
+      <v-col class="d-flex flex-column align-center ga-4">
+        <div class="text-body-2 text-medium-emphasis">
+          {{ paginationText }}
         </div>
-      </Popup>
-      <Popup
-        title="Menü scan indítás"
-        :show-modal="showScanPopup"
-        confirm-text="Scan"
-        @cancel="showScanPopup=false"
-        @confirm="submitScan()"
-      >
-        <p>
-          Válaszd ki a megfelelő dátumot
-        </p>
-        <div class="mb-3">
+        <div class="d-flex align-center ga-4">
+          <v-select
+            v-model="limit"
+            :items="itemsPerPageOptions"
+            label="Elemek/oldal"
+            variant="outlined"
+            density="compact"
+            hide-details
+            style="min-width: 120px;"
+          />
+          <v-pagination
+            v-model="currentPage"
+            :length="Math.ceil(totalCount / limit)"
+            :total-visible="5"
+            size="small"
+          />
+        </div>
+      </v-col>
+    </v-row>
+
+    <!-- Loading state -->
+    <v-row v-if="isLoading">
+      <v-col class="text-center py-12">
+        <v-progress-circular
+          indeterminate
+          size="64"
+          color="primary"
+        />
+        <div class="text-h6 mt-4">
+          Menük betöltése...
+        </div>
+      </v-col>
+    </v-row>
+
+    <!-- Import Dialog -->
+    <v-dialog
+      v-model="showImportPopup"
+      max-width="600"
+      :fullscreen="$vuetify.display.mobile"
+      :transition="$vuetify.display.mobile ? 'dialog-bottom-transition' : 'dialog-transition'"
+    >
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon
+            class="me-2"
+            color="primary"
+          >
+            mdi-import
+          </v-icon>
+          <span class="text-h6">Menü importálása JSON fájlból</span>
+          <v-spacer />
+          <v-btn
+            v-if="$vuetify.display.mobile"
+            icon="mdi-close"
+            variant="text"
+            @click="showImportPopup = false"
+          />
+        </v-card-title>
+
+        <v-card-text class="py-4">
+          <v-alert
+            type="info"
+            class="mb-4"
+          >
+            A JSON fájlnak követnie kell egy meghatározott struktúrát. Bővebben lásd a dokumentációban.
+          </v-alert>
+
+          <v-file-input
+            v-model="uploadedFiles"
+            label="JSON fájl"
+            accept=".json"
+            variant="outlined"
+            prepend-icon="mdi-file-document"
+            @change="handleFileUpload"
+          />
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-spacer v-if="!$vuetify.display.mobile" />
+          <v-btn
+            :block="$vuetify.display.mobile"
+            color="grey-darken-1"
+            variant="outlined"
+            class="mb-2 mb-sm-0"
+            @click="showImportPopup = false"
+          >
+            Mégse
+          </v-btn>
+          <v-btn
+            :block="$vuetify.display.mobile"
+            color="primary"
+            variant="flat"
+            :disabled="!file"
+            @click="submitJsonFile()"
+          >
+            Importálás
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Scan Dialog -->
+    <v-dialog
+      v-model="showScanPopup"
+      max-width="400"
+      :fullscreen="$vuetify.display.mobile"
+      :transition="$vuetify.display.mobile ? 'dialog-bottom-transition' : 'dialog-transition'"
+    >
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon
+            class="me-2"
+            color="primary"
+          >
+            mdi-qrcode-scan
+          </v-icon>
+          <span class="text-h6">Menü scan indítás</span>
+          <v-spacer />
+          <v-btn
+            v-if="$vuetify.display.mobile"
+            icon="mdi-close"
+            variant="text"
+            @click="showScanPopup = false"
+          />
+        </v-card-title>
+
+        <v-card-text class="py-4">
+          <div class="text-body-1 mb-4">
+            Válaszd ki a megfelelő dátumot
+          </div>
           <v-date-picker
             v-model="scanDate"
             show-adjacent-months
             first-day-of-week="1"
             hide-header
+            full-width
           />
-        </div>
-      </Popup>
-    </div>
-  </div>
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-spacer v-if="!$vuetify.display.mobile" />
+          <v-btn
+            :block="$vuetify.display.mobile"
+            color="grey-darken-1"
+            variant="outlined"
+            class="mb-2 mb-sm-0"
+            @click="showScanPopup = false"
+          >
+            Mégse
+          </v-btn>
+          <v-btn
+            :block="$vuetify.display.mobile"
+            color="primary"
+            variant="flat"
+            @click="submitScan()"
+          >
+            Scan
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Delete confirmation dialog -->
+    <v-dialog
+      v-model="deleteDialog"
+      max-width="500"
+      :fullscreen="$vuetify.display.mobile"
+      :transition="$vuetify.display.mobile ? 'dialog-bottom-transition' : 'dialog-transition'"
+    >
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon
+            class="me-2"
+            color="primary"
+          >
+            mdi-delete-alert
+          </v-icon>
+          <span class="text-h6">Menü törlése</span>
+          <v-spacer />
+          <v-btn
+            v-if="$vuetify.display.mobile"
+            icon="mdi-close"
+            variant="text"
+            @click="deleteDialog = false"
+          />
+        </v-card-title>
+
+        <v-card-text class="py-4">
+          <div class="text-body-1 mb-4">
+            Biztosan törölni szeretnéd a
+            <strong class="text-error">#{{ selectedMenu?.id }}</strong>
+            számú menüt?
+          </div>
+          <v-alert
+            type="warning"
+            class="mb-4"
+          >
+            Ez a művelet nem visszavonható!
+          </v-alert>
+          <div class="text-body-2">
+            <strong>Név:</strong> {{ selectedMenu?.name }}
+          </div>
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-spacer v-if="!$vuetify.display.mobile" />
+          <v-btn
+            :block="$vuetify.display.mobile"
+            color="grey-darken-1"
+            variant="outlined"
+            class="mb-2 mb-sm-0"
+            @click="deleteDialog = false"
+          >
+            Mégse
+          </v-btn>
+          <v-btn
+            :block="$vuetify.display.mobile"
+            color="primary"
+            variant="flat"
+            @click="deleteMenu"
+          >
+            Törlés
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Snackbar -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="4000"
+      :location="$vuetify.display.mobile ? 'top' : 'bottom end'"
+      :multi-line="$vuetify.display.mobile"
+    >
+      {{ snackbar.text }}
+      <template #actions>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="snackbar.show = false"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </v-container>
 </template>
 
-<script>
-import { useAuth } from "@/stores/auth";
-import { useMenuStore } from "@/stores/menu";
-import Popup from "@/components/Popup.vue";
-import Paginator from "@/components/Paginator.vue";
-import { notify } from "@kyvg/vue3-notification";
-import { useVendorStore } from "@/stores/vendor";
+<script setup>
+import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from "@/stores/auth"
+import { useMenuStore } from "@/stores/menu"
+import { useVendorStore } from "@/stores/vendor"
+
+// Composables
+const route = useRoute()
+const router = useRouter()
+const auth = useAuth()
+const menuStore = useMenuStore()
+const vendorStore = useVendorStore()
+
+// Reactive data
+const menulist = ref(new Map())
+const newMenu = ref({ name: "" })
+const isLoading = ref(true)
+const showImportPopup = ref(false)
+const showScanPopup = ref(false)
+const scanDate = ref(new Date())
+
+const searchQuery = ref("")
+const searchActive = ref(true)
+const dateMenu = ref(false)
+const dateRange = ref([])
+const searchTimeout = ref(null)
+
+const uploadedFiles = ref([])
+const file = ref(null)
+const limit = ref(10)
+const currentPage = ref(1)
+const totalCount = ref(0)
+const deleteDialog = ref(false)
+const selectedMenu = ref(null)
+const snackbar = ref({
+  show: false,
+  text: '',
+  color: 'success'
+})
+
+// Items per page options
+const itemsPerPageOptions = [
+  { value: 5, title: '5' },
+  { value: 10, title: '10' },
+  { value: 25, title: '25' },
+  { value: 50, title: '50' }
+]
+
+// Table headers configuration
+const headers = [
+  {
+    title: '#',
+    key: 'id',
+    align: 'start',
+    sortable: false,
+    width: '80px'
+  },
+  {
+    title: 'Név',
+    key: 'name',
+    align: 'start',
+    sortable: false,
+    minWidth: '200px'
+  },
+  {
+    title: 'Dátumtól',
+    key: 'from_date',
+    align: 'start',
+    sortable: false,
+    width: '180px'
+  },
+  {
+    title: 'Dátumig',
+    key: 'to_date',
+    align: 'start',
+    sortable: false,
+    width: '180px'
+  },
+  {
+    title: 'Aktív',
+    key: 'active',
+    align: 'center',
+    sortable: false,
+    width: '100px'
+  },
+  {
+    title: 'Műveletek',
+    key: 'actions',
+    align: 'center',
+    sortable: false,
+    width: '280px'
+  }
+]
+
+// Computed properties
+const selectedVendor = computed(() => {
+  return vendorStore.selectedVendor || { type: '' }
+})
+
+const paginationText = computed(() => {
+  const start = (currentPage.value - 1) * limit.value + 1
+  const end = Math.min(currentPage.value * limit.value, totalCount.value)
+  return `${start}-${end} / ${totalCount.value}`
+})
+
+const hasActiveFilters = computed(() => {
+  return searchQuery.value || searchActive.value || (dateRange.value && dateRange.value.length > 1)
+})
 
 
-export default {
-    name: "VendorMenuManager",
-    components: {
-      Popup,
-      Paginator
-    },
-    setup() {
-      const auth = useAuth();
-      const menuStore = useMenuStore();
-      const vendorStore = useVendorStore();
-      return {
-        auth,
-        menuStore,
-        vendorStore
-      }
-    },
-    data() {
-      return {
-        menulist: [],
-        newMenu: {
-          name: "",
-        },
-        isLoading: true,
-        showImportPopup: false,
-        showScanPopup: false,
-        scanDate: new Date(),
-        searchString: "",
-        json_file: "",
-        limit: 10,
-        currentPage: 1,
-        totalCount: 0
-      }
-    },
-    computed: {
-      selectedVendor() {
-        return this.vendorStore.selectedVendor || false
-      }
-    },
-    mounted() {
-      this.getMenuList()
-    },
-    methods: {
-      handlePageChange(page) {
-        this.currentPage = page;
-        this.getMenuList()
-      },
-      search() {
-        this.getMenuList()
-      },
-      openImportPopup() {
-        this.showImportPopup = true;
-      },
-      openScanPopup() {
-        this.showScanPopup = true;
-      },
-      submitJsonFile() {
-        let formData = new FormData();
-        formData.append("file", this.file);
-        this.vendorStore.import(this.$route.params.id, formData)
-        .then(response => {
-          if (response.status === 201) {
-            this.showImportPopup=false;
-            this.getMenuList();
-          }
-        })
-      },
-      submitScan() {
-        this.vendorStore.scan(this.$route.params.id, this.scanDate.toISODate())
-        .then(response => {
-          if (response.status === 201) {
-            this.showScanPopup=false;
-            this.getMenuList();
-          }
-        })
-      },
-      handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (file && file.type === "application/json") {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            try {
-              const json = JSON.parse(e.target.result);
-              console.log("Valid JSON:", json);
-              this.file = event.target.files[0];
-            } catch (error) {
-              console.log("Invalid JSON:", error);
-              notify({
-                type: "error",
-                text: "Helytelen JSON fájl: " + error,
-              })
-            }
-          };
-          reader.readAsText(file);
-        } else {
-          console.log("Only .json files are allowed");
-        }
-      },
-      toggleActivation(to) {
-        let result;
-        if (to.active) {
-          result = this.menuStore.deactivate(to.id)
-        } else {
-          result = this.menuStore.activate(to.id)
-        }
+// Watchers
+watch([currentPage, limit], () => {
+  loadMenu()
+})
 
-        result.then(response => {
-          if (response.status === 200) {
-            this.getMenuList()
-          }
-        })
-      },
-      getMenuList() {
-        this.vendorStore.fetchMenus(this.$route.params.id,{
-            "search": this.searchString,
-            "limit": this.limit,
-            "page": this.currentPage
-          })
-          .then(response => {
-            let newMenuList = new Map(
-              response.data.data.menus.map(
-                item => [item.id, item]
-              )
-            );
-            newMenuList.forEach((item) => {
-              item.isEditing = false;
-            });
-            this.currentPage = response.data.data.page;
-            this.limit = response.data.data.limit;
-            this.totalCount = response.data.data.total_count;
-            this.menulist = newMenuList;
-            this.isLoading = false;
-          })
-          .catch(e => {
-              console.log(e);
-          })
-      },
-      addMenu() {
-        this.newMenu.vendor_id = this.$route.params.id
-        this.menuStore.add(this.newMenu)
-          .then(response => {
-            if (response.status === 201) {
-              this.getMenuList()
-            }
-          })
-      },
-      edit(menu_id) {
-        const item = this.menulist.get(menu_id)
-        this.menulist.set(item.id, { ...item, isEditing: true})
-      },
-      cancelEdit(menu_id) {
-        const item = this.menulist.get(menu_id)
-        this.menulist.set(item.id, { ...item, isEditing: false})
-      },
-      updateMenu(menu_id) {
-        const menu = this.menulist.get(menu_id)
-        if (!menu.from_date) {
-          delete menu["from_date"]
-        }
-        if (!menu.to_date) {
-          delete menu["to_date"]
-        }
-        this.menulist.set(menu.id, { ...menu, isEditing: false})
-        delete menu["isEditing"];
-        this.menuStore.update(menu_id, menu )
-          .then(response => {
-            if (response.status === 200) {
-              this.getMenuList()
-            }
-          })
-      },
-      deleteMenu(menu_id) {
-        const menu = this.menulist.get(menu_id)
-        this.menulist.set(menu.id, { ...menu, isEditing: false})
-        delete menu["isEditing"];
-        this.menuStore.delete(menu_id)
-          .then(response => {
-            if (response.status === 200) {
-              this.getMenuList()
-            }
-          })
-      },
-      duplicateMenu(menu_id) {
-        const menu = this.menulist.get(menu_id)
-        this.menulist.set(menu.id, { ...menu, isEditing: false})
-        delete menu["isEditing"];
-        this.menuStore.duplicate(menu_id, menu )
-          .then(response => {
-            if (response.status === 200) {
-              this.getMenuList()
-            }
-          })
-      },
-      openItemManger(menu_id) {
-        this.$router.push({ path:`/admin/${this.$route.params.id}/menu/${menu_id}`})
+// Methods
+
+const loadMenu  = () => {
+  let params = {
+      "limit": limit.value,
+      "page": currentPage.value
+    }
+  if (searchQuery.value) params['search'] = searchQuery.value
+  if (searchActive.value) params['active'] = searchActive.value
+  if (dateRange.value && dateRange.value.length > 1) {
+    params['date_from'] = dateRange.value[0].toISODate()
+    params['date_to'] = dateRange.value[dateRange.value.length - 1].toISODate()
+  }
+
+  vendorStore.fetchMenus(route.params.id, params).then(response => {
+    const newMenuList = new Map(
+      response.data.data.menus.map(
+        item => [item.id, { ...item, isEditing: false }]
+      )
+    )
+
+    currentPage.value = response.data.data.page
+    limit.value = response.data.data.limit
+    totalCount.value = response.data.data.total_count
+    menulist.value = newMenuList
+    isLoading.value = false
+  })
+}
+
+const handlePageChange = (page) => {
+  isLoading.value = true
+  currentPage.value = page;
+  loadMenu()
+}
+
+const formatDateRange = (range) => {
+  if (!range || range.length < 2) return ''
+  const start = new Date(range[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const end = new Date(range[range.length - 1]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return `${start} - ${end}`
+}
+
+const debounceSearch = () => {
+  clearTimeout(searchTimeout.value)
+  searchTimeout.value = setTimeout(() => {
+    applyFilters()
+  }, 500)
+}
+
+const applyFilters = () => {
+  isLoading.value = true
+  currentPage.value = 1
+  loadMenu()
+}
+
+const applyDateFilter = () => {
+  if (dateRange.value.length <= 1) {
+    return
+  }
+  dateMenu.value = false
+  applyFilters()
+}
+
+const clearSearch = () => {
+  searchQuery.value = ""
+  applyFilters()
+}
+
+const clearActive = () => {
+  searchActive.value = false
+  applyFilters()
+}
+
+const clearDateFilter = () => {
+  dateRange.value = []
+  dateMenu.value = false
+  applyFilters()
+}
+
+const clearAllFilters = () => {
+  searchQuery.value = ""
+  searchActive.value = true
+  dateRange.value = []
+  applyFilters()
+}
+
+const updateItemsPerPage = (newItemsPerPage) => {
+  limit.value = newItemsPerPage
+  currentPage.value = 1
+}
+
+const openImportPopup = () => {
+  showImportPopup.value = true
+}
+
+const openScanPopup = () => {
+  showScanPopup.value = true
+}
+
+const submitJsonFile = async () => {
+  try {
+    const formData = new FormData()
+    formData.append("file", file.value)
+    const response = await vendorStore.import(route.params.id, formData)
+
+    if (response.status === 201) {
+      showImportPopup.value = false
+      loadMenu()
+    }
+  } catch (error) {
+    console.error('Error importing menu:', error)
+  }
+}
+
+const submitScan = async () => {
+  try {
+    const response = await vendorStore.scan(route.params.id, new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(scanDate.value))
+
+    if (response.status === 201) {
+      showScanPopup.value = false
+      loadMenu()
+    }
+  } catch (error) {
+    console.error('Error scanning menu:', error)
+  }
+}
+
+const handleFileUpload = (event) => {
+  const selectedFile = event.target.files?.[0] || uploadedFiles.value?.[0]
+
+  if (selectedFile && selectedFile.type === "application/json") {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target.result)
+        console.log("Valid JSON:", json)
+        file.value = selectedFile
+      } catch (error) {
+        console.log("Invalid JSON:", error)
       }
     }
-};
-</script>
+    reader.readAsText(selectedFile)
+  }
+}
 
-<style scoped>
-</style>
+const toggleActivation = async (menu) => {
+  try {
+    let result
+    if (menu.active) {
+      result = await menuStore.deactivate(menu.id)
+    } else {
+      result = await menuStore.activate(menu.id)
+    }
+
+    if (result.status === 200) {
+      loadMenu()
+    }
+  } catch (error) {
+    console.error('Error toggling activation:', error)
+  }
+}
+
+const addMenu = async () => {
+  try {
+    const menuData = {
+      ...newMenu.value,
+      vendor_id: route.params.id
+    }
+    const response = await menuStore.add(menuData)
+
+    if (response.status === 201) {
+      newMenu.value = { name: "" }
+      loadMenu()
+    }
+  } catch (error) {
+    console.error('Error adding menu:', error)
+  }
+}
+
+const edit = (menuId) => {
+  const menu = menulist.value.get(menuId)
+  if (menu) {
+    menulist.value.set(menuId, { ...menu, isEditing: true })
+  }
+}
+
+const cancelEdit = (menuId) => {
+  const menu = menulist.value.get(menuId)
+  if (menu) {
+    menulist.value.set(menuId, { ...menu, isEditing: false })
+  }
+}
+
+const updateMenu = async (menuId) => {
+  try {
+    const menu = menulist.value.get(menuId)
+    if (!menu) return
+
+    const updateData = { ...menu }
+
+    if (!updateData.from_date) {
+      delete updateData["from_date"]
+    }
+    if (!updateData.to_date) {
+      delete updateData["to_date"]
+    }
+
+    delete updateData["isEditing"]
+
+    const response = await menuStore.update(menuId, updateData)
+
+    if (response.status === 200) {
+      loadMenu()
+    }
+  } catch (error) {
+    console.error('Error updating menu:', error)
+  }
+}
+
+const confirmDeleteMenu = (menu) => {
+  selectedMenu.value = menu
+  deleteDialog.value = true
+}
+
+const deleteMenu = async () => {
+  try {
+    if (!selectedMenu.value) return
+
+    const response = await menuStore.delete(selectedMenu.value.id)
+
+    if (response.status === 204) {
+      deleteDialog.value = false
+      selectedMenu.value = null
+      loadMenu()
+    }
+  } catch (error) {
+    console.error('Error deleting menu:', error)
+  }
+}
+
+const duplicateMenu = async (menuId) => {
+  try {
+    const menu = menulist.value.get(menuId)
+    if (!menu) return
+
+    const duplicateData = { ...menu }
+    delete duplicateData["isEditing"]
+
+    const response = await menuStore.duplicate(menuId, duplicateData)
+
+    if (response.status === 200) {
+      loadMenu()
+    }
+  } catch (error) {
+    console.error('Error duplicating menu:', error)
+  }
+}
+
+const openItemManager = (menuId) => {
+  router.push({ path: `/admin/${route.params.id}/menu/${menuId}` })
+}
+
+// Lifecycle
+onMounted(() => {
+  loadMenu()
+})
+</script>

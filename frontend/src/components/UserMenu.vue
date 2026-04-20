@@ -134,7 +134,7 @@
 
     <UserProfilePopup
       v-if="auth.isLoggedIn"
-      v-model="showProfile"
+      :show="showProfile"
       @cancel="showProfile = false"
     />
   </div>

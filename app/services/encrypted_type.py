@@ -1,17 +1,17 @@
-from cryptography.fernet import Fernet
-from sqlalchemy.types import TypeDecorator, String
 import base64
-from cryptography.fernet import Fernet
-
-from dotenv import load_dotenv
-from pathlib import Path
 from os import getenv
+from pathlib import Path
+
+from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+from sqlalchemy.types import String, TypeDecorator
 
 dotenv_path = Path(".env")
 load_dotenv(dotenv_path=dotenv_path)
 
-FERNET_KEY = getenv('FERNET_KEY')
+FERNET_KEY = getenv("FERNET_KEY")
 cipher = Fernet(str.encode(FERNET_KEY))
+
 
 class Encrypted(TypeDecorator):
     """Custom SQLAlchemy type that encrypts/decrypts string data."""
@@ -34,3 +34,17 @@ class Encrypted(TypeDecorator):
             decrypted_value = cipher.decrypt(base64.b64decode(value))
             return decrypted_value.decode()
         return value
+
+
+def encrypt_value(value=None):
+    if value is not None:
+        encrypted_value = cipher.encrypt(value.encode())
+        return base64.b64encode(encrypted_value).decode()
+    return value
+
+
+def decrypt_value(value=None):
+    if value is not None:
+        decrypted_value = cipher.decrypt(base64.b64decode(value))
+        return decrypted_value.decode()
+    return value

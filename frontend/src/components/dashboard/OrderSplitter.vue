@@ -110,7 +110,7 @@
                   </v-list-item-title>
 
                   <v-list-item-subtitle>
-                    {{ formatCurrency(order.total_price + order.order_fee) }}
+                    {{ formatCurrency(order.total_price) }}
                   </v-list-item-subtitle>
 
                   <template #append>

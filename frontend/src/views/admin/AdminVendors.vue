@@ -1,220 +1,537 @@
 <template>
-  <div class="row ms-2 mt-2">
-    <h1 class="col d-flex justify-content-start">
-      Üzlet kezelő
-    </h1>
-    <div class="">
-      <v-btn
-        class="bg-primary me-1 "
-        icon
-        size="small"
-        border="primary thin"
-        rounded
-        varian="text"
-        @click="refreshVendorList()"
+  <v-container
+    fluid
+    class="pa-2 pa-md-4"
+  >
+    <!-- Header with Actions -->
+    <v-row class="d-none d-sm-flex mb-4">
+      <v-col
+        cols="6"
+        md="8"
+        class="d-flex align-center"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          fill="currentColor"
-          class="bi bi-arrow-clockwise"
-          viewBox="0 0 16 16"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"
-          />
-          <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
-        </svg>
-      </v-btn>
-      <v-btn
-        class="bg-primary me-1 "
-        icon
-        size="small"
-        border="primary thin"
-        rounded
-        varian="text"
-        @click="addVendor()"
+        <h1 class="text-h4 text-md-h4">
+          Üzlet kezelő
+        </h1>
+      </v-col>
+      <v-col
+        cols="6"
+        md="4"
+        class="d-flex justify-end ga-2"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          fill="currentColor"
-          class="bi bi-building-add"
-          viewBox="0 0 16 16"
+        <v-tooltip text="Lista frissítése">
+          <template #activator="{ props }">
+            <v-btn
+              v-bind="props"
+              icon="mdi-refresh"
+              color="primary"
+              variant="elevated"
+              size="small"
+              :loading="isLoading"
+              @click="refreshVendorList"
+            />
+          </template>
+        </v-tooltip>
+
+        <v-tooltip text="Új üzlet hozzáadása">
+          <template #activator="{ props }">
+            <v-btn
+              v-bind="props"
+              icon="mdi-store-plus"
+              color="primary"
+              variant="elevated"
+              size="small"
+              @click="addVendor"
+            />
+          </template>
+        </v-tooltip>
+      </v-col>
+    </v-row>
+
+    <!-- Mobile Actions (visible only on mobile) -->
+    <v-row class="d-flex d-sm-none mb-4">
+      <v-col
+        cols="6"
+        class="d-flex ga-2"
+      >
+        <v-btn
+          color="primary"
+          variant="elevated"
+          prepend-icon="mdi-refresh"
+          block
+          :loading="isLoading"
+          @click="refreshVendorList"
         >
-          <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0" />
-          <path d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6.5a.5.5 0 0 1-1 0V1H3v14h3v-2.5a.5.5 0 0 1 .5-.5H8v4H3a1 1 0 0 1-1-1z" />
-          <path d="M4.5 2a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" />
-        </svg>
-      </v-btn>
-    </div>
-    <div class="row ms-2">
-      <table class="table table-striped table-hover">
-        <thead>
-          <tr>
-            <th scope="col">
-              #
-            </th>
-            <th scope="col">
-              Név
-            </th>
-            <th scope="col">
-              aktív
-            </th>
-            <th scope="col">
-              Műveletek
-            </th>
-          </tr>
-        </thead>
-        <tbody class="table-group-divider">
-          <tr
-            v-for="vendor,i in allVendorList"
-            :key="i"
+          Frissítés
+        </v-btn>
+        <v-btn
+          color="primary"
+          variant="elevated"
+          prepend-icon="mdi-store-plus"
+          block
+          @click="addVendor"
+        >
+          Új üzlet
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- Mobile Cards View -->
+    <v-row
+      v-if="!isLoading"
+      class="d-flex d-sm-none"
+    >
+      <v-col cols="12">
+        <v-card
+          v-for="(vendor, index) in allVendorList"
+          :key="vendor.id"
+          class="mb-3"
+          elevation="2"
+        >
+          <v-card-text class="pb-2">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <div class="text-subtitle-1 font-weight-medium">
+                #{{ index + 1 }} - {{ vendor.name }}
+              </div>
+              <v-chip
+                :color="vendor.active ? 'primary' : ''"
+                size="default"
+                variant="flat"
+              >
+                {{ vendor.active ? 'Aktív' : 'Inaktív' }}
+              </v-chip>
+            </div>
+          </v-card-text>
+
+          <v-card-actions class="pt-0">
+            <v-btn
+              color="primary"
+              :prepend-icon="vendor.active ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off'"
+              variant="text"
+              :loading="toggleLoading === vendor.id"
+              @click="toggleActivation(vendor)"
+            >
+              {{ vendor.active ? 'Deaktiválás' : 'Aktiválás' }}
+            </v-btn>
+
+            <v-spacer />
+
+            <v-tooltip text="Üzlet beállítások">
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  icon="mdi-cog"
+                  color="primary"
+                  variant="text"
+                  @click="openVendorConfiguration(vendor.id)"
+                />
+              </template>
+            </v-tooltip>
+
+            <v-tooltip text="Menük kezelése">
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  icon="mdi-food"
+                  color="primary"
+                  variant="text"
+                  @click="openVendorMenuManager(vendor.id)"
+                />
+              </template>
+            </v-tooltip>
+          </v-card-actions>
+        </v-card>
+
+        <!-- Empty State for Mobile -->
+        <v-card
+          v-if="allVendorList.length === 0"
+          class="text-center pa-8"
+        >
+          <v-icon
+            size="64"
+            color="grey-lighten-2"
+            class="mb-4"
           >
-            <th scope="row">
-              {{ i+1 }}
-            </th>
-            <td>
-              {{ vendor.name }}
-            </td>
-            <td>
-              <v-checkbox-btn
-                v-model="vendor.active"
-                color="primary"
-                readonly
-                disabled
+            mdi-store-off
+          </v-icon>
+          <div class="text-h6 text-medium-emphasis mb-2">
+            Nincs üzlet
+          </div>
+          <div class="text-body-2 text-medium-emphasis mb-4">
+            Még nem található üzlet a rendszerben
+          </div>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            prepend-icon="mdi-store-plus"
+            @click="addVendor"
+          >
+            Első üzlet hozzáadása
+          </v-btn>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Desktop Table View -->
+    <v-row
+      v-if="!isLoading"
+      class="d-none d-sm-flex"
+    >
+      <v-col>
+        <v-data-table
+          :headers="headers"
+          :items="allVendorList"
+          :loading="isLoading"
+          class="elevation-1"
+          hover
+          no-data-text="Nincs üzlet a rendszerben"
+          loading-text="Üzletek betöltése..."
+        >
+          <!-- Index column -->
+          <template #item.index="{ index }">
+            <span class="font-weight-bold">#{{ index + 1 }}</span>
+          </template>
+
+          <!-- Name column -->
+          <template #item.name="{ item }">
+            <div class="text-subtitle-2 font-weight-medium">
+              {{ item.name }}
+            </div>
+          </template>
+
+          <!-- Active status column -->
+          <template #item.active="{ item }">
+            <v-chip
+              :color="item.active ? 'primary' : ''"
+              size="default"
+              variant="flat"
+            >
+              <v-icon
+                :icon="item.active ? 'mdi-check-circle' : 'mdi-close-circle'"
+                size="small"
+                class="me-1"
               />
-            </td>
-            <td>
-              <div
-                class="btn text-primary"
-                title="Üzlet elérhetőség ki/be kapcsolása"
-                @click="toggleActivation(vendor)"
+              {{ item.active ? 'Aktív' : 'Inaktív' }}
+            </v-chip>
+          </template>
+
+          <!-- Actions column -->
+          <template #item.actions="{ item }">
+            <div class="d-flex ga-2">
+              <v-tooltip :text="item.active ? 'Üzlet deaktiválása' : 'Üzlet aktiválása'">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    :icon="item.active ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off'"
+                    color="primary"
+                    variant="text"
+                    :loading="toggleLoading === item.id"
+                    @click="toggleActivation(item)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip text="Üzlet beállítások">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-cog"
+                    color="primary"
+                    variant="text"
+                    @click="openVendorConfiguration(item.id)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip text="Menük kezelése">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-food"
+                    color="primary"
+                    variant="text"
+                    @click="openVendorMenuManager(item.id)"
+                  />
+                </template>
+              </v-tooltip>
+            </div>
+          </template>
+
+          <!-- Empty state -->
+          <template #no-data>
+            <div class="text-center pa-8">
+              <v-icon
+                size="64"
+                color="grey-lighten-2"
+                class="mb-4"
               >
-                <svg
-                  v-if="vendor.active"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="currentColor"
-                  class="bi bi-toggle-on"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-                </svg>
-                <svg
-                  v-else
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="currentColor"
-                  class="bi bi-toggle-off"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-                </svg>
+                mdi-store-off
+              </v-icon>
+              <div class="text-h6 text-medium-emphasis mb-2">
+                Nincs üzlet
               </div>
-              <div
-                class="btn text-primary"
-                title="Üzlet beállítások"
-                @click="openVendorConfiguration(vendor.id)"
+              <div class="text-body-2 text-medium-emphasis mb-4">
+                Még nem található üzlet a rendszerben
+              </div>
+              <v-btn
+                color="primary"
+                variant="elevated"
+                prepend-icon="mdi-store-plus"
+                @click="addVendor"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="currentColor"
-                  class="bi bi-gear-fill"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z" />
-                </svg>
-              </div>
-              <div
-                class="btn text-primary"
-                title="Menük"
-                @click="openVendorMenuManager(vendor.id)"
-              >
-                <v-icon>
-                  mdi-food
-                </v-icon>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+                Első üzlet hozzáadása
+              </v-btn>
+            </div>
+          </template>
+        </v-data-table>
+      </v-col>
+    </v-row>
+
+    <!-- Loading state -->
+    <v-row v-if="isLoading">
+      <v-col class="text-center py-12">
+        <v-progress-circular
+          indeterminate
+          size="64"
+          color="primary"
+        />
+        <div class="text-h6 mt-4">
+          Üzletek betöltése...
+        </div>
+      </v-col>
+    </v-row>
+
+    <!-- Activation confirmation dialog -->
+    <v-dialog
+      v-model="activationDialog"
+      max-width="400"
+      :fullscreen="$vuetify.display.mobile"
+      :transition="$vuetify.display.mobile ? 'dialog-bottom-transition' : 'dialog-transition'"
+    >
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon
+            :icon="selectedVendor?.active ? 'mdi-toggle-switch-off' : 'mdi-toggle-switch'"
+            :color="selectedVendor?.active ? 'warning' : 'success'"
+            class="me-2"
+          />
+          <span class="text-h6">
+            Üzlet {{ selectedVendor?.active ? 'deaktiválása' : 'aktiválása' }}
+          </span>
+          <v-spacer />
+          <v-btn
+            v-if="$vuetify.display.mobile"
+            icon="mdi-close"
+            variant="text"
+            @click="activationDialog = false"
+          />
+        </v-card-title>
+
+        <v-card-text class="py-4">
+          <div class="text-body-1 mb-4">
+            Biztosan {{ selectedVendor?.active ? 'deaktiválni' : 'aktiválni' }}
+            szeretnéd a <strong class="text-primary">{{ selectedVendor?.name }}</strong>
+            üzletet?
+          </div>
+
+          <v-alert
+            :type="selectedVendor?.active ? 'warning' : 'info'"
+            variant="tonal"
+            class="mb-2"
+          >
+            <div v-if="selectedVendor?.active">
+              A deaktiválás után az üzlet nem lesz elérhető a felhasználók számára.
+            </div>
+            <div v-else>
+              Az aktiválás után az üzlet ismét elérhető lesz a felhasználók számára.
+            </div>
+          </v-alert>
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-spacer v-if="!$vuetify.display.mobile" />
+          <v-btn
+            :block="$vuetify.display.mobile"
+            color="grey-darken-1"
+            variant="outlined"
+            class="mb-2 mb-sm-0"
+            @click="activationDialog = false"
+          >
+            Mégse
+          </v-btn>
+          <v-btn
+            :block="$vuetify.display.mobile"
+            :color="selectedVendor?.active ? 'warning' : 'success'"
+            variant="flat"
+            :loading="toggleLoading === selectedVendor?.id"
+            @click="confirmToggleActivation"
+          >
+            {{ selectedVendor?.active ? 'Deaktiválás' : 'Aktiválás' }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Snackbar -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="4000"
+      :location="$vuetify.display.mobile ? 'top' : 'bottom end'"
+      :multi-line="$vuetify.display.mobile"
+    >
+      {{ snackbar.text }}
+      <template #actions>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="snackbar.show = false"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </v-container>
 </template>
 
-<script>
-import { useAuth } from "@/stores/auth";
-import { useVendorStore } from "@/stores/vendor";
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useVendorStore } from "@/stores/vendor"
 
-export default {
-    name: "AdminVendors",
-    setup() {
-      const auth = useAuth();
-      const vendorStore = useVendorStore();
-      return {
-        auth,
-        vendorStore
-      }
-    },
-    data() {
-      return {
-        allVendorList: []
-      }
-    },
-    mounted() {
-      this.refreshVendorList()
-    },
-    methods: {
-      openAdminHome: function () {
-        this.$router.push({ path:`/admin`})
-      },
-      refreshVendorList: function () {
-        this.vendorStore.fetch()
-          .then(response => {
-            this.allVendorList = response.data.data
-          })
-      },
-      toggleActivation: function (to) {
-        if (to.active) {
-          this.vendorStore.deactivate(to.id).then(() => {
-            this.refreshVendorList();
-          })
-        } else {
-          this.vendorStore.activate(to.id).then(() => {
-            this.refreshVendorList();
-          })
-        }
-      },
-      openVendorConfiguration: function (id) {
-        this.vendorStore.vendors.forEach((item) => {
-          if (item.id === id) {
-            useVendorStore().selectedVendor = item;
-          }
-        });
-        this.$router.push({ path:`/admin/${id}/config`})
-      },
-      openVendorMenuManager: function (id) {
-        this.vendorStore.vendors.forEach((item) => {
-          if (item.id === id) {
-            useVendorStore().selectedVendor = item;
-          }
-        });
-        this.$router.push({ path:`/admin/${id}/menu`})
-      },
-      addVendor: function () {
-        this.$router.push({ path:`/admin/add`})
-      }
+// Composables
+const router = useRouter()
+const vendorStore = useVendorStore()
+
+// Reactive data
+const allVendorList = ref([])
+const isLoading = ref(true)
+const toggleLoading = ref(null)
+const activationDialog = ref(false)
+const selectedVendor = ref(null)
+const snackbar = ref({
+  show: false,
+  text: '',
+  color: 'success'
+})
+
+// Table headers configuration
+const headers = [
+  {
+    title: '#',
+    key: 'index',
+    align: 'start',
+    sortable: false,
+    width: '80px'
+  },
+  {
+    title: 'Név',
+    key: 'name',
+    align: 'start',
+    sortable: true,
+    minWidth: '200px'
+  },
+  {
+    title: 'Állapot',
+    key: 'active',
+    align: 'center',
+    sortable: true,
+    width: '140px'
+  },
+  {
+    title: 'Műveletek',
+    key: 'actions',
+    align: 'center',
+    sortable: false,
+    width: '180px'
+  }
+]
+
+// Methods
+const refreshVendorList = async () => {
+  try {
+    isLoading.value = true
+
+
+    const response = await vendorStore.fetch()
+    if (response?.data?.data) {
+      allVendorList.value = response.data.data
     }
-};
+  } catch (error) {
+    showSnackbar('Hiba történt az üzletek betöltése során', 'error')
+    console.error('Error fetching vendors:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const toggleActivation = (vendor) => {
+  selectedVendor.value = vendor
+  activationDialog.value = true
+}
+
+const confirmToggleActivation = async () => {
+  if (!selectedVendor.value) return
+
+  try {
+    toggleLoading.value = selectedVendor.value.id
+
+    if (selectedVendor.value.active) {
+      await vendorStore.deactivate(selectedVendor.value.id)
+      showSnackbar(`${selectedVendor.value.name} deaktiválva`, 'warning')
+    } else {
+      await vendorStore.activate(selectedVendor.value.id)
+      showSnackbar(`${selectedVendor.value.name} aktiválva`, 'success')
+    }
+
+    // Refresh the list to get updated data
+    await refreshVendorList()
+
+  } catch (error) {
+    const action = selectedVendor.value.active ? 'deaktiválása' : 'aktiválása'
+    showSnackbar(`Hiba történt az üzlet ${action} során`, 'error')
+    console.error('Error toggling vendor activation:', error)
+  } finally {
+    toggleLoading.value = null
+    activationDialog.value = false
+    selectedVendor.value = null
+  }
+}
+
+const openVendorConfiguration = (vendorId) => {
+  const vendor = allVendorList.value.find(v => v.id === vendorId)
+  if (vendor) {
+    vendorStore.selectedVendor = vendor
+  }
+  router.push({ path: `/admin/${vendorId}/config` })
+}
+
+const openVendorMenuManager = (vendorId) => {
+  const vendor = allVendorList.value.find(v => v.id === vendorId)
+  if (vendor) {
+    vendorStore.selectedVendor = vendor
+  }
+  router.push({ path: `/admin/${vendorId}/menu` })
+}
+
+const addVendor = () => {
+  router.push({ path: '/admin/add' })
+}
+
+const showSnackbar = (text, color = 'success') => {
+  snackbar.value = {
+    show: true,
+    text,
+    color
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  refreshVendorList()
+})
 </script>
 
 <style scoped>
+/* Using Vuetify's built-in spacing classes */
 </style>

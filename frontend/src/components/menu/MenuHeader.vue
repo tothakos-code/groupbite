@@ -18,13 +18,13 @@
 
     <!-- Auto Email Order Info -->
     <v-col
-      v-if="vendorSettings.auto_email_order.value"
+      v-if="vendorSettings.auto_email_order && vendorSettings.closed_scheduler_active"
       sm="auto"
       class="d-flex flex-fill align-items-center justify-content-sm-start justify-content-center"
     >
       <AutoEmailOrderInfo
-        :deadline="vendorSettings.email_order_scheduler.value"
-        :min-users="vendorSettings.email_min_user.value"
+        :deadline="vendorSettings.closed_scheduler"
+        :min-users="vendorSettings.email_min_user"
         :current-users="userCount"
       />
     </v-col>
@@ -36,7 +36,7 @@
     >
       <div class="d-flex">
         <v-tooltip
-          v-if="vendorSettings.show_notification_button.value"
+          v-if="vendorSettings.show_notification_button"
           location="bottom"
         >
           <template #activator="{ props: props }">
@@ -50,7 +50,7 @@
               @click="handleToggle"
             />
           </template>
-          <span>Üzlet értesítés {{ notificationStatus ? 'ki' : 'be' }}kapcsolása</span>
+          <span>{{ notificationStatus ? 'Értesítés kikapcsolása' : 'Értesítés bekapcsolása ezen az eszközön' }}</span>
         </v-tooltip>
 
 
@@ -79,10 +79,10 @@
         </v-tooltip>
 
         <TransferPopup
-          v-if="vendorSettings.enable_email_order.value || vendorSettings.enable_full_automatic_order.value || vendorSettings.enable_manual_order.value"
-          :enable_email_order="vendorSettings.enable_email_order.value"
-          :enable_full_automatic_order="vendorSettings.enable_full_automatic_order.value"
-          :enable_manual_order="vendorSettings.enable_manual_order.value"
+          v-if="vendorSettings.enable_email_order || vendorSettings.enable_full_automatic_order || vendorSettings.enable_manual_order"
+          :enable-email-order="vendorSettings.enable_email_order"
+          :enable-full-automatic-order="vendorSettings.enable_full_automatic_order"
+          :enable-manual-order="vendorSettings.enable_manual_order"
         />
       </div>
     </v-col>
@@ -121,13 +121,35 @@ const prop = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['subscribe', 'unsubscribe'])
+const emit = defineEmits(['subscribe', 'unsubscribe-requested'])
 
 const handleToggle = () => {
   if (prop.notificationStatus) {
-    emit('unsubscribe')
-  } else {
-    emit('subscribe')
+    emit('unsubscribe-requested')
+    return
   }
+
+  if (!('Notification' in window)) {
+    return
+  }
+
+  if (Notification.permission === 'denied') {
+    // Browser has blocked notifications — inform the parent to show a message
+    emit('subscribe', { blocked: true })
+    return
+  }
+
+  if (Notification.permission === 'default') {
+    // Request permission synchronously within the user gesture call stack
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        emit('subscribe', { blocked: false })
+      }
+    })
+    return
+  }
+
+  // Already granted
+  emit('subscribe', { blocked: false })
 }
 </script>

@@ -1,12 +1,67 @@
-version: "3.4"
+version: "3.8"
 
 services:
   database:
     build: ./db/
     restart: on-failure
     ports:
-     - 5432:5432
+      - "5432:5432"
     env_file:
       - .env
     volumes:
       - ./db/data/:/var/lib/postgresql/data/
+
+  # Dev mode: backend + frontend dev server with hot reload
+  # Usage: docker-compose --profile dev up
+  backend:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    restart: on-failure
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: database
+      FRONTEND_DEV_URL: http://frontend:8080
+    volumes:
+      - .:/app
+      - /app/env
+    depends_on:
+      - database
+      - frontend
+    profiles:
+      - dev
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend/src:/app/frontend/src
+      - ./frontend/public:/app/frontend/public
+      - ./plugins:/app/plugins
+    profiles:
+      - dev
+
+  # Prod mode: single container, backend serves built frontend
+  # Usage: docker-compose --profile prod up
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: database
+      APP_ENV: production
+    depends_on:
+      - database
+    profiles:
+      - prod

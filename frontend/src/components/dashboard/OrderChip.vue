@@ -112,7 +112,7 @@
           class="me-4"
         >
           <v-chip
-            color="teal-darken-4"
+            :color="theme === 'light' ? 'teal-darken-4' : 'teal-lighten-1' "
             size="small"
             variant="tonal"
           >
@@ -138,7 +138,7 @@
               class="text-caption"
               :class="isSelected ? 'text-success-lighten-4' : 'text-grey-lighten-1'"
             >
-              {{ getParticipantCount(order) }} résztvevő
+              {{ order.user_count }} résztvevő
             </div>
           </div>
         </v-col>
@@ -148,6 +148,7 @@
 </template>
 
 <script>
+import { inject } from "vue";
 export default {
   name: 'InformativeOrderCard',
   props: {
@@ -161,6 +162,10 @@ export default {
     }
   },
   emits: ['click'],
+  setup() {
+    const { theme } = inject("theme");
+    return {theme}
+  },
   methods: {
     formatCurrency(amount) {
       return new Intl.NumberFormat('hu-HU', {
@@ -200,12 +205,6 @@ export default {
         case 'collect': return 'Nyitott';
         default: return 'Ismeretlen';
       }
-    },
-    getParticipantCount(order) {
-      if (order.basket && typeof order.basket === 'object') {
-        return Object.keys(order.basket).length;
-      }
-      return 0;
     },
     goToOrder(order) {
       this.$router.push({ path: "/menu/" + order.vendor + "/" + order.date_of_order })

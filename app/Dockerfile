@@ -1,16 +1,15 @@
-FROM python:3.8-alpine
+FROM python:3.12-slim
 
-RUN sed -i "s/https/http/" /etc/apk/repositories
-RUN apk upgrade --no-cache
-RUN apk add postgresql-dev gcc python3-dev musl-dev
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    python3-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY ./requirements.txt /app/requirements.txt
 WORKDIR /app
-RUN pip install -r requirements.txt
 
-COPY . /app
+COPY app/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-ENV FLASK_DEBUG 1
-
-ENTRYPOINT [ "python" ]
-CMD ["app.py" ]
+EXPOSE 5000
+CMD ["python", "groupbite.py", "run"]

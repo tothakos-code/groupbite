@@ -1,26 +1,32 @@
 from enum import Enum as pyenum
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
-from marshmallow import Schema, fields
-from sqlalchemy import Boolean
+from marshmallow import Schema, fields, validate
+from sqlalchemy import Boolean, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.utils.vendor_settings_registry import VendorSettingsRegistry
+from app.utils.vendor_settings_registry import CURRENT_SCHEMA_VERSION, VendorSettingsRegistry
 
 from . import Base
 
 
 class BaseVendorSchema(Schema):
     name = fields.Str(required=True)
-    active = fields.Bool()
-    settings = fields.Dict(required=True)
+    active = fields.Bool(load_default=False)
+    menu_type = fields.Str(
+        load_default="fixed_menu",
+        validate=validate.OneOf(["daily_menu", "fixed_menu", "own_inventory"]),
+    )
+    plugin_id = fields.Str(load_default=None, allow_none=True)
+    settings = fields.Dict(load_default={})
 
 
-class VendorType(pyenum):
-    PLUGIN = "plugin"
-    BASIC = "basic"
+class MenuType(pyenum):
+    DAILY_MENU = "daily_menu"
+    FIXED_MENU = "fixed_menu"
+    OWN_INVENTORY = "own_inventory"
 
     def __str__(self):
         return self.value
@@ -32,40 +38,25 @@ class Vendor(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, unique=True, nullable=False)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
     active: Mapped[bool] = mapped_column(Boolean(), default=False)
-    type: Mapped[VendorType] = mapped_column(default=VendorType.BASIC)
+    menu_type: Mapped[MenuType] = mapped_column(default=MenuType.FIXED_MENU)
+    plugin_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     settings: Mapped[dict] = mapped_column(JSONB)
 
     orders: Mapped[List["Order"]] = relationship(back_populates="vendor")
 
     def __repr__(self):
-        return f"Vendor<id={self.id},name={self.name},type={str(self.type)}>"
+        return f"Vendor<id={self.id},name={self.name},menu_type={str(self.menu_type)}>"
 
     def _validate_settings(self):
-        """Ensure all required settings exist with proper defaults"""
         if not isinstance(self.settings, dict):
             self.settings = {}
-
-        # Get default settings from registry
-        default_settings = VendorSettingsRegistry.get_default_settings_dict()
-
-        # Merge with existing settings, keeping existing values
-        for key, default_setting in default_settings.items():
-            if key not in self.settings:
-                self.settings[key] = default_setting
-            else:
-                # Ensure the structure is correct
-                existing = self.settings[key]
-                if not isinstance(existing, dict):
-                    # Reset to default if structure is wrong
-                    self.settings[key] = default_setting
-                else:
-                    # Ensure all required keys exist
-                    for required_key in ["name", "type", "value", "section"]:
-                        if required_key not in existing:
-                            if required_key == "value":
-                                existing[required_key] = default_setting[required_key]
-                            else:
-                                existing[required_key] = default_setting[required_key]
+        blob = self.settings
+        blob.setdefault("schemaVersion", CURRENT_SCHEMA_VERSION)
+        blob.setdefault("core", {})
+        blob.setdefault("plugins", {})
+        defaults = VendorSettingsRegistry.defaults()
+        for key, default_value in defaults.items():
+            blob["core"].setdefault(key, default_value)
 
     @property
     def serialized(self):
@@ -75,7 +66,8 @@ class Vendor(Base):
             "id": str(self.id),
             "name": self.name,
             "active": self.active,
-            "type": str(self.type),
+            "menu_type": str(self.menu_type),
+            "plugin_id": self.plugin_id,
             "settings": load_vendor_settings(self),
         }
 
@@ -87,6 +79,7 @@ class Vendor(Base):
             "id": str(self.id),
             "name": self.name,
             "active": self.active,
-            "type": str(self.type),
+            "menu_type": str(self.menu_type),
+            "plugin_id": self.plugin_id,
             "settings": public_settings(self),
         }

@@ -89,6 +89,16 @@ class VendorController:
         bp.add_url_rule(
             "/<vendor_id>/menus/import", view_func=self.import_menu, methods=["POST"]
         )
+        bp.add_url_rule(
+            "/<vendor_id>/plugin-settings",
+            view_func=self.handle_get_plugin_settings,
+            methods=["GET"],
+        )
+        bp.add_url_rule(
+            "/<vendor_id>/plugin-settings",
+            view_func=self.handle_save_plugin_settings,
+            methods=["PUT"],
+        )
 
     @require_auth
     @require_admin
@@ -269,3 +279,29 @@ class VendorController:
     def import_menu(self, db, vendor_id):
         self.vendor_service.import_menu(db, vendor_id, request.files)
         return {"msg": "OK"}, 201
+
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_get_plugin_settings(self, db, vendor_id):
+        result = self.vendor_service.get_plugin_settings(db, vendor_id)
+        if result is None:
+            return {"error": "Vendor has no plugin"}, 404
+        return {"data": result}, 200
+
+    @require_auth
+    @require_admin
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_save_plugin_settings(self, db, vendor_id):
+        patch = request.json.get("data", {})
+        vendor, errors = self.vendor_service.update_plugin_settings(db, vendor_id, patch)
+        if vendor is None:
+            if "error" in errors:
+                return {"error": errors["error"]}, 400
+            return {"errors": errors}, 422
+        if errors:
+            return {"errors": errors}, 422
+        db.commit()
+        return {"data": self.vendor_service.get_plugin_settings(db, vendor_id)}, 200

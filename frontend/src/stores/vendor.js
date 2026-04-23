@@ -3,6 +3,7 @@ import { defineStore } from "pinia"
 import { notify } from "@kyvg/vue3-notification";
 import { regWorker } from "@/main";
 import { useAuth } from "@/stores/auth";
+import i18n from "@/plugins/i18n";
 
 export const useVendorStore = defineStore("vendor", {
   state: () => ({
@@ -52,10 +53,13 @@ export const useVendorStore = defineStore("vendor", {
         return response
 
       } catch (error) {
-        console.error("Failed to add size:", error.response.data.error);
+        console.error("Failed to add vendor:", error.response?.data?.error);
+        const errorKey = error.response?.data?.error || ''
+        const knownKeys = ['name_taken', 'unknown_plugin']
+        const msgKey = knownKeys.includes(errorKey) ? `vendor.errors.${errorKey}` : 'vendor.errors.default'
         notify({
           type: "error",
-          text: "Üzlet hozzáadása nem sikerült!",
+          text: i18n.global.t(msgKey),
         });
         return error.response
       } finally {
@@ -173,6 +177,37 @@ export const useVendorStore = defineStore("vendor", {
           text: "Beállítások mentése nem sikerült!",
         });
         return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async fetchPlugins() {
+      try {
+        const response = await axios.get('/api/plugins');
+        return response;
+      } catch (error) {
+        console.error('Failed to fetch plugins:', error.response?.data?.error);
+        return error.response;
+      }
+    },
+    async fetchPluginSettings(vendorId) {
+      try {
+        const response = await axios.get(`/api/vendor/${vendorId}/plugin-settings`);
+        return response;
+      } catch (error) {
+        return error.response;
+      }
+    },
+    async savePluginSettings(vendorId, data) {
+      this.isLoading = true;
+      try {
+        const response = await axios.put(`/api/vendor/${vendorId}/plugin-settings`, { data });
+        notify({ type: 'info', text: 'Plugin beállítások mentése sikeres!' });
+        return response;
+      } catch (error) {
+        console.error('Failed to save plugin settings:', error.response?.data?.error);
+        notify({ type: 'error', text: 'Plugin beállítások mentése nem sikerült!' });
+        return error.response;
       } finally {
         this.isLoading = false;
       }

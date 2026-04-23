@@ -4,7 +4,7 @@ from app.entities.menu import Menu, Frequency
 from app.entities.order import Order, OrderState
 from app.entities.order_item import OrderItem
 from app.entities.notification import Notification, NotificationType
-from app.entities.vendor import Vendor, VendorType
+from app.entities.vendor import Vendor, MenuType
 from app.entities.menu_item import MenuItem
 from app.entities.user_basket import UserBasket
 from app.entities.setting import Setting

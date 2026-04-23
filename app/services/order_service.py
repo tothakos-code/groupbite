@@ -152,7 +152,7 @@ class OrderService:
             f"Manual order triggered by userID: {session.get('user_id')} for order {order.id}"
         )
         trigger_data = {"order_id": order_id, "order": order.serialized}
-        event_manager.trigger_event("beforeClose@" + order.vendor.name, trigger_data)
+        event_manager.trigger_event("beforeClose@" + str(order.vendor_id), trigger_data)
         if order.state_id == OrderState.CLOSED:
             return {"msg": "Order is already closed"}, 400
 
@@ -167,7 +167,7 @@ class OrderService:
             else VendorService.get_setting_value(order.vendor, "transport_price")
         )
         order.ordered_by = UserRepository(db).get_by_id(session.get("user_id"))
-        event_manager.trigger_event("afterClose@" + order.vendor.name, trigger_data)
+        event_manager.trigger_event("afterClose@" + str(order.vendor_id), trigger_data)
         logging.info("Order closed successfully")
         return order
 
@@ -209,13 +209,13 @@ class OrderService:
             "size": size.serialized,
         }
 
-        event_manager.trigger_event("beforeAdd@" + order.vendor.name, data)
+        event_manager.trigger_event("beforeAdd@" + str(order.vendor_id), data)
 
         basket_item = self.user_basket_service.add_item(
             db, user_id, item_id, size_id, order_id
         )
 
-        event_manager.trigger_event("afterAdd@" + order.vendor.name, data)
+        event_manager.trigger_event("afterAdd@" + str(order.vendor_id), data)
 
         return basket_item
 
@@ -242,13 +242,13 @@ class OrderService:
             "size": size.serialized,
         }
 
-        event_manager.trigger_event("beforeRemove@" + order.vendor.name, data)
+        event_manager.trigger_event("beforeRemove@" + str(order.vendor_id), data)
 
         basket_item = self.user_basket_service.remove_item(
             db, user_id, item_id, size_id, order_id
         )
 
-        event_manager.trigger_event("afterRemove@" + order.vendor.name, data)
+        event_manager.trigger_event("afterRemove@" + str(order.vendor_id), data)
 
         return basket_item
 
@@ -522,7 +522,7 @@ class OrderService:
             return False
 
         event_manager.trigger_event(
-            "beforeClose@" + order.vendor.name,
+            "beforeClose@" + str(order.vendor_id),
             {"order_id": order.id, "order": order.serialized},
         )
         email_min_user = VendorService.get_setting_value(order.vendor, "email_min_user")
@@ -536,7 +536,7 @@ class OrderService:
                 self.send_in_mail(order)
 
                 event_manager.trigger_event(
-                    "afterClose@" + order.vendor.name,
+                    "afterClose@" + str(order.vendor_id),
                     {"order_id": order.id, "order": order.serialized},
                 )
 
@@ -553,7 +553,7 @@ class OrderService:
             else:
                 logging.info("Minimum order requirements are not met")
                 event_manager.trigger_event(
-                    "closeFailed@" + order.vendor.name,
+                    "closeFailed@" + str(order.vendor_id),
                     {"order_id": order.id, "order": order.serialized},
                 )
                 return False

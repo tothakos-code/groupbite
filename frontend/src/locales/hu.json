@@ -28,6 +28,35 @@
       "favourite_notification_active": "Kedvenc értesítés időzítve",
       "favourite_notification_time": "Kedvenc értesítés időpontja (formátum: hh:mm)",
       "favourite_notification_days": "Kedvenc értesítés napjai"
+    },
+    "menu_type": {
+      "label": "Menü típus",
+      "daily_menu": "Napi menü",
+      "fixed_menu": "Fix menü",
+      "own_inventory": "Saját készlet"
+    },
+    "plugin": {
+      "label": "Plugin",
+      "none": "Nincs plugin",
+      "settings": "Plugin beállítások"
+    },
+    "add": {
+      "title": "Új üzlet létrehozás",
+      "name": "Rövid név",
+      "save": "Mentés"
+    },
+    "errors": {
+      "name_taken": "Ilyen nevű üzlet már létezik!",
+      "unknown_plugin": "Ismeretlen plugin!",
+      "default": "Üzlet hozzáadása nem sikerült!"
+    }
+  },
+  "makkos": {
+    "settings": {
+      "target_url": "API URL",
+      "leves_ar": "Leves ára (Ft)",
+      "menu_leves_ar": "Leves ára menüvel (Ft)",
+      "foetel_ar": "Főétel ára (Ft)"
     }
   }
 }

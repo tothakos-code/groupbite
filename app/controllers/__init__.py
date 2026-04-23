@@ -2,6 +2,7 @@ from flask import Blueprint
 
 from app.controllers.favourite_controller import FavouriteController
 from app.controllers.item_controller import MenuItemController
+from app.controllers.plugins_controller import PluginsController
 from app.controllers.main_controller import MainController
 from app.controllers.menu_controller import MenuController
 from app.controllers.order_controller import OrderController
@@ -48,6 +49,7 @@ def register_blueprints(app):
     setting_ctrl = SettingController(setting_service)
     webhook_ctrl = WebhookController(webhook_service)
     favourite_ctrl = FavouriteController(favourite_service)
+    plugins_ctrl = PluginsController()
     main_ctrl = MainController()
 
     app.register_blueprint(menu_item_ctrl.blueprint)
@@ -59,4 +61,5 @@ def register_blueprints(app):
     app.register_blueprint(setting_ctrl.blueprint)
     app.register_blueprint(webhook_ctrl.blueprint)
     app.register_blueprint(favourite_ctrl.blueprint)
+    app.register_blueprint(plugins_ctrl.blueprint)
     app.register_blueprint(main_ctrl.blueprint)

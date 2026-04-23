@@ -59,7 +59,7 @@
                   Importálás
                 </v-btn>
                 <v-btn
-                  v-if="selectedVendor.type === 'plugin'"
+                  v-if="selectedVendor.plugin_id"
                   color="primary"
                   variant="outlined"
                   prepend-icon="mdi-qrcode-scan"

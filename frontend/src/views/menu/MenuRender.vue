@@ -58,7 +58,7 @@ export default {
   },
   computed:{
     activeVendor() {
-      return state.selectedVendor?.type === "plugin" ? PluginMenu : MenuView;
+      return state.selectedVendor?.plugin_id ? PluginMenu : MenuView;
     },
     activeVendorId() {
       return state.selectedVendor?.id;

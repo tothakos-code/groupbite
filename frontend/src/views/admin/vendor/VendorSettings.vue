@@ -162,6 +162,11 @@
                   v-else-if="activeSection === 'webhook'"
                   :vendor-id="vendor.id"
                 />
+                <PluginSettings
+                  v-else-if="activeSection === 'plugin'"
+                  v-model:settings="pluginSettings"
+                  :plugin-id="vendor.plugin_id"
+                />
               </div>
             </transition>
           </main>
@@ -181,6 +186,7 @@ import GeneralSettings from '@/components/vendor-settings/GeneralSettings.vue'
 import UiSettings from '@/components/vendor-settings/UiSettings.vue'
 import OrderTimingSettings from '@/components/vendor-settings/OrderTimingSettings.vue'
 import AutoEmailSettings from '@/components/vendor-settings/AutoEmailSettings.vue'
+import PluginSettings from '@/components/vendor-settings/PluginSettings.vue'
 
 export default {
   name: 'VendorSettings',
@@ -190,6 +196,7 @@ export default {
     UiSettings,
     OrderTimingSettings,
     AutoEmailSettings,
+    PluginSettings,
   },
   setup() {
     const auth = useAuth()
@@ -201,17 +208,18 @@ export default {
     return {
       vendor: {},
       originalVendor: {},
+      pluginSettings: {},
       isLoading: true,
       saving: false,
       smtpStatus: false,
       navCollapsed: false,
       activeSection: 'general',
       sections: [
-        { id: 'general', label: 'Általános',            icon: 'mdi-cog',          color: 'primary'   },
+        { id: 'general', label: 'Általános',            icon: 'mdi-cog',          color: 'primary' },
         { id: 'ui',      label: 'Felhasználói felület', icon: 'mdi-palette',       color: 'primary' },
-        { id: 'timing',  label: 'Időzítés',             icon: 'mdi-clock-outline', color: 'primary'   },
-        { id: 'email',   label: 'Automatikus email',    icon: 'mdi-email-fast',    color: 'primary'   },
-        { id: 'webhook', label: 'Webhook',              icon: 'mdi-webhook',       color: 'primary'      },
+        { id: 'timing',  label: 'Időzítés',             icon: 'mdi-clock-outline', color: 'primary' },
+        { id: 'email',   label: 'Automatikus email',    icon: 'mdi-email-fast',    color: 'primary' },
+        { id: 'webhook', label: 'Webhook',              icon: 'mdi-webhook',       color: 'primary' },
       ],
     }
   },
@@ -227,6 +235,10 @@ export default {
         this.initializeNewSettings()
         this.originalVendor = JSON.parse(JSON.stringify(this.vendor))
         await this.checkSmtpStatus()
+        if (this.vendor.plugin_id) {
+          await this.loadPluginSettings()
+          this.sections.push({ id: 'plugin', label: this.$t('vendor.plugin.settings'), icon: 'mdi-puzzle', color: 'primary' })
+        }
       } catch (error) {
         console.error('Error loading settings:', error)
         this.$toast?.error('Hiba a beállítások betöltése során')
@@ -257,6 +269,13 @@ export default {
       }
     },
 
+    async loadPluginSettings() {
+      const response = await this.vendorStore.fetchPluginSettings(this.$route.params.id)
+      if (response?.status === 200) {
+        this.pluginSettings = response.data.data.settings
+      }
+    },
+
     async saveSettings() {
       try {
         const { valid } = await this.$refs.form.validate()
@@ -265,9 +284,17 @@ export default {
           return
         }
         this.saving = true
-        await this.vendorStore.saveSettings(this.$route.params.id, this.vendor.settings)
-        this.$toast?.success('Beállítások sikeresen mentve')
-        this.originalVendor = JSON.parse(JSON.stringify(this.vendor))
+        if (this.activeSection === 'plugin') {
+          const values = Object.fromEntries(
+            Object.entries(this.pluginSettings).map(([k, s]) => [k, s.value])
+          )
+          await this.vendorStore.savePluginSettings(this.$route.params.id, values)
+          await this.loadPluginSettings()
+        } else {
+          await this.vendorStore.saveSettings(this.$route.params.id, this.vendor.settings)
+          this.$toast?.success('Beállítások sikeresen mentve')
+          this.originalVendor = JSON.parse(JSON.stringify(this.vendor))
+        }
       } catch (error) {
         console.error('Error saving settings:', error)
         this.$toast?.error('Hiba a beállítások mentése során')

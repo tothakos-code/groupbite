@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from app.entities.order import Order
 from app.entities.user_basket import UserBasket
-from app.entities.vendor import Vendor, VendorType
+from app.entities.vendor import MenuType, Vendor
 
 
 class VendorRepository:
@@ -13,8 +13,8 @@ class VendorRepository:
         stmt = select(Vendor).order_by(Vendor.name)
         return self.db.execute(stmt).scalars().all()
 
-    def find_all_by_type(self, vendor_type: VendorType):
-        stmt = select(Vendor).where(Vendor.type == vendor_type)
+    def find_all_by_menu_type(self, menu_type: MenuType):
+        stmt = select(Vendor).where(Vendor.menu_type == menu_type)
         return self.db.execute(stmt).scalars().all()
 
     def find_all_active(self):
@@ -23,7 +23,14 @@ class VendorRepository:
 
     def get_by_id(self, vendor_id):
         stmt = select(Vendor).where(Vendor.id == vendor_id)
+        return self.db.execute(stmt).scalars().first()
 
+    def get_by_plugin_id(self, plugin_id: str):
+        stmt = select(Vendor).where(Vendor.plugin_id == plugin_id)
+        return self.db.execute(stmt).scalars().all()
+
+    def get_by_name(self, name: str):
+        stmt = select(Vendor).where(Vendor.name == name)
         return self.db.execute(stmt).scalars().first()
 
     def save(self, vendor):
@@ -39,22 +46,14 @@ class VendorRepository:
         vendor.active = False
         self.db.flush()
 
-    def update(self, vendor, name, from_date, to_date):
+    def update(self, vendor, name):
         vendor.name = name
-        vendor.from_date = from_date
-        vendor.to_date = to_date
         self.db.flush()
 
     def delete(self, vendor):
         self.db.delete(vendor)
         self.db.flush()
         self.db.expunge(vendor)
-
-    def get_by_name_and_type(self, vendor_name: str, vendor_type: VendorType):
-        stmt = select(Vendor).where(
-            Vendor.type == vendor_type, Vendor.name == vendor_name
-        )
-        return self.db.execute(stmt).scalars().first()
 
     def find_vendors_by_user_orders(self, user_id):
         user_vendor_ids_subquery = (

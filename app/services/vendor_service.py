@@ -10,13 +10,12 @@ from app.entities.menu import Menu
 from app.entities.menu_item import MenuItem
 from app.entities.notification import NotificationType
 from app.entities.size import Size
-from app.entities.vendor import Vendor, VendorType
+from app.entities.vendor import MenuType, Vendor
 from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.order_repository import OrderRepository
 from app.repositories.setting_repository import SettingRepository
 from app.repositories.vendor_repository import VendorRepository
-from app.services.base_vendor_service import BaseVendorService
 from app.services.order_service import OrderService
 from app.services.vendor_service_factory import VendorServiceFactory
 from app.utils.vendor_settings import (
@@ -269,15 +268,30 @@ class VendorService:
             new_settings["auto_email_order"] = old_active
 
     def create_vendor(self, db, data) -> Vendor:
+        from app.plugin_registry import PluginRegistry
+
+        plugin_id = data.get("plugin_id") or None
+        if plugin_id and not PluginRegistry.get(plugin_id):
+            raise ValueError(f"Unknown plugin: {plugin_id}")
+
+        menu_type = MenuType(data.get("menu_type", MenuType.FIXED_MENU.value))
+
+        if VendorRepository(db).get_by_name(data["name"]):
+            raise ValueError("name_taken")
+
         vendor = Vendor(
             id=uuid4(),
             name=data["name"],
-            type=VendorType.BASIC,
+            menu_type=menu_type,
+            plugin_id=plugin_id,
             settings=data.get("settings", {}),
         )
-        vendor = VendorRepository(db).save(vendor)
+        VendorRepository(db).save(vendor)
         vendor._validate_settings()
-        VendorServiceFactory.register_vendor_service(vendor, BaseVendorService)
+
+        if plugin_id:
+            service_class = PluginRegistry.get(plugin_id)
+            service_class.register(plugin_id, [str(vendor.id)])
 
         if self.get_setting_value(vendor, "closure_scheduler_active"):
             from app.scheduler import schedule_task
@@ -376,7 +390,7 @@ class VendorService:
                 logging.info("Open order not found for state changing")
                 return
             event_manager.trigger_event(
-                "beforeClose@" + order.vendor.name,
+                "beforeClose@" + str(vendor.id),
                 {"order_id": order.id, "order": order.serialized},
             )
 
@@ -397,7 +411,7 @@ class VendorService:
                 else:
                     logging.info("Minimum order requirements are not met")
                     event_manager.trigger_event(
-                        "closeFailed@" + vendor.name,
+                        "closeFailed@" + str(vendor.id),
                         {"order_id": order.id, "order": order.serialized},
                     )
                     return False
@@ -405,7 +419,7 @@ class VendorService:
                 self.order_service._change_state(db, order, OrderState.CLOSED)
 
             event_manager.trigger_event(
-                "afterClose@" + vendor.name,
+                "afterClose@" + str(vendor.id),
                 {"order_id": order.id, "order": order.serialized},
             )
             socketio = SocketioSingleton.get_instance()
@@ -430,7 +444,7 @@ class VendorService:
                 logging.info("Open order not found for state changing")
                 return
             event_manager.trigger_event(
-                "beforeOrder@" + vendor.name,
+                "beforeOrder@" + str(vendor.id),
                 {"order_id": order.id, "order": order.serialized},
             )
             ok = self.order_service._change_state(db, order, OrderState.ORDER)
@@ -442,7 +456,7 @@ class VendorService:
             include_favourite = bool(self.get_setting_value(vendor, "favourite_notification_on_order"))
             NotificationService.send_order_notifications(db, vendor, order, include_favourite)
             event_manager.trigger_event(
-                "afterOrder@" + vendor.name,
+                "afterOrder@" + str(vendor.id),
                 {"order_id": order.id, "order": order.serialized},
             )
 
@@ -461,7 +475,7 @@ class VendorService:
 
         with get_session() as db:
             event_manager.trigger_event(
-                "beforeScan@" + vendor.name,
+                "beforeScan@" + str(vendor.id),
                 {"vendor_id": vendor.id, "vendor": vendor.serialized},
             )
 
@@ -474,6 +488,47 @@ class VendorService:
                 service.scan(db, menu_date=scan_date)
 
             event_manager.trigger_event(
-                "afterScan@" + vendor.name,
+                "afterScan@" + str(vendor.id),
                 {"vendor_id": vendor.id, "vendor": vendor.serialized},
             )
+
+    @staticmethod
+    def get_plugin_settings(db, vendor_id):
+        from app.plugin_registry import PluginRegistry
+        from app.utils.vendor_settings import plugin_settings as load_plugin_settings
+
+        vendor = VendorRepository(db).get_by_id(vendor_id)
+        if not vendor or not vendor.plugin_id:
+            return None
+
+        schema = PluginRegistry.get_settings(vendor.plugin_id)
+        stored = load_plugin_settings(vendor, vendor.plugin_id)
+
+        settings = {
+            s.key: {**s.to_registry_dict(), "value": stored.get(s.key, s.get_default_value())}
+            for s in schema
+        }
+        return {"plugin_id": vendor.plugin_id, "settings": settings}
+
+    @staticmethod
+    def update_plugin_settings(db, vendor_id, patch):
+        from app.plugin_registry import PluginRegistry
+        from app.utils.vendor_settings import save_plugin_settings as persist_plugin_settings
+
+        vendor = VendorRepository(db).get_by_id(vendor_id)
+        if not vendor or not vendor.plugin_id:
+            return None, {"error": "vendor has no plugin"}
+
+        schema = {s.key: s for s in PluginRegistry.get_settings(vendor.plugin_id)}
+        errors = {}
+        for key, value in patch.items():
+            if key not in schema:
+                errors[key] = "unknown_setting"
+            elif not schema[key].validate(value):
+                errors[key] = "invalid_value"
+
+        if errors:
+            return None, errors
+
+        persist_plugin_settings(vendor, vendor.plugin_id, patch)
+        return vendor, {}

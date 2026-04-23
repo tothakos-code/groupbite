@@ -1,124 +1,115 @@
 <template>
-  <div class="row ms-2">
-    <div class="">
-      <h1 class="">
-        Új üzlet létrehozás
-      </h1>
-    </div>
-    <div class="">
-      <div
-        class=""
-      >
-        <label for="short-name">Rövid Név:
-        </label>
-        <input
-          v-model="vendor.name"
-          class="form-control"
-          type="text"
-          name="short-name"
-          required
-        >
+  <v-container
+    max-width="560"
+    class="mt-6"
+  >
+    <h1 class="mb-6">
+      {{ $t('vendor.add.title') }}
+    </h1>
 
-        <label for="full-name">Teljes név:
-        </label>
-        <input
-          v-model="vendor.settings.title.value"
-          type="text"
-          name="full-name"
-          class="form-control"
-          required
-        >
+    <v-form
+      ref="form"
+      @submit.prevent="createVendor"
+    >
+      <v-text-field
+        v-model="vendor.name"
+        :label="$t('vendor.add.name')"
+        prepend-icon="mdi-store"
+        variant="outlined"
+        density="comfortable"
+        :rules="[v => !!v || 'Kötelező mező']"
+        class="mb-2"
+      />
 
-        <label for="transport_price">Szállítási Díj:
-        </label>
-        <input
-          v-model="vendor.settings.transport_price.value"
-          type="number"
-          name="transport_price"
-          class="form-control"
-        >
+      <v-select
+        v-model="vendor.menu_type"
+        :label="$t('vendor.menu_type.label')"
+        :items="menuTypeOptions"
+        item-title="label"
+        item-value="value"
+        prepend-icon="mdi-menu"
+        variant="outlined"
+        density="comfortable"
+        class="mb-2"
+      />
 
-        <label for="transport_price">Rendelés megjegyzés példa:
-        </label>
-        <input
-          v-model="vendor.settings.comment_example.value"
-          type="text"
-          name="transport_price"
-          class="form-control"
-        >
-      </div>
+      <v-select
+        v-model="vendor.plugin_id"
+        :label="$t('vendor.plugin.label')"
+        :items="pluginOptions"
+        item-title="label"
+        item-value="value"
+        prepend-icon="mdi-puzzle"
+        variant="outlined"
+        density="comfortable"
+        clearable
+        :loading="loadingPlugins"
+        class="mb-4"
+      />
+
       <v-btn
-        class="btn mt-2 bg-primary"
-        type="button"
-        name="save"
-        @click="createVendor()"
+        type="submit"
+        color="primary"
+        :loading="vendorStore.isLoading"
+        block
       >
-        Mentés
+        {{ $t('vendor.add.save') }}
       </v-btn>
-    </div>
-  </div>
+    </v-form>
+  </v-container>
 </template>
 
 <script>
-import { useAuth } from "@/stores/auth";
-import { useVendorStore } from "@/stores/vendor";
+import { useVendorStore } from '@/stores/vendor'
 
 export default {
-    name: "VendorAdd",
-    setup() {
-      const auth = useAuth();
-      const vendorStore = useVendorStore();
-      return {
-        auth,
-        vendorStore
-      }
-    },
-    data() {
-      return {
-        vendor: {
-          "name":"",
-          "settings":{
-            "title": {
-              "name": "Cím",
-              "type": "STR",
-              "value": "",
-              "section": "root"
-            },
-            "link": {
-              "name": "Eredeti oldal elérhetősége",
-              "type": "STR",
-              "value": "",
-              "section": "root"
-            },
-            "transport_price": {
-              "name": "Szállítási díj",
-              "type": "INT",
-              "value": "0",
-              "section": "root"
-            },
-            "comment_example": {
-              "name": "Rendelés megjegyzés példa",
-              "type": "STR",
-              "value": "Bárdi autó épületén jobb oldalt fotocellás ajtó, balra lift, 3. em, jobbra csengő Tigra Kft.",
-              "section": "root"
-            }
-          }
-        }
-      }
-    },
-    mounted() {
-    },
-    methods: {
-      createVendor: function () {
-        this.vendorStore.add(this.vendor)
-          .then(() => {
-
-            this.$router.push("/admin")
-          })
+  name: 'VendorAdd',
+  setup() {
+    const vendorStore = useVendorStore()
+    return { vendorStore }
+  },
+  data() {
+    return {
+      vendor: {
+        name: '',
+        menu_type: 'fixed_menu',
+        plugin_id: null,
       },
+      plugins: [],
+      loadingPlugins: false,
+      menuTypeOptions: [
+        { value: 'fixed_menu',    label: this.$t('vendor.menu_type.fixed_menu')    },
+        { value: 'daily_menu',    label: this.$t('vendor.menu_type.daily_menu')    },
+        { value: 'own_inventory', label: this.$t('vendor.menu_type.own_inventory') },
+      ],
     }
-};
+  },
+  computed: {
+    pluginOptions() {
+      const none = [{ value: null, label: this.$t('vendor.plugin.none') }]
+      return none.concat(this.plugins.map(p => ({ value: p.id, label: p.id })))
+    },
+  },
+  async mounted() {
+    this.loadingPlugins = true
+    try {
+      const response = await this.vendorStore.fetchPlugins()
+      if (response?.status === 200) this.plugins = response.data.data
+    } finally {
+      this.loadingPlugins = false
+    }
+  },
+  methods: {
+    async createVendor() {
+      const { valid } = await this.$refs.form.validate()
+      if (!valid) return
+      const response = await this.vendorStore.add({
+        name: this.vendor.name,
+        menu_type: this.vendor.menu_type,
+        plugin_id: this.vendor.plugin_id || null,
+      })
+      if (response?.status === 200) this.$router.push('/admin')
+    },
+  },
+}
 </script>
-
-<style scoped>
-</style>

@@ -1,12 +1,12 @@
-import threading
-from datetime import datetime, timedelta, time
 import logging
+import threading
+from datetime import date, datetime, time, timedelta
 
-# Dictionary to store target times and timers for each task
 tasks = {}
 lock = threading.Lock()
 
 DAY_TO_IDX = {"mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4, "sat": 5, "sun": 6}
+
 
 def _to_allowed_weekdays(scheduled_days):
     if not scheduled_days:
@@ -14,9 +14,9 @@ def _to_allowed_weekdays(scheduled_days):
     allowed = {DAY_TO_IDX[d] for d in scheduled_days if d in DAY_TO_IDX}
     return allowed if allowed else None
 
+
 def _next_target_datetime(now: datetime, hour: int, minute: int, allowed_weekdays: set | None) -> datetime:
     candidate = datetime.combine(now.date(), time(hour=hour, minute=minute))
-
 
     if candidate < now:
         candidate += timedelta(days=1)
@@ -29,8 +29,8 @@ def _next_target_datetime(now: datetime, hour: int, minute: int, allowed_weekday
             return candidate
         candidate += timedelta(days=1)
 
-    # fallback (shouldn't happen)
     return candidate
+
 
 def schedule_task(task_id, hour, minute, func, scheduled_days=None, *args, **kwargs):
     global tasks
@@ -41,20 +41,28 @@ def schedule_task(task_id, hour, minute, func, scheduled_days=None, *args, **kwa
         delay = (target_time - now).total_seconds()
 
         def task_wrapper():
-            if allowed_weekdays is None or target_time.weekday() in allowed_weekdays:
-                func(*args, **kwargs)
-            # Reschedule the task for the next day (same time)
-            schedule_task(task_id, hour, minute, func, scheduled_days, *args, **kwargs)
+            with lock:
+                before_target = tasks.get(task_id, {}).get("target_time")
 
-        # Cancel the previous timer if it exists
+            try:
+                if allowed_weekdays is None or target_time.weekday() in allowed_weekdays:
+                    func(*args, **kwargs)
+            except Exception:
+                logging.exception("Error in scheduled task '%s'", task_id)
+            finally:
+                with lock:
+                    after_target = tasks.get(task_id, {}).get("target_time")
+
+                # Only auto-reschedule if func() didn't already call reschedule_task
+                if before_target == after_target:
+                    schedule_task(task_id, hour, minute, func, scheduled_days, *args, **kwargs)
+
         if task_id in tasks:
             tasks[task_id]["timer"].cancel()
 
-        # Schedule the function to be called after the delay
         timer = threading.Timer(max(0, delay), task_wrapper)
         timer.start()
 
-        # Store the new timer, target time, and task details (needed for manual rescheduling)
         tasks[task_id] = {
             "timer": timer,
             "target_time": target_time,
@@ -66,10 +74,11 @@ def schedule_task(task_id, hour, minute, func, scheduled_days=None, *args, **kwa
             "kwargs": kwargs,
         }
 
-def reschedule_task(task_id):
+
+def reschedule_task(task_id, next_fire_date: date = None):
     """
-    Manually reschedule an already-scheduled task to the next day at the same time.
-    If the task isn't found, raises a KeyError.
+    Reschedule a task. If next_fire_date is given the task fires on that exact date
+    (weekday restrictions are ignored). Otherwise advances to the next natural occurrence.
     """
     global tasks
     with lock:
@@ -81,22 +90,49 @@ def reschedule_task(task_id):
 
         now = datetime.now()
         allowed_weekdays = _to_allowed_weekdays(info["scheduled_days"])
-        next_target_time = _next_target_datetime(now, info["hour"], info["minute"], allowed_weekdays)
+
+        if next_fire_date is not None:
+            next_target_time = datetime.combine(
+                next_fire_date, time(hour=info["hour"], minute=info["minute"])
+            )
+        else:
+            next_target_time = _next_target_datetime(
+                now, info["hour"], info["minute"], allowed_weekdays
+            )
+
         delay = (next_target_time - now).total_seconds()
 
         def task_wrapper():
-            if allowed_weekdays is None or next_target_time.weekday() in allowed_weekdays:
-                info["func"](*info["args"], **info["kwargs"])
-            # Reschedule the task for the next day (same time)
-            schedule_task(task_id, info["hour"], info["minute"], info["func"], info["scheduled_days"], *info["args"], **info["kwargs"])
+            with lock:
+                before_target = tasks.get(task_id, {}).get("target_time")
 
-        # Arm a new timer
+            try:
+                # Explicit next_fire_date bypasses the weekday check
+                if next_fire_date is not None or allowed_weekdays is None or next_target_time.weekday() in allowed_weekdays:
+                    info["func"](*info["args"], **info["kwargs"])
+            except Exception:
+                logging.exception("Error in scheduled task '%s'", task_id)
+            finally:
+                with lock:
+                    after_target = tasks.get(task_id, {}).get("target_time")
+
+                if before_target == after_target:
+                    schedule_task(
+                        task_id,
+                        info["hour"],
+                        info["minute"],
+                        info["func"],
+                        info["scheduled_days"],
+                        *info["args"],
+                        **info["kwargs"],
+                    )
+
         timer = threading.Timer(max(0, delay), task_wrapper)
         timer.start()
 
-        # Update stored state
         info["timer"] = timer
         info["target_time"] = next_target_time
+
 
 def cancel_task(task_id):
     global tasks
@@ -104,6 +140,42 @@ def cancel_task(task_id):
         if task_id in tasks:
             tasks[task_id]["timer"].cancel()
             del tasks[task_id]
+
+
+def schedule_once(task_id: str, target_datetime: datetime, func, *args, **kwargs):
+    """Schedule a one-shot task at a specific datetime. Does not auto-reschedule."""
+    global tasks
+    with lock:
+        if task_id in tasks:
+            tasks[task_id]["timer"].cancel()
+
+        now = datetime.now()
+        delay = (target_datetime - now).total_seconds()
+
+        def task_wrapper():
+            try:
+                func(*args, **kwargs)
+            except Exception:
+                logging.exception("Error in scheduled one-shot task '%s'", task_id)
+            finally:
+                with lock:
+                    tasks.pop(task_id, None)
+
+        timer = threading.Timer(max(0, delay), task_wrapper)
+        timer.start()
+
+        tasks[task_id] = {
+            "timer": timer,
+            "target_time": target_datetime,
+            "hour": target_datetime.hour,
+            "minute": target_datetime.minute,
+            "scheduled_days": None,
+            "func": func,
+            "args": args,
+            "kwargs": kwargs,
+            "once": True,
+        }
+
 
 def get_scheduled_tasks():
     global tasks

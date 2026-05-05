@@ -198,7 +198,7 @@ export default {
         await this.favourites.removeFavourite(vendorId, favouriteId);
       } else {
         await this.favourites.addFavourite(vendorId, this.item.name);
-        const menuDate = this.order.order?.date_of_order ?? null;
+        const menuDate = this.order.order?.open_from ?? null;
         await this.favourites.fetchMatches(vendorId, menuDate);
         await this.favourites.ensureFavouriteNotificationsEnabled(vendorId);
       }

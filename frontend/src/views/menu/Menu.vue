@@ -11,6 +11,7 @@
       >
         <MenuHeader
           :vendor-title="vendorTitle"
+          :vendor-id="vendorId"
           :vendor-settings="vendorSettings"
           :user-count="userCount"
           :vendor-link="vendorLink"

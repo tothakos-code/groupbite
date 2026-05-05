@@ -258,7 +258,9 @@ class UserService:
                     "id": item.order.id,
                     "vendor": {"name": item.order.vendor.name},
                     "state_id": str(item.order.state_id),
-                    "date_of_order": item.order.date_of_order.strftime("%Y-%m-%d"),
+                    "date_of_order": item.order.open_from.strftime("%Y-%m-%d"),
+                    "open_from": item.order.open_from.strftime("%Y-%m-%d"),
+                    "open_until": item.order.effective_until.strftime("%Y-%m-%d"),
                     "order_time": item.order.order_time.isoformat()
                     if item.order.order_time
                     else None,
@@ -380,7 +382,7 @@ class UserService:
                     total_spent += user_fee_share
                     processed_order_fees.add(order_id)
 
-                order_date = item.order.date_of_order
+                order_date = item.order.open_from
                 if isinstance(order_date, str):
                     order_date = datetime.strptime(order_date, "%Y-%m-%d").date()
 
@@ -467,7 +469,7 @@ class UserService:
             processed_order_fees = {}
 
             for item in user_items:
-                order_date = item.order.date_of_order
+                order_date = item.order.open_from
                 if isinstance(order_date, str):
                     order_date = datetime.strptime(order_date, "%Y-%m-%d").date()
 

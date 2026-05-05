@@ -8,12 +8,19 @@
       <h2>{{ vendorTitle }}</h2>
     </v-col>
 
-    <!-- Order State -->
+    <!-- Order State + Date Range -->
     <v-col
+      v-if="orderStore.order?.id"
       sm="auto"
       class="d-flex flex-fill align-items-center justify-content-sm-start justify-content-center justify-content-xl-start"
     >
       <OrderState class="text-truncate my-auto" />
+      <span
+        v-if="orderDateRange"
+        class="text-caption text-medium-emphasis ms-2 my-auto"
+      >
+        {{ orderDateRange }}
+      </span>
     </v-col>
 
     <!-- Auto Email Order Info -->
@@ -53,7 +60,6 @@
           <span>{{ notificationStatus ? 'Értesítés kikapcsolása' : 'Értesítés bekapcsolása ezen az eszközön' }}</span>
         </v-tooltip>
 
-
         <v-tooltip
           v-if="vendorLink"
           location="bottom"
@@ -87,41 +93,35 @@
       </div>
     </v-col>
   </v-row>
+
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import OrderState from '@/components/menu/OrderState.vue'
 import AutoEmailOrderInfo from '@/components/menu/AutoOrderInfo.vue'
-// import NotificationToggle from '@/components/NotificationToggle.vue'
-// import VendorLinkButton from '@/components/VendorLinkButton.vue'
 import TransferPopup from '@/components/TransferPopup.vue'
+import { useOrderStore } from '@/stores/order'
 
-// Props
+const orderStore = useOrderStore()
+
 const prop = defineProps({
-  vendorTitle: {
-    type: String,
-    required: true
-  },
-  vendorSettings: {
-    type: Object,
-    required: true
-  },
-  userCount: {
-    type: Number,
-    required: true
-  },
-  vendorLink: {
-    type: String,
-    default: ''
-  },
-  notificationStatus: {
-    type: Boolean,
-    default: false
-  }
+  vendorTitle: { type: String, required: true },
+  vendorId: { type: String, default: '' },
+  vendorSettings: { type: Object, required: true },
+  userCount: { type: Number, required: true },
+  vendorLink: { type: String, default: '' },
+  notificationStatus: { type: Boolean, default: false }
 })
 
-// Emits
 const emit = defineEmits(['subscribe', 'unsubscribe-requested'])
+
+const orderDateRange = computed(() => {
+  const order = orderStore.order
+  if (!order?.open_from) return null
+  if (!order.open_until || order.open_until === order.open_from) return null
+  return `${order.open_from} – ${order.open_until}`
+})
 
 const handleToggle = () => {
   if (prop.notificationStatus) {
@@ -129,18 +129,14 @@ const handleToggle = () => {
     return
   }
 
-  if (!('Notification' in window)) {
-    return
-  }
+  if (!('Notification' in window)) return
 
   if (Notification.permission === 'denied') {
-    // Browser has blocked notifications — inform the parent to show a message
     emit('subscribe', { blocked: true })
     return
   }
 
   if (Notification.permission === 'default') {
-    // Request permission synchronously within the user gesture call stack
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
         emit('subscribe', { blocked: false })
@@ -149,7 +145,6 @@ const handleToggle = () => {
     return
   }
 
-  // Already granted
   emit('subscribe', { blocked: false })
 }
 </script>

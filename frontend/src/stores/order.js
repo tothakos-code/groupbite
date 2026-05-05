@@ -9,7 +9,9 @@ export const useOrderStore = defineStore("order", {
     order: {},
     basket: {},
     selectedOrders: [],
-    isLoading: false
+    isLoading: false,
+    pendingItem: null,
+    showCreateOrderDialog: false,
   }),
   getters: {
     userCount(state) {
@@ -239,6 +241,11 @@ export const useOrderStore = defineStore("order", {
         });
         return;
       }
+      if (!this.order?.id) {
+        this.pendingItem = { menuItemId, sizeId }
+        this.showCreateOrderDialog = true
+        return
+      }
       if (this.order.state_id === "closed") {
         notify({
           type: "warn",
@@ -273,6 +280,20 @@ export const useOrderStore = defineStore("order", {
       } catch (error) {
         console.error("Failed to delete order:", error.response.data.error);
         return error.response
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async createOrder(vendorId, openUntil = null) {
+      this.isLoading = true;
+      try {
+        const body = openUntil ? { open_until: openUntil } : {};
+        const response = await axios.post(`/api/vendor/${vendorId}/order`, body);
+        this.order = response.data.data;
+        return response;
+      } catch (error) {
+        console.error("Failed to create order:", error.response?.data?.error);
+        return error.response;
       } finally {
         this.isLoading = false;
       }

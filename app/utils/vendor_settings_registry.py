@@ -338,6 +338,22 @@ class VendorSettingsRegistry:
         visibility=Visibility.PRIVATE,
         default_value=[],
     )
+    ORDER_DURATION_DAYS = IntegerSetting(
+        key="order_duration_days",
+        labelKey="vendor.settings.order_duration_days",
+        section="order",
+        visibility=Visibility.PRIVATE,
+        default_value=1,
+        min_value=1,
+        max_value=365,
+    )
+    AUTO_ORDER_CREATION = BooleanSetting(
+        key="auto_order_creation",
+        labelKey="vendor.settings.auto_order_creation",
+        section="order",
+        visibility=Visibility.PUBLIC,
+        default_value=False,
+    )
 
     @classmethod
     def _iter(cls) -> Dict[str, BaseSetting]:

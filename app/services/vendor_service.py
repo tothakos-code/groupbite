@@ -57,7 +57,7 @@ class VendorService:
 
             categorized_items = {}
             for item in items:
-                category = item.category or "egyéb"
+                category = item.category_obj.name if item.category_obj else "egyéb"
                 if category not in categorized_items:
                     categorized_items[category] = []
                 categorized_items[category].append(item.serialized)
@@ -152,7 +152,7 @@ class VendorService:
         errors = save_vendor_settings(vendor, {key: value})
         return len(errors) == 0
 
-    def update_settings(self, vendor, settings: dict):
+    def update_settings(self, vendor, settings: dict, db=None):
         normalised = {}
         for key, v in settings.items():
             if isinstance(v, dict) and "value" in v:
@@ -160,6 +160,8 @@ class VendorService:
             else:
                 normalised[key] = v
 
+        if db is not None:
+            self._handle_duration_decrease(vendor, normalised, db)
         self._handle_scheduler_changes(vendor, normalised)
         errors = save_vendor_settings(vendor, normalised)
         if errors:
@@ -169,6 +171,27 @@ class VendorService:
                 "Settings validation errors: %s", errors
             )
         return errors
+
+    def _handle_duration_decrease(self, vendor, new_settings: dict, db):
+        """Delete future open orders when order_duration_days is decreased."""
+        new_duration = new_settings.get("order_duration_days")
+        if new_duration is None:
+            return
+        try:
+            new_duration = int(new_duration)
+        except (ValueError, TypeError):
+            return
+        old_duration = int(self.get_setting_value(vendor, "order_duration_days") or 1)
+        if new_duration >= old_duration:
+            return
+
+        from app.repositories.user_basket_repository import UserBasketRepository
+        order_repo = OrderRepository(db)
+        basket_repo = UserBasketRepository(db)
+        for order in order_repo.find_future_open_orders_for_vendor(vendor.id):
+            basket_repo.clear_order_items(order.id)
+            db.flush()
+            order_repo.delete(order)
 
     def update_setting(self, vendor, key, value) -> bool:
         return self.set_setting_value(vendor, key, value)
@@ -386,14 +409,17 @@ class VendorService:
         logging.info("Scheduled order 'CLOSED' state stepping running")
         from app.entities.order import OrderState
         from app.event_manager import event_manager
+        from app.scheduler import reschedule_task
 
         with get_session() as db:
-            order = self.order_service.find_open_order_by_vendor(
-                db, vendor.id, date.today()
-            )
-            if not order:
+            try:
+                order = self.order_service.find_open_order_by_vendor(
+                    db, vendor.id, date.today()
+                )
+            except ValueError:
                 logging.info("Open order not found for state changing")
                 return
+
             event_manager.trigger_event(
                 "beforeClose@" + str(vendor.id),
                 {"order_id": order.id, "order": order.serialized},
@@ -431,23 +457,37 @@ class VendorService:
             socketio.emit(
                 "be_order_update",
                 {"order": order.serialized},
-                to=f"{order.vendor_id}@{order.date_of_order}",
+                to=f"{order.vendor_id}@{order.open_from}",
             )
+
+            order_duration_days = int(self.get_setting_value(vendor, "order_duration_days") or 1)
+            if order_duration_days > 1:
+                task_id = f"{str(vendor.id)}-closed"
+                try:
+                    reschedule_task(
+                        task_id,
+                        next_fire_date=order.effective_until + timedelta(days=order_duration_days),
+                    )
+                except KeyError:
+                    pass
 
     def closure_wrapper(self, vendor):
         logging.info("Scheduled order 'ORDER' state stepping running")
         from app.entities.order import OrderState
         from app.event_manager import event_manager
+        from app.scheduler import reschedule_task
         from app.services.notification_service import NotificationService
         from app.socketio_singleton import SocketioSingleton
 
         with get_session() as db:
-            order = self.order_service.find_open_order_by_vendor(
-                db, vendor.id, date.today()
-            )
-            if not order:
+            try:
+                order = self.order_service.find_open_order_by_vendor(
+                    db, vendor.id, date.today()
+                )
+            except ValueError:
                 logging.info("Open order not found for state changing")
                 return
+
             event_manager.trigger_event(
                 "beforeOrder@" + str(vendor.id),
                 {"order_id": order.id, "order": order.serialized},
@@ -464,6 +504,17 @@ class VendorService:
                 "afterOrder@" + str(vendor.id),
                 {"order_id": order.id, "order": order.serialized},
             )
+
+            order_duration_days = int(self.get_setting_value(vendor, "order_duration_days") or 1)
+            if order_duration_days > 1:
+                task_id = f"{str(vendor.id)}-closure"
+                try:
+                    reschedule_task(
+                        task_id,
+                        next_fire_date=order.effective_until + timedelta(days=order_duration_days),
+                    )
+                except KeyError:
+                    pass
 
     def favourite_notification_wrapper(self, vendor):
         logging.info("Scheduled favourite notification running")

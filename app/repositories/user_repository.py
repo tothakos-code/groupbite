@@ -44,6 +44,6 @@ class UserRepository:
 
     def get_all_orders_between(self, user_id, start, end):
         stmt = select(User).where(
-            User.id == user_id, User.orders.any(Order.date_of_order.between(start, end))
+            User.id == user_id, User.orders.any(Order.open_from.between(start, end))
         )
         return self.db.execute(stmt).all()

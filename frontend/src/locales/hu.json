@@ -27,7 +27,9 @@
       "favourite_notification_on_order": "Kedvenc értesítés küldése rendelés indításakor",
       "favourite_notification_active": "Kedvenc értesítés időzítve",
       "favourite_notification_time": "Kedvenc értesítés időpontja (formátum: hh:mm)",
-      "favourite_notification_days": "Kedvenc értesítés napjai"
+      "favourite_notification_days": "Kedvenc értesítés napjai",
+      "order_duration_days": "Rendelési időszak hossza (napokban)",
+      "auto_order_creation": "Automatikus rendelés létrehozás"
     },
     "menu_type": {
       "label": "Menü típus",

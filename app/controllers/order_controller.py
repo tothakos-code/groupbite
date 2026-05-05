@@ -116,7 +116,7 @@ class OrderController:
         socketio.emit(
             "be_order_update",
             {"order": order.serialized},
-            to=f"{order.vendor_id}@{order.date_of_order}",
+            to=f"{order.vendor_id}@{order.open_from}",
         )
         return {"data": order.serialized}, 200
 
@@ -144,7 +144,7 @@ class OrderController:
             {
                 "order": order.serialized,
             },
-            to=f"{order.vendor_id}@{order.date_of_order}",
+            to=f"{order.vendor_id}@{order.open_from}",
         )
         return {"msg": "OK"}, 200
 
@@ -155,17 +155,17 @@ class OrderController:
         order = self.order_service.copy_basket(db, order_id, user_id, src_user_id)
         db.commit()
         menus = VendorService(self.order_service).get_menu_items(
-            db, order.vendor_id, str(order.date_of_order)
+            db, order.vendor_id, str(order.open_from)
         )
         socketio.emit(
             "be_order_update",
             {"basket": self.order_service.get_order_items(order)},
-            to=f"{order.vendor_id}@{order.date_of_order}",
+            to=f"{order.vendor_id}@{order.open_from}",
         )
         socketio.emit(
             "be_menu_update",
             {"menus": menus},
-            to=f"{order.vendor_id}@{order.date_of_order}",
+            to=f"{order.vendor_id}@{order.open_from}",
         )
         return {"msg": "OK"}, 201
 
@@ -185,15 +185,15 @@ class OrderController:
             socketio.emit(
                 "be_order_update",
                 {"basket": self.order_service.get_order_items(order)},
-                to=f"{order.vendor_id}@{order.date_of_order}",
+                to=f"{order.vendor_id}@{order.open_from}",
             )
             menus = VendorService(self.order_service).get_menu_items(
-                db, order.vendor_id, str(order.date_of_order)
+                db, order.vendor_id, str(order.open_from)
             )
             socketio.emit(
                 "be_menu_update",
                 {"menus": menus},
-                to=f"{order.vendor_id}@{order.date_of_order}",
+                to=f"{order.vendor_id}@{order.open_from}",
             )
             return {"msg": "OK"}, 201
         else:
@@ -210,15 +210,15 @@ class OrderController:
         socketio.emit(
             "be_order_update",
             {"basket": self.order_service.get_order_items(order)},
-            to=f"{order.vendor_id}@{order.date_of_order}",
+            to=f"{order.vendor_id}@{order.open_from}",
         )
         menus = VendorService(self.order_service).get_menu_items(
-            db, order.vendor_id, str(order.date_of_order)
+            db, order.vendor_id, str(order.open_from)
         )
         socketio.emit(
             "be_menu_update",
             {"menus": menus},
-            to=f"{order.vendor_id}@{order.date_of_order}",
+            to=f"{order.vendor_id}@{order.open_from}",
         )
         return {"msg": "OK"}, 204
 
@@ -233,15 +233,15 @@ class OrderController:
         socketio.emit(
             "be_order_update",
             {"basket": self.order_service.get_order_items(order)},
-            to=f"{order.vendor_id}@{order.date_of_order}",
+            to=f"{order.vendor_id}@{order.open_from}",
         )
         menus = VendorService(self.order_service).get_menu_items(
-            db, order.vendor_id, str(order.date_of_order)
+            db, order.vendor_id, str(order.open_from)
         )
         socketio.emit(
             "be_menu_update",
             {"menus": menus},
-            to=f"{order.vendor_id}@{order.date_of_order}",
+            to=f"{order.vendor_id}@{order.open_from}",
         )
         return {"msg": "OK"}, 204
 
@@ -250,10 +250,15 @@ class OrderController:
     @handle_request
     def handle_close_order(self, db, order_id):
         order = self.order_service.close_order(db, order_id)
+        db.flush()
+        db.expire(order)
         socketio.emit(
             "be_order_update",
-            {"order": order.serialized},
-            to=f"{order.vendor_id}@{order.date_of_order}",
+            {
+                "order": order.serialized,
+                "basket": OrderService.get_order_items(order),
+            },
+            to=f"{order.vendor_id}@{order.open_from}",
         )
         return {"msg": "OK"}, 200
 
@@ -273,33 +278,53 @@ class OrderController:
         return {"msg": "Email sent and order closed manually"}, 200
 
 
-# TODO: Upgrade this
 @socketio.on("fe_date_selection")
 def handle_date_selection_change(data):
     new_date = data["new_selected_date"]
     vendor_id = data["vendor_id"]
 
-    # leave all old rooms
     sid = request.sid
     for room in rooms(sid):
         if room != sid:
             leave_room(room, sid=sid)
 
-    join_room(f"{vendor_id}@{new_date}")
     with get_session() as db:
         order_repo = OrderRepository(db)
-        order = order_repo.find_order_by_date_for_a_vendor(vendor_id, new_date)
         vendor = VendorRepository(db).get_by_id(vendor_id)
+        order = order_repo.find_order_by_date_for_a_vendor(vendor_id, new_date)
+
         if not order:
-            order = order_repo.save(
-                Order(
-                    vendor_id=vendor.id,
-                    date_of_order=date.fromisoformat(new_date),
-                    order_fee=VendorService.get_setting_value(
-                        vendor, "transport_price"
-                    ),
-                )
+            from datetime import timedelta
+            ref_date = date.fromisoformat(new_date) if isinstance(new_date, str) else new_date
+            if bool(VendorService.get_setting_value(vendor, "auto_order_creation")):
+                order_duration_days = int(VendorService.get_setting_value(vendor, "order_duration_days") or 1)
+                open_until = ref_date + timedelta(days=order_duration_days - 1) if order_duration_days > 1 else None
+                effective_until = open_until or ref_date
+                if not order_repo.has_overlapping_open_order(vendor.id, ref_date, effective_until):
+                    order = order_repo.save(
+                        Order(
+                            vendor_id=vendor.id,
+                            open_from=ref_date,
+                            open_until=open_until,
+                            order_fee=VendorService.get_setting_value(vendor, "transport_price"),
+                        )
+                    )
+
+        if not order:
+            join_room(f"{vendor_id}@{new_date}")
+            socketio.emit(
+                "be_order_update",
+                {"order": {}, "basket": {}},
+                to=request.sid,
             )
+            socketio.emit(
+                "be_menu_update",
+                {"menus": VendorService.get_menu_items(db, vendor_id, new_date)},
+                to=request.sid,
+            )
+            return {"ok": True}
+
+        join_room(f"{vendor_id}@{order.open_from}")
 
         socketio.emit(
             "be_order_update",
@@ -308,7 +333,7 @@ def handle_date_selection_change(data):
         )
         socketio.emit(
             "be_menu_update",
-            {"menus": VendorService.get_menu_items(db, vendor_id, new_date)},
+            {"menus": VendorService.get_menu_items(db, vendor_id, str(order.open_from))},
             to=request.sid,
         )
         return {"ok": True}

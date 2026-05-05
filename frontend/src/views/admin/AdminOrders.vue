@@ -46,7 +46,7 @@
               <strong>Felhasználó:</strong> {{ order.user_id }}
             </div>
             <div class="text-body-2 mb-2">
-              <strong>Dátum:</strong> {{ formatDate(order.date_of_order) }}
+              <strong>Dátum:</strong> {{ formatDate(order.open_from) }}<span v-if="order.open_until && order.open_until !== order.open_from"> – {{ formatDate(order.open_until) }}</span>
             </div>
             <div class="text-body-2 mb-3">
               <strong>Díj:</strong>
@@ -240,7 +240,7 @@
 
           <!-- Date column -->
           <template #item.date_of_order="{ item }">
-            {{ formatDate(item.date_of_order) }}
+            {{ formatDate(item.open_from) }}<span v-if="item.open_until && item.open_until !== item.open_from"> – {{ formatDate(item.open_until) }}</span>
           </template>
 
           <!-- Order fee column -->
@@ -452,7 +452,7 @@
           <div class="text-body-2">
             <strong>Üzlet:</strong> {{ selectedOrder?.vendor }}<br>
             <strong>Felhasználó:</strong> {{ selectedOrder?.user_id }}<br>
-            <strong>Dátum:</strong> {{ formatDate(selectedOrder?.date_of_order) }}
+            <strong>Dátum:</strong> {{ formatDate(selectedOrder?.open_from) }}<span v-if="selectedOrder?.open_until && selectedOrder.open_until !== selectedOrder.open_from"> – {{ formatDate(selectedOrder.open_until) }}</span>
           </div>
         </v-card-text>
 
@@ -692,7 +692,7 @@ const canDeleteOrder = (order) => {
   const isEmpty = order.item_count === 0
   const oneWeekAgo = new Date()
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-  const isOld = new Date(order.date_of_order) < oneWeekAgo
+  const isOld = new Date(order.open_from) < oneWeekAgo
 
   return isEmpty || isOld
 }

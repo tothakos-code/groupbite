@@ -224,7 +224,10 @@
               Rendelés azonosító #{{ order.id }}
             </h3>
             <p class="text-caption mb-0 grey--text">
-              {{ formatDate(order.date_of_order) }}
+              {{ formatDate(order.open_from) }}
+              <span v-if="order.open_until && order.open_until !== order.open_from">
+                – {{ formatDate(order.open_until) }}
+              </span>
               <span v-if="order.order_time">
                 at {{ formatTime(order.order_time) }}
               </span>

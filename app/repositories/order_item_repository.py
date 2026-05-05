@@ -52,9 +52,9 @@ class OrderItemRepository:
             stmt = stmt.where(Order.vendor_id == vendor_id)
 
         if date_from is not None and date_to is not None:
-            stmt = stmt.where(Order.date_of_order.between(date_from, date_to))
+            stmt = stmt.where(Order.open_from.between(date_from, date_to))
 
-        stmt = stmt.order_by(Order.date_of_order.desc())
+        stmt = stmt.order_by(Order.open_from.desc())
 
         if limit is not None:
             stmt = stmt.limit(limit)

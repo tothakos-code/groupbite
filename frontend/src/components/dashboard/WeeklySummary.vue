@@ -319,7 +319,7 @@ export default {
       return Object.values(this.history[day]).reduce((total, order) => total + (order.sum || 0), 0);
     },
     goToOrder: function(order) {
-      this.$router.push({ path: "/menu/" + order.vendor + "/" + order.date_of_order });
+      this.$router.push({ path: "/menu/" + order.vendor + "/" + order.open_from });
     },
     onSameDay: function(input_date1, input_date2) {
       const date1 = new Date(input_date1);

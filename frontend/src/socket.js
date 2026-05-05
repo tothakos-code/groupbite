@@ -60,7 +60,7 @@ socket.on("be_menu_update", function(data) {
   const vendorStore = useVendorStore();
   const orderStore = useOrderStore();
   if (auth.isLoggedIn && vendorStore.selectedVendor) {
-    const menuDate = orderStore.order?.date_of_order ?? null;
+    const menuDate = orderStore.order?.open_from ?? null;
     useFavouritesStore().fetchMatches(vendorStore.selectedVendor.id, menuDate);
   }
 });

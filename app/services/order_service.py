@@ -39,12 +39,12 @@ class OrderService:
         return order
 
     @staticmethod
-    def find_open_order_by_vendor(db, order_id, order_date):
+    def find_open_order_by_vendor(db, vendor_id, reference_date=None):
         order_repo = OrderRepository(db)
-        order = order_repo.find_open_order_by_date_for_a_vendor(order_id, order_date)
+        order = order_repo.find_open_order_for_vendor(vendor_id, reference_date)
         if not order:
-            logging.info(f"Order {order_id} not found")
-            raise ValueError(f"Order {order_id} not found")
+            logging.info(f"Open order not found for vendor {vendor_id}")
+            raise ValueError(f"Open order not found for vendor {vendor_id}")
         return order
 
     @staticmethod
@@ -126,6 +126,45 @@ class OrderService:
         return result
 
     @staticmethod
+    def create_order_for_vendor(db, vendor, open_until=None, close_time=None, user_id=None):
+        """
+        Find-or-create an order for the vendor starting today.
+        Returns (order, created: bool).
+        close_time: datetime.time — if set, a one-shot timer will close the order at
+                    that time on the open_until date (or today if open_until is None).
+        Raises ValueError('open_until_before_today') or ValueError('overlapping_order').
+        """
+        from app.repositories.order_repository import OrderRepository
+        from app.utils.vendor_settings import get_setting_value
+
+        open_from = date.today()
+
+        if open_until is not None and open_until < open_from:
+            raise ValueError("open_until_before_today")
+
+        order_repo = OrderRepository(db)
+
+        existing = order_repo.find_open_order_for_vendor(vendor.id)
+        if existing:
+            return existing, False
+
+        effective_until = open_until or open_from
+        if order_repo.has_overlapping_open_order(vendor.id, open_from, effective_until):
+            raise ValueError("overlapping_order")
+
+        order = order_repo.save(
+            Order(
+                vendor_id=vendor.id,
+                open_from=open_from,
+                open_until=open_until,
+                close_time=close_time,
+                order_fee=get_setting_value(vendor, "transport_price"),
+                user_id=user_id,
+            )
+        )
+        return order, True
+
+    @staticmethod
     def delete_order(db, order_id: int):
         from app.repositories.user_basket_repository import UserBasketRepository
         order_repo = OrderRepository(db)
@@ -137,7 +176,7 @@ class OrderService:
             raise ValueError("Closed orders cannot be deleted")
         if order.order_items:
             raise ValueError("Order has order items but is not closed — data inconsistency")
-        if order.items and order.date_of_order >= date.today() - timedelta(weeks=1):
+        if order.items and order.open_from >= date.today() - timedelta(weeks=1):
             raise ValueError("Cannot delete a non-empty order less than a week old")
         user_basket_repo.clear_order_items(order_id)
         db.flush()
@@ -157,6 +196,8 @@ class OrderService:
         if order.state_id == OrderState.CLOSED:
             return {"msg": "Order is already closed"}, 400
 
+        # beforeClose may have modified baskets in a separate session; expire so items reload
+        db.expire(order)
         ok = self._change_state(db, order, OrderState.CLOSED)
         if not ok:
             logging.error("Order close error")
@@ -279,12 +320,12 @@ class OrderService:
             if len(order_participants) == 0:
                 continue
 
-            date_of_order = order.date_of_order.strftime("%Y-%m-%d")
-            if date_of_order not in result:
-                result[date_of_order] = {}
+            open_from = order.open_from.strftime("%Y-%m-%d")
+            if open_from not in result:
+                result[open_from] = {}
 
-            result[date_of_order][order.id] = order.serialized
-            result[date_of_order][order.id]["vendor"] = order.vendor.name
+            result[open_from][order.id] = order.serialized
+            result[open_from][order.id]["vendor"] = order.vendor.name
 
             sum = 0
             # TODO: integrate OrderItem, it already has total_price
@@ -295,10 +336,10 @@ class OrderService:
                 for item in order.items:
                     sum += item.size.price * item.count
             sum += order.order_fee
-            result[date_of_order][order.id]["sum"] = sum
+            result[open_from][order.id]["sum"] = sum
 
-            result[date_of_order][order.id]["user_count"] = len(order_participants)
-            result[date_of_order][order.id]["ordered"] = any(
+            result[open_from][order.id]["user_count"] = len(order_participants)
+            result[open_from][order.id]["ordered"] = any(
                 str(user.id) == session.get("user_id") for user in order_participants
             )
 
@@ -366,7 +407,7 @@ class OrderService:
 
         daily_lookup = {}
         for row in daily_data:
-            key = f"{row.vendor_id}-{row.date_of_order.strftime('%Y-%m-%d')}"
+            key = f"{row.vendor_id}-{row.open_from.strftime('%Y-%m-%d')}"
             daily_lookup[key] = row.daily_sum
 
         result = {}
@@ -548,7 +589,7 @@ class OrderService:
                 socketio.emit(
                     "be_order_update",
                     {"order": order.serialized},
-                    to=f"{order.vendor_id}@{order.date_of_order}",
+                    to=f"{order.vendor_id}@{order.open_from}",
                 )
                 return True
             else:
@@ -568,15 +609,15 @@ class OrderService:
             socketio.emit(
                 "be_order_update",
                 {"basket": OrderService.get_order_items(order)},
-                to=f"{order.vendor_id}@{order.date_of_order}",
+                to=f"{order.vendor_id}@{order.open_from}",
             )
             from app.services.vendor_service import VendorService
 
             menus = VendorService.get_menu_items(
-                db, order.vendor_id, str(order.date_of_order)
+                db, order.vendor_id, str(order.open_from)
             )
             socketio.emit(
                 "be_menu_update",
                 {"menus": menus},
-                to=f"{order.vendor_id}@{order.date_of_order}",
+                to=f"{order.vendor_id}@{order.open_from}",
             )

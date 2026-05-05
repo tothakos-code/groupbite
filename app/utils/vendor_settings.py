@@ -80,19 +80,22 @@ def save_vendor_settings(
     """
     errors: Dict[str, str] = {}
 
+    known_patch: Dict[str, Any] = {}
     for key, value in patch.items():
         if not VendorSettingsRegistry.get(key):
-            errors[key] = "unknown_setting"
+            log.debug("Skipping unknown setting key %r (legacy or stale)", key)
             continue
         if not VendorSettingsRegistry.validate_value(key, value):
             errors[key] = "invalid_value"
             log.warning("Invalid setting value for %s: %r", key, value)
+        else:
+            known_patch[key] = value
 
     if errors:
         return errors
 
     blob = _ensure_shape(vendor.settings)
-    blob["core"].update(patch)
+    blob["core"].update(known_patch)
     blob["schemaVersion"] = CURRENT_SCHEMA_VERSION
 
     vendor.settings = blob

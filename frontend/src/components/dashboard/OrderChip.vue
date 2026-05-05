@@ -55,7 +55,7 @@
                 class="text-caption"
                 :class="isSelected ? 'text-success-lighten-4' : 'text-grey-lighten-1'"
               >
-                {{ formatDate(order.date_of_order) }}
+                {{ formatDate(order.open_from) }}
               </div>
             </div>
           </div>
@@ -207,7 +207,7 @@ export default {
       }
     },
     goToOrder(order) {
-      this.$router.push({ path: "/menu/" + order.vendor + "/" + order.date_of_order })
+      this.$router.push({ path: "/menu/" + order.vendor + "/" + order.open_from })
     },
   }
 }

@@ -105,10 +105,11 @@ export default {
     return {
       navCollapsed: false,
       menuItems: [
-        { label: 'Üzlet kezelő',  path: '/admin/vendors',  icon: 'mdi-store',          color: 'primary'   },
+        { label: 'Üzlet kezelő',  path: '/admin/vendors',  icon: 'mdi-store',          color: 'primary' },
         { label: 'Felhasználók',  path: '/admin/users',    icon: 'mdi-account-group',  color: 'primary' },
-        { label: 'Rendelések',    path: '/admin/orders',   icon: 'mdi-clipboard-list', color: 'primary'   },
-        { label: 'Beállítások',   path: '/admin/settings', icon: 'mdi-cog',            color: 'primary'      },
+        { label: 'Rendelések',    path: '/admin/orders',   icon: 'mdi-clipboard-list', color: 'primary' },
+        { label: 'Pluginok',      path: '/admin/plugins',  icon: 'mdi-puzzle',         color: 'primary' },
+        { label: 'Beállítások',   path: '/admin/settings', icon: 'mdi-cog',            color: 'primary' },
       ],
     }
   },

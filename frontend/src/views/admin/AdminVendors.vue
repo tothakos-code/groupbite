@@ -87,6 +87,8 @@
           :key="vendor.id"
           class="mb-3"
           elevation="2"
+          style="cursor: pointer"
+          @click="openVendorConfiguration(vendor.id)"
         >
           <v-card-text class="pb-2">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -101,6 +103,19 @@
                 {{ vendor.active ? 'Aktív' : 'Inaktív' }}
               </v-chip>
             </div>
+            <div class="d-flex ga-2">
+              <v-chip
+                size="x-small"
+                variant="tonal"
+                :color="vendor.plugin_id ? 'deep-purple' : 'blue-grey'"
+              >
+                {{ vendor.plugin_id ? 'Plugin' : 'Beépített' }}
+              </v-chip>
+              <span
+                v-if="vendor.plugin_id"
+                class="text-caption text-medium-emphasis align-self-center"
+              >{{ vendor.plugin_id }}</span>
+            </div>
           </v-card-text>
 
           <v-card-actions class="pt-0">
@@ -109,36 +124,12 @@
               :prepend-icon="vendor.active ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off'"
               variant="text"
               :loading="toggleLoading === vendor.id"
-              @click="toggleActivation(vendor)"
+              @click.stop="toggleActivation(vendor)"
             >
               {{ vendor.active ? 'Deaktiválás' : 'Aktiválás' }}
             </v-btn>
-
             <v-spacer />
-
-            <v-tooltip text="Üzlet beállítások">
-              <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon="mdi-cog"
-                  color="primary"
-                  variant="text"
-                  @click="openVendorConfiguration(vendor.id)"
-                />
-              </template>
-            </v-tooltip>
-
-            <v-tooltip text="Menük kezelése">
-              <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon="mdi-food"
-                  color="primary"
-                  variant="text"
-                  @click="openVendorMenuManager(vendor.id)"
-                />
-              </template>
-            </v-tooltip>
+            <v-icon color="grey">mdi-chevron-right</v-icon>
           </v-card-actions>
         </v-card>
 
@@ -182,10 +173,11 @@
           :headers="headers"
           :items="allVendorList"
           :loading="isLoading"
-          class="elevation-1"
+          class="elevation-1 vendor-table"
           hover
           no-data-text="Nincs üzlet a rendszerben"
           loading-text="Üzletek betöltése..."
+          @click:row="(_, row) => openVendorConfiguration(row.item.id)"
         >
           <!-- Index column -->
           <template #item.index="{ index }">
@@ -197,6 +189,31 @@
             <div class="text-subtitle-2 font-weight-medium">
               {{ item.name }}
             </div>
+          </template>
+
+          <!-- Type column -->
+          <template #item.menu_type="{ item }">
+            <v-chip
+              size="small"
+              variant="tonal"
+              :color="item.plugin_id ? 'deep-purple' : 'blue-grey'"
+            >
+              {{ item.plugin_id ? 'Plugin' : 'Beépített' }}
+            </v-chip>
+          </template>
+
+          <!-- Plugin column -->
+          <template #item.plugin_id="{ item }">
+            <span
+              v-if="item.plugin_id"
+              class="text-caption font-weight-medium"
+            >
+              {{ item.plugin_id }}
+            </span>
+            <span
+              v-else
+              class="text-medium-emphasis text-caption"
+            >—</span>
           </template>
 
           <!-- Active status column -->
@@ -226,31 +243,7 @@
                     color="primary"
                     variant="text"
                     :loading="toggleLoading === item.id"
-                    @click="toggleActivation(item)"
-                  />
-                </template>
-              </v-tooltip>
-
-              <v-tooltip text="Üzlet beállítások">
-                <template #activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    icon="mdi-cog"
-                    color="primary"
-                    variant="text"
-                    @click="openVendorConfiguration(item.id)"
-                  />
-                </template>
-              </v-tooltip>
-
-              <v-tooltip text="Menük kezelése">
-                <template #activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    icon="mdi-food"
-                    color="primary"
-                    variant="text"
-                    @click="openVendorMenuManager(item.id)"
+                    @click.stop="toggleActivation(item)"
                   />
                 </template>
               </v-tooltip>
@@ -432,6 +425,20 @@ const headers = [
     minWidth: '200px'
   },
   {
+    title: 'Típus',
+    key: 'menu_type',
+    align: 'center',
+    sortable: true,
+    width: '160px'
+  },
+  {
+    title: 'Plugin',
+    key: 'plugin_id',
+    align: 'center',
+    sortable: true,
+    width: '160px'
+  },
+  {
     title: 'Állapot',
     key: 'active',
     align: 'center',
@@ -443,7 +450,7 @@ const headers = [
     key: 'actions',
     align: 'center',
     sortable: false,
-    width: '180px'
+    width: '100px'
   }
 ]
 
@@ -533,5 +540,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Using Vuetify's built-in spacing classes */
+:deep(.vendor-table .v-data-table__tr) {
+  cursor: pointer;
+}
 </style>

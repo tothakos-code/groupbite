@@ -39,7 +39,7 @@ class MenuService:
     def add_menu(db, name, vendor_id) -> Menu:
         menu = Menu(name=name, vendor_id=vendor_id)
         menu_repo = MenuRepository(db)
-        menu_repo.add(menu)
+        menu_repo.save(menu)
         return menu
 
     @staticmethod
@@ -71,7 +71,7 @@ class MenuService:
         for item in orig_menu.items:
             menu_item = MenuItem(
                 name=item.name,
-                category=item.category,
+                category_id=item.category_id,
                 description=item.description,
                 index=item.index,
             )
@@ -89,7 +89,7 @@ class MenuService:
                 )
 
             new_menu.items.append(menu_item)
-        menu_repo.add(new_menu)
+        menu_repo.save(new_menu)
         return new_menu
 
     @staticmethod

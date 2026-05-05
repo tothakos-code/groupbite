@@ -10,9 +10,11 @@ from .size import Size
 
 class BaseItemSchema(Schema):
     menu_id = fields.Int(required=True)
+    vendor_id = fields.UUID(required=True)
     name = fields.Str(required=True)
     description = fields.Str(allow_none=True)
-    category = fields.Str(required=True)
+    category = fields.Str(allow_none=True, load_default=None)
+    category_id = fields.Int(allow_none=True, load_default=None)
     index = fields.Int(required=True)
 
 
@@ -42,7 +44,7 @@ class MenuItem(Base):
     name: Mapped[str]
     description: Mapped[str] = mapped_column(nullable=True)
     index: Mapped[int]
-    category: Mapped[str]
+    category_id: Mapped[int] = mapped_column(ForeignKey("category.id"))
 
     sizes: Mapped[List["Size"]] = relationship(
         back_populates="menu_item",
@@ -56,9 +58,10 @@ class MenuItem(Base):
         passive_deletes=True,
     )
     menu: Mapped["Menu"] = relationship(back_populates="items")
+    category_obj: Mapped["Category"] = relationship(back_populates="items")
 
     def __repr__(self):
-        return f"MenuItem<{self.id},menu_id={self.menu_id},index={self.index},category={self.category}>"
+        return f"MenuItem<{self.id},menu_id={self.menu_id},index={self.index},category_id={self.category_id}>"
 
     @property
     def serialized(self):
@@ -69,5 +72,6 @@ class MenuItem(Base):
             "description": self.description,
             "index": self.index,
             "sizes": [size.serialized for size in self.sizes],
-            "category": self.category,
+            "category_id": self.category_id,
+            "category": self.category_obj.name if self.category_obj else None,
         }

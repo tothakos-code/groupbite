@@ -22,6 +22,7 @@
     <ItemForm
       v-model="newItem"
       :loading="isLoading"
+      :vendor-id="$route.params.id"
       @submit="addToMenu"
     />
 
@@ -40,6 +41,7 @@
       :items="items"
       :loading="isLoading"
       :sortable="true"
+      :vendor-id="$route.params.id"
       @edit-item="editItem"
       @update-item="updateItem"
       @cancel-edit="cancelEditItem"
@@ -72,7 +74,7 @@
     <MenuSelectionDialog
       v-model="showMovePopup"
       title="Étel áthelyezése"
-      :getter-func="vendorStore.fetchMenus"
+      :getter-func="() => vendorStore.fetchMenus($route.params.id)"
       @confirm="moveItem"
     />
 
@@ -80,7 +82,7 @@
     <MenuSelectionDialog
       v-model="showCopyPopup"
       title="Étel másolása"
-      :getter-func="vendorStore.fetchMenus"
+      :getter-func="() => vendorStore.fetchMenus($route.params.id)"
       @confirm="copyItem"
     />
 
@@ -110,6 +112,7 @@ import { useMenuStore } from "@/stores/menu";
 import { useItemStore } from "@/stores/item";
 import { useSizeStore } from "@/stores/size";
 import { useVendorStore } from "@/stores/vendor";
+import { useCategoriesStore } from "@/stores/categories";
 import ItemForm from "@/components/item-manager/ItemForm.vue";
 import SearchForm from "@/components/item-manager/SearchForm.vue";
 import ItemsDataTable from "@/components/item-manager/ItemsDataTable.vue";
@@ -121,7 +124,7 @@ export default {
     ItemForm,
     SearchForm,
     ItemsDataTable,
-    MenuSelectionDialog
+    MenuSelectionDialog,
   },
   setup() {
     const auth = useAuth();
@@ -129,7 +132,8 @@ export default {
     const itemStore = useItemStore();
     const sizeStore = useSizeStore();
     const vendorStore = useVendorStore();
-    return { auth, menuStore, itemStore, sizeStore, vendorStore };
+    const categoriesStore = useCategoriesStore();
+    return { auth, menuStore, itemStore, sizeStore, vendorStore, categoriesStore };
   },
   data() {
     return {
@@ -159,6 +163,7 @@ export default {
   },
   mounted() {
     this.getItemList();
+    this.categoriesStore.fetchByVendor(this.$route.params.id);
   },
   methods: {
     showSnackbar(text, color = 'success') {
@@ -204,11 +209,13 @@ export default {
     async addToMenu() {
       try {
         this.newItem.menu_id = this.$route.params.menuId;
+        this.newItem.vendor_id = this.$route.params.id;
         const response = await this.itemStore.add(this.newItem);
 
         if (response.status === 201) {
           this.showSnackbar('Étel sikeresen hozzáadva');
           this.newItem = { name: "", description: "", category: "", index: 0 };
+          this.categoriesStore.fetchByVendor(this.$route.params.id);
           this.getItemList();
         }
       } catch (error) {
@@ -236,11 +243,13 @@ export default {
         delete itemData.isEditing;
         delete itemData.sizes;
         itemData.menu_id = this.$route.params.menuId;
+        itemData.vendor_id = this.$route.params.id;
 
         const response = await this.itemStore.update(item.id, itemData);
 
         if (response.status === 200) {
           this.showSnackbar('Étel sikeresen frissítve');
+          this.categoriesStore.fetchByVendor(this.$route.params.id);
           this.getItemList();
         }
       } catch (error) {
@@ -257,6 +266,7 @@ export default {
         delete itemData.sizes;
         itemData.name = `${itemData.name} (másolat)`;
         itemData.menu_id = this.$route.params.menuId;
+        itemData.vendor_id = this.$route.params.id;
 
         const response = await this.itemStore.add(itemData);
 
@@ -293,6 +303,7 @@ export default {
         delete item.isEditing;
         delete item.sizes;
         item.menu_id = menu.id;
+        item.vendor_id = this.$route.params.id;
 
         const response = await this.itemStore.update(item.id, item);
 
@@ -314,6 +325,7 @@ export default {
         delete item.sizes;
         delete item.id;
         item.menu_id = menu.id;
+        item.vendor_id = this.$route.params.id;
 
         const response = await this.itemStore.add(item);
 

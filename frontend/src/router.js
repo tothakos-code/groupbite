@@ -11,6 +11,7 @@ const VendorMenuManager = () =>
 const AdminVendorsView = () => import("./views/admin/AdminVendors.vue");
 const AdminOrdersView = () => import("./views/admin/AdminOrders.vue");
 const AdminUsersView = () => import("./views/admin/AdminUsers.vue");
+const AdminPluginsView = () => import("./views/admin/AdminPlugins.vue");
 const VendorItemManager = () =>
   import("./views/admin/vendor/VendorItemManager.vue");
 const VendorAdd = () => import("./components/VendorAdd.vue");
@@ -99,6 +100,11 @@ const routes = [
         name: "vendorItems",
         path: ":id/menu/:menuId",
         component: VendorItemManager,
+      },
+      {
+        name: "plugins",
+        path: "plugins",
+        component: AdminPluginsView,
       },
       {
         path: "add",

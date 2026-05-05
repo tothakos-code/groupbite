@@ -3,6 +3,7 @@ import logging
 from app.entities.menu_item import MenuItem
 from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.menu_repository import MenuRepository
+from app.services.category_service import CategoryService
 
 
 class MenuItemService:
@@ -12,8 +13,9 @@ class MenuItemService:
         pass
 
     @staticmethod
-    def add_item(db, menu_item: MenuItem):
-        if not MenuRepository(db).get_by_id(menu_item.menu_id):
+    def add_item(db, vendor_id, menu_item: MenuItem):
+        menu = MenuRepository(db).get_by_id(menu_item.menu_id)
+        if not menu:
             logging.warning("Menu not found")
             raise ValueError("Menu not found")
         menu_item_repo = MenuItemRepository(db)
@@ -27,7 +29,8 @@ class MenuItemService:
         return item
 
     @staticmethod
-    def update_item(db, menu_item, data):
+    def update_item(db, vendor_id, menu_item, data):
+        category = CategoryService.get_or_create(db, vendor_id, data.get("category") or "")
         menu_item_repo = MenuItemRepository(db)
         menu_item_repo.update(
             menu_item,
@@ -35,7 +38,7 @@ class MenuItemService:
             data["name"],
             data["description"],
             data["index"],
-            data["category"],
+            category.id,
         )
 
     @staticmethod

@@ -1,7 +1,7 @@
 <template>
   <v-dialog
     :model-value="modelValue"
-    max-width="800"
+    max-width="600"
     persistent
     @update:model-value="$emit('update:modelValue', $event)"
   >
@@ -13,48 +13,52 @@
         {{ title }}
       </v-card-title>
 
-      <v-card-text class="pa-4">
-        <v-data-table
-          v-model:selected="selectedItems"
-          :headers="headers"
-          :items="menus"
-          :loading="loading"
-          item-key="id"
-          return-object
-          single-select
-          show-select
-          class="elevation-1"
-          no-data-text="Nincsenek menük"
-          loading-text="Betöltés..."
-          density="comfortable"
+      <v-card-text class="pa-0">
+        <div
+          v-if="loading"
+          class="d-flex justify-center pa-6"
         >
-          <!-- Date column -->
-          <template #item.date="{ item }">
-            <v-chip
-              color="primary"
-              variant="outlined"
-              size="small"
-            >
-              {{ formatDate(item.date) }}
-            </v-chip>
-          </template>
+          <v-progress-circular
+            indeterminate
+            color="primary"
+          />
+        </div>
 
-          <!-- Frequency column -->
-          <template #item.freq="{ item }">
-            <v-chip
-              :color="getFrequencyColor(item.freq)"
-              variant="outlined"
-              size="small"
-            >
-              {{ getFrequencyLabel(item.freq) }}
-            </v-chip>
-          </template>
+        <div
+          v-else-if="menus.length === 0"
+          class="pa-6 text-center text-medium-emphasis"
+        >
+          Nincsenek menük
+        </div>
 
-          <!-- Name column -->
-          <template #item.name="{ item }">
-            <span class="font-weight-medium">{{ item.name }}</span>
-          </template>
-        </v-data-table>
+        <v-list
+          v-else
+          lines="two"
+          select-strategy="single-leaf"
+        >
+          <v-list-item
+            v-for="menu in menus"
+            :key="menu.id"
+            :value="menu"
+            :active="selectedMenu && selectedMenu.id === menu.id"
+            active-color="primary"
+            rounded="lg"
+            class="ma-1"
+            @click="selectedMenu = menu"
+          >
+            <template #prepend>
+              <v-icon :color="selectedMenu && selectedMenu.id === menu.id ? 'primary' : 'grey'">
+                {{ selectedMenu && selectedMenu.id === menu.id ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank' }}
+              </v-icon>
+            </template>
+            <v-list-item-title class="font-weight-medium">
+              {{ menu.name }}
+            </v-list-item-title>
+            <v-list-item-subtitle>
+              {{ formatDateRange(menu.from_date, menu.to_date) }}
+            </v-list-item-subtitle>
+          </v-list-item>
+        </v-list>
       </v-card-text>
 
       <v-card-actions class="pa-4">
@@ -72,7 +76,7 @@
         <v-btn
           color="primary"
           variant="elevated"
-          :disabled="!selectedItems.length"
+          :disabled="!selectedMenu"
           @click="confirm"
         >
           <v-icon class="me-2">
@@ -107,20 +111,14 @@ export default {
     return {
       loading: false,
       menus: [],
-      selectedItems: [],
-      headers: [
-        { title: 'ID', key: 'id', sortable: true, width: '80px' },
-        { title: 'Dátum', key: 'date', sortable: true, width: '150px' },
-        { title: 'Név', key: 'name', sortable: true },
-        { title: 'Gyakoriság', key: 'freq', sortable: true, width: '150px' }
-      ]
-    }
+      selectedMenu: null,
+    };
   },
   watch: {
     modelValue(newVal) {
       if (newVal) {
+        this.selectedMenu = null;
         this.loadMenus();
-        this.selectedItems = [];
       }
     }
   },
@@ -128,10 +126,11 @@ export default {
     async loadMenus() {
       try {
         this.loading = true;
+        this.menus = [];
         const response = await this.getterFunc();
-
-        if (response.status === 200) {
-          this.menus = response.data.data || response.data || [];
+        if (response && response.status === 200) {
+          const raw = response.data?.data?.menus;
+          this.menus = Array.isArray(raw) ? raw : [];
         }
       } catch (error) {
         console.error('Error loading menus:', error);
@@ -141,43 +140,21 @@ export default {
       }
     },
 
-    formatDate(dateString) {
-      if (!dateString) return '-';
-      return new Date(dateString).toLocaleDateString('hu-HU', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      });
-    },
-
-    getFrequencyColor(freq) {
-      const colors = {
-        'daily': 'success',
-        'weekly': 'info',
-        'monthly': 'warning',
-        'yearly': 'error'
-      };
-      return colors[freq] || 'grey';
-    },
-
-    getFrequencyLabel(freq) {
-      const labels = {
-        'daily': 'Napi',
-        'weekly': 'Heti',
-        'monthly': 'Havi',
-        'yearly': 'Éves'
-      };
-      return labels[freq] || freq;
+    formatDateRange(from, to) {
+      if (!from && !to) return '';
+      const fmt = (d) => d ? new Date(d).toLocaleDateString('hu-HU') : '?';
+      if (from === to) return fmt(from);
+      return `${fmt(from)} – ${fmt(to)}`;
     },
 
     cancel() {
-      this.selectedItems = [];
+      this.selectedMenu = null;
       this.$emit('update:modelValue', false);
     },
 
     confirm() {
-      if (this.selectedItems.length > 0) {
-        this.$emit('confirm', this.selectedItems[0]);
+      if (this.selectedMenu) {
+        this.$emit('confirm', this.selectedMenu);
         this.$emit('update:modelValue', false);
       }
     }
@@ -186,11 +163,7 @@ export default {
 </script>
 
 <style scoped>
-:deep(.v-data-table__tr--selected) {
-  background-color: rgba(var(--v-theme-primary), 0.1) !important;
-}
-
-:deep(.v-data-table__tr:hover) {
-  background-color: rgba(var(--v-theme-on-surface), 0.04) !important;
+:deep(.v-list-item--active) {
+  background-color: rgba(var(--v-theme-primary), 0.08) !important;
 }
 </style>

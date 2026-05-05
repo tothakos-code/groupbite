@@ -54,7 +54,8 @@ class UserBasket(Base):
             "item_name": self.item.name,
             "size_name": self.size.name,
             "price": self.size.price,
-            "category": self.item.category,
+            "category_id": self.item.category_id,
+            "category": self.item.category_obj.name if self.item.category_obj else None,
             "quantity": self.count,
         }
 
@@ -66,6 +67,7 @@ class UserBasket(Base):
             "item_name": self.item.name,
             "size_name": self.size.name,
             "price": self.size.price,
-            "category": self.item.category,
+            "category_id": self.item.category_id,
+            "category": self.item.category_obj.name if self.item.category_obj else None,
             "quantity": self.count,
         }

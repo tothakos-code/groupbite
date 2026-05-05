@@ -49,37 +49,51 @@
               nav
               class="nav-list"
             >
-              <v-tooltip
+              <template
                 v-for="section in sections"
                 :key="section.id"
-                :text="section.label"
-                :disabled="!navCollapsed"
-                location="right"
               >
-                <template #activator="{ props }">
-                  <v-list-item
-                    v-bind="props"
-                    :value="section.id"
-                    :active="activeSection === section.id"
-                    :color="section.color"
-                    rounded="lg"
-                    class="nav-item"
-                    @click="activeSection = section.id"
-                  >
-                    <template #prepend>
-                      <v-icon :color="activeSection === section.id ? section.color : ''">
-                        {{ section.icon }}
-                      </v-icon>
-                    </template>
-                    <v-list-item-title
-                      v-if="!navCollapsed"
-                      class="nav-item-title"
+                <v-divider
+                  v-if="section.divider"
+                  class="my-2"
+                />
+                <v-tooltip
+                  v-else
+                  :text="section.label"
+                  :disabled="!navCollapsed"
+                  location="right"
+                >
+                  <template #activator="{ props }">
+                    <v-list-item
+                      v-bind="props"
+                      :value="section.id"
+                      :active="!section.navigate && activeSection === section.id"
+                      :color="section.color"
+                      rounded="lg"
+                      class="nav-item"
+                      @click="handleNavClick(section)"
                     >
-                      {{ section.label }}
-                    </v-list-item-title>
-                  </v-list-item>
-                </template>
-              </v-tooltip>
+                      <template #prepend>
+                        <v-icon :color="!section.navigate && activeSection === section.id ? section.color : ''">
+                          {{ section.icon }}
+                        </v-icon>
+                      </template>
+                      <v-list-item-title
+                        v-if="!navCollapsed"
+                        class="nav-item-title"
+                      >
+                        {{ section.label }}
+                      </v-list-item-title>
+                      <template
+                        v-if="!navCollapsed && section.navigate"
+                        #append
+                      >
+                        <v-icon size="small">mdi-open-in-new</v-icon>
+                      </template>
+                    </v-list-item>
+                  </template>
+                </v-tooltip>
+              </template>
             </v-list>
 
             <!-- Save / Reset pinned to bottom -->
@@ -141,8 +155,12 @@
               mode="out-in"
             >
               <div :key="activeSection">
+                <CategoryManager
+                  v-if="activeSection === 'categories'"
+                  :vendor-id="$route.params.id"
+                />
                 <GeneralSettings
-                  v-if="activeSection === 'general'"
+                  v-else-if="activeSection === 'general'"
                   v-model:settings="vendor.settings"
                 />
                 <UiSettings
@@ -180,6 +198,8 @@
 import { useVendorStore } from '@/stores/vendor'
 import { useAuth } from '@/stores/auth'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { notify } from '@kyvg/vue3-notification'
 import axios from 'axios'
 import WebhookSettings from '@/components/vendor-settings/WebhookSettings.vue'
 import GeneralSettings from '@/components/vendor-settings/GeneralSettings.vue'
@@ -187,6 +207,7 @@ import UiSettings from '@/components/vendor-settings/UiSettings.vue'
 import OrderTimingSettings from '@/components/vendor-settings/OrderTimingSettings.vue'
 import AutoEmailSettings from '@/components/vendor-settings/AutoEmailSettings.vue'
 import PluginSettings from '@/components/vendor-settings/PluginSettings.vue'
+import CategoryManager from '@/components/item-manager/CategoryManager.vue'
 
 export default {
   name: 'VendorSettings',
@@ -197,12 +218,14 @@ export default {
     OrderTimingSettings,
     AutoEmailSettings,
     PluginSettings,
+    CategoryManager,
   },
   setup() {
     const auth = useAuth()
     const vendorStore = useVendorStore()
+    const router = useRouter()
     const form = ref()
-    return { auth, vendorStore, form }
+    return { auth, vendorStore, router, form }
   },
   data() {
     return {
@@ -215,11 +238,14 @@ export default {
       navCollapsed: false,
       activeSection: 'general',
       sections: [
-        { id: 'general', label: 'Általános',            icon: 'mdi-cog',          color: 'primary' },
-        { id: 'ui',      label: 'Felhasználói felület', icon: 'mdi-palette',       color: 'primary' },
-        { id: 'timing',  label: 'Időzítés',             icon: 'mdi-clock-outline', color: 'primary' },
-        { id: 'email',   label: 'Automatikus email',    icon: 'mdi-email-fast',    color: 'primary' },
-        { id: 'webhook', label: 'Webhook',              icon: 'mdi-webhook',       color: 'primary' },
+        { id: 'menu',       label: 'Menükezelés',          icon: 'mdi-food',          color: 'primary', navigate: true },
+        { id: 'categories', label: 'Kategóriakezelés',     icon: 'mdi-tag-multiple',  color: 'primary' },
+        { id: '_divider', divider: true },
+        { id: 'general',    label: 'Általános',            icon: 'mdi-cog',           color: 'primary' },
+        { id: 'ui',         label: 'Felhasználói felület', icon: 'mdi-palette',       color: 'primary' },
+        { id: 'timing',     label: 'Időzítés',             icon: 'mdi-clock-outline', color: 'primary' },
+        { id: 'email',      label: 'Automatikus email',    icon: 'mdi-email-fast',    color: 'primary' },
+        { id: 'webhook',    label: 'Webhook',              icon: 'mdi-webhook',       color: 'primary' },
       ],
     }
   },
@@ -227,6 +253,14 @@ export default {
     this.getSettings()
   },
   methods: {
+    handleNavClick(section) {
+      if (section.navigate) {
+        this.router.push(`/admin/${this.$route.params.id}/menu`)
+      } else {
+        this.activeSection = section.id
+      }
+    },
+
     async getSettings() {
       try {
         this.isLoading = true
@@ -280,7 +314,7 @@ export default {
       try {
         const { valid } = await this.$refs.form.validate()
         if (!valid) {
-          this.$toast?.error('Kérjük javítsa ki a hibákat a mentés előtt')
+          notify({ type: 'warn', text: 'Kérjük javítsa ki a hibákat a mentés előtt.' })
           return
         }
         this.saving = true

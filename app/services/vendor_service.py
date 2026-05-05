@@ -329,6 +329,8 @@ class VendorService:
             raise ValueError("No file selected for uploading")
 
         try:
+            from app.services.category_service import CategoryService
+
             file_content = json.loads(json_file.read())
             for menu in file_content["menus"]:
                 menu_db = Menu(
@@ -346,9 +348,12 @@ class VendorService:
 
                 item_index = 0
                 for item in menu["items"]:
+                    category = CategoryService.get_or_create(
+                        db, vendor_id, item.get("category", "")
+                    )
                     menu_item = MenuItem(
                         name=item["name"],
-                        category=item["category"] if "category" in item else "",
+                        category_id=category.id,
                         index=item["index"] if "index" in item else item_index,
                     )
                     if "index" not in item:

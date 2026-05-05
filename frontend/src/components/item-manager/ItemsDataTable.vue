@@ -284,12 +284,14 @@
                   <div
                     class="px-2 text-center col-category"
                   >
-                    <v-text-field
+                    <v-combobox
                       v-if="item.isEditing"
                       v-model="item.category"
+                      :items="categoryNames"
                       variant="outlined"
                       density="compact"
                       hide-details
+                      clearable
                       @click.stop=""
                     />
                     <v-chip
@@ -499,6 +501,7 @@
 
 <script>
 import SizesTable from './SizesTable.vue';
+import { useCategoriesStore } from '@/stores/categories';
 
 export default {
   name: "ItemsDataTable",
@@ -517,7 +520,15 @@ export default {
     sortable: {
       type: Boolean,
       default: true
+    },
+    vendorId: {
+      type: String,
+      default: null
     }
+  },
+  setup() {
+    const categoriesStore = useCategoriesStore();
+    return { categoriesStore };
   },
   emits: [
     'edit-item',
@@ -595,6 +606,10 @@ export default {
       const ids = new Set();
       Object.values(this.sizeEdits).forEach(e => ids.add(e.itemId));
       return ids;
+    },
+
+    categoryNames() {
+      return this.vendorId ? this.categoriesStore.namesForVendor(this.vendorId) : [];
     }
   },
   watch: {

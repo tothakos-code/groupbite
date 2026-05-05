@@ -59,13 +59,13 @@
               cols="12"
               md="3"
             >
-              <v-text-field
+              <v-combobox
                 v-model="localItem.category"
+                :items="categoryNames"
                 label="Kategória"
                 variant="outlined"
                 density="comfortable"
-                :rules="[rules.required]"
-                required
+                clearable
               />
             </v-col>
 
@@ -96,6 +96,8 @@
 </template>
 
 <script>
+import { useCategoriesStore } from "@/stores/categories";
+
 export default {
   name: "ItemForm",
   props: {
@@ -106,15 +108,23 @@ export default {
     loading: {
       type: Boolean,
       default: false
+    },
+    vendorId: {
+      type: String,
+      default: null
     }
   },
   emits: ['update:modelValue', 'submit'],
+  setup() {
+    const categoriesStore = useCategoriesStore();
+    return { categoriesStore };
+  },
   data() {
     return {
       rules: {
         required: value => !!value || 'Ez a mező kötelező'
       }
-    }
+    };
   },
   computed: {
     localItem: {
@@ -126,7 +136,10 @@ export default {
       }
     },
     isFormValid() {
-      return this.localItem.name && this.localItem.category;
+      return !!this.localItem.name;
+    },
+    categoryNames() {
+      return this.vendorId ? this.categoriesStore.namesForVendor(this.vendorId) : [];
     }
   },
   methods: {

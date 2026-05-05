@@ -115,7 +115,8 @@ class OrderService:
                     "item_name": item.item.name,
                     "size_name": item.size.name,
                     "price": item.size.price,
-                    "category": item.item.category,
+                    "category_id": item.item.category_id,
+                    "category": item.item.category_obj.name if item.item.category_obj else None,
                     "quantity": item.count,
                     "total_price": item.size.price * item.count,
                 }

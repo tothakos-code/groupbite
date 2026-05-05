@@ -1,4 +1,5 @@
 from app.entities import Base, engine
+from app.entities.category import Category
 from app.entities.user import User, Theme
 from app.entities.menu import Menu, Frequency
 from app.entities.order import Order, OrderState

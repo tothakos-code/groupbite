@@ -7,6 +7,7 @@ from app.entities.menu_item import (
     UpdateItemSchema,
 )
 from app.repositories.menu_item_repository import MenuItemRepository
+from app.services.category_service import CategoryService
 from app.services.menu_item_service import MenuItemService
 from app.utils.decorators import (
     handle_request,
@@ -45,13 +46,15 @@ class MenuItemController:
     @require_admin
     @handle_request
     def handle_menu_item_add(self, db, data):
+        category = CategoryService.get_or_create(db, data["vendor_id"], data.get("category") or "")
         item = self.menu_item_service.add_item(
             db,
+            data["vendor_id"],
             MenuItem(
                 menu_id=data["menu_id"],
                 name=data["name"],
                 description=data["description"],
-                category=data["category"],
+                category_id=category.id,
             ),
         )
 
@@ -64,7 +67,7 @@ class MenuItemController:
     @handle_request
     def handle_menu_item_update(self, db, data, item_id):
         menu_item = MenuItemRepository(db).get_by_id(item_id)
-        self.menu_item_service.update_item(db, menu_item, data)
+        self.menu_item_service.update_item(db, data["vendor_id"], menu_item, data)
 
         return {"msg": "OK"}, 200
 

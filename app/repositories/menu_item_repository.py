@@ -2,6 +2,7 @@ from typing import Optional
 
 from sqlalchemy import func, or_, select, update
 
+from app.entities.category import Category
 from app.entities.menu_item import MenuItem
 
 
@@ -18,9 +19,9 @@ class MenuItemRepository:
 
         if search:
             ilike_expr = f"%{search}%"
-            stmt = stmt.where(
+            stmt = stmt.join(MenuItem.category_obj).where(
                 or_(
-                    MenuItem.category.ilike(ilike_expr),
+                    Category.name.ilike(ilike_expr),
                     MenuItem.name.ilike(ilike_expr),
                     MenuItem.description.ilike(ilike_expr),
                 )
@@ -54,9 +55,9 @@ class MenuItemRepository:
 
         if search:
             ilike_expr = f"%{search}%"
-            stmt = stmt.where(
+            stmt = stmt.join(MenuItem.category_obj).where(
                 or_(
-                    MenuItem.category.ilike(ilike_expr),
+                    Category.name.ilike(ilike_expr),
                     MenuItem.name.ilike(ilike_expr),
                     MenuItem.description.ilike(ilike_expr),
                 )
@@ -70,15 +71,15 @@ class MenuItemRepository:
         if category_filter is None:
             category_filter = []
 
-        stmt = select(MenuItem).where(MenuItem.menu_id.in_(menu_id_list))
+        stmt = select(MenuItem).join(MenuItem.category_obj).where(MenuItem.menu_id.in_(menu_id_list))
 
         if category_filter and len(category_filter) > 0:
-            stmt = stmt.where(MenuItem.category.in_(category_filter))
+            stmt = stmt.where(Category.name.in_(category_filter))
 
         if desc:
-            stmt = stmt.order_by(MenuItem.category.desc(), MenuItem.index.desc())
+            stmt = stmt.order_by(Category.name.desc(), MenuItem.index.desc())
         else:
-            stmt = stmt.order_by(MenuItem.category.asc(), MenuItem.index.asc())
+            stmt = stmt.order_by(Category.name.asc(), MenuItem.index.asc())
 
         if limit:
             stmt = stmt.limit(limit)
@@ -90,12 +91,12 @@ class MenuItemRepository:
         self.db.flush()
         return menu_item
 
-    def update(self, menu_item, menu_id, name, description, index, category):
+    def update(self, menu_item, menu_id, name, description, index, category_id):
         menu_item.name = name
         menu_item.menu_id = menu_id
         menu_item.description = description
         menu_item.index = index
-        menu_item.category = category
+        menu_item.category_id = category_id
         return menu_item
 
     def delete(self, menu_item):

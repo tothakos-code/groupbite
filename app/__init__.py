@@ -149,5 +149,8 @@ def create_app(config: Config = Config(), debug=False) -> Flask:
 
         WebhookService(event_manager).register_all_webhooks_at_boot(db)
 
+    from app.services.order_service import OrderService
+    OrderService.restore_adhoc_close_timers()
+
     logging.info("Initialization finished")
     return application

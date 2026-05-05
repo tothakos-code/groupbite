@@ -601,6 +601,19 @@ class OrderService:
                 return False
 
     @staticmethod
+    def restore_adhoc_close_timers():
+        """Called on startup to re-schedule one-shot close timers for open orders with close_time set."""
+        from datetime import datetime as _dt
+        from app.scheduler import schedule_once
+        with get_session() as db:
+            order_repo = OrderRepository(db)
+            orders = order_repo.find_open_orders_with_close_time()
+            for order in orders:
+                target_dt = _dt.combine(order.effective_until, order.close_time)
+                task_id = f"{order.vendor_id}-adhoc-close-{order.id}"
+                schedule_once(task_id, target_dt, _adhoc_close_for_vendor, str(order.vendor_id))
+
+    @staticmethod
     def emit_update(data):
         with get_session() as db:
             order_repo = OrderRepository(db)
@@ -621,3 +634,20 @@ class OrderService:
                 {"menus": menus},
                 to=f"{order.vendor_id}@{order.open_from}",
             )
+
+
+def _adhoc_close_for_vendor(vendor_id_str: str):
+    """One-shot timer callback: closes the current open order for a vendor."""
+    from app.plugin_registry import PluginRegistry
+    from app.services.base_vendor_service import BaseVendorService
+
+    with get_session() as db:
+        vendor = VendorRepository(db).get_by_id(vendor_id_str)
+        if not vendor:
+            return
+        plugin_id = vendor.plugin_id
+
+    # vendor is detached here but simple columns (id, settings) remain accessible
+    service_class = (PluginRegistry.get(plugin_id) or BaseVendorService) if plugin_id else BaseVendorService
+    service = service_class(vendor_id_str)
+    service.closed_wrapper(vendor)

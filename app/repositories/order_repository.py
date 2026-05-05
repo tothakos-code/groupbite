@@ -63,8 +63,28 @@ class OrderRepository:
         )
         return self.db.execute(stmt).scalars().first()
 
+    def find_future_open_orders_for_vendor(self, vendor_id: UUID) -> list:
+        """Returns non-CLOSED orders whose open_from is strictly after today."""
+        today = date.today()
+        stmt = select(Order).where(
+            Order.vendor_id == vendor_id,
+            Order.open_from > today,
+            Order.state_id != OrderState.CLOSED,
+        )
+        return self.db.execute(stmt).scalars().all()
+
+    def find_open_orders_with_close_time(self) -> list:
+        """Returns non-CLOSED orders that have a close_time set and are still in their window."""
+        today = date.today()
+        stmt = select(Order).where(
+            Order.close_time.isnot(None),
+            Order.state_id != OrderState.CLOSED,
+            func.coalesce(Order.open_until, Order.open_from) >= today,
+        )
+        return self.db.execute(stmt).scalars().all()
+
     def find_order_between(self, date_from, date_to):
-        stmt = select(Order).where(Order.date_of_order.between(date_from, date_to))
+        stmt = select(Order).where(Order.open_from.between(date_from, date_to))
         return self.db.execute(stmt).all()
 
     def find_order_participants(self, order):

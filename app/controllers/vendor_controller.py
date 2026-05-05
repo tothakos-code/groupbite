@@ -99,6 +99,11 @@ class VendorController:
             view_func=self.handle_save_plugin_settings,
             methods=["PUT"],
         )
+        bp.add_url_rule(
+            "/<vendor_id>/order",
+            view_func=self.handle_create_order,
+            methods=["POST"],
+        )
 
     @require_auth
     @require_admin
@@ -252,7 +257,7 @@ class VendorController:
     def handle_save_settings(self, db, vendor_id):
         data = request.json["data"]
         vendor = self.vendor_service.get_vendor(db, vendor_id)
-        errors = self.vendor_service.update_settings(vendor, data)
+        errors = self.vendor_service.update_settings(vendor, data, db=db)
         if errors:
             return {"errors": errors}, 422
         db.commit()
@@ -305,3 +310,69 @@ class VendorController:
             return {"errors": errors}, 422
         db.commit()
         return {"data": self.vendor_service.get_plugin_settings(db, vendor_id)}, 200
+
+    @require_auth
+    @validate_url_params(IDSchema())
+    @handle_request
+    def handle_create_order(self, db, vendor_id):
+        from datetime import date, datetime, time
+        from app.repositories.vendor_repository import VendorRepository
+        from app.services.order_service import OrderService, _adhoc_close_for_vendor
+        from app.scheduler import schedule_once
+
+        vendor = VendorRepository(db).get_by_id(vendor_id)
+        if not vendor:
+            return {"error": "vendor_not_found"}, 404
+
+        body = request.json or {}
+        open_until_raw = body.get("open_until")
+
+        if not open_until_raw:
+            return {"error": "open_until_required"}, 400
+
+        open_until = None
+        close_time = None
+
+        if open_until_raw:
+            if "T" in str(open_until_raw):
+                dt = datetime.fromisoformat(open_until_raw)
+                open_until = dt.date()
+                if dt.time() != time(0, 0):
+                    close_time = dt.time()
+            else:
+                open_until = date.fromisoformat(open_until_raw)
+
+        user_id = session.get("user_id")
+
+        try:
+            order, created = OrderService.create_order_for_vendor(db, vendor, open_until, close_time, user_id=user_id)
+        except ValueError as e:
+            msg = str(e)
+            if msg == "open_until_before_today":
+                return {"error": msg}, 400
+            return {"error": msg}, 409
+
+        if created and close_time is not None:
+            target_date = open_until or order.open_from
+            target_dt = datetime.combine(target_date, close_time)
+            task_id = f"{vendor_id}-adhoc-close-{order.id}"
+            schedule_once(task_id, target_dt, _adhoc_close_for_vendor, str(vendor_id))
+
+        db.commit()
+
+        if created:
+            from app.services.order_service import OrderService
+            room = f"{vendor_id}@{order.open_from}"
+            socketio.emit(
+                "be_order_update",
+                {"order": order.serialized, "basket": OrderService.get_order_items(order)},
+                to=room,
+            )
+            socketio.emit(
+                "be_menu_update",
+                {"menus": VendorService.get_menu_items(db, str(vendor_id), str(order.open_from))},
+                to=room,
+            )
+
+        status = 201 if created else 200
+        return {"data": order.serialized}, status

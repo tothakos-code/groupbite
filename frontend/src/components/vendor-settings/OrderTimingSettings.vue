@@ -10,43 +10,160 @@
       Rendelés időzítés beállítások
     </v-card-title>
     <v-card-text class="pa-4">
-      <!-- Closed Scheduler Section -->
-      <div class="mb-6">
-        <div class="text-body-2 text-medium-emphasis mb-3">
-          A rendelés napi lezárásának időzítése. Beállítható, hogy a hét
-          csak bizonos napjain fusson.
-        </div>
-        <DayScheduler
-          v-model:active="localSettings.closed_scheduler_active"
-          v-model:time="localSettings.closed_scheduler"
-          v-model:days="localSettings.closed_scheduler_days"
-          :active-label="$t('vendor.settings.closed_scheduler_active')"
-          active-icon="mdi-clock-end"
-          :time-label="$t('vendor.settings.closed_scheduler')"
+
+      <!-- Auto Order Creation Toggle -->
+      <div class="mb-4">
+        <v-switch
+          v-model="localSettings.auto_order_creation"
+          color="primary"
+          :label="$t('vendor.settings.auto_order_creation')"
+          prepend-icon="mdi-autorenew"
+          hide-details
+          inset
         />
+        <div class="text-body-2 text-medium-emphasis mt-2">
+          Ha be van kapcsolva, a rendelés automatikusan jön létre amikor a felhasználók
+          megnyitják az étlapot. Kikapcsolva a "Rendelés indítása" gomb jelenik meg.
+        </div>
       </div>
 
       <v-divider class="my-6" />
 
-      <!-- Closure Scheduler Section -->
-      <div class="mb-6">
-        <div class="text-body-2 text-medium-emphasis mb-3">
-          Rendelés léptetése 'Siess' státuszba. Egy rendelés zárásának
-          figyelmeztetésének is lehet használni. Beállítható, hogy a hét
-          csak bizonos napjain fusson.
+      <!-- Auto-creation dependent settings -->
+      <div :class="{ 'section-disabled': !localSettings.auto_order_creation }">
+
+        <!-- Order Duration -->
+        <div class="mb-6">
+          <div class="text-body-2 text-medium-emphasis mb-3">
+            Meghatározza, hogy egy rendelési időszak hány napig legyen nyitva.
+            1 = napi rendelés (alapértelmezett). Az időzítők az utolsó napon
+            (határidőn) futnak le.
+          </div>
+          <v-row>
+            <v-col
+              cols="12"
+              md="6"
+              lg="4"
+            >
+              <v-text-field
+                v-model.number="localSettings.order_duration_days"
+                :label="$t('vendor.settings.order_duration_days')"
+                :disabled="!localSettings.auto_order_creation"
+                type="number"
+                :rules="[(v) => (v >= 1 && v <= 365) || '1 és 365 közötti érték adható meg']"
+                prepend-icon="mdi-calendar-range"
+                variant="outlined"
+                density="comfortable"
+                hint="Pl. 7 = heti rendelés, 1 = napi rendelés"
+                persistent-hint
+              />
+            </v-col>
+          </v-row>
         </div>
-        <DayScheduler
-          v-model:active="localSettings.closure_scheduler_active"
-          v-model:time="localSettings.closure_scheduler"
-          v-model:days="localSettings.closure_scheduler_days"
-          :active-label="$t('vendor.settings.closure_scheduler_active')"
-          active-icon="mdi-clock-alert"
-          :time-label="$t('vendor.settings.closure_scheduler')"
-        />
+
+        <v-divider class="my-6" />
+
+        <!-- Closed Scheduler Section -->
+        <div class="mb-6">
+          <div class="text-body-2 text-medium-emphasis mb-3">
+            A rendelés lezárásának időzítése — az időszak utolsó napján fut le.
+            Beállítható, hogy a hét csak bizonyos napjain fusson.
+          </div>
+          <DayScheduler
+            v-model:active="localSettings.closed_scheduler_active"
+            v-model:time="localSettings.closed_scheduler"
+            v-model:days="localSettings.closed_scheduler_days"
+            :active-label="$t('vendor.settings.closed_scheduler_active')"
+            active-icon="mdi-clock-end"
+            :time-label="$t('vendor.settings.closed_scheduler')"
+          />
+        </div>
+
+        <v-divider class="my-6" />
+
+        <!-- Closure Scheduler Section -->
+        <div class="mb-6">
+          <div class="text-body-2 text-medium-emphasis mb-3">
+            Rendelés léptetése 'Siess' státuszba az időszak utolsó napján.
+            Egy rendelés zárásának figyelmeztetésének is lehet használni.
+            Beállítható, hogy a hét csak bizonyos napjain fusson.
+          </div>
+          <DayScheduler
+            v-model:active="localSettings.closure_scheduler_active"
+            v-model:time="localSettings.closure_scheduler"
+            v-model:days="localSettings.closure_scheduler_days"
+            :active-label="$t('vendor.settings.closure_scheduler_active')"
+            active-icon="mdi-clock-alert"
+            :time-label="$t('vendor.settings.closure_scheduler')"
+          />
+        </div>
+
+        <v-divider class="my-6" />
+
+        <!-- SMTP Warning Alert -->
+        <v-alert
+          v-if="!smtpStatus"
+          type="warning"
+          variant="tonal"
+          class="mb-6"
+        >
+          <template #prepend>
+            <v-icon>mdi-alert</v-icon>
+          </template>
+          SMTP beállítások nem konfiguráltak. Az automatikus email funkciók
+          nem elérhetők.
+        </v-alert>
+
+        <!-- Auto Email Order Section -->
+        <div class="mb-6">
+          <div class="text-body-2 text-medium-emphasis mb-3">
+            Rendelés zárás időzítőkor a rendelés tételei emailben elküldése
+            a beállított email címre. Ehhez egy minimum rendelésben részvevő
+            felhasználó feltételt is lehet adni így csak akkor megy ki az
+            email ha minimum ennyi felhasználó rendel.
+          </div>
+
+          <v-row align="center">
+            <v-col
+              cols="12"
+              md="6"
+              lg="4"
+            >
+              <v-checkbox
+                v-model="localSettings.auto_email_order"
+                color="success"
+                :label="$t('vendor.settings.auto_email_order')"
+                :disabled="!localSettings.auto_order_creation || !smtpStatus || !localSettings.closed_scheduler_active"
+                prepend-icon="mdi-email-fast"
+                hide-details
+              />
+            </v-col>
+            <v-col
+              cols="12"
+              md="6"
+              lg="4"
+            >
+              <v-text-field
+                v-model.number="localSettings.email_min_user"
+                :label="$t('vendor.settings.email_min_user')"
+                :disabled="!localSettings.auto_order_creation || !localSettings.auto_email_order"
+                :rules="numberRules"
+                type="number"
+                prepend-icon="mdi-account-multiple"
+                variant="outlined"
+                density="comfortable"
+                hint="Minimum résztvevő szám a rendelés elküldéséhez"
+                persistent-hint
+              />
+            </v-col>
+          </v-row>
+        </div>
+
       </div>
 
       <v-divider class="my-6" />
 
+      <!-- Menu Scan — independent of auto_order_creation -->
       <div class="mb-6">
         <div class="text-body-2 text-medium-emphasis mb-3">
           Menü automatikus szinkronizálás ütemezése. A szinkronizálás a beállított
@@ -86,68 +203,7 @@
 
       <v-divider class="my-6" />
 
-      <!-- SMTP Warning Alert -->
-      <v-alert
-        v-if="!smtpStatus"
-        type="warning"
-        variant="tonal"
-        class="mb-6"
-      >
-        <template #prepend>
-          <v-icon>mdi-alert</v-icon>
-        </template>
-        SMTP beállítások nem konfiguráltak. Az automatikus email funkciók
-        nem elérhetők.
-      </v-alert>
-
-      <!-- Auto Email Order Section -->
-      <div class="mb-6">
-        <div class="text-body-2 text-medium-emphasis mb-3">
-          Rendelés zárás időzíő kor a rendelés tételei emailben elküldése
-          a beállított email címre. Ehhez egy minimum rendelésben részvevő
-          felhasználó feltételt is lehet adni így csak akkor megy ki az
-          email ha minimum ennyi felhasználó rendel.
-        </div>
-
-        <v-row align="center">
-          <v-col
-            cols="12"
-            md="6"
-            lg="4"
-          >
-            <v-checkbox
-              v-model="localSettings.auto_email_order"
-              color="success"
-              :label="$t('vendor.settings.auto_email_order')"
-              :disabled="!smtpStatus || !localSettings.closed_scheduler_active"
-              prepend-icon="mdi-email-fast"
-              hide-details
-            />
-          </v-col>
-          <v-col
-            cols="12"
-            md="6"
-            lg="4"
-          >
-            <v-text-field
-              v-model.number="localSettings.email_min_user"
-              :label="$t('vendor.settings.email_min_user')"
-              :disabled="!localSettings.auto_email_order"
-              :rules="numberRules"
-              type="number"
-              prepend-icon="mdi-account-multiple"
-              variant="outlined"
-              density="comfortable"
-              hint="Minimum résztvevő szám a rendelés elküldéséhez"
-              persistent-hint
-            />
-          </v-col>
-        </v-row>
-      </div>
-
-      <v-divider class="my-6" />
-
-      <!-- Order Text Template Section -->
+      <!-- Order Text Template — always available -->
       <div>
         <div class="text-body-2 text-medium-emphasis mb-3">
           Ez a minta alapján jelennek meg a sorok az emailben és/vagy
@@ -191,9 +247,6 @@ export default {
   emits: ['update:settings'],
   data() {
     return {
-      // Deep clone so we own the copy and don't mutate the prop directly.
-      // Spread ({...this.settings}) would only shallow-copy, leaving nested
-      // arrays/objects as shared references.
       localSettings: JSON.parse(JSON.stringify(this.settings)),
       numberRules: [
         (v) =>
@@ -208,7 +261,7 @@ export default {
     localSettings: {
       deep: true,
       handler(v) {
-        this.$emit('update:settings', JSON.parse(JSON.stringify(v))) // deep clone before emitting
+        this.$emit('update:settings', JSON.parse(JSON.stringify(v)))
       },
     },
     settings: {
@@ -222,3 +275,11 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.section-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+  user-select: none;
+}
+</style>

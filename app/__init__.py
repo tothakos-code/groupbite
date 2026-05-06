@@ -69,14 +69,14 @@ def create_migration():
     create_database_migration(application)
 
 
-def downgrade_migration(revision: str = "-1"):
+def downgrade_migration(revision: str = "-1", plugin: str = None):
     initialize_logging()
     application = Flask(__name__)
     application.config["SQLALCHEMY_DATABASE_URI"] = DB_URL
     application.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     from app.create_tables import downgrade_database_migration
 
-    downgrade_database_migration(application, revision)
+    downgrade_database_migration(application, revision, plugin=plugin)
 
 
 def create_app(config: Config = Config(), debug=False) -> Flask:

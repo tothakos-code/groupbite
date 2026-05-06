@@ -52,10 +52,13 @@ def migrate():
 
 @cli.command("downgrade")
 @click.argument("revision", default="-1")
-def downgrade(revision):
-    """Downgrade the database. REVISION defaults to -1 (one step back), or pass a specific revision ID."""
-    downgrade_migration(revision)
-    print(f"Downgrade to '{revision}' complete.")
+@click.option("--plugin", default=None, help="Plugin name to downgrade (omit for main app).")
+def downgrade(revision, plugin):
+    """Downgrade the database. REVISION defaults to -1 (one step back), or pass a specific revision ID.
+    Use --plugin <name> to downgrade a plugin migration branch instead of the main app."""
+    downgrade_migration(revision, plugin=plugin)
+    target = f"plugin '{plugin}'" if plugin else "main app"
+    print(f"Downgrade {target} to '{revision}' complete.")
 
 
 if __name__ == "__main__":

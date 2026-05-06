@@ -50,7 +50,18 @@ def migrate_database(app):
         alembic_cfg.set_main_option("script_location", "db/migrations")
         alembic_cfg.set_main_option("config_file_name", "alembic.ini")
         alembic_cfg.set_main_option("sqlalchemy.url", app.config["SQLALCHEMY_DATABASE_URI"])
-        command.upgrade(alembic_cfg, "head")
 
-        # upgrade(directory=migrations_dir)
+        version_locations = ["db/migrations/versions"]
+        if os.path.isdir("plugins"):
+            for plugin in os.scandir("plugins"):
+                if not plugin.is_dir():
+                    continue
+                versions_dir = os.path.join(plugin.path, "migrations", "versions")
+                if os.path.isdir(versions_dir):
+                    version_locations.append(versions_dir)
+                    logging.info("Including plugin migrations from: %s", versions_dir)
+
+        alembic_cfg.set_main_option("version_locations", " ".join(version_locations))
+        command.upgrade(alembic_cfg, "heads")
+
         logging.info("Database migrations applied.")

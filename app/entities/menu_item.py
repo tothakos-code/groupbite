@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import Base
 from .size import Size
+from .option_group import option_group_item
 
 
 class BaseItemSchema(Schema):
@@ -59,6 +60,11 @@ class MenuItem(Base):
     )
     menu: Mapped["Menu"] = relationship(back_populates="items")
     category_obj: Mapped["Category"] = relationship(back_populates="items")
+    option_groups: Mapped[List["OptionGroup"]] = relationship(
+        secondary=option_group_item,
+        back_populates="items",
+        order_by="OptionGroup.index",
+    )
 
     def __repr__(self):
         return f"MenuItem<{self.id},menu_id={self.menu_id},index={self.index},category_id={self.category_id}>"
@@ -74,4 +80,5 @@ class MenuItem(Base):
             "sizes": [size.serialized for size in self.sizes],
             "category_id": self.category_id,
             "category": self.category_obj.name if self.category_obj else None,
+            "option_groups": [g.serialized for g in self.option_groups],
         }

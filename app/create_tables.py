@@ -11,6 +11,11 @@ from app.entities.user_basket import UserBasket
 from app.entities.setting import Setting
 from app.entities.webhook import Webhook, WebhookType
 from app.entities.user_favourite import UserFavourite
+from app.entities.option_group import OptionGroup, option_group_item
+from app.entities.option_choice import OptionChoice
+from app.entities.basket_option_selection import BasketOptionSelection
+from app.entities.bundle_discount import BundleDiscount
+from app.entities.bundle_slot import BundleSlot
 from sqlalchemy import event
 from flask_migrate import upgrade, migrate, stamp
 import logging

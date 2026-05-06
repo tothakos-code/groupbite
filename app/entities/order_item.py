@@ -1,6 +1,8 @@
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import ForeignKey, Index
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import Base
@@ -27,6 +29,7 @@ class OrderItem(Base):
     size_label: Mapped[str]
     unit_price: Mapped[int]
     total_price: Mapped[int]
+    extras_summary: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
     # Relationships (optional)
     order: Mapped["Order"] = relationship(back_populates="order_items")

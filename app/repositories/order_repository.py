@@ -63,6 +63,13 @@ class OrderRepository:
         )
         return self.db.execute(stmt).scalars().first()
 
+    def find_all_open_for_vendor(self, vendor_id) -> list:
+        stmt = select(Order).where(
+            Order.vendor_id == vendor_id,
+            Order.state_id != OrderState.CLOSED,
+        )
+        return self.db.execute(stmt).scalars().all()
+
     def find_future_open_orders_for_vendor(self, vendor_id: UUID) -> list:
         """Returns non-CLOSED orders whose open_from is strictly after today."""
         today = date.today()

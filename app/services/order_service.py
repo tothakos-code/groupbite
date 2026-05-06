@@ -9,6 +9,7 @@ from app.db.session import get_session
 from app.entities.order import Order, OrderState
 from app.entities.order_item import OrderItem
 from app.event_manager import event_manager
+from app.repositories.basket_option_selection_repository import BasketOptionSelectionRepository
 from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.order_item_repository import OrderItemRepository
 from app.repositories.order_repository import OrderRepository
@@ -17,6 +18,7 @@ from app.repositories.user_basket_repository import UserBasketRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.vendor_repository import VendorRepository
 from app.scheduler import reschedule_task
+from app.services.bundle_engine import bundle_engine
 from app.services.mail_sender_service import EmailService
 from app.services.user_basket_service import UserBasketService
 from app.socketio_singleton import SocketioSingleton
@@ -71,7 +73,7 @@ class OrderService:
         }
 
     @staticmethod
-    def get_order_items(order: Order, user_filter=None):
+    def get_order_items(order: Order, user_filter=None, db=None):
         if user_filter is not None:
             if not isinstance(user_filter, (list, tuple, set)):
                 user_filter = [user_filter]
@@ -80,48 +82,110 @@ class OrderService:
         result = {}
 
         if order.state_id == OrderState.CLOSED:
-            items_source = order.order_items
-        else:
-            items_source = order.items
-
-        for item in items_source:
-            user_id_str = str(item.user_id)
-
-            if user_filter is not None and user_id_str not in user_filter:
-                continue
-
-            if user_id_str not in result:
-                result[user_id_str] = {"user_id": user_id_str, "items": []}
-
-            result[user_id_str]["username"] = (
-                item.user.username if item.user else "Unknown"
-            )
-
-            if order.state_id == OrderState.CLOSED:
-                item_data = {
+            for item in order.order_items:
+                user_id_str = str(item.user_id)
+                if user_filter is not None and user_id_str not in user_filter:
+                    continue
+                if user_id_str not in result:
+                    result[user_id_str] = {"user_id": user_id_str, "items": []}
+                result[user_id_str]["username"] = item.user.username if item.user else "Unknown"
+                result[user_id_str]["items"].append({
                     "item_id": item.menu_item_id,
                     "size_id": item.size_id,
                     "item_name": item.item_name,
                     "size_name": item.size_label,
                     "price": item.unit_price,
+                    "effective_price": item.unit_price,
                     "category": None,
                     "quantity": item.count,
                     "total_price": item.total_price,
+                    "option_selections": [],
+                    "bundle_discount": None,
+                    "extras_summary": item.extras_summary,
+                })
+            return result
+
+        # COLLECT / ORDER state — enrich with live option selections and bundle matches.
+        matches = {}
+        selections_index = {}
+        if db is not None:
+            try:
+                matches = bundle_engine.compute_matches(db, order.id, order.vendor_id)
+            except Exception:
+                logging.warning("Bundle engine failed for order %s", order.id, exc_info=True)
+            for sel in BasketOptionSelectionRepository(db).find_by_order_with_details(order.id):
+                key = (str(sel.user_id), sel.menu_item_id, sel.size_id)
+                selections_index.setdefault(key, []).append(sel)
+
+        for item in order.items:
+            user_id_str = str(item.user_id)
+            if user_filter is not None and user_id_str not in user_filter:
+                continue
+            if user_id_str not in result:
+                result[user_id_str] = {"user_id": user_id_str, "items": []}
+            result[user_id_str]["username"] = item.user.username if item.user else "Unknown"
+
+            sel_key = (user_id_str, item.menu_item_id, item.size_id)
+            selections = selections_index.get(sel_key, [])
+            option_delta = sum(s.choice.price_delta for s in selections if s.choice)
+            option_selections_data = [
+                {
+                    "group": s.choice.group.name if s.choice and s.choice.group else None,
+                    "choice": s.choice.name if s.choice else None,
+                    "delta": s.choice.price_delta if s.choice else 0,
                 }
-            else:
-                item_data = {
+                for s in selections
+            ]
+
+            base_price = item.size.price
+            match = matches.get((user_id_str, item.menu_item_id, item.size_id))
+            matched_units = match["matched_units"] if match else 0
+            total_units = item.count
+
+            def _make_item_data(qty, extra_delta, bundle_info):
+                effective = base_price + option_delta + extra_delta
+                return {
                     "item_id": item.item.id,
                     "size_id": item.size.id,
                     "item_name": item.item.name,
                     "size_name": item.size.name,
-                    "price": item.size.price,
+                    "price": base_price,
+                    "effective_price": effective,
                     "category_id": item.item.category_id,
                     "category": item.item.category_obj.name if item.item.category_obj else None,
-                    "quantity": item.count,
-                    "total_price": item.size.price * item.count,
+                    "quantity": qty,
+                    "total_price": effective * qty,
+                    "option_selections": option_selections_data,
+                    "bundle_discount": bundle_info,
+                    "extras_summary": None,
                 }
 
-            result[user_id_str]["items"].append(item_data)
+            if matched_units == 0:
+                result[user_id_str]["items"].append(_make_item_data(total_units, 0, None))
+            elif matched_units == total_units:
+                bundle_info = {
+                    "bundle_name": match["bundle_name"],
+                    "bundle_id": match["bundle_id"],
+                    "original_price": base_price + option_delta,
+                    "applied_delta": match["applied_delta"],
+                }
+                result[user_id_str]["items"].append(
+                    _make_item_data(total_units, match["applied_delta"], bundle_info)
+                )
+            else:
+                # Partial match — emit two rows.
+                bundle_info = {
+                    "bundle_name": match["bundle_name"],
+                    "bundle_id": match["bundle_id"],
+                    "original_price": base_price + option_delta,
+                    "applied_delta": match["applied_delta"],
+                }
+                result[user_id_str]["items"].append(
+                    _make_item_data(matched_units, match["applied_delta"], bundle_info)
+                )
+                result[user_id_str]["items"].append(
+                    _make_item_data(total_units - matched_units, 0, None)
+                )
 
         return result
 
@@ -228,7 +292,7 @@ class OrderService:
         order.order_fee = data["order_fee"]
         return order
 
-    def add_to_basket(self, db, order_id, user_id, item_id, size_id):
+    def add_to_basket(self, db, order_id, user_id, item_id, size_id, option_choice_ids=None):
         order_repo = OrderRepository(db)
         user_repo = UserRepository(db)
         menu_item_repo = MenuItemRepository(db)
@@ -254,7 +318,7 @@ class OrderService:
         event_manager.trigger_event("beforeAdd@" + str(order.vendor_id), data)
 
         basket_item = self.user_basket_service.add_item(
-            db, user_id, item_id, size_id, order_id
+            db, user_id, item_id, size_id, order_id, option_choice_ids=option_choice_ids
         )
 
         event_manager.trigger_event("afterAdd@" + str(order.vendor_id), data)
@@ -297,12 +361,22 @@ class OrderService:
     def copy_basket(self, db, order_id, user_id, src_user_id):
         order_repo = OrderRepository(db)
         user_basket_repo = UserBasketRepository(db)
+        bos_repo = BasketOptionSelectionRepository(db)
+
         self.user_basket_service.clear_items(db, user_id, order_id)
+
         for item in user_basket_repo.find_user_basket(order_id, src_user_id):
-            for i in range(0, item.count):
+            src_selections = bos_repo.find_by_basket_entry(
+                src_user_id, order_id, item.menu_item_id, item.size_id
+            )
+            src_choice_ids = [sel.option_choice_id for sel in src_selections]
+
+            for i in range(item.count):
                 try:
                     self.user_basket_service.add_item(
-                        db, user_id, str(item.menu_item_id), item.size_id, order_id
+                        db, user_id, str(item.menu_item_id), item.size_id, order_id,
+                        option_choice_ids=src_choice_ids,
+                        skip_validation=True,
                     )
                 except ValueError as e:
                     logging.error(e)
@@ -485,36 +559,87 @@ class OrderService:
         created_items = []
 
         try:
-            # Create order items from basket items
+            matches = bundle_engine.compute_matches(db, order.id, order.vendor_id)
+
+            bos_repo = BasketOptionSelectionRepository(db)
+            all_selections = bos_repo.find_by_order_with_details(order.id)
+            selections_index = {}
+            for sel in all_selections:
+                key = (str(sel.user_id), sel.menu_item_id, sel.size_id)
+                selections_index.setdefault(key, []).append(sel)
+
+            order_item_repo = OrderItemRepository(db)
+
             for basket_item in order.items:
-                # Create OrderItem with snapshot data
-                order_item = OrderItem(
-                    order_id=order.id,
-                    menu_item_id=basket_item.menu_item_id,
-                    size_id=basket_item.size_id,
-                    user_id=basket_item.user_id,
-                    count=basket_item.count,
-                    item_name=basket_item.item.name,
-                    size_label=basket_item.size.name,
-                    unit_price=basket_item.size.price,
-                    total_price=basket_item.size.price * basket_item.count,
-                )
+                user_id_str = str(basket_item.user_id)
+                sel_key = (user_id_str, basket_item.menu_item_id, basket_item.size_id)
+                selections = selections_index.get(sel_key, [])
+                option_delta = sum(s.choice.price_delta for s in selections if s.choice)
 
-                OrderItemRepository(db).save(order_item)
-                created_items.append(order_item)
-                order_price += order_item.total_price
+                options_summary = [
+                    {
+                        "group": s.choice.group.name if s.choice and s.choice.group else None,
+                        "choice": s.choice.name if s.choice else None,
+                        "delta": s.choice.price_delta if s.choice else 0,
+                    }
+                    for s in selections
+                ]
 
-            # Add order fee to total price
+                base_price = basket_item.size.price
+                price_with_options = base_price + option_delta
+                match = matches.get((user_id_str, basket_item.menu_item_id, basket_item.size_id))
+                matched_units = match["matched_units"] if match else 0
+                total_units = basket_item.count
+
+                def _make_order_item(count, unit_price, bundle_match):
+                    bundle_summary = None
+                    if bundle_match:
+                        bundle_summary = {
+                            "name": bundle_match["bundle_name"],
+                            "original_price": price_with_options,
+                            "applied_delta": bundle_match["applied_delta"],
+                        }
+                    extras = {}
+                    if options_summary:
+                        extras["options"] = options_summary
+                    if bundle_summary:
+                        extras["bundle"] = bundle_summary
+                    return OrderItem(
+                        order_id=order.id,
+                        menu_item_id=basket_item.menu_item_id,
+                        size_id=basket_item.size_id,
+                        user_id=basket_item.user_id,
+                        count=count,
+                        item_name=basket_item.item.name,
+                        size_label=basket_item.size.name,
+                        unit_price=unit_price,
+                        total_price=unit_price * count,
+                        extras_summary=extras if extras else None,
+                    )
+
+                if matched_units == 0:
+                    items_to_save = [_make_order_item(total_units, price_with_options, None)]
+                elif matched_units == total_units:
+                    discounted_price = price_with_options + match["applied_delta"]
+                    items_to_save = [_make_order_item(total_units, discounted_price, match)]
+                else:
+                    discounted_price = price_with_options + match["applied_delta"]
+                    items_to_save = [
+                        _make_order_item(matched_units, discounted_price, match),
+                        _make_order_item(total_units - matched_units, price_with_options, None),
+                    ]
+
+                for order_item in items_to_save:
+                    order_item_repo.save(order_item)
+                    created_items.append(order_item)
+                    order_price += order_item.total_price
+
             order_price += order.order_fee
             order.total_price = order_price
-
-            # Flush to get any database errors before final commit
-            # db.flush()
             return True
 
         except Exception as e:
             logging.exception("Error creating order items. " + str(e))
-            # Clean up any partially created items
             for item in created_items:
                 db.expunge(item)
             return False
@@ -621,7 +746,7 @@ class OrderService:
             socketio = SocketioSingleton.get_instance()
             socketio.emit(
                 "be_order_update",
-                {"basket": OrderService.get_order_items(order)},
+                {"basket": OrderService.get_order_items(order, db=db)},
                 to=f"{order.vendor_id}@{order.open_from}",
             )
             from app.services.vendor_service import VendorService

@@ -102,7 +102,7 @@ class OrderController:
     def handle_get_basket(self, db, order_id):
         order = self.order_service.get_order_by_id(db, order_id)
         return_obj = order.serialized
-        return_obj["basket"] = self.order_service.get_order_items(order)
+        return_obj["basket"] = self.order_service.get_order_items(order, db=db)
         return {"data": return_obj}, 200
 
     @require_auth
@@ -159,7 +159,7 @@ class OrderController:
         )
         socketio.emit(
             "be_order_update",
-            {"basket": self.order_service.get_order_items(order)},
+            {"basket": self.order_service.get_order_items(order, db=db)},
             to=f"{order.vendor_id}@{order.open_from}",
         )
         socketio.emit(
@@ -173,8 +173,10 @@ class OrderController:
     @validate_url_params(IDSchema())
     @handle_request
     def handle_add_to_basket(self, db, order_id, user_id, item_id, size_id):
+        option_choice_ids = (request.json or {}).get("option_choice_ids", [])
         basket_item = self.order_service.add_to_basket(
-            db, order_id, user_id, item_id, size_id
+            db, order_id, user_id, item_id, size_id,
+            option_choice_ids=option_choice_ids,
         )
         db.commit()
         if basket_item:
@@ -184,7 +186,7 @@ class OrderController:
             logging.info(basket_item.order)
             socketio.emit(
                 "be_order_update",
-                {"basket": self.order_service.get_order_items(order)},
+                {"basket": self.order_service.get_order_items(order, db=db)},
                 to=f"{order.vendor_id}@{order.open_from}",
             )
             menus = VendorService(self.order_service).get_menu_items(
@@ -209,7 +211,7 @@ class OrderController:
         db.expire(order, ["items"])
         socketio.emit(
             "be_order_update",
-            {"basket": self.order_service.get_order_items(order)},
+            {"basket": self.order_service.get_order_items(order, db=db)},
             to=f"{order.vendor_id}@{order.open_from}",
         )
         menus = VendorService(self.order_service).get_menu_items(
@@ -232,7 +234,7 @@ class OrderController:
         db.expire(order, ["items"])
         socketio.emit(
             "be_order_update",
-            {"basket": self.order_service.get_order_items(order)},
+            {"basket": self.order_service.get_order_items(order, db=db)},
             to=f"{order.vendor_id}@{order.open_from}",
         )
         menus = VendorService(self.order_service).get_menu_items(
@@ -256,7 +258,7 @@ class OrderController:
             "be_order_update",
             {
                 "order": order.serialized,
-                "basket": OrderService.get_order_items(order),
+                "basket": OrderService.get_order_items(order, db=db),
             },
             to=f"{order.vendor_id}@{order.open_from}",
         )
@@ -328,7 +330,7 @@ def handle_date_selection_change(data):
 
         socketio.emit(
             "be_order_update",
-            {"order": order.serialized, "basket": OrderService.get_order_items(order)},
+            {"order": order.serialized, "basket": OrderService.get_order_items(order, db=db)},
             to=request.sid,
         )
         socketio.emit(

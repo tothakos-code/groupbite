@@ -1,8 +1,10 @@
 from flask import Blueprint
 
+from app.controllers.bundle_discount_controller import BundleDiscountController
 from app.controllers.category_controller import CategoryController
 from app.controllers.favourite_controller import FavouriteController
 from app.controllers.item_controller import MenuItemController
+from app.controllers.option_group_controller import OptionGroupController
 from app.controllers.plugins_controller import PluginsController
 from app.controllers.main_controller import MainController
 from app.controllers.menu_controller import MenuController
@@ -55,6 +57,8 @@ def register_blueprints(app):
     plugins_ctrl = PluginsController()
     main_ctrl = MainController()
     category_ctrl = CategoryController(category_service)
+    option_group_ctrl = OptionGroupController()
+    bundle_discount_ctrl = BundleDiscountController()
 
     app.register_blueprint(menu_item_ctrl.blueprint)
     app.register_blueprint(menu_ctrl.blueprint)
@@ -68,3 +72,5 @@ def register_blueprints(app):
     app.register_blueprint(plugins_ctrl.blueprint)
     app.register_blueprint(main_ctrl.blueprint)
     app.register_blueprint(category_ctrl.blueprint)
+    app.register_blueprint(option_group_ctrl.blueprint)
+    app.register_blueprint(bundle_discount_ctrl.blueprint)

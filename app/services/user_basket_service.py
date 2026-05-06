@@ -1,6 +1,10 @@
+from app.entities.basket_option_selection import BasketOptionSelection
 from app.entities.user_basket import UserBasket
+from app.repositories.basket_option_selection_repository import BasketOptionSelectionRepository
+from app.repositories.option_group_repository import OptionGroupRepository
 from app.repositories.size_repository import SizeRepository
 from app.repositories.user_basket_repository import UserBasketRepository
+from app.services.bundle_engine import bundle_engine
 
 
 class UserBasketService:
@@ -20,14 +24,23 @@ class UserBasketService:
             size_repo.increment_quantity(size)
 
         if basket_item.count == 1:
+            BasketOptionSelectionRepository(db).delete_by_basket_entry(
+                user_id, order_id, menu_item_id, size_id
+            )
             basket_item = basket_repo.delete(basket_item)
         else:
             basket_repo.decrement_count(basket_item)
 
+        bundle_engine.invalidate(order_id)
         return basket_item
 
     @staticmethod
-    def add_item(db, user_id, menu_item_id, size_id, order_id):
+    def add_item(db, user_id, menu_item_id, size_id, order_id,
+                 option_choice_ids: list = None, skip_validation: bool = False):
+        if not skip_validation:
+            # Validate before any DB modification so a failure leaves nothing committed.
+            _validate_option_selections(db, menu_item_id, option_choice_ids)
+
         basket_repo = UserBasketRepository(db)
         size_repo = SizeRepository(db)
 
@@ -54,12 +67,25 @@ class UserBasketService:
         else:
             basket_repo.increment_count(basket_item)
 
+        bos_repo = BasketOptionSelectionRepository(db)
+        bos_repo.delete_by_basket_entry(user_id, order_id, menu_item_id, size_id)
+        for cid in (option_choice_ids or []):
+            bos_repo.save(BasketOptionSelection(
+                user_id=user_id,
+                order_id=order_id,
+                menu_item_id=menu_item_id,
+                size_id=size_id,
+                option_choice_id=cid,
+            ))
+
+        bundle_engine.invalidate(order_id)
         return basket_item
 
     @staticmethod
     def clear_items(db, user_id, order_id):
-        basket_repo = UserBasketRepository(db)
-        basket_repo.clear_items(user_id, order_id)
+        BasketOptionSelectionRepository(db).delete_by_user_order(user_id, order_id)
+        UserBasketRepository(db).clear_items(user_id, order_id)
+        bundle_engine.invalidate(order_id)
 
     @staticmethod
     def delete(db, basket_item):
@@ -73,3 +99,34 @@ class UserBasketService:
         user_basket_repo = UserBasketRepository(db)
         result = user_basket_repo.get_user_counts_batch(order_ids)
         return {row.order_id: row.user_count for row in result}
+
+
+def _validate_option_selections(db, menu_item_id: int, option_choice_ids: list):
+    groups = OptionGroupRepository(db).find_by_item(menu_item_id)
+    if not groups:
+        return
+
+    choice_ids = list(option_choice_ids or [])
+
+    # Map each active choice id to its group for fast lookup.
+    choice_to_group = {}
+    for group in groups:
+        for choice in group.choices:
+            choice_to_group[choice.id] = group
+
+    for cid in choice_ids:
+        if cid not in choice_to_group:
+            raise ValueError(f"Option choice {cid} is not valid for this item")
+
+    for group in groups:
+        count = sum(1 for cid in choice_ids if choice_to_group.get(cid) is group)
+        if count < group.min_choices:
+            raise ValueError(
+                f"Option group '{group.name}' requires at least {group.min_choices} "
+                f"selection(s), got {count}"
+            )
+        if count > group.max_choices:
+            raise ValueError(
+                f"Option group '{group.name}' allows at most {group.max_choices} "
+                f"selection(s), got {count}"
+            )

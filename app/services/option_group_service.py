@@ -52,10 +52,18 @@ class OptionGroupService:
 
         choice_ids = [c.id for c in group.choices]
         if choice_ids and _has_open_order_selections(db, choice_ids):
-            raise ValueError(
-                "Cannot delete option group: it is referenced by an active order basket"
-            )
-        repo.delete(group_id)
+            group.active = False
+            repo.unassign_from_all_items(group_id)
+        else:
+            repo.delete(group_id)
+
+    @staticmethod
+    def cleanup_inactive(db, vendor_id):
+        repo = OptionGroupRepository(db)
+        for group in repo.find_inactive_by_vendor(vendor_id):
+            choice_ids = [c.id for c in group.choices]
+            if not choice_ids or not _has_open_order_selections(db, choice_ids):
+                repo.delete(group.id)
 
     @staticmethod
     def add_choice(db, group_id: int, name: str, price_delta: int, index: int) -> OptionChoice:
@@ -88,7 +96,7 @@ class OptionGroupService:
             raise ValueError(f"OptionChoice {choice_id} not found")
         if _has_open_order_selections(db, [choice_id]):
             raise ValueError(
-                "Cannot delete option choice: it is referenced by an active order basket"
+                "Az opció választás nem törölhető: aktív rendelési kosár hivatkozik rá"
             )
         repo.soft_delete(choice_id)
 

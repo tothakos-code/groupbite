@@ -12,7 +12,7 @@ class OptionGroupRepository:
     def find_by_vendor(self, vendor_id) -> list:
         stmt = (
             select(OptionGroup)
-            .where(OptionGroup.vendor_id == vendor_id)
+            .where(OptionGroup.vendor_id == vendor_id, OptionGroup.active == True)
             .options(joinedload(OptionGroup.choices))
             .order_by(OptionGroup.index)
         )
@@ -22,9 +22,17 @@ class OptionGroupRepository:
         stmt = (
             select(OptionGroup)
             .join(option_group_item, OptionGroup.id == option_group_item.c.option_group_id)
-            .where(option_group_item.c.menu_item_id == menu_item_id)
+            .where(option_group_item.c.menu_item_id == menu_item_id, OptionGroup.active == True)
             .options(joinedload(OptionGroup.choices))
             .order_by(option_group_item.c.index)
+        )
+        return self.db.execute(stmt).unique().scalars().all()
+
+    def find_inactive_by_vendor(self, vendor_id) -> list:
+        stmt = (
+            select(OptionGroup)
+            .where(OptionGroup.vendor_id == vendor_id, OptionGroup.active == False)
+            .options(joinedload(OptionGroup.choices))
         )
         return self.db.execute(stmt).unique().scalars().all()
 
@@ -62,6 +70,14 @@ class OptionGroupRepository:
             option_group_item.delete().where(
                 option_group_item.c.option_group_id == option_group_id,
                 option_group_item.c.menu_item_id == menu_item_id,
+            )
+        )
+        self.db.flush()
+
+    def unassign_from_all_items(self, option_group_id: int):
+        self.db.execute(
+            option_group_item.delete().where(
+                option_group_item.c.option_group_id == option_group_id,
             )
         )
         self.db.flush()

@@ -556,6 +556,8 @@ class OrderService:
             if not success:
                 order.state_id = old_state
                 return False
+            from app.services.option_group_service import OptionGroupService
+            OptionGroupService.cleanup_inactive(db, order.vendor_id)
         return True
 
     def _create_order_items_and_calculate_total(self, db, order):

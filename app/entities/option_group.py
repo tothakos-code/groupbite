@@ -26,6 +26,7 @@ class OptionGroup(Base):
     max_choices: Mapped[int] = mapped_column(default=1)
     required: Mapped[bool] = mapped_column(Boolean, default=False)
     index: Mapped[int] = mapped_column(default=0)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     choices: Mapped[List["OptionChoice"]] = relationship(
         back_populates="group",
@@ -51,5 +52,5 @@ class OptionGroup(Base):
             "max_choices": self.max_choices,
             "required": self.required,
             "index": self.index,
-            "choices": [c.serialized for c in self.choices],
+            "choices": [c.serialized for c in self.choices if c.active],
         }

@@ -70,6 +70,10 @@ class IDSchema(Schema):
     size_id = fields.Integer(validate=validate_size_id)
     menu_id = fields.Integer(validate=validate_menu_id)
     category_id = fields.Integer()
+    bundle_id = fields.Integer()
+    slot_id = fields.Integer()
+    group_id = fields.Integer()
+    choice_id = fields.Integer()
     menu_date = fields.Date()
     notification_type = fields.Str(
         validate=validate.OneOf([nt.value for nt in NotificationType])

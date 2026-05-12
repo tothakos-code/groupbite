@@ -451,6 +451,43 @@
                     @reorder-sizes="(sizes) => $emit('reorder-sizes', item.id, sizes)"
                     @size-field-changed="handleSizeFieldChanged"
                   />
+
+                  <!-- Option Group Assignments -->
+                  <div
+                    v-if="vendorOptionGroups.length > 0 || (item.option_groups && item.option_groups.length > 0)"
+                    class="pa-3 border-t option-groups-row"
+                  >
+                    <div class="d-flex align-center gap-2 flex-wrap">
+                      <span class="text-caption font-weight-bold text-medium-emphasis me-1">
+                        <v-icon size="small">mdi-tune</v-icon>
+                        Opció csoportok:
+                      </span>
+                      <v-chip
+                        v-for="group in (item.option_groups || [])"
+                        :key="group.id"
+                        size="small"
+                        color="primary"
+                        variant="tonal"
+                        closable
+                        @click:close="unassignGroup(item, group)"
+                      >
+                        {{ group.name }}
+                      </v-chip>
+                      <v-select
+                        v-if="unassignedGroups(item).length > 0"
+                        :model-value="null"
+                        :items="unassignedGroups(item)"
+                        item-title="name"
+                        item-value="id"
+                        label="Csoport hozzáadása"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                        style="max-width: 220px"
+                        @update:model-value="(gid) => { if (gid) assignGroup(item, gid) }"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </template>
@@ -502,6 +539,7 @@
 <script>
 import SizesTable from './SizesTable.vue';
 import { useCategoriesStore } from '@/stores/categories';
+import { useOptionGroupsStore } from '@/stores/option_groups';
 
 export default {
   name: "ItemsDataTable",
@@ -526,10 +564,6 @@ export default {
       default: null
     }
   },
-  setup() {
-    const categoriesStore = useCategoriesStore();
-    return { categoriesStore };
-  },
   emits: [
     'edit-item',
     'update-item',
@@ -549,6 +583,11 @@ export default {
     'enter-reorder-mode',
     'exit-reorder-mode'
   ],
+  setup() {
+    const categoriesStore = useCategoriesStore();
+    const optionGroupsStore = useOptionGroupsStore();
+    return { categoriesStore, optionGroupsStore };
+  },
   data() {
     return {
       sizeEdits: {},
@@ -610,7 +649,10 @@ export default {
 
     categoryNames() {
       return this.vendorId ? this.categoriesStore.namesForVendor(this.vendorId) : [];
-    }
+    },
+    vendorOptionGroups() {
+      return this.vendorId ? this.optionGroupsStore.forVendor(this.vendorId) : [];
+    },
   },
   watch: {
     reorderMode(newVal) {
@@ -620,7 +662,7 @@ export default {
         this.exitReorderMode();
       }
     },
-    items(newVal) {
+    items() {
       if (this.reorderMode) {
         this.initReorderMode();
       }
@@ -631,6 +673,9 @@ export default {
   mounted() {
     if (this.reorderMode) {
       this.initReorderMode();
+    }
+    if (this.vendorId) {
+      this.optionGroupsStore.fetchByVendor(this.vendorId);
     }
   },
 
@@ -904,7 +949,40 @@ export default {
         this.deleteDialog = false;
         this.itemToDelete = null;
       }
-    }
+    },
+
+    unassignedGroups(item) {
+      const assignedIds = new Set((item.option_groups || []).map(g => g.id));
+      return this.vendorOptionGroups.filter(g => !assignedIds.has(g.id));
+    },
+
+    async assignGroup(item, groupId) {
+      if (!groupId) return;
+      const idx = (item.option_groups || []).length;
+      try {
+        await this.optionGroupsStore.assignToItem(item.id, groupId, idx);
+        await this.optionGroupsStore.fetchByVendor(this.vendorId);
+        if (!item.option_groups) item.option_groups = [];
+        const group = this.vendorOptionGroups.find(g => g.id === groupId);
+        if (group && !item.option_groups.find(g => g.id === groupId)) {
+          item.option_groups.push(group);
+        }
+      } catch (e) {
+        console.error('Assign failed', e);
+      }
+    },
+
+    async unassignGroup(item, group) {
+      try {
+        await this.optionGroupsStore.unassignFromItem(item.id, group.id);
+        await this.optionGroupsStore.fetchByVendor(this.vendorId);
+        if (item.option_groups) {
+          item.option_groups = item.option_groups.filter(g => g.id !== group.id);
+        }
+      } catch (e) {
+        console.error('Unassign failed', e);
+      }
+    },
   }
 };
 </script>

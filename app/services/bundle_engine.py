@@ -10,10 +10,6 @@ class BundleEngine:
         self._cache = cache
 
     def compute_matches(self, db, order_id: int, vendor_id) -> dict:
-        cached = self._cache.get(order_id)
-        if cached is not None:
-            return cached
-
         from sqlalchemy.orm import joinedload
         from app.entities.user_basket import UserBasket
         from app.repositories.bundle_discount_repository import BundleDiscountRepository
@@ -56,9 +52,7 @@ class BundleEngine:
             for b in bundles
         ]
 
-        result = _run_matching(raw_entries, raw_bundles)
-        self._cache.set(order_id, result)
-        return result
+        return _run_matching(raw_entries, raw_bundles)
 
     def invalidate(self, order_id: int) -> None:
         self._cache.invalidate(order_id)
@@ -68,7 +62,7 @@ def _compute_delta(slot: dict, unit_price: int) -> int:
     if slot["price_override"] is not None:
         return slot["price_override"] - unit_price
     if slot["price_delta"] is not None:
-        return slot["price_delta"]
+        return -slot["price_delta"]  # price_delta is stored as a positive discount amount
     return 0
 
 
@@ -98,6 +92,19 @@ def _run_matching(basket_entries: list, bundles: list) -> dict:
                 "category_id": entry["category_id"],
                 "_matched": False,
             })
+
+    # Process bundles with the highest discount first so that a zero-discount or
+    # misconfigured duplicate bundle cannot steal units away from the correct one.
+    def _bundle_sort_key(b):
+        max_delta = 0
+        for s in b["slots"]:
+            if s["price_delta"] is not None:
+                max_delta = max(max_delta, s["price_delta"])
+            elif s["price_override"] is not None:
+                max_delta = max(max_delta, 1)  # price_override implies some discount
+        return -max_delta  # most-discounted bundle sorts first
+
+    bundles = sorted(bundles, key=_bundle_sort_key)
 
     for bundle in bundles:
         slots = sorted(bundle["slots"], key=lambda s: s["slot_index"])

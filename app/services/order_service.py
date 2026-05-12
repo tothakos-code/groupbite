@@ -168,7 +168,7 @@ class OrderService:
                 result[user_id_str]["items"].append(_make_item_data(total_units, 0, None))
             elif matched_units == total_units:
                 bundle_info = {
-                    "bundle_name": match["bundle_name"],
+                    "name": match["bundle_name"],
                     "bundle_id": match["bundle_id"],
                     "original_price": base_price + option_delta,
                     "applied_delta": match["applied_delta"],
@@ -179,7 +179,7 @@ class OrderService:
             else:
                 # Partial match — emit two rows.
                 bundle_info = {
-                    "bundle_name": match["bundle_name"],
+                    "name": match["bundle_name"],
                     "bundle_id": match["bundle_id"],
                     "original_price": base_price + option_delta,
                     "applied_delta": match["applied_delta"],

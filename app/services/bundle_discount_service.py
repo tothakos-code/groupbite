@@ -13,7 +13,9 @@ class BundleDiscountService:
     @staticmethod
     def create(db, vendor_id, name: str, description: str = None) -> BundleDiscount:
         bundle = BundleDiscount(vendor_id=vendor_id, name=name, description=description)
-        return BundleDiscountRepository(db).save(bundle)
+        bundle = BundleDiscountRepository(db).save(bundle)
+        _invalidate_vendor_orders(db, vendor_id)
+        return bundle
 
     @staticmethod
     def update(db, bundle_id: int, **fields) -> BundleDiscount:
@@ -25,7 +27,9 @@ class BundleDiscountService:
         for key, value in fields.items():
             if key in allowed:
                 setattr(bundle, key, value)
-        return repo.save(bundle)
+        bundle = repo.save(bundle)
+        _invalidate_vendor_orders(db, bundle.vendor_id)
+        return bundle
 
     @staticmethod
     def delete(db, bundle_id: int):

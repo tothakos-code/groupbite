@@ -14,13 +14,14 @@ class BasketOptionSelection(Base):
     order_id: Mapped[int] = mapped_column(ForeignKey("order.id", ondelete="CASCADE"))
     menu_item_id: Mapped[int] = mapped_column()
     size_id: Mapped[int] = mapped_column()
+    line_key: Mapped[str] = mapped_column(default="", server_default="")
     option_choice_id: Mapped[int] = mapped_column(ForeignKey("option_choice.id", ondelete="CASCADE"))
 
     choice: Mapped["OptionChoice"] = relationship()
 
     __table_args__ = (
         UniqueConstraint(
-            "user_id", "order_id", "menu_item_id", "size_id", "option_choice_id",
+            "user_id", "order_id", "menu_item_id", "size_id", "line_key", "option_choice_id",
             name="uq_basket_option_selection",
         ),
     )

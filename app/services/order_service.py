@@ -114,7 +114,7 @@ class OrderService:
             except Exception:
                 logging.warning("Bundle engine failed for order %s", order.id, exc_info=True)
             for sel in BasketOptionSelectionRepository(db).find_by_order_with_details(order.id):
-                key = (str(sel.user_id), sel.menu_item_id, sel.size_id)
+                key = (str(sel.user_id), sel.menu_item_id, sel.size_id, sel.line_key)
                 selections_index.setdefault(key, []).append(sel)
 
         for item in order.items:
@@ -125,11 +125,12 @@ class OrderService:
                 result[user_id_str] = {"user_id": user_id_str, "items": []}
             result[user_id_str]["username"] = item.user.username if item.user else "Unknown"
 
-            sel_key = (user_id_str, item.menu_item_id, item.size_id)
+            sel_key = (user_id_str, item.menu_item_id, item.size_id, item.line_key)
             selections = selections_index.get(sel_key, [])
             option_delta = sum(s.choice.price_delta for s in selections if s.choice)
             option_selections_data = [
                 {
+                    "choice_id": s.choice.id if s.choice else None,
                     "group": s.choice.group.name if s.choice and s.choice.group else None,
                     "choice": s.choice.name if s.choice else None,
                     "delta": s.choice.price_delta if s.choice else 0,
@@ -141,6 +142,8 @@ class OrderService:
             match = matches.get((user_id_str, item.menu_item_id, item.size_id))
             matched_units = match["matched_units"] if match else 0
             total_units = item.count
+
+            option_choice_ids = [s.choice.id for s in selections if s.choice]
 
             def _make_item_data(qty, extra_delta, bundle_info):
                 effective = base_price + option_delta + extra_delta
@@ -156,6 +159,7 @@ class OrderService:
                     "quantity": qty,
                     "total_price": effective * qty,
                     "option_selections": option_selections_data,
+                    "option_choice_ids": option_choice_ids,
                     "bundle_discount": bundle_info,
                     "extras_summary": None,
                 }
@@ -201,14 +205,14 @@ class OrderService:
         from app.repositories.order_repository import OrderRepository
         from app.utils.vendor_settings import get_setting_value
 
-        open_from = date.today()
+        open_from = open_until if open_until is not None else date.today()
 
-        if open_until is not None and open_until < open_from:
+        if open_until is not None and open_until < date.today():
             raise ValueError("open_until_before_today")
 
         order_repo = OrderRepository(db)
 
-        existing = order_repo.find_open_order_for_vendor(vendor.id)
+        existing = order_repo.find_open_order_for_vendor(vendor.id, open_from)
         if existing:
             return existing, False
 
@@ -325,7 +329,7 @@ class OrderService:
 
         return basket_item
 
-    def remove_from_basket(self, db, order_id, user_id, item_id, size_id):
+    def remove_from_basket(self, db, order_id, user_id, item_id, size_id, option_choice_ids=None):
         order_repo = OrderRepository(db)
         user_repo = UserRepository(db)
         menu_item_repo = MenuItemRepository(db)
@@ -351,7 +355,7 @@ class OrderService:
         event_manager.trigger_event("beforeRemove@" + str(order.vendor_id), data)
 
         basket_item = self.user_basket_service.remove_item(
-            db, user_id, item_id, size_id, order_id
+            db, user_id, item_id, size_id, order_id, option_choice_ids=option_choice_ids
         )
 
         event_manager.trigger_event("afterRemove@" + str(order.vendor_id), data)
@@ -367,7 +371,7 @@ class OrderService:
 
         for item in user_basket_repo.find_user_basket(order_id, src_user_id):
             src_selections = bos_repo.find_by_basket_entry(
-                src_user_id, order_id, item.menu_item_id, item.size_id
+                src_user_id, order_id, item.menu_item_id, item.size_id, item.line_key
             )
             src_choice_ids = [sel.option_choice_id for sel in src_selections]
 
@@ -565,14 +569,14 @@ class OrderService:
             all_selections = bos_repo.find_by_order_with_details(order.id)
             selections_index = {}
             for sel in all_selections:
-                key = (str(sel.user_id), sel.menu_item_id, sel.size_id)
+                key = (str(sel.user_id), sel.menu_item_id, sel.size_id, sel.line_key)
                 selections_index.setdefault(key, []).append(sel)
 
             order_item_repo = OrderItemRepository(db)
 
             for basket_item in order.items:
                 user_id_str = str(basket_item.user_id)
-                sel_key = (user_id_str, basket_item.menu_item_id, basket_item.size_id)
+                sel_key = (user_id_str, basket_item.menu_item_id, basket_item.size_id, basket_item.line_key)
                 selections = selections_index.get(sel_key, [])
                 option_delta = sum(s.choice.price_delta for s in selections if s.choice)
 

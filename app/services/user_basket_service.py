@@ -9,12 +9,13 @@ from app.services.bundle_engine import bundle_engine
 
 class UserBasketService:
     @staticmethod
-    def remove_item(db, user_id, menu_item_id, size_id, order_id):
+    def remove_item(db, user_id, menu_item_id, size_id, order_id, option_choice_ids=None):
         basket_repo = UserBasketRepository(db)
         size_repo = SizeRepository(db)
 
+        line_key = _compute_line_key(option_choice_ids)
         basket_item = basket_repo.find_basket_item(
-            order_id, user_id, menu_item_id, size_id
+            order_id, user_id, menu_item_id, size_id, line_key=line_key
         )
         if not basket_item:
             raise ValueError("Item not found in basket")
@@ -25,7 +26,7 @@ class UserBasketService:
 
         if basket_item.count == 1:
             BasketOptionSelectionRepository(db).delete_by_basket_entry(
-                user_id, order_id, menu_item_id, size_id
+                user_id, order_id, menu_item_id, size_id, line_key=line_key
             )
             basket_item = basket_repo.delete(basket_item)
         else:
@@ -38,14 +39,14 @@ class UserBasketService:
     def add_item(db, user_id, menu_item_id, size_id, order_id,
                  option_choice_ids: list = None, skip_validation: bool = False):
         if not skip_validation:
-            # Validate before any DB modification so a failure leaves nothing committed.
             _validate_option_selections(db, menu_item_id, option_choice_ids)
 
         basket_repo = UserBasketRepository(db)
         size_repo = SizeRepository(db)
 
+        line_key = _compute_line_key(option_choice_ids)
         basket_item = basket_repo.find_basket_item(
-            order_id, user_id, menu_item_id, size_id
+            order_id, user_id, menu_item_id, size_id, line_key=line_key
         )
 
         size = size_repo.get_by_id(size_id)
@@ -61,6 +62,7 @@ class UserBasketService:
                     menu_item_id=menu_item_id,
                     size_id=size_id,
                     order_id=order_id,
+                    line_key=line_key,
                     count=1,
                 )
             )
@@ -68,13 +70,14 @@ class UserBasketService:
             basket_repo.increment_count(basket_item)
 
         bos_repo = BasketOptionSelectionRepository(db)
-        bos_repo.delete_by_basket_entry(user_id, order_id, menu_item_id, size_id)
+        bos_repo.delete_by_basket_entry(user_id, order_id, menu_item_id, size_id, line_key=line_key)
         for cid in (option_choice_ids or []):
             bos_repo.save(BasketOptionSelection(
                 user_id=user_id,
                 order_id=order_id,
                 menu_item_id=menu_item_id,
                 size_id=size_id,
+                line_key=line_key,
                 option_choice_id=cid,
             ))
 
@@ -99,6 +102,12 @@ class UserBasketService:
         user_basket_repo = UserBasketRepository(db)
         result = user_basket_repo.get_user_counts_batch(order_ids)
         return {row.order_id: row.user_count for row in result}
+
+
+def _compute_line_key(option_choice_ids) -> str:
+    if not option_choice_ids:
+        return ""
+    return ",".join(str(cid) for cid in sorted(int(cid) for cid in option_choice_ids))
 
 
 def _validate_option_selections(db, menu_item_id: int, option_choice_ids: list):

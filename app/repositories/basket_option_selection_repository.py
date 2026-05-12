@@ -10,12 +10,13 @@ class BasketOptionSelectionRepository:
     def __init__(self, db):
         self.db = db
 
-    def find_by_basket_entry(self, user_id, order_id: int, menu_item_id: int, size_id: int) -> list:
+    def find_by_basket_entry(self, user_id, order_id: int, menu_item_id: int, size_id: int, line_key: str = "") -> list:
         stmt = select(BasketOptionSelection).where(
             BasketOptionSelection.user_id == user_id,
             BasketOptionSelection.order_id == order_id,
             BasketOptionSelection.menu_item_id == menu_item_id,
             BasketOptionSelection.size_id == size_id,
+            BasketOptionSelection.line_key == line_key,
         )
         return self.db.execute(stmt).scalars().all()
 
@@ -42,8 +43,8 @@ class BasketOptionSelectionRepository:
         self.db.flush()
         return selection
 
-    def delete_by_basket_entry(self, user_id, order_id: int, menu_item_id: int, size_id: int):
-        rows = self.find_by_basket_entry(user_id, order_id, menu_item_id, size_id)
+    def delete_by_basket_entry(self, user_id, order_id: int, menu_item_id: int, size_id: int, line_key: str = ""):
+        rows = self.find_by_basket_entry(user_id, order_id, menu_item_id, size_id, line_key)
         for row in rows:
             self.db.delete(row)
         self.db.flush()

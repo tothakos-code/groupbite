@@ -14,12 +14,13 @@ class UserBasketRepository:
         stmt = select(UserBasket).where(UserBasket.order_id == order_id)
         return self.db.execute(stmt).scalars().all()
 
-    def find_basket_item(self, order_id, user_id, menu_item_id, size_id):
+    def find_basket_item(self, order_id, user_id, menu_item_id, size_id, line_key=""):
         stmt = select(UserBasket).where(
             UserBasket.order_id == order_id,
             UserBasket.user_id == user_id,
             UserBasket.menu_item_id == menu_item_id,
             UserBasket.size_id == size_id,
+            UserBasket.line_key == line_key,
         )
         return self.db.execute(stmt).scalars().first()
 

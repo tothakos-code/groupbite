@@ -351,9 +351,9 @@ async function submitStartOrder() {
   const res = await orderStore.createOrder(vendorId, openUntil)
   if (res?.status === 200 || res?.status === 201) {
     if (orderStore.pendingItem) {
-      const { menuItemId, sizeId } = orderStore.pendingItem
+      const { menuItemId, sizeId, optionChoiceIds } = orderStore.pendingItem
       orderStore.pendingItem = null
-      await orderStore.addItem(menuItemId, sizeId)
+      await orderStore.addItem(menuItemId, sizeId, optionChoiceIds || [])
     }
     closeStartOrderDialog()
     notify({ type: 'success', text: 'Rendelés sikeresen megnyitva!' })

@@ -22,6 +22,7 @@ class UserBasket(Base):
         ForeignKey("size.id", ondelete="CASCADE"), primary_key=True
     )
     order_id: Mapped[int] = mapped_column(ForeignKey("order.id"), primary_key=True)
+    line_key: Mapped[str] = mapped_column(default="", server_default="", primary_key=True)
     count: Mapped[int]
 
     order: Mapped["Order"] = relationship(back_populates="items")

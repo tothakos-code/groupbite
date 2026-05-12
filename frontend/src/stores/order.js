@@ -39,7 +39,7 @@ export const useOrderStore = defineStore("order", {
       let sum=0;
       Object.values(state.basket).forEach((person) => {
         Object.values(person.items).forEach((entry) => {
-          sum+= Number(entry.quantity) * Number(entry.price);
+          sum+= Number(entry.quantity) * Number(entry.effective_price ?? entry.price);
         })
       })
       sum += Number(this.transportFee);
@@ -54,7 +54,7 @@ export const useOrderStore = defineStore("order", {
       if (state.basket[auth.user.id] === undefined) return sum;
 
       for (const item of state.basket[auth.user.id].items) {
-        sum+= Number(item.quantity) * Number(item.price);
+        sum+= Number(item.quantity) * Number(item.effective_price ?? item.price);
       }
 
       if (this.userCount != 0) {
@@ -187,7 +187,7 @@ export const useOrderStore = defineStore("order", {
         return error.response
       }
     },
-    async removeItem(menuItemId, sizeId) {
+    async removeItem(menuItemId, sizeId, optionChoiceIds = []) {
       if ( this.order.state_id === "closed") {
         notify({
           type: "warn",
@@ -197,7 +197,8 @@ export const useOrderStore = defineStore("order", {
       }
       const auth = useAuth()
       try {
-        const response = axios.delete(`/api/order/${this.order.id}/user/${auth.user.id}/item/${menuItemId}/size/${sizeId}`)
+        const body = optionChoiceIds.length ? { option_choice_ids: optionChoiceIds } : undefined
+        const response = axios.delete(`/api/order/${this.order.id}/user/${auth.user.id}/item/${menuItemId}/size/${sizeId}`, { data: body })
         return response
       } catch (error) {
         console.error("Failed to remove item:", error.response.data.error);
@@ -232,7 +233,7 @@ export const useOrderStore = defineStore("order", {
         return error.response
       }
     },
-    async addItem(menuItemId, sizeId) {
+    async addItem(menuItemId, sizeId, optionChoiceIds = []) {
       const auth = useAuth()
       if (!auth.isLoggedIn) {
         notify({
@@ -242,7 +243,7 @@ export const useOrderStore = defineStore("order", {
         return;
       }
       if (!this.order?.id) {
-        this.pendingItem = { menuItemId, sizeId }
+        this.pendingItem = { menuItemId, sizeId, optionChoiceIds }
         this.showCreateOrderDialog = true
         return
       }
@@ -254,7 +255,8 @@ export const useOrderStore = defineStore("order", {
         return;
       }
       try {
-        const response = axios.put(`/api/order/${this.order.id}/user/${auth.user.id}/item/${menuItemId}/size/${sizeId}`)
+        const body = optionChoiceIds.length ? { option_choice_ids: optionChoiceIds } : undefined
+        const response = axios.put(`/api/order/${this.order.id}/user/${auth.user.id}/item/${menuItemId}/size/${sizeId}`, body)
         return response
       } catch (error) {
         console.error("Failed to add item:", error.response.data.error);

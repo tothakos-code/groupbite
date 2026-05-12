@@ -57,7 +57,8 @@
             <v-card
               :class="[
                 'size-card',
-                size.unlimited || size.quantity > 0 ? 'available' : 'unavailable'
+                size.unlimited || size.quantity > 0 ? 'available' : 'unavailable',
+                selectedSizeId === size.id ? 'selected' : '',
               ]"
               :elevation="size.unlimited || size.quantity > 0 ? 2 : 0"
               rounded="md"
@@ -81,17 +82,17 @@
                   <!-- Action Button -->
                   <v-btn
                     v-if="size.unlimited || size.quantity > 0"
-                    color="primary"
+                    :color="selectedSizeId === size.id ? 'secondary' : 'primary'"
                     variant="elevated"
                     rounded="lg"
                     class="compact-order-btn"
-                    @click="handleOrder(item.id, size.id)"
+                    @click="handleSizeClick(size)"
                   >
                     <v-icon
                       start
                       size="16"
                     >
-                      mdi-plus-circle
+                      {{ selectedSizeId === size.id ? 'mdi-check-circle' : 'mdi-plus-circle' }}
                     </v-icon>
                     <span>{{ formatPrice(size.price) }}</span>
                   </v-btn>
@@ -118,6 +119,110 @@
         </div>
       </div>
 
+      <!-- Option Groups (shown when a size is selected and item has groups) -->
+      <v-expand-transition>
+        <div
+          v-if="selectedSizeId && hasOptionGroups"
+          class="option-groups-section mt-3"
+        >
+          <v-divider class="mb-3" />
+          <div class="d-flex align-center mb-3">
+            <v-icon
+              size="small"
+              color="primary"
+              class="me-1"
+            >
+              mdi-tune
+            </v-icon>
+            <span class="text-subtitle-2 font-weight-bold flex-grow-1">Kiegészítők</span>
+            <v-btn
+              icon="mdi-close"
+              size="x-small"
+              variant="text"
+              color="default"
+              @click="selectedSizeId = null; selectedChoiceIds = {}"
+            />
+          </div>
+
+          <div
+            v-for="group in item.option_groups"
+            :key="group.id"
+            class="mb-4"
+          >
+            <div class="d-flex align-center mb-1">
+              <span class="text-body-2 font-weight-medium">{{ group.name }}</span>
+              <v-chip
+                v-if="group.min_choices > 0"
+                size="x-small"
+                color="primary"
+                variant="outlined"
+                class="ms-2"
+              >
+                kötelező
+              </v-chip>
+              <v-chip
+                v-if="group.max_choices > 1"
+                size="x-small"
+                color="primary"
+                variant="outlined"
+                class="ms-1"
+              >
+                max {{ group.max_choices }}
+              </v-chip>
+            </div>
+
+            <!-- Radio group (max_choices === 1) -->
+            <v-radio-group
+              v-if="group.max_choices === 1"
+              v-model="selectedChoiceIds[group.id]"
+              density="compact"
+              hide-details
+              class="mt-1 ms-2"
+            >
+              <v-radio
+                v-for="choice in group.choices"
+                :key="choice.id"
+                :label="choiceLabel(choice)"
+                :value="choice.id"
+              />
+            </v-radio-group>
+
+            <!-- Checkboxes (max_choices > 1) -->
+            <div
+              v-else
+              class="ms-2"
+            >
+              <v-checkbox
+                v-for="choice in group.choices"
+                :key="choice.id"
+                :model-value="selectedChoiceIds[group.id] || []"
+                :label="choiceLabel(choice)"
+                :value="choice.id"
+                :disabled="!isChoiceSelectable(group, choice.id)"
+                density="compact"
+                hide-details
+                @update:model-value="val => selectedChoiceIds[group.id] = val"
+              />
+            </div>
+          </div>
+
+          <!-- Add to basket button -->
+          <v-btn
+            color="primary"
+            variant="elevated"
+            rounded="lg"
+            block
+            :disabled="!isReadyToAdd"
+            class="mt-2"
+            @click="handleAddWithOptions"
+          >
+            <v-icon start>
+              mdi-cart-plus
+            </v-icon>
+            Hozzáadás — {{ formatPrice(effectivePrice) }}
+          </v-btn>
+        </div>
+      </v-expand-transition>
 
       <!-- Additional Info -->
       <div
@@ -170,24 +275,90 @@ export default {
     const order = useOrderStore();
     const favourites = useFavouritesStore();
     const vendorStore = useVendorStore();
+    return { auth, order, favourites, vendorStore };
+  },
+  data() {
     return {
-      auth,
-      order,
-      favourites,
-      vendorStore,
-    }
+      selectedSizeId: null,
+      selectedChoiceIds: {},
+    };
   },
   computed: {
     isFavourite() {
       return this.favourites.isMatched(this.item.id);
     },
+    hasOptionGroups() {
+      return (this.item.option_groups || []).length > 0;
+    },
+    isReadyToAdd() {
+      if (!this.selectedSizeId) return false;
+      return (this.item.option_groups || []).every(group => {
+        const val = this.selectedChoiceIds[group.id];
+        const count = Array.isArray(val) ? val.length : (val != null ? 1 : 0);
+        return count >= group.min_choices;
+      });
+    },
+    effectivePrice() {
+      if (!this.selectedSizeId) return 0;
+      const size = this.item.sizes.find(s => s.id === this.selectedSizeId);
+      if (!size) return 0;
+      let delta = 0;
+      for (const group of (this.item.option_groups || [])) {
+        const val = this.selectedChoiceIds[group.id];
+        const ids = Array.isArray(val) ? val : (val != null ? [val] : []);
+        for (const choiceId of ids) {
+          const choice = group.choices.find(c => c.id === choiceId);
+          if (choice) delta += choice.price_delta;
+        }
+      }
+      return size.price + delta;
+    },
+    allSelectedChoiceIds() {
+      const ids = [];
+      for (const group of (this.item.option_groups || [])) {
+        const val = this.selectedChoiceIds[group.id];
+        if (Array.isArray(val)) ids.push(...val);
+        else if (val != null) ids.push(val);
+      }
+      return ids;
+    },
   },
   methods: {
-    handleOrder(itemId, sizeId) {
-      this.order.addItem(itemId, sizeId);
+    handleSizeClick(size) {
+      if (!this.hasOptionGroups) {
+        this.order.addItem(this.item.id, size.id);
+        this.$emit('item-added', { itemId: this.item.id, sizeId: size.id });
+        return;
+      }
+      if (this.selectedSizeId === size.id) {
+        this.selectedSizeId = null;
+        return;
+      }
+      this.selectedSizeId = size.id;
+      for (const group of this.item.option_groups) {
+        if (!(group.id in this.selectedChoiceIds)) {
+          this.selectedChoiceIds[group.id] = group.max_choices === 1 ? null : [];
+        }
+      }
+    },
 
-      // Optional: Show a brief success feedback
-      this.$emit('item-added', { itemId, sizeId });
+    handleAddWithOptions() {
+      this.order.addItem(this.item.id, this.selectedSizeId, this.allSelectedChoiceIds);
+      this.$emit('item-added', { itemId: this.item.id, sizeId: this.selectedSizeId });
+      this.selectedSizeId = null;
+      this.selectedChoiceIds = {};
+    },
+
+    isChoiceSelectable(group, choiceId) {
+      const selected = this.selectedChoiceIds[group.id] || [];
+      if (selected.includes(choiceId)) return true;
+      return selected.length < group.max_choices;
+    },
+
+    choiceLabel(choice) {
+      if (choice.price_delta === 0) return `${choice.name} (ingyenes)`;
+      const sign = choice.price_delta > 0 ? '+' : '';
+      return `${choice.name} (${sign}${this.formatPrice(choice.price_delta)})`;
     },
 
     async toggleFavourite() {
@@ -225,9 +396,9 @@ export default {
         'tészta': 'mdi-pasta'
       };
       return iconMap[category.toLowerCase()] || 'mdi-food';
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -272,7 +443,7 @@ export default {
   transition: all 0.2s ease;
   border: 1px solid rgba(var(--v-theme-outline), 0.2);
   background: rgb(var(--v-theme-surface-container-low));
-   padding: 0;
+  padding: 0;
 }
 
 .size-card.available {
@@ -286,10 +457,21 @@ export default {
   box-shadow: 0 4px 12px rgba(var(--v-theme-primary), 0.15);
 }
 
+.size-card.selected {
+  border-color: rgba(var(--v-theme-secondary), 0.7);
+  background: rgba(var(--v-theme-secondary), 0.08);
+}
+
 .size-card.unavailable {
   background: rgb(var(--v-theme-surface-variant));
   border-color: rgb(var(--v-theme-outline));
   opacity: 0.6;
+}
+
+.option-groups-section {
+  border: 1px solid rgba(var(--v-theme-outline), 0.3);
+  border-radius: 8px;
+  padding: 12px;
 }
 
 .price-display {

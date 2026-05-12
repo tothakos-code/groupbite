@@ -68,8 +68,8 @@
           class="bg-surface user-panel"
         >
           <v-list-item
-            v-for="item in userBasketArray"
-            :key="`${item.item_id}-${item.size_id || 'default'}`"
+            v-for="(item, idx) in userBasketArray"
+            :key="`${item.item_id}-${item.size_id || 'default'}-${idx}`"
             class="compact-item px-4 py-2"
           >
             <template #prepend>
@@ -105,21 +105,47 @@
                   </span>
                 </v-list-item-title>
               </template>
-
               <div>
                 {{ item.item_name }}
-                <span
-                  v-if="item.size_name"
-                >
-                  ({{ item.size_name }})
-                </span>
+                <span v-if="item.size_name">({{ item.size_name }})</span>
               </div>
             </v-tooltip>
 
+            <!-- Option selections: live data or snapshot fallback -->
+            <v-list-item-subtitle
+              v-if="(item.option_selections && item.option_selections.length) || item.extras_summary?.options?.length"
+              class="text-caption text-medium-emphasis"
+            >
+              {{ (item.option_selections?.length ? item.option_selections : item.extras_summary?.options || []).map(s => s.choice).join(', ') }}
+            </v-list-item-subtitle>
+
+            <!-- Bundle badge: live data or snapshot fallback -->
+            <v-chip
+              v-if="item.bundle_discount || item.extras_summary?.bundle"
+              size="x-small"
+              color="success"
+              variant="tonal"
+              prepend-icon="mdi-sale"
+              class="mt-1"
+            >
+              {{ (item.bundle_discount || item.extras_summary?.bundle).name }}
+            </v-chip>
+
             <template #append>
-              <span class="text-body-2 font-weight-medium ms-2">
-                {{ item.price }} Ft
-              </span>
+              <div class="text-end ms-2">
+                <div
+                  v-if="item.bundle_discount || item.extras_summary?.bundle"
+                  class="text-caption text-medium-emphasis text-decoration-line-through"
+                >
+                  {{ (item.bundle_discount || item.extras_summary?.bundle).original_price }} Ft
+                </div>
+                <span
+                  class="text-body-2 font-weight-medium"
+                  :class="(item.bundle_discount || item.extras_summary?.bundle) ? 'text-success' : ''"
+                >
+                  {{ item.effective_price ?? item.price }} Ft
+                </span>
+              </div>
             </template>
           </v-list-item>
 
@@ -205,7 +231,7 @@ const itemCount = computed(() => {
 const basketTotal = computed(() => {
   let sum = 0
   userBasketArray.value.forEach((entry) => {
-    sum += Number(entry.quantity) * Number(entry.price)
+    sum += Number(entry.quantity) * Number(entry.effective_price ?? entry.price)
   })
   sum += Math.ceil(props.transportFee)
   return sum

@@ -89,8 +89,8 @@
         density="comfortable"
       >
         <v-list-item
-          v-for="item in userBasket"
-          :key="`${item.item_id}-${item.size_id || 'default'}`"
+          v-for="(item, idx) in userBasket"
+          :key="`${item.item_id}-${item.size_id || 'default'}-${idx}`"
           class="basket-item"
         >
           <template #prepend>
@@ -126,29 +126,57 @@
                 </span>
               </v-list-item-title>
             </template>
-
             <div>
               {{ item.item_name }}
-              <span
-                v-if="item.size_name"
-              >
-                ({{ item.size_name }})
-              </span>
+              <span v-if="item.size_name">({{ item.size_name }})</span>
             </div>
           </v-tooltip>
 
+          <!-- Option selections: live data or snapshot fallback -->
+          <v-list-item-subtitle
+            v-if="(item.option_selections && item.option_selections.length) || item.extras_summary?.options?.length"
+            class="text-caption text-medium-emphasis mt-1"
+          >
+            {{ (item.option_selections?.length ? item.option_selections : item.extras_summary?.options || []).map(s => s.choice).join(', ') }}
+          </v-list-item-subtitle>
+
+          <!-- Bundle discount badge: live data or snapshot fallback -->
+          <v-chip
+            v-if="item.bundle_discount || item.extras_summary?.bundle"
+            size="x-small"
+            color="success"
+            variant="tonal"
+            prepend-icon="mdi-sale"
+            class="mt-1"
+          >
+            {{ (item.bundle_discount || item.extras_summary?.bundle).name }}
+            <template v-if="(item.bundle_discount || item.extras_summary?.bundle).applied_delta">
+              : {{ formatDelta((item.bundle_discount || item.extras_summary?.bundle).applied_delta) }}
+            </template>
+          </v-chip>
 
           <template #append>
             <div class="d-flex align-center">
-              <span class="text-h6 font-weight-bold mx-2">
-                {{ item.price }} Ft
-              </span>
+              <div class="text-end me-1">
+                <div
+                  v-if="item.bundle_discount || item.extras_summary?.bundle"
+                  class="text-caption text-medium-emphasis text-decoration-line-through"
+                >
+                  {{ (item.bundle_discount || item.extras_summary?.bundle).original_price }} Ft
+                </div>
+                <span
+                  class="text-h6 font-weight-bold"
+                  :class="(item.bundle_discount || item.extras_summary?.bundle) ? 'text-success' : ''"
+                >
+                  {{ item.effective_price ?? item.price }} Ft
+                </span>
+              </div>
               <v-btn
                 variant="text"
                 color="error"
                 size="small"
                 icon="mdi-close"
-                @click="emit('remove-item', item.item_id, item.size_id)"
+                @click="emit('remove-item', item.item_id, item.size_id, item.option_choice_ids || [])"
               />
             </div>
           </template>
@@ -210,6 +238,12 @@ const itemQuantityPulse = ref(false)
 watch(() => props.userBasket, () => {
   itemQuantityPulse.value = true
 }, { deep: true })
+
+function formatDelta(delta) {
+  if (!delta) return ''
+  const sign = delta > 0 ? '+' : ''
+  return `${sign}${delta} Ft`
+}
 </script>
 
 <style scoped>

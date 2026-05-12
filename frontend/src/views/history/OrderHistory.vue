@@ -282,24 +282,48 @@
               <v-expansion-panel-text>
                 <v-list dense>
                   <v-list-item
-                    v-for="item in order.order_items"
-                    :key="item.id"
+                    v-for="(item, idx) in order.order_items"
+                    :key="`${item.id}-${idx}`"
                     class="px-0"
                   >
                     <div class="d-flex justify-space-between align-center">
-                      <div>
+                      <div class="flex-grow-1">
                         <v-list-item-title class="font-weight-medium">
                           {{ item.item_name }}
                         </v-list-item-title>
                         <v-list-item-subtitle>
-                          Size: {{ item.size_label }}
-                          <span v-if="item.count > 1">
-                            • Quantity: {{ item.count }}
-                          </span>
+                          {{ item.size_label }}
+                          <span v-if="item.count > 1">• {{ item.count }} db</span>
                         </v-list-item-subtitle>
+
+                        <!-- Option selections from snapshot -->
+                        <div
+                          v-if="item.extras_summary && item.extras_summary.options && item.extras_summary.options.length"
+                          class="text-caption text-medium-emphasis mt-1"
+                        >
+                          {{ item.extras_summary.options.map(o => o.choice).join(', ') }}
+                        </div>
+
+                        <!-- Bundle discount from snapshot -->
+                        <v-chip
+                          v-if="item.extras_summary && item.extras_summary.bundle"
+                          size="x-small"
+                          color="success"
+                          variant="tonal"
+                          prepend-icon="mdi-sale"
+                          class="mt-1"
+                        >
+                          {{ item.extras_summary.bundle.name }}: {{ formatDelta(item.extras_summary.bundle.applied_delta) }}
+                        </v-chip>
                       </div>
-                      <div class="text-right">
-                        <div class="font-weight-medium">
+                      <div class="text-right ms-3">
+                        <div
+                          v-if="item.extras_summary && item.extras_summary.bundle"
+                          class="text-caption text-medium-emphasis text-decoration-line-through"
+                        >
+                          {{ item.extras_summary.bundle.original_price }} Ft
+                        </div>
+                        <div class="font-weight-medium" :class="item.extras_summary && item.extras_summary.bundle ? 'text-success' : ''">
                           {{ item.total_price }} Ft
                         </div>
                         <div class="text-caption grey--text">
@@ -415,6 +439,10 @@ export default {
             this.totalCount = response.data.data.total_count;
             this.isLoading = false;
         })
+    },
+    formatDelta(delta) {
+      if (!delta) return '0 Ft'
+      return (delta > 0 ? '+' : '') + delta + ' Ft'
     },
     formatDate(dateString) {
       const date = new Date(dateString)

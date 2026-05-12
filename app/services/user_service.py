@@ -277,6 +277,7 @@ class UserService:
                     "count": item.count,
                     "unit_price": item.unit_price,
                     "total_price": item.total_price,
+                    "extras_summary": item.extras_summary,
                 }
             )
             orders_dict[order_id]["total_price"] += item.total_price

@@ -6,6 +6,7 @@ from app.entities.menu_item import MenuItem
 from app.entities.size import Size
 from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.menu_repository import MenuRepository
+from app.repositories.option_group_repository import OptionGroupRepository
 
 
 class MenuService:
@@ -68,6 +69,9 @@ class MenuService:
             active=False,
         )
 
+        og_repo = OptionGroupRepository(db)
+        orig_option_groups = {item.id: list(item.option_groups) for item in orig_menu.items}
+
         for item in orig_menu.items:
             menu_item = MenuItem(
                 name=item.name,
@@ -89,7 +93,14 @@ class MenuService:
                 )
 
             new_menu.items.append(menu_item)
+
         menu_repo.save(new_menu)
+        db.flush()
+
+        for orig_item, new_item in zip(orig_menu.items, new_menu.items):
+            for idx, group in enumerate(orig_option_groups[orig_item.id]):
+                og_repo.assign_to_item(group.id, new_item.id, index=idx)
+
         return new_menu
 
     @staticmethod

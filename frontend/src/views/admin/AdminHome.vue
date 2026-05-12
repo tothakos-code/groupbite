@@ -103,7 +103,7 @@ export default {
   },
   data() {
     return {
-      navCollapsed: false,
+      navCollapsed: !!this.$route?.params?.id,
       menuItems: [
         { label: 'Üzlet kezelő',  path: '/admin/vendors',  icon: 'mdi-store',          color: 'primary' },
         { label: 'Felhasználók',  path: '/admin/users',    icon: 'mdi-account-group',  color: 'primary' },
@@ -112,6 +112,13 @@ export default {
         { label: 'Beállítások',   path: '/admin/settings', icon: 'mdi-cog',            color: 'primary' },
       ],
     }
+  },
+  watch: {
+    '$route'(to) {
+      if (to.params.id) {
+        this.navCollapsed = true
+      }
+    },
   },
   methods: {
     isActive(path) {

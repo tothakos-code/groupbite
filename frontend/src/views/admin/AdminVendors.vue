@@ -129,7 +129,9 @@
               {{ vendor.active ? 'Deaktiválás' : 'Aktiválás' }}
             </v-btn>
             <v-spacer />
-            <v-icon color="grey">mdi-chevron-right</v-icon>
+            <v-icon color="grey">
+              mdi-chevron-right
+            </v-icon>
           </v-card-actions>
         </v-card>
 
@@ -511,14 +513,6 @@ const openVendorConfiguration = (vendorId) => {
     vendorStore.selectedVendor = vendor
   }
   router.push({ path: `/admin/${vendorId}/config` })
-}
-
-const openVendorMenuManager = (vendorId) => {
-  const vendor = allVendorList.value.find(v => v.id === vendorId)
-  if (vendor) {
-    vendorStore.selectedVendor = vendor
-  }
-  router.push({ path: `/admin/${vendorId}/menu` })
 }
 
 const addVendor = () => {

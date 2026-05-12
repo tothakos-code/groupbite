@@ -861,14 +861,13 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useAuth } from "@/stores/auth"
 import { useMenuStore } from "@/stores/menu"
 import { useVendorStore } from "@/stores/vendor"
 
 // Composables
 const route = useRoute()
-const router = useRouter()
 const auth = useAuth()
 const menuStore = useMenuStore()
 const vendorStore = useVendorStore()
@@ -1237,8 +1236,10 @@ const duplicateMenu = async (menuId) => {
   }
 }
 
+const emit = defineEmits(['select-menu'])
+
 const openItemManager = (menuId) => {
-  router.push({ path: `/admin/${route.params.id}/menu/${menuId}` })
+  emit('select-menu', menuId)
 }
 
 // Lifecycle

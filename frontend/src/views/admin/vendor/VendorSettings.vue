@@ -84,12 +84,6 @@
                       >
                         {{ section.label }}
                       </v-list-item-title>
-                      <template
-                        v-if="!navCollapsed && section.navigate"
-                        #append
-                      >
-                        <v-icon size="small">mdi-open-in-new</v-icon>
-                      </template>
                     </v-list-item>
                   </template>
                 </v-tooltip>
@@ -155,8 +149,27 @@
               mode="out-in"
             >
               <div :key="activeSection">
+                <VendorMenuManager
+                  v-if="activeSection === 'menu' && !selectedMenuId"
+                  :key="'menu-' + $route.params.id"
+                  @select-menu="selectedMenuId = $event"
+                />
+                <VendorItemManager
+                  v-else-if="activeSection === 'menu' && selectedMenuId"
+                  :key="'items-' + selectedMenuId"
+                  :inline-menu-id="selectedMenuId"
+                  @back="selectedMenuId = null"
+                />
+                <VendorOptionGroupManager
+                  v-else-if="activeSection === 'option-groups'"
+                  :key="'og-' + $route.params.id"
+                />
+                <VendorBundleManager
+                  v-else-if="activeSection === 'bundles'"
+                  :key="'b-' + $route.params.id"
+                />
                 <CategoryManager
-                  v-if="activeSection === 'categories'"
+                  v-else-if="activeSection === 'categories'"
                   :vendor-id="$route.params.id"
                 />
                 <GeneralSettings
@@ -208,6 +221,10 @@ import OrderTimingSettings from '@/components/vendor-settings/OrderTimingSetting
 import AutoEmailSettings from '@/components/vendor-settings/AutoEmailSettings.vue'
 import PluginSettings from '@/components/vendor-settings/PluginSettings.vue'
 import CategoryManager from '@/components/item-manager/CategoryManager.vue'
+import VendorMenuManager from '@/views/admin/vendor/VendorMenuManager.vue'
+import VendorItemManager from '@/views/admin/vendor/VendorItemManager.vue'
+import VendorOptionGroupManager from '@/views/admin/vendor/VendorOptionGroupManager.vue'
+import VendorBundleManager from '@/views/admin/vendor/VendorBundleManager.vue'
 
 export default {
   name: 'VendorSettings',
@@ -219,6 +236,10 @@ export default {
     AutoEmailSettings,
     PluginSettings,
     CategoryManager,
+    VendorMenuManager,
+    VendorItemManager,
+    VendorOptionGroupManager,
+    VendorBundleManager,
   },
   setup() {
     const auth = useAuth()
@@ -236,10 +257,13 @@ export default {
       saving: false,
       smtpStatus: false,
       navCollapsed: false,
-      activeSection: 'general',
+      activeSection: this.$route.params.section || 'general',
+      selectedMenuId: null,
       sections: [
-        { id: 'menu',       label: 'Menükezelés',          icon: 'mdi-food',          color: 'primary', navigate: true },
-        { id: 'categories', label: 'Kategóriakezelés',     icon: 'mdi-tag-multiple',  color: 'primary' },
+        { id: 'menu',          label: 'Menükezelés',          icon: 'mdi-food',         color: 'primary' },
+        { id: 'option-groups', label: 'Opció csoportok',      icon: 'mdi-tune',         color: 'primary' },
+        { id: 'bundles',       label: 'Menü ajánlatok',       icon: 'mdi-tag-multiple', color: 'primary' },
+        { id: 'categories',    label: 'Kategóriakezelés',     icon: 'mdi-tag-multiple', color: 'primary' },
         { id: '_divider', divider: true },
         { id: 'general',    label: 'Általános',            icon: 'mdi-cog',           color: 'primary' },
         { id: 'ui',         label: 'Felhasználói felület', icon: 'mdi-palette',       color: 'primary' },
@@ -249,16 +273,19 @@ export default {
       ],
     }
   },
+  watch: {
+    '$route.params.section'(section) {
+      if (section) this.activeSection = section
+    },
+  },
   mounted() {
     this.getSettings()
   },
   methods: {
     handleNavClick(section) {
-      if (section.navigate) {
-        this.router.push(`/admin/${this.$route.params.id}/menu`)
-      } else {
-        this.activeSection = section.id
-      }
+      this.activeSection = section.id
+      if (section.id === 'menu') this.selectedMenuId = null
+      this.$router.push({ params: { section: section.id } })
     },
 
     async getSettings() {

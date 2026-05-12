@@ -7,8 +7,16 @@
     <v-row
       align="center"
       no-gutters
+      class="mb-2"
     >
-      <v-col>
+      <v-col class="d-flex align-center gap-2">
+        <v-btn
+          v-if="inlineMenuId"
+          icon="mdi-arrow-left"
+          variant="text"
+          size="small"
+          @click="$emit('back')"
+        />
         <h2 class="text-h5 font-weight-bold">
           <v-icon class="me-2">
             mdi-food
@@ -22,7 +30,7 @@
     <ItemForm
       v-model="newItem"
       :loading="isLoading"
-      :vendor-id="$route.params.id"
+      :vendor-id="activeVendorId"
       @submit="addToMenu"
     />
 
@@ -41,7 +49,7 @@
       :items="items"
       :loading="isLoading"
       :sortable="true"
-      :vendor-id="$route.params.id"
+      :vendor-id="activeVendorId"
       @edit-item="editItem"
       @update-item="updateItem"
       @cancel-edit="cancelEditItem"
@@ -74,7 +82,7 @@
     <MenuSelectionDialog
       v-model="showMovePopup"
       title="Étel áthelyezése"
-      :getter-func="() => vendorStore.fetchMenus($route.params.id)"
+      :getter-func="() => vendorStore.fetchMenus(activeVendorId)"
       @confirm="moveItem"
     />
 
@@ -82,7 +90,7 @@
     <MenuSelectionDialog
       v-model="showCopyPopup"
       title="Étel másolása"
-      :getter-func="() => vendorStore.fetchMenus($route.params.id)"
+      :getter-func="() => vendorStore.fetchMenus(activeVendorId)"
       @confirm="copyItem"
     />
 
@@ -126,6 +134,10 @@ export default {
     ItemsDataTable,
     MenuSelectionDialog,
   },
+  props: {
+    inlineMenuId: { type: [String, Number], default: null },
+  },
+  emits: ['back'],
   setup() {
     const auth = useAuth();
     const menuStore = useMenuStore();
@@ -161,9 +173,13 @@ export default {
       }
     };
   },
+  computed: {
+    activeMenuId() { return this.inlineMenuId || this.$route.params.menuId },
+    activeVendorId() { return this.$route.params.id },
+  },
   mounted() {
     this.getItemList();
-    this.categoriesStore.fetchByVendor(this.$route.params.id);
+    this.categoriesStore.fetchByVendor(this.activeVendorId);
   },
   methods: {
     showSnackbar(text, color = 'success') {
@@ -178,7 +194,7 @@ export default {
     async getItemList() {
       try {
         this.isLoading = true;
-        const response = await this.menuStore.fetch(this.$route.params.menuId, {
+        const response = await this.menuStore.fetch(this.activeMenuId, {
           "search": this.searchString ? this.searchString : null,
           "limit": this.limit,
           "page": this.limit ? this.currentPage : null
@@ -208,14 +224,14 @@ export default {
 
     async addToMenu() {
       try {
-        this.newItem.menu_id = this.$route.params.menuId;
-        this.newItem.vendor_id = this.$route.params.id;
+        this.newItem.menu_id = this.activeMenuId;
+        this.newItem.vendor_id = this.activeVendorId;
         const response = await this.itemStore.add(this.newItem);
 
         if (response.status === 201) {
           this.showSnackbar('Étel sikeresen hozzáadva');
           this.newItem = { name: "", description: "", category: "", index: 0 };
-          this.categoriesStore.fetchByVendor(this.$route.params.id);
+          this.categoriesStore.fetchByVendor(this.activeVendorId);
           this.getItemList();
         }
       } catch (error) {
@@ -242,14 +258,14 @@ export default {
         const itemData = { ...item };
         delete itemData.isEditing;
         delete itemData.sizes;
-        itemData.menu_id = this.$route.params.menuId;
-        itemData.vendor_id = this.$route.params.id;
+        itemData.menu_id = this.activeMenuId;
+        itemData.vendor_id = this.activeVendorId;
 
         const response = await this.itemStore.update(item.id, itemData);
 
         if (response.status === 200) {
           this.showSnackbar('Étel sikeresen frissítve');
-          this.categoriesStore.fetchByVendor(this.$route.params.id);
+          this.categoriesStore.fetchByVendor(this.activeVendorId);
           this.getItemList();
         }
       } catch (error) {
@@ -265,8 +281,8 @@ export default {
         const sizes = [...itemData.sizes];
         delete itemData.sizes;
         itemData.name = `${itemData.name} (másolat)`;
-        itemData.menu_id = this.$route.params.menuId;
-        itemData.vendor_id = this.$route.params.id;
+        itemData.menu_id = this.activeMenuId;
+        itemData.vendor_id = this.activeVendorId;
 
         const response = await this.itemStore.add(itemData);
 
@@ -303,7 +319,7 @@ export default {
         delete item.isEditing;
         delete item.sizes;
         item.menu_id = menu.id;
-        item.vendor_id = this.$route.params.id;
+        item.vendor_id = this.activeVendorId;
 
         const response = await this.itemStore.update(item.id, item);
 
@@ -325,7 +341,7 @@ export default {
         delete item.sizes;
         delete item.id;
         item.menu_id = menu.id;
-        item.vendor_id = this.$route.params.id;
+        item.vendor_id = this.activeVendorId;
 
         const response = await this.itemStore.add(item);
 

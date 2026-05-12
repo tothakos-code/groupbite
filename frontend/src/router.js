@@ -6,8 +6,6 @@ const MenuView = () => import("./views/menu/MenuRender.vue");
 const MenuLoading = () => import("./views/menu//MenuLoading.vue");
 const AdminSettingsView = () => import("./views/admin/AdminSettings.vue");
 const VendorSettings = () => import("./views/admin/vendor/VendorSettings.vue");
-const VendorMenuManager = () =>
-  import("./views/admin/vendor/VendorMenuManager.vue");
 const AdminVendorsView = () => import("./views/admin/AdminVendors.vue");
 const AdminOrdersView = () => import("./views/admin/AdminOrders.vue");
 const AdminUsersView = () => import("./views/admin/AdminUsers.vue");
@@ -89,12 +87,8 @@ const routes = [
         component: AdminVendorsView,
       },
       {
-        path: ":id/config",
+        path: ":id/config/:section?",
         component: VendorSettings,
-      },
-      {
-        path: ":id/menu",
-        component: VendorMenuManager,
       },
       {
         name: "vendorItems",

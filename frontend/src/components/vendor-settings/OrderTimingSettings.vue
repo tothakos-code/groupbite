@@ -10,7 +10,6 @@
       Rendelés időzítés beállítások
     </v-card-title>
     <v-card-text class="pa-4">
-
       <!-- Auto Order Creation Toggle -->
       <div class="mb-4">
         <v-switch
@@ -31,7 +30,6 @@
 
       <!-- Auto-creation dependent settings -->
       <div :class="{ 'section-disabled': !localSettings.auto_order_creation }">
-
         <!-- Order Duration -->
         <div class="mb-6">
           <div class="text-body-2 text-medium-emphasis mb-3">
@@ -158,7 +156,6 @@
             </v-col>
           </v-row>
         </div>
-
       </div>
 
       <v-divider class="my-6" />

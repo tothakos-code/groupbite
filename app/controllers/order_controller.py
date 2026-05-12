@@ -173,7 +173,7 @@ class OrderController:
     @validate_url_params(IDSchema())
     @handle_request
     def handle_add_to_basket(self, db, order_id, user_id, item_id, size_id):
-        option_choice_ids = (request.json or {}).get("option_choice_ids", [])
+        option_choice_ids = (request.get_json(silent=True, force=True) or {}).get("option_choice_ids", [])
         basket_item = self.order_service.add_to_basket(
             db, order_id, user_id, item_id, size_id,
             option_choice_ids=option_choice_ids,
@@ -205,7 +205,8 @@ class OrderController:
     @validate_url_params(IDSchema())
     @handle_request
     def handle_remove_from_basket(self, db, order_id, user_id, item_id, size_id):
-        self.order_service.remove_from_basket(db, order_id, user_id, item_id, size_id)
+        option_choice_ids = (request.get_json(silent=True, force=True) or {}).get("option_choice_ids", [])
+        self.order_service.remove_from_basket(db, order_id, user_id, item_id, size_id, option_choice_ids=option_choice_ids)
         db.commit()
         order = self.order_service.get_order_by_id(db, order_id)
         db.expire(order, ["items"])

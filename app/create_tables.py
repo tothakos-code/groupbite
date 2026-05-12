@@ -60,14 +60,16 @@ def downgrade_database_migration(app, revision: str = "-1", plugin: str = None):
 def migrate_database(app):
     """Automatically applies database migrations on startup."""
     with app.app_context():
-        logging.info("Applying database migrations...")
+        logging.getLogger("alembic.runtime.migration").setLevel(logging.WARNING)
 
         db_url = app.config["SQLALCHEMY_DATABASE_URI"]
 
+        logging.info("Applying main app migrations...")
         main_cfg = Config()
         main_cfg.set_main_option("script_location", "db/migrations")
         main_cfg.set_main_option("sqlalchemy.url", db_url)
         command.upgrade(main_cfg, "head")
+        logging.info("Main app migrations applied.")
 
         if os.path.isdir("plugins"):
             for plugin in os.scandir("plugins"):
@@ -76,11 +78,10 @@ def migrate_database(app):
                 migrations_dir = os.path.join(plugin.path, "migrations")
                 if not os.path.isdir(os.path.join(migrations_dir, "versions")):
                     continue
-                logging.info("Applying plugin migrations for: %s", plugin.name)
+                logging.info("Applying migrations for plugin: %s", plugin.name)
                 plugin_cfg = Config()
                 plugin_cfg.set_main_option("script_location", migrations_dir)
                 plugin_cfg.set_main_option("sqlalchemy.url", db_url)
                 plugin_cfg.set_main_option("version_table", "alembic_version_plugins")
                 command.upgrade(plugin_cfg, "head")
-
-        logging.info("Database migrations applied.")
+                logging.info("Plugin migrations applied: %s", plugin.name)

@@ -60,5 +60,13 @@
       "menu_leves_ar": "Leves ára menüvel (Ft)",
       "foetel_ar": "Főétel ára (Ft)"
     }
+  },
+  "packaging": {
+    "fee_label": "Csomagolási díj",
+    "fee_suffix": "Ft",
+    "fee_inherited": "Kategóriától örökölt",
+    "fee_default_label": "Alapértelmezett csomagolási díj (Ft)",
+    "fee_column": "Csomag. díj",
+    "fee_basket_line": "+ Csomagolási díj"
   }
 }

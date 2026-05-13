@@ -17,12 +17,14 @@ class CategoryService:
         return CategoryRepository(db).find_by_vendor(vendor_id)
 
     @staticmethod
-    def update(db, category_id: int, name: str) -> Category:
+    def update(db, category_id: int, name: str, default_packaging_fee: int = None) -> Category:
         repo = CategoryRepository(db)
         category = repo.get_by_id(category_id)
         if not category:
             raise ValueError("Category not found")
         category.name = name.strip()
+        if default_packaging_fee is not None:
+            category.default_packaging_fee = default_packaging_fee
         db.flush()
         return category
 

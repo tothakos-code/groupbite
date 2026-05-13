@@ -29,6 +29,7 @@ class OrderItem(Base):
     size_label: Mapped[str]
     unit_price: Mapped[int]
     total_price: Mapped[int]
+    packaging_fee: Mapped[int] = mapped_column(default=0)
     extras_summary: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
     # Relationships (optional)

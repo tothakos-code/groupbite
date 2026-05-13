@@ -301,7 +301,15 @@
                           v-if="item.extras_summary && item.extras_summary.options && item.extras_summary.options.length"
                           class="text-caption text-medium-emphasis mt-1"
                         >
-                          {{ item.extras_summary.options.map(o => o.choice).join(', ') }}
+                          {{ item.extras_summary.options.map(o => o.delta ? `${o.choice} (${formatDelta(o.delta)})` : o.choice).join(', ') }}
+                        </div>
+
+                        <!-- Packaging fee from snapshot -->
+                        <div
+                          v-if="item.packaging_fee > 0"
+                          class="text-caption text-medium-emphasis mt-1"
+                        >
+                          + Csomagolási díj: {{ item.packaging_fee }} Ft
                         </div>
 
                         <!-- Bundle discount from snapshot -->

@@ -14,6 +14,7 @@ from app.utils.validators import IDSchema
 
 class CategorySchema(Schema):
     name = fields.Str(required=True)
+    default_packaging_fee = fields.Int(load_default=0)
 
 
 class CategoryController:
@@ -70,7 +71,7 @@ class CategoryController:
     @require_admin
     @handle_request
     def handle_update(self, db, data, vendor_id, category_id):
-        category = self.category_service.update(db, category_id, data["name"])
+        category = self.category_service.update(db, category_id, data["name"], data.get("default_packaging_fee"))
         return {"data": category.serialized}, 200
 
     @validate_url_params(IDSchema())

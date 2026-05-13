@@ -277,6 +277,7 @@ class UserService:
                     "count": item.count,
                     "unit_price": item.unit_price,
                     "total_price": item.total_price,
+                    "packaging_fee": item.packaging_fee,
                     "extras_summary": item.extras_summary,
                 }
             )

@@ -258,6 +258,8 @@ export default {
         const itemData = { ...item };
         delete itemData.isEditing;
         delete itemData.sizes;
+        delete itemData.option_groups;
+        delete itemData.effective_packaging_fee;
         itemData.menu_id = this.activeMenuId;
         itemData.vendor_id = this.activeVendorId;
 

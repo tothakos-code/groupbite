@@ -23,8 +23,10 @@ export const useCategoriesStore = defineStore("categories", {
       await this.fetchByVendor(vendorId);
       return response;
     },
-    async renameCategory(vendorId, categoryId, name) {
-      const response = await axios.put(`/api/vendor/${vendorId}/categories/${categoryId}`, { data: { name } });
+    async renameCategory(vendorId, categoryId, name, defaultPackagingFee = null) {
+      const response = await axios.put(`/api/vendor/${vendorId}/categories/${categoryId}`, {
+        data: { name, default_packaging_fee: defaultPackagingFee ?? 0 },
+      });
       await this.fetchByVendor(vendorId);
       return response;
     },

@@ -13,6 +13,7 @@ class Category(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     vendor_id: Mapped[UUID] = mapped_column(ForeignKey("vendor.id"))
     name: Mapped[str]
+    default_packaging_fee: Mapped[int] = mapped_column(default=0)
 
     items: Mapped[List["MenuItem"]] = relationship(back_populates="category_obj")
 
@@ -20,4 +21,4 @@ class Category(Base):
 
     @property
     def serialized(self):
-        return {"id": self.id, "vendor_id": str(self.vendor_id), "name": self.name}
+        return {"id": self.id, "vendor_id": str(self.vendor_id), "name": self.name, "default_packaging_fee": self.default_packaging_fee}

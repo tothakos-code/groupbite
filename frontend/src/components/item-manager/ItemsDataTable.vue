@@ -304,6 +304,37 @@
                     </v-chip>
                   </div>
 
+                  <!-- Packaging Fee -->
+                  <div
+                    class="px-2 text-center col-packaging-fee"
+                  >
+                    <v-text-field
+                      v-if="item.isEditing"
+                      v-model.number="item.packaging_fee"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      clearable
+                      :placeholder="`${getEffectivePackagingFee(item)} (Kat.)`"
+                      min="0"
+                      style="min-width: 100px"
+                      @click.stop=""
+                    />
+                    <v-chip
+                      v-else-if="getEffectivePackagingFee(item) > 0"
+                      size="small"
+                      :color="item.packaging_fee != null ? 'warning' : 'default'"
+                      variant="outlined"
+                    >
+                      {{ getEffectivePackagingFee(item) }} Ft
+                    </v-chip>
+                    <span
+                      v-else
+                      class="text-medium-emphasis text-caption"
+                    >—</span>
+                  </div>
+
                   <!-- Index -->
                   <div
                     class="px-2 text-center col-index"
@@ -608,6 +639,7 @@ export default {
         { title: 'Név', key: 'name', sortable: true },
         { title: 'Leírás', key: 'description', sortable: true },
         { title: 'Kategória', key: 'category', sortable: true },
+        { title: 'Csomag. díj', key: 'packaging_fee', sortable: true, width: '130px' },
         { title: 'Sorrend', key: 'index', sortable: true, width: '120px' },
         { title: 'Műveletek', key: 'actions', sortable: false, width: '300px' }
       ],
@@ -615,6 +647,7 @@ export default {
         { key: 'name', title: 'Név' },
         { key: 'description', title: 'Leírás' },
         { key: 'category', title: 'Kategória' },
+        { key: 'packaging_fee', title: 'Csomag. díj' },
         { key: 'index', title: 'Sorrend' }
       ]
     }
@@ -683,6 +716,13 @@ export default {
     this.cleanupDragListeners();
   },
   methods: {
+    getEffectivePackagingFee(item) {
+      if (item.packaging_fee != null) return item.packaging_fee;
+      const cats = this.vendorId ? (this.categoriesStore.byVendor[this.vendorId] || []) : [];
+      const cat = cats.find(c => c.name === item.category);
+      return cat ? (cat.default_packaging_fee ?? 0) : 0;
+    },
+
     rowProps(data) {
       return {
         'data-item-id': data.item.id
@@ -1086,6 +1126,11 @@ export default {
 .col-category {
   width: 150px;
   min-width: 150px;
+}
+
+.col-packaging-fee {
+  width: 130px;
+  min-width: 130px;
 }
 
 .col-index {

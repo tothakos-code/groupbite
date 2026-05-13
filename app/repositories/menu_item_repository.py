@@ -91,12 +91,13 @@ class MenuItemRepository:
         self.db.flush()
         return menu_item
 
-    def update(self, menu_item, menu_id, name, description, index, category_id):
+    def update(self, menu_item, menu_id, name, description, index, category_id, packaging_fee=None):
         menu_item.name = name
         menu_item.menu_id = menu_id
         menu_item.description = description
         menu_item.index = index
         menu_item.category_id = category_id
+        menu_item.packaging_fee = packaging_fee
         return menu_item
 
     def delete(self, menu_item):

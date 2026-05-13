@@ -18,6 +18,12 @@
             >
               {{ item.description }}
             </p>
+            <p
+              v-if="item.effective_packaging_fee > 0"
+              class="text-caption text-medium-emphasis ma-0 mt-1"
+            >
+              + Csomagolási díj: {{ item.effective_packaging_fee }} Ft
+            </p>
           </div>
           <v-btn
             v-if="auth.isLoggedIn && vendorStore.selectedVendor?.settings?.show_favourites !== false"

@@ -68,18 +68,39 @@
               <v-list-item-title class="text-body-1">
                 {{ cat.name }}
               </v-list-item-title>
+              <v-list-item-subtitle
+                v-if="cat.default_packaging_fee > 0"
+                class="text-caption"
+              >
+                Alapértelmezett csomagolási díj: {{ cat.default_packaging_fee }} Ft
+              </v-list-item-subtitle>
             </template>
             <template v-else>
-              <v-text-field
-                v-model="editName"
-                density="compact"
-                variant="outlined"
-                hide-details
-                autofocus
-                style="max-width: 320px"
-                @keyup.enter="save(cat)"
-                @keyup.esc="cancelEdit"
-              />
+              <div class="d-flex gap-3 align-center flex-wrap pt-3">
+                <v-text-field
+                  v-model="editName"
+                  label="Kategória neve"
+                  density="compact"
+                  variant="outlined"
+                  hide-details
+                  autofocus
+                  style="max-width: 240px"
+                  @keyup.enter="save(cat)"
+                  @keyup.esc="cancelEdit"
+                />
+                <v-text-field
+                  v-model.number="editPackagingFee"
+                  label="Alapért. csomagolási díj (Ft)"
+                  type="number"
+                  density="compact"
+                  variant="outlined"
+                  hide-details
+                  style="max-width: 200px"
+                  min="0"
+                  @keyup.enter="save(cat)"
+                  @keyup.esc="cancelEdit"
+                />
+              </div>
             </template>
 
             <template #append>
@@ -213,6 +234,7 @@ export default {
       creating: false,
       editingId: null,
       editName: "",
+      editPackagingFee: 0,
       saving: false,
       deleteDialog: false,
       categoryToDelete: null,
@@ -250,22 +272,26 @@ export default {
     startEdit(cat) {
       this.editingId = cat.id;
       this.editName = cat.name;
+      this.editPackagingFee = cat.default_packaging_fee ?? 0;
     },
 
     cancelEdit() {
       this.editingId = null;
       this.editName = "";
+      this.editPackagingFee = 0;
     },
 
     async save(cat) {
-      if (!this.editName.trim() || this.editName.trim() === cat.name) {
+      const nameChanged = this.editName.trim() && this.editName.trim() !== cat.name;
+      const feeChanged = (this.editPackagingFee ?? 0) !== (cat.default_packaging_fee ?? 0);
+      if (!this.editName.trim() || (!nameChanged && !feeChanged)) {
         this.cancelEdit();
         return;
       }
       try {
         this.saving = true;
-        await this.categoriesStore.renameCategory(this.vendorId, cat.id, this.editName.trim());
-        this.showSnackbar("Kategória sikeresen átnevezve");
+        await this.categoriesStore.renameCategory(this.vendorId, cat.id, this.editName.trim(), this.editPackagingFee ?? 0);
+        this.showSnackbar("Kategória sikeresen frissítve");
       } catch {
         this.showSnackbar("Hiba történt az átnevezés során", "error");
       } finally {

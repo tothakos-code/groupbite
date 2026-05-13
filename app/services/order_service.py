@@ -96,6 +96,7 @@ class OrderService:
                     "size_name": item.size_label,
                     "price": item.unit_price,
                     "effective_price": item.unit_price,
+                    "packaging_fee": item.packaging_fee,
                     "category": None,
                     "quantity": item.count,
                     "total_price": item.total_price,
@@ -139,6 +140,7 @@ class OrderService:
             ]
 
             base_price = item.size.price
+            pkg_fee = item.item.effective_packaging_fee
             match = matches.get((user_id_str, item.menu_item_id, item.size_id))
             matched_units = match["matched_units"] if match else 0
             total_units = item.count
@@ -146,13 +148,15 @@ class OrderService:
             option_choice_ids = [s.choice.id for s in selections if s.choice]
 
             def _make_item_data(qty, extra_delta, bundle_info):
-                effective = base_price + option_delta + extra_delta
+                effective = base_price + option_delta + extra_delta + pkg_fee
                 return {
                     "item_id": item.item.id,
                     "size_id": item.size.id,
                     "item_name": item.item.name,
                     "size_name": item.size.name,
                     "price": base_price,
+                    "option_delta": option_delta,
+                    "packaging_fee": pkg_fee,
                     "effective_price": effective,
                     "category_id": item.item.category_id,
                     "category": item.item.category_obj.name if item.item.category_obj else None,
@@ -592,6 +596,7 @@ class OrderService:
                 ]
 
                 base_price = basket_item.size.price
+                pkg_fee = basket_item.item.effective_packaging_fee
                 price_with_options = base_price + option_delta
                 match = matches.get((user_id_str, basket_item.menu_item_id, basket_item.size_id))
                 matched_units = match["matched_units"] if match else 0
@@ -620,19 +625,20 @@ class OrderService:
                         size_label=basket_item.size.name,
                         unit_price=unit_price,
                         total_price=unit_price * count,
+                        packaging_fee=pkg_fee,
                         extras_summary=extras if extras else None,
                     )
 
                 if matched_units == 0:
-                    items_to_save = [_make_order_item(total_units, price_with_options, None)]
+                    items_to_save = [_make_order_item(total_units, price_with_options + pkg_fee, None)]
                 elif matched_units == total_units:
                     discounted_price = price_with_options + match["applied_delta"]
-                    items_to_save = [_make_order_item(total_units, discounted_price, match)]
+                    items_to_save = [_make_order_item(total_units, discounted_price + pkg_fee, match)]
                 else:
                     discounted_price = price_with_options + match["applied_delta"]
                     items_to_save = [
-                        _make_order_item(matched_units, discounted_price, match),
-                        _make_order_item(total_units - matched_units, price_with_options, None),
+                        _make_order_item(matched_units, discounted_price + pkg_fee, match),
+                        _make_order_item(total_units - matched_units, price_with_options + pkg_fee, None),
                     ]
 
                 for order_item in items_to_save:

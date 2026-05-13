@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from marshmallow import Schema, fields, validate
 from sqlalchemy import ForeignKey
@@ -16,6 +16,7 @@ class BaseItemSchema(Schema):
     description = fields.Str(allow_none=True)
     category = fields.Str(allow_none=True, load_default=None)
     category_id = fields.Int(allow_none=True, load_default=None)
+    packaging_fee = fields.Int(allow_none=True, load_default=None)
     index = fields.Int(required=True)
 
 
@@ -46,6 +47,7 @@ class MenuItem(Base):
     description: Mapped[str] = mapped_column(nullable=True)
     index: Mapped[int]
     category_id: Mapped[int] = mapped_column(ForeignKey("category.id"))
+    packaging_fee: Mapped[Optional[int]] = mapped_column(nullable=True)
 
     sizes: Mapped[List["Size"]] = relationship(
         back_populates="menu_item",
@@ -66,6 +68,12 @@ class MenuItem(Base):
         order_by="OptionGroup.index",
     )
 
+    @property
+    def effective_packaging_fee(self) -> int:
+        if self.packaging_fee is not None:
+            return self.packaging_fee
+        return self.category_obj.default_packaging_fee if self.category_obj else 0
+
     def __repr__(self):
         return f"MenuItem<{self.id},menu_id={self.menu_id},index={self.index},category_id={self.category_id}>"
 
@@ -80,5 +88,7 @@ class MenuItem(Base):
             "sizes": [size.serialized for size in self.sizes],
             "category_id": self.category_id,
             "category": self.category_obj.name if self.category_obj else None,
+            "packaging_fee": self.packaging_fee,
+            "effective_packaging_fee": self.effective_packaging_fee,
             "option_groups": [g.serialized for g in self.option_groups],
         }

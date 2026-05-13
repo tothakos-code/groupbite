@@ -39,6 +39,7 @@ class MenuItemService:
             data["description"],
             data["index"],
             category.id,
+            packaging_fee=data.get("packaging_fee"),
         )
 
     @staticmethod

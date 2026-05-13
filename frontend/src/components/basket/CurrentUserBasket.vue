@@ -140,6 +140,14 @@
             {{ (item.option_selections?.length ? item.option_selections : item.extras_summary?.options || []).map(s => s.choice).join(', ') }}
           </v-list-item-subtitle>
 
+          <!-- Packaging fee line -->
+          <v-list-item-subtitle
+            v-if="item.packaging_fee > 0"
+            class="text-caption text-medium-emphasis mt-1"
+          >
+            + Csomagolási díj: {{ item.packaging_fee }} Ft
+          </v-list-item-subtitle>
+
           <!-- Bundle discount badge: live data or snapshot fallback -->
           <v-chip
             v-if="item.bundle_discount || item.extras_summary?.bundle"

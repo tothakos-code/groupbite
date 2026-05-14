@@ -1,8 +1,10 @@
 from app.entities.basket_option_selection import BasketOptionSelection
+from app.entities.stock_history import StockChangeReason, StockHistory
 from app.entities.user_basket import UserBasket
 from app.repositories.basket_option_selection_repository import BasketOptionSelectionRepository
 from app.repositories.option_group_repository import OptionGroupRepository
 from app.repositories.size_repository import SizeRepository
+from app.repositories.stock_history_repository import StockHistoryRepository
 from app.repositories.user_basket_repository import UserBasketRepository
 from app.services.bundle_engine import bundle_engine
 
@@ -23,6 +25,10 @@ class UserBasketService:
         size = size_repo.get_by_id(size_id)
         if not size.unlimited:
             size_repo.increment_quantity(size)
+            StockHistoryRepository(db).save(StockHistory(
+                size_id=size_id, quantity_change=+1,
+                reason=StockChangeReason.ORDER, performed_by=user_id,
+            ))
 
         if basket_item.count == 1:
             BasketOptionSelectionRepository(db).delete_by_basket_entry(
@@ -52,6 +58,11 @@ class UserBasketService:
         size = size_repo.get_by_id(size_id)
         if size.unlimited or size.quantity > 0:
             size_repo.decrement_quantity(size)
+            if not size.unlimited:
+                StockHistoryRepository(db).save(StockHistory(
+                    size_id=size_id, quantity_change=-1,
+                    reason=StockChangeReason.ORDER, performed_by=user_id,
+                ))
         else:
             raise ValueError("Item out of stock")
 
@@ -86,16 +97,30 @@ class UserBasketService:
 
     @staticmethod
     def clear_items(db, user_id, order_id):
+        items = UserBasketRepository(db).find_user_basket(order_id, user_id)
+        history_repo = StockHistoryRepository(db)
+        for item in items:
+            if not item.size.unlimited:
+                item.size.quantity += item.count
+                history_repo.save(StockHistory(
+                    size_id=item.size_id, quantity_change=item.count,
+                    reason=StockChangeReason.ORDER, performed_by=user_id,
+                ))
+        db.flush()
         BasketOptionSelectionRepository(db).delete_by_user_order(user_id, order_id)
         UserBasketRepository(db).clear_items(user_id, order_id)
         bundle_engine.invalidate(order_id)
 
     @staticmethod
-    def delete(db, basket_item):
-        user_basket_repo = UserBasketRepository(db)
+    def delete(db, basket_item, user_id=None):
+        size_repo = SizeRepository(db)
         if not basket_item.size.unlimited:
-            basket_item.size.quantity += basket_item.count
-        user_basket_repo.delete(basket_item)
+            size_repo.increment_quantity(basket_item.size)
+            StockHistoryRepository(db).save(StockHistory(
+                size_id=basket_item.size_id, quantity_change=basket_item.count,
+                reason=StockChangeReason.ORDER, performed_by=user_id,
+            ))
+        UserBasketRepository(db).delete(basket_item)
 
     @staticmethod
     def get_user_count_by_order(db, order_ids):

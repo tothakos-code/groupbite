@@ -61,6 +61,52 @@
       "foetel_ar": "Főétel ára (Ft)"
     }
   },
+  "stats": {
+    "tab": {
+      "inventory": "Készlet",
+      "sales": "Értékesítés",
+      "performance": "Teljesítmény"
+    },
+    "chart": {
+      "stockLevels": "Készletszintek",
+      "salesTrend": "Bevételi trend",
+      "popularItems": "Legnépszerűbb termékek",
+      "vendorTrend": "Rendelési volumen",
+      "stockHistory": "Készlet előzmény"
+    },
+    "kpi": {
+      "totalRevenue": "Összes bevétel",
+      "avgOrderValue": "Átlagos rendelés érték",
+      "ordersPerDay": "Napi átlag rendelés (30n)",
+      "mostPopular": "Legnépszerűbb termék"
+    },
+    "preset": {
+      "last30": "Utolsó 30 nap",
+      "currentMonth": "Aktuális hónap",
+      "lastMonth": "Előző hónap",
+      "sinceLastTopup": "Utolsó feltöltés óta",
+      "allTime": "Összes"
+    },
+    "alert": {
+      "outOfStock": "Elfogyott",
+      "critical": "Kritikus",
+      "low": "Alacsony"
+    },
+    "topup": {
+      "title": "Feltöltés",
+      "quantity": "Mennyiség",
+      "note": "Megjegyzés (opcionális)",
+      "confirm": "Feltöltés"
+    },
+    "table": {
+      "user": "Felhasználó",
+      "totalSpend": "Összes költés",
+      "orderCount": "Rendelések száma"
+    },
+    "button": {
+      "label": "Statisztika"
+    }
+  },
   "packaging": {
     "fee_label": "Csomagolási díj",
     "fee_suffix": "Ft",

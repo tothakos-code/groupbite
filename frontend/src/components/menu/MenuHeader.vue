@@ -90,6 +90,18 @@
           :enable-full-automatic-order="vendorSettings.enable_full_automatic_order"
           :enable-manual-order="vendorSettings.enable_manual_order"
         />
+
+        <v-btn
+          v-if="auth.user?.admin && menuType === 'own_inventory'"
+          color="primary"
+          variant="elevated"
+          size="small"
+          class="ms-2"
+          prepend-icon="mdi-chart-line"
+          @click="router.push({ name: 'stats', params: { vendorId } })"
+        >
+          {{ $t('stats.button.label') }}
+        </v-btn>
       </div>
     </v-col>
   </v-row>
@@ -97,12 +109,16 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import OrderState from '@/components/menu/OrderState.vue'
 import AutoEmailOrderInfo from '@/components/menu/AutoOrderInfo.vue'
 import TransferPopup from '@/components/TransferPopup.vue'
 import { useOrderStore } from '@/stores/order'
+import { useAuth } from '@/stores/auth'
 
 const orderStore = useOrderStore()
+const auth = useAuth()
+const router = useRouter()
 
 const prop = defineProps({
   vendorTitle: { type: String, required: true },
@@ -110,7 +126,8 @@ const prop = defineProps({
   vendorSettings: { type: Object, required: true },
   userCount: { type: Number, required: true },
   vendorLink: { type: String, default: '' },
-  notificationStatus: { type: Boolean, default: false }
+  notificationStatus: { type: Boolean, default: false },
+  menuType: { type: String, default: '' },
 })
 
 const emit = defineEmits(['subscribe', 'unsubscribe-requested'])

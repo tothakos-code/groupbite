@@ -137,8 +137,9 @@ const routes = [
   },
   {
     name: "stats",
-    path: "/stats",
+    path: "/stats/:vendorId",
     component: VendorStatsView,
+    meta: { requiresAdmin: true },
   },
   {
     name: "NotFound",
@@ -159,6 +160,10 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+  if (to.meta.requiresAdmin && !useAuth().user?.admin) {
+    return next({ name: "home" });
+  }
+
   const vendorStore = useVendorStore();
   if (vendorStore.routesLoaded) {
     next();

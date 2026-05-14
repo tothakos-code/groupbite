@@ -20,8 +20,8 @@ logger = logging.getLogger('alembic.env')
 
 # Function to filter out the "sessions" table from migrations, it is managed by Flask-Session
 def include_object(object, name, type_, reflected, compare_to):
-    if type_ == "table" and name == "sessions":
-        return False  # Skip this table
+    if type_ == "table" and name in ("sessions", "alembic_version_plugins"):
+        return False
     return True
 
 def get_metadata():

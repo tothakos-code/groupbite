@@ -16,6 +16,7 @@ from app.entities.option_choice import OptionChoice
 from app.entities.basket_option_selection import BasketOptionSelection
 from app.entities.bundle_discount import BundleDiscount
 from app.entities.bundle_slot import BundleSlot
+from app.entities.stock_history import StockHistory, StockChangeReason
 from sqlalchemy import event
 from flask_migrate import upgrade, migrate, stamp
 import logging

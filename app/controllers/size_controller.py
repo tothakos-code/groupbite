@@ -1,6 +1,6 @@
 import json
 
-from flask import Blueprint
+from flask import Blueprint, session
 
 from app.entities.size import BaseSizeSchema, BulkUpdateSizeSchema, Size, UpdateSizeSchema
 from app.repositories.size_repository import SizeRepository
@@ -62,7 +62,7 @@ class SizeController:
     @handle_request
     def handle_menu_item_size_update(self, db, data, size_id):
         size = SizeRepository(db).get_by_id(size_id)
-        size = self.size_service.update_size(db, size, data)
+        size = self.size_service.update_size(db, size, data, admin_user_id=session.get("user_id"))
         return {"data": json.dumps(size.serialized)}, 200
 
     @validate_url_params(IDSchema())
@@ -79,5 +79,5 @@ class SizeController:
     @require_admin
     @handle_request
     def handle_bulk_update_sizes(self, db, data):
-        updated = self.size_service.bulk_update_sizes(db, data)
+        updated = self.size_service.bulk_update_sizes(db, data, admin_user_id=session.get("user_id"))
         return {"msg": "OK", "updated_count": len(updated)}, 200

@@ -1,6 +1,6 @@
-from flask import Blueprint
-
 from app.controllers.bundle_discount_controller import BundleDiscountController
+from app.controllers.statistics_controller import StatisticsController
+from app.controllers.stock_controller import StockController
 from app.controllers.category_controller import CategoryController
 from app.controllers.favourite_controller import FavouriteController
 from app.controllers.item_controller import MenuItemController
@@ -26,11 +26,6 @@ from app.services.user_basket_service import UserBasketService
 from app.services.user_service import UserService
 from app.services.vendor_service import VendorService
 from app.services.webhook_service import WebhookService
-
-statistics_blueprint = Blueprint(
-    "statistics_controller", __name__, url_prefix="/api/statistics"
-)
-
 
 def register_blueprints(app):
     user_basket_service = UserBasketService()
@@ -59,6 +54,8 @@ def register_blueprints(app):
     category_ctrl = CategoryController(category_service)
     option_group_ctrl = OptionGroupController()
     bundle_discount_ctrl = BundleDiscountController()
+    stock_ctrl = StockController()
+    statistics_ctrl = StatisticsController()
 
     app.register_blueprint(menu_item_ctrl.blueprint)
     app.register_blueprint(menu_ctrl.blueprint)
@@ -74,3 +71,5 @@ def register_blueprints(app):
     app.register_blueprint(category_ctrl.blueprint)
     app.register_blueprint(option_group_ctrl.blueprint)
     app.register_blueprint(bundle_discount_ctrl.blueprint)
+    app.register_blueprint(stock_ctrl.blueprint)
+    app.register_blueprint(statistics_ctrl.blueprint)

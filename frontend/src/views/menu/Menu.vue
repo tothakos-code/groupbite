@@ -16,6 +16,7 @@
           :user-count="userCount"
           :vendor-link="vendorLink"
           :notification-status="notificationStatus"
+          :menu-type="vendorStore.selectedVendor?.menu_type ?? ''"
           @subscribe="handleSubscribe"
           @unsubscribe-requested="handleUnsubscribeRequested"
         />

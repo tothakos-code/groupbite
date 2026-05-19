@@ -1,6 +1,7 @@
 import logging
 
 from app.entities.menu_item import MenuItem
+from app.repositories.category_repository import CategoryRepository
 from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.menu_repository import MenuRepository
 from app.services.category_service import CategoryService
@@ -74,3 +75,46 @@ class MenuItemService:
         logging.info(f"Successfully bulk updated {len(items_to_update)} item indices")
 
         return items_to_update
+
+    @staticmethod
+    def bulk_edit(db, data):
+        repo = MenuItemRepository(db)
+
+        item_ids = data.get('item_ids')
+        if data.get('select_all_menu_id') is not None:
+            item_ids = repo.get_ids_by_menu(data['select_all_menu_id'])
+
+        if not item_ids:
+            raise ValueError("No items found")
+
+        if repo.count_unique_vendor_ids_by_item_ids(item_ids) != 1:
+            raise ValueError("Items must belong to the same vendor")
+
+        items = repo.get_by_ids(item_ids)
+
+        patch = {k: data[k] for k in ('category_id', 'packaging_fee', 'description') if k in data}
+
+        if 'category_id' in patch and patch['category_id'] is not None:
+            vendor_id = items[0].menu.vendor_id
+            category = CategoryRepository(db).get_by_id(patch['category_id'])
+            if not category or category.vendor_id != vendor_id:
+                raise ValueError("Category not found or belongs to a different vendor")
+
+        return repo.bulk_edit(items, patch)
+
+    @staticmethod
+    def bulk_delete(db, data):
+        repo = MenuItemRepository(db)
+
+        item_ids = data.get('item_ids')
+        if data.get('select_all_menu_id') is not None:
+            item_ids = repo.get_ids_by_menu(data['select_all_menu_id'])
+
+        if not item_ids:
+            raise ValueError("No items found")
+
+        if repo.count_unique_vendor_ids_by_item_ids(item_ids) != 1:
+            raise ValueError("Items must belong to the same vendor")
+
+        repo.bulk_delete(item_ids)
+        return len(item_ids)

@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, validates_schema, ValidationError
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -36,6 +36,35 @@ class BulkUpdateItemSchema(Schema):
         required=True,
         validate=validate.Length(min=1, max=1000),
     )
+
+
+class BulkEditItemsSchema(Schema):
+    item_ids = fields.List(fields.Integer(), validate=validate.Length(min=1, max=500))
+    select_all_menu_id = fields.Integer()
+    category_id = fields.Integer(allow_none=True)
+    packaging_fee = fields.Integer(allow_none=True)
+    description = fields.Str(allow_none=True)
+
+    @validates_schema
+    def validate_request(self, data, **kwargs):
+        has_ids = 'item_ids' in data
+        has_all = 'select_all_menu_id' in data
+        if has_ids == has_all:
+            raise ValidationError('Provide exactly one of item_ids or select_all_menu_id')
+        if not {'category_id', 'packaging_fee', 'description'}.intersection(data):
+            raise ValidationError('At least one of category_id, packaging_fee, or description must be provided')
+
+
+class BulkDeleteItemsSchema(Schema):
+    item_ids = fields.List(fields.Integer(), validate=validate.Length(min=1, max=500))
+    select_all_menu_id = fields.Integer()
+
+    @validates_schema
+    def validate_request(self, data, **kwargs):
+        has_ids = 'item_ids' in data
+        has_all = 'select_all_menu_id' in data
+        if has_ids == has_all:
+            raise ValidationError('Provide exactly one of item_ids or select_all_menu_id')
 
 
 class MenuItem(Base):

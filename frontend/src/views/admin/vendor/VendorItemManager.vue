@@ -50,6 +50,8 @@
       :loading="isLoading"
       :sortable="true"
       :vendor-id="activeVendorId"
+      :menu-id="activeMenuId"
+      :total-count="totalCount"
       @edit-item="editItem"
       @update-item="updateItem"
       @cancel-edit="cancelEditItem"
@@ -67,6 +69,8 @@
       @delete-size="deleteSize"
       @reorder-sizes="reorderSizes"
       @bulk-update-sizes="bulkSaveSizes"
+      @bulk-edit-items="handleBulkEditItems"
+      @bulk-delete-items="handleBulkDeleteItems"
     />
 
     <!-- Pagination -->
@@ -512,6 +516,47 @@ export default {
         this.getItemList();
       } catch (error) {
         this.showSnackbar('Hiba történt a sorrend frissítése során', 'error');
+      }
+    },
+
+    async handleBulkEditItems({ item_ids, select_all_menu_id, patch, sizePriceData }) {
+      try {
+        const selector = { item_ids, select_all_menu_id };
+
+        if (patch && Object.keys(patch).length > 0) {
+          const response = await this.itemStore.bulkEdit({ ...selector, ...patch });
+          if (response.status >= 400) {
+            this.showSnackbar(response.data?.error || this.$t('bulk.edit.error'), 'error');
+            return;
+          }
+        }
+
+        if (sizePriceData) {
+          const response = await this.sizeStore.bulkPriceByItems({ ...selector, ...sizePriceData });
+          if (response.status >= 400) {
+            this.showSnackbar(response.data?.error || this.$t('bulk.edit.size_error'), 'error');
+            return;
+          }
+        }
+
+        this.showSnackbar(this.$t('bulk.edit.success'));
+        await this.getItemList();
+      } catch (error) {
+        this.showSnackbar(this.$t('bulk.edit.error'), 'error');
+      }
+    },
+
+    async handleBulkDeleteItems({ item_ids, select_all_menu_id }) {
+      try {
+        const response = await this.itemStore.bulkDelete({ item_ids, select_all_menu_id });
+        if (response.status >= 400) {
+          this.showSnackbar(response.data?.error || this.$t('bulk.delete.error'), 'error');
+          return;
+        }
+        this.showSnackbar(this.$t('bulk.delete.success', { n: response.data?.deleted_count }));
+        await this.getItemList();
+      } catch (error) {
+        this.showSnackbar(this.$t('bulk.delete.error'), 'error');
       }
     },
 

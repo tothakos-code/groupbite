@@ -72,20 +72,39 @@ export const useItemStore = defineStore("item", {
       }
     },
     async bulkUpdateIndices(items) {
+      this.isLoading = true;
       try {
-        const response = axios.put(`/api/item/reorder`, { "data": {"items": items} });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || 'Failed to bulk update indices');
-        }
-
-        const result = await response.json();
-        return result;
-
+        const response = await axios.put(`/api/item/reorder`, { "data": { items } });
+        return response;
       } catch (error) {
-        console.error('Store bulk update error:', error);
+        console.error('Store bulk update error:', error.response?.data?.error);
         return error.response;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async bulkEdit(data) {
+      this.isLoading = true;
+      try {
+        const response = await axios.patch(`/api/item/bulk`, { "data": data });
+        return response;
+      } catch (error) {
+        console.error("Failed to bulk edit items:", error.response?.data?.error);
+        return error.response;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async bulkDelete(data) {
+      this.isLoading = true;
+      try {
+        const response = await axios.delete(`/api/item/bulk`, { data: { "data": data } });
+        return response;
+      } catch (error) {
+        console.error("Failed to bulk delete items:", error.response?.data?.error);
+        return error.response;
+      } finally {
+        this.isLoading = false;
       }
     },
   }

@@ -2,6 +2,8 @@ from flask import Blueprint
 
 from app.entities.menu_item import (
     BaseItemSchema,
+    BulkDeleteItemsSchema,
+    BulkEditItemsSchema,
     BulkUpdateItemSchema,
     MenuItem,
     UpdateItemSchema,
@@ -9,6 +11,8 @@ from app.entities.menu_item import (
 from app.repositories.menu_item_repository import MenuItemRepository
 from app.services.category_service import CategoryService
 from app.services.menu_item_service import MenuItemService
+from app.services.vendor_service import VendorService
+from app.socketio_singleton import SocketioSingleton
 from app.utils.decorators import (
     handle_request,
     require_admin,
@@ -17,6 +21,8 @@ from app.utils.decorators import (
     validate_url_params,
 )
 from app.utils.validators import IDSchema
+
+socketio = SocketioSingleton.get_instance()
 
 
 class MenuItemController:
@@ -40,6 +46,8 @@ class MenuItemController:
         bp.add_url_rule(
             "/reorder", view_func=self.handle_bulk_update_indices, methods=["PUT"]
         )
+        bp.add_url_rule("/bulk", view_func=self.handle_bulk_edit, methods=["PATCH"])
+        bp.add_url_rule("/bulk", view_func=self.handle_bulk_delete, methods=["DELETE"])
 
     @validate_data(BaseItemSchema())
     @require_auth
@@ -90,3 +98,21 @@ class MenuItemController:
             "msg": "Indices updated successfully",
             "updated_count": len(items_to_update),
         }, 200
+
+    @validate_data(BulkEditItemsSchema())
+    @require_auth
+    @require_admin
+    @handle_request
+    def handle_bulk_edit(self, db, data):
+        items = self.menu_item_service.bulk_edit(db, data)
+        socketio.emit("be_vendors_update", [v.serialized for v in VendorService.find_all_active(db)])
+        return {"data": [item.serialized for item in items]}, 200
+
+    @validate_data(BulkDeleteItemsSchema())
+    @require_auth
+    @require_admin
+    @handle_request
+    def handle_bulk_delete(self, db, data):
+        deleted_count = self.menu_item_service.bulk_delete(db, data)
+        socketio.emit("be_vendors_update", [v.serialized for v in VendorService.find_all_active(db)])
+        return {"msg": "OK", "deleted_count": deleted_count}, 200

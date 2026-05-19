@@ -1,8 +1,9 @@
 from typing import Optional
 
-from sqlalchemy import func, or_, select, update
+from sqlalchemy import delete, func, or_, select, update
 
 from app.entities.category import Category
+from app.entities.menu import Menu
 from app.entities.menu_item import MenuItem
 
 
@@ -109,3 +110,30 @@ class MenuItemRepository:
         # Perform bulk update
         self.db.execute(update(MenuItem), update_mapping)
         self.db.commit()
+
+    def count_unique_vendor_ids_by_item_ids(self, ids: list[int]) -> int:
+        if not ids:
+            return 0
+        stmt = (
+            select(func.count(func.distinct(Menu.vendor_id)))
+            .select_from(MenuItem)
+            .join(Menu, MenuItem.menu_id == Menu.id)
+            .where(MenuItem.id.in_(ids))
+        )
+        return self.db.execute(stmt).scalar_one()
+
+    def get_ids_by_menu(self, menu_id) -> list[int]:
+        stmt = select(MenuItem.id).where(MenuItem.menu_id == menu_id)
+        return list(self.db.execute(stmt).scalars().all())
+
+    def bulk_edit(self, items: list, patch: dict):
+        for item in items:
+            for key, value in patch.items():
+                setattr(item, key, value)
+        self.db.flush()
+        return items
+
+    def bulk_delete(self, item_ids: list[int]):
+        stmt = delete(MenuItem).where(MenuItem.id.in_(item_ids))
+        self.db.execute(stmt)
+        self.db.flush()

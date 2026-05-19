@@ -62,3 +62,9 @@ class SizeRepository:
             stmt = stmt.order_by(Size.index)
 
         return self.db.execute(stmt).scalars().all()
+
+    def get_by_item_ids(self, item_ids: list[int]) -> list:
+        if not item_ids:
+            return []
+        stmt = select(Size).where(Size.menu_item_id.in_(item_ids))
+        return self.db.execute(stmt).scalars().all()

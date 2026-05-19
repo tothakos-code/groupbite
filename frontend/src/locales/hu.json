@@ -114,5 +114,44 @@
     "fee_default_label": "Alapértelmezett csomagolási díj (Ft)",
     "fee_column": "Csomag. díj",
     "fee_basket_line": "+ Csomagolási díj"
+  },
+  "bulk": {
+    "selection": {
+      "toggle": "Kiválasztás",
+      "finish": "Befejezés",
+      "count_chip": "{n} kiválasztva",
+      "select_all_chip": "Összes {n} étel kiválasztása ebben a menüben",
+      "all_selected": "{n} étel kiválasztva"
+    },
+    "edit": {
+      "button": "Szerkesztés",
+      "dialog_title": "{n} étel tömeges szerkesztése",
+      "section_item_data": "Étel adatok",
+      "section_size_prices": "Méret árak",
+      "category_label": "Kategória",
+      "packaging_fee_label": "Csomagolási díj (Ft)",
+      "description_label": "Leírás",
+      "price_mode_none": "Nincs változtatás",
+      "price_mode_set": "Ár beállítása",
+      "price_mode_adjust_fixed": "Módosítás (+/-Ft)",
+      "price_mode_adjust_percent": "Módosítás (%)",
+      "price_value_set": "Ár (Ft)",
+      "price_value_adjust_fixed": "Módosítás összege (Ft, lehet negatív)",
+      "price_value_adjust_percent": "Módosítás mértéke (%, lehet negatív)",
+      "apply": "Alkalmaz",
+      "cancel": "Mégse",
+      "success": "Tömeges szerkesztés sikeresen alkalmazva",
+      "error": "Hiba történt a tömeges szerkesztés során",
+      "size_error": "Hiba történt a méret árak módosítása során"
+    },
+    "delete": {
+      "button": "Törlés",
+      "dialog_title": "Tömeges törlés megerősítése",
+      "dialog_body": "Biztosan törölni szeretné ezt a(z) {n} ételt? Ez a művelet nem vonható vissza.",
+      "confirm": "Törlés",
+      "cancel": "Mégse",
+      "success": "{n} étel törölve",
+      "error": "Hiba történt a tömeges törlés során"
+    }
   }
 }

@@ -1,6 +1,6 @@
 from typing import List
 
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, validates_schema, ValidationError
 from sqlalchemy import Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -35,6 +35,20 @@ class BulkUpdateSizeSchema(Schema):
         required=True,
         validate=validate.Length(min=1, max=5000),
     )
+
+
+class BulkSizePriceByItemsSchema(Schema):
+    item_ids = fields.List(fields.Integer(), validate=validate.Length(min=1, max=500))
+    select_all_menu_id = fields.Integer()
+    mode = fields.Str(required=True, validate=validate.OneOf(['set', 'adjust_fixed', 'adjust_percent']))
+    value = fields.Integer(required=True)
+
+    @validates_schema
+    def validate_request(self, data, **kwargs):
+        has_ids = 'item_ids' in data
+        has_all = 'select_all_menu_id' in data
+        if has_ids == has_all:
+            raise ValidationError('Provide exactly one of item_ids or select_all_menu_id')
 
 
 class Size(Base):

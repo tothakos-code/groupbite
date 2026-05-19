@@ -2,9 +2,11 @@ import json
 
 from flask import Blueprint, session
 
-from app.entities.size import BaseSizeSchema, BulkUpdateSizeSchema, Size, UpdateSizeSchema
+from app.entities.size import BaseSizeSchema, BulkSizePriceByItemsSchema, BulkUpdateSizeSchema, Size, UpdateSizeSchema
 from app.repositories.size_repository import SizeRepository
 from app.services.size_service import SizeService
+from app.services.vendor_service import VendorService
+from app.socketio_singleton import SocketioSingleton
 from app.utils.decorators import (
     handle_request,
     require_admin,
@@ -13,6 +15,8 @@ from app.utils.decorators import (
     validate_url_params,
 )
 from app.utils.validators import IDSchema
+
+socketio = SocketioSingleton.get_instance()
 
 
 class SizeController:
@@ -35,6 +39,9 @@ class SizeController:
         )
         bp.add_url_rule(
             "/bulk", view_func=self.handle_bulk_update_sizes, methods=["PUT"]
+        )
+        bp.add_url_rule(
+            "/bulk-price-by-items", view_func=self.handle_bulk_price_by_items, methods=["PATCH"]
         )
 
     @validate_data(BaseSizeSchema())
@@ -81,3 +88,12 @@ class SizeController:
     def handle_bulk_update_sizes(self, db, data):
         updated = self.size_service.bulk_update_sizes(db, data, admin_user_id=session.get("user_id"))
         return {"msg": "OK", "updated_count": len(updated)}, 200
+
+    @validate_data(BulkSizePriceByItemsSchema())
+    @require_auth
+    @require_admin
+    @handle_request
+    def handle_bulk_price_by_items(self, db, data):
+        sizes = self.size_service.bulk_edit_prices_by_items(db, data)
+        socketio.emit("be_vendors_update", [v.serialized for v in VendorService.find_all_active(db)])
+        return {"data": [size.serialized for size in sizes]}, 200

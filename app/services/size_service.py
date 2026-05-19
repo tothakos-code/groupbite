@@ -77,3 +77,32 @@ class SizeService:
             updated.append(size)
         db.flush()
         return updated
+
+    @staticmethod
+    def bulk_edit_prices_by_items(db, data):
+        item_repo = MenuItemRepository(db)
+
+        item_ids = data.get('item_ids')
+        if data.get('select_all_menu_id') is not None:
+            item_ids = item_repo.get_ids_by_menu(data['select_all_menu_id'])
+
+        if not item_ids:
+            raise ValueError("No items found")
+
+        if item_repo.count_unique_vendor_ids_by_item_ids(item_ids) != 1:
+            raise ValueError("Items must belong to the same vendor")
+
+        mode = data['mode']
+        value = data['value']
+
+        sizes = SizeRepository(db).get_by_item_ids(item_ids)
+        for size in sizes:
+            if mode == 'set':
+                size.price = value
+            elif mode == 'adjust_fixed':
+                size.price = max(0, size.price + value)
+            elif mode == 'adjust_percent':
+                size.price = max(0, round(size.price * (1 + value / 100)))
+
+        db.flush()
+        return sizes

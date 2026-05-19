@@ -91,5 +91,17 @@ export const useSizeStore = defineStore("size", {
         this.isLoading = false;
       }
     },
+    async bulkPriceByItems(data) {
+      this.isLoading = true;
+      try {
+        const response = await axios.patch(`/api/size/bulk-price-by-items`, { "data": data });
+        return response;
+      } catch (error) {
+        console.error("Failed to bulk update size prices:", error.response?.data?.error);
+        return error.response;
+      } finally {
+        this.isLoading = false;
+      }
+    },
   }
 })

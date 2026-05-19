@@ -45,48 +45,60 @@
             </v-btn>
           </template>
 
+          <!-- Selected count chip -->
+          <v-chip
+            v-if="selectionMode && (selectedIds.length > 0 || selectAllMode)"
+            size="small"
+            color="primary"
+            variant="elevated"
+          >
+            {{ $t('bulk.selection.count_chip', { n: selectAllMode ? totalCount : selectedIds.length }) }}
+          </v-chip>
+
+          <!-- Bulk action buttons (visible when items are selected) -->
+          <template v-if="selectionMode && (selectedIds.length > 0 || selectAllMode)">
+            <v-btn
+              color="primary"
+              variant="elevated"
+              size="small"
+              prepend-icon="mdi-pencil-box-multiple"
+              @click="showBulkEditDialog = true"
+            >
+              {{ $t('bulk.edit.button') }}
+            </v-btn>
+            <v-btn
+              color="error"
+              variant="elevated"
+              size="small"
+              prepend-icon="mdi-delete-sweep"
+              @click="bulkDeleteDialog = true"
+            >
+              {{ $t('bulk.delete.button') }}
+            </v-btn>
+          </template>
+
+          <!-- Selection Mode Toggle -->
+          <v-btn
+            :color="selectionMode ? 'success' : 'dark'"
+            :variant="selectionMode ? 'elevated' : 'outlined'"
+            :prepend-icon="selectionMode ? 'mdi-check' : 'mdi-checkbox-multiple-marked-outline'"
+            :disabled="reorderMode"
+            @click="toggleSelectionMode"
+          >
+            {{ selectionMode ? $t('bulk.selection.finish') : $t('bulk.selection.toggle') }}
+          </v-btn>
+
           <!-- Reorder Mode Toggle -->
           <v-btn
             :color="reorderMode ? 'success' : 'dark'"
             :variant="reorderMode ? 'elevated' : 'outlined'"
             :prepend-icon="reorderMode ? 'mdi-check' : 'mdi-drag-horizontal-variant'"
             :loading="reorderLoading"
+            :disabled="selectionMode"
             @click="toggleReorderMode"
           >
             {{ reorderMode ? 'Befejezés' : 'Átrendezés' }}
           </v-btn>
-
-          <!-- Sort Menu (only in normal mode) -->
-          <v-menu v-if="!reorderMode">
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                color="dark"
-                variant="outlined"
-                prepend-icon="mdi-sort"
-              >
-                Rendezés
-              </v-btn>
-            </template>
-
-            <v-list>
-              <v-list-item
-                v-for="header in sortableHeaders"
-                :key="header.key"
-                @click="toggleSort(header.key)"
-              >
-                <v-list-item-title>
-                  {{ header.title }}
-                  <v-icon
-                    v-if="sortBy === header.key"
-                    :class="sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down'"
-                    size="small"
-                    class="ms-2"
-                  />
-                </v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
         </div>
       </v-card-title>
 
@@ -172,6 +184,21 @@
         <template v-else>
           <!-- Table Header -->
           <div class="v-data-table-header d-flex align-center pa-3 bg-secondary">
+            <!-- Selection checkbox header -->
+            <div
+              v-if="selectionMode"
+              style="width: 32px; min-width: 32px;"
+              class="me-1 d-flex align-center"
+              @click.stop
+            >
+              <v-checkbox
+                :model-value="allPageSelected"
+                :indeterminate="somePageSelected"
+                density="compact"
+                hide-details
+                @update:model-value="toggleHeaderCheckbox"
+              />
+            </div>
             <div
               class="me-2"
               style="width: 24px;"
@@ -201,6 +228,33 @@
             </div>
           </div>
 
+          <!-- Select All Banner -->
+          <div
+            v-if="selectionMode && allPageSelected && !selectAllMode && totalCount > sortedItems.length"
+            class="d-flex justify-center align-center pa-2 border-b"
+          >
+            <v-chip
+              color="primary"
+              variant="tonal"
+              @click="selectAllMode = true"
+            >
+              {{ $t('bulk.selection.select_all_chip', { n: totalCount }) }}
+            </v-chip>
+          </div>
+          <div
+            v-if="selectionMode && selectAllMode"
+            class="d-flex justify-center align-center pa-2 border-b"
+          >
+            <v-chip
+              color="primary"
+              variant="elevated"
+              closable
+              @click:close="clearSelection"
+            >
+              {{ $t('bulk.selection.all_selected', { n: totalCount }) }}
+            </v-chip>
+          </div>
+
           <!-- Virtual Scrolled Table Body -->
           <v-virtual-scroll
             :items="sortedItems"
@@ -220,6 +274,21 @@
                   }"
                   @click="toggleExpanded(item.id)"
                 >
+                  <!-- Selection Checkbox -->
+                  <div
+                    v-if="selectionMode"
+                    style="width: 32px; min-width: 32px;"
+                    class="me-1 d-flex align-center"
+                    @click.stop
+                  >
+                    <v-checkbox
+                      :model-value="selectedIds.includes(item.id)"
+                      density="compact"
+                      hide-details
+                      @update:model-value="toggleItemSelection(item.id)"
+                    />
+                  </div>
+
                   <!-- Expand Icon -->
                   <div
                     class="me-2 d-flex align-center"
@@ -526,6 +595,50 @@
         </template>
       </v-card-text>
 
+      <!-- Bulk Edit Dialog -->
+      <BulkEditDialog
+        v-model="showBulkEditDialog"
+        :selected-count="selectAllMode ? totalCount : selectedIds.length"
+        :menu-id="menuId"
+        :vendor-id="vendorId"
+        @apply="handleBulkEditApply"
+      />
+
+      <!-- Bulk Delete Confirmation Dialog -->
+      <v-dialog
+        v-model="bulkDeleteDialog"
+        max-width="450"
+      >
+        <v-card>
+          <v-card-title class="text-h6">
+            <v-icon class="me-2 text-error">
+              mdi-alert
+            </v-icon>
+            {{ $t('bulk.delete.dialog_title') }}
+          </v-card-title>
+          <v-card-text>
+            {{ $t('bulk.delete.dialog_body', { n: selectAllMode ? totalCount : selectedIds.length }) }}
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn
+              color="grey"
+              variant="text"
+              @click="bulkDeleteDialog = false"
+            >
+              {{ $t('bulk.delete.cancel') }}
+            </v-btn>
+            <v-btn
+              color="error"
+              variant="elevated"
+              @click="executeBulkDelete"
+            >
+              {{ $t('bulk.delete.confirm') }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <!-- Delete Confirmation Dialog -->
       <v-dialog
         v-model="deleteDialog"
@@ -568,6 +681,7 @@
 </template>
 
 <script>
+import BulkEditDialog from './BulkEditDialog.vue';
 import SizesTable from './SizesTable.vue';
 import { useCategoriesStore } from '@/stores/categories';
 import { useOptionGroupsStore } from '@/stores/option_groups';
@@ -575,6 +689,7 @@ import { useOptionGroupsStore } from '@/stores/option_groups';
 export default {
   name: "ItemsDataTable",
   components: {
+    BulkEditDialog,
     SizesTable
   },
   props: {
@@ -593,6 +708,14 @@ export default {
     vendorId: {
       type: String,
       default: null
+    },
+    menuId: {
+      type: [Number, String],
+      default: null
+    },
+    totalCount: {
+      type: Number,
+      default: 0
     }
   },
   emits: [
@@ -612,7 +735,9 @@ export default {
     'reorder-sizes',
     'bulk-update-sizes',
     'enter-reorder-mode',
-    'exit-reorder-mode'
+    'exit-reorder-mode',
+    'bulk-edit-items',
+    'bulk-delete-items'
   ],
   setup() {
     const categoriesStore = useCategoriesStore();
@@ -626,6 +751,11 @@ export default {
       sortOrder: 'asc',
       deleteDialog: false,
       itemToDelete: null,
+      selectionMode: false,
+      selectedIds: [],
+      selectAllMode: false,
+      showBulkEditDialog: false,
+      bulkDeleteDialog: false,
       reorderMode: false,
       reorderLoading: false,
       reorderItems: [],
@@ -670,6 +800,15 @@ export default {
       });
     },
 
+    allPageSelected() {
+      if (this.sortedItems.length === 0) return false;
+      return this.sortedItems.every(item => this.selectedIds.includes(item.id));
+    },
+
+    somePageSelected() {
+      return this.sortedItems.some(item => this.selectedIds.includes(item.id)) && !this.allPageSelected;
+    },
+
     dirtyCount() {
       return Object.keys(this.sizeEdits).length;
     },
@@ -688,6 +827,12 @@ export default {
     },
   },
   watch: {
+    selectionMode(newVal) {
+      if (!newVal) {
+        this.clearSelection();
+      }
+    },
+
     reorderMode(newVal) {
       if (newVal) {
         this.initReorderMode();
@@ -716,6 +861,54 @@ export default {
     this.cleanupDragListeners();
   },
   methods: {
+    buildBulkSelector() {
+      return this.selectAllMode
+        ? { select_all_menu_id: this.menuId }
+        : { item_ids: [...this.selectedIds] };
+    },
+
+    handleBulkEditApply({ patch, sizePriceData }) {
+      this.$emit('bulk-edit-items', { ...this.buildBulkSelector(), patch, sizePriceData });
+      this.showBulkEditDialog = false;
+    },
+
+    executeBulkDelete() {
+      this.$emit('bulk-delete-items', this.buildBulkSelector());
+      this.bulkDeleteDialog = false;
+    },
+
+    toggleSelectionMode() {
+      this.selectionMode = !this.selectionMode;
+    },
+
+    toggleItemSelection(id) {
+      const idx = this.selectedIds.indexOf(id);
+      if (idx === -1) {
+        this.selectedIds.push(id);
+      } else {
+        this.selectedIds.splice(idx, 1);
+      }
+      this.selectAllMode = false;
+    },
+
+    toggleHeaderCheckbox() {
+      if (this.allPageSelected) {
+        const pageIds = new Set(this.sortedItems.map(i => i.id));
+        this.selectedIds = this.selectedIds.filter(id => !pageIds.has(id));
+        this.selectAllMode = false;
+      } else {
+        const existing = new Set(this.selectedIds);
+        this.sortedItems.forEach(item => {
+          if (!existing.has(item.id)) this.selectedIds.push(item.id);
+        });
+      }
+    },
+
+    clearSelection() {
+      this.selectedIds = [];
+      this.selectAllMode = false;
+    },
+
     getEffectivePackagingFee(item) {
       if (item.packaging_fee != null) return item.packaging_fee;
       const cats = this.vendorId ? (this.categoriesStore.byVendor[this.vendorId] || []) : [];

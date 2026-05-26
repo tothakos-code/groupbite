@@ -775,16 +775,12 @@ class OrderService:
 
 def _adhoc_close_for_vendor(vendor_id_str: str):
     """One-shot timer callback: closes the current open order for a vendor."""
-    from app.plugin_registry import PluginRegistry
-    from app.services.base_vendor_service import BaseVendorService
+    from app.services.vendor_service import VendorService
 
     with get_session() as db:
         vendor = VendorRepository(db).get_by_id(vendor_id_str)
         if not vendor:
             return
-        plugin_id = vendor.plugin_id
 
-    # vendor is detached here but simple columns (id, settings) remain accessible
-    service_class = (PluginRegistry.get(plugin_id) or BaseVendorService) if plugin_id else BaseVendorService
-    service = service_class(vendor_id_str)
+    service = VendorService(OrderService(UserBasketService()))
     service.closed_wrapper(vendor)

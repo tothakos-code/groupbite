@@ -164,6 +164,11 @@ export default {
     login: function() {
       this.auth.login(this.username).then(response => {
         if (!response.data.error) {
+          if (this.auth.pendingAction) {
+            this.auth.pendingAction();
+            this.auth.pendingAction = null;
+          }
+          this.auth.loginDialogVisible = false;
           this.cancel()
         }
       })

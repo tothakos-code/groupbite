@@ -218,6 +218,7 @@ export default {
     },
     checkNewDevice() {
       if (!this.auth.isLoggedIn) return;
+      if (localStorage.getItem('notification_decline_' + this.vendorId)) return;
       if (this.hasAnyVendorNotification && !this.notificationStatus) {
         this.showNewDeviceDialog = true;
       }
@@ -259,6 +260,7 @@ export default {
     },
     handleNewDeviceDecline() {
       this.showNewDeviceDialog = false;
+      localStorage.setItem('notification_decline_' + this.vendorId, 'true');
     },
   }
 };

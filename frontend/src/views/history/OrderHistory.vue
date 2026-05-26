@@ -1,5 +1,6 @@
 <template>
   <v-container
+    v-if="auth.isLoggedIn"
     fluid
     max-width="1400"
   >
@@ -412,12 +413,17 @@ export default {
     hasActiveFilters() {
       return this.searchQuery || this.selectedVendor || (this.dateRange && this.dateRange.length > 1)
     },
-
+    effectiveUserId() {
+      return this.userId || this.auth.user?.id;
+    },
   },
   watch: {
     userId() {
       this.loadUserHistory();
-    }
+    },
+    'auth.isLoggedIn'(val) {
+      if (val) this.loadUserHistory();
+    },
   },
   mounted() {
     this.loadUserHistory()
@@ -428,6 +434,7 @@ export default {
       this.loadUserHistory()
     },
     loadUserHistory() {
+      if (!this.effectiveUserId) return;
       let params = {
           "limit": this.limit,
           "page": this.currentPage
@@ -438,7 +445,7 @@ export default {
         params['date_from'] = this.dateRange[0].toISODate()
         params['date_to'] = this.dateRange[this.dateRange.length - 1].toISODate()
       }
-      this.auth.orders(this.userId, params)
+      this.auth.orders(this.effectiveUserId, params)
         .then(response => {
             this.orderHistoryList = response.data.data.items;
             this.vendorOptions = response.data.data.vendors;

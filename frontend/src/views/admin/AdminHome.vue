@@ -1,5 +1,8 @@
 <template>
-  <div class="admin-layout">
+  <div
+    v-if="auth.isLoggedIn && auth.user?.admin"
+    class="admin-layout"
+  >
     <!-- Left Sidebar -->
     <nav
       class="admin-nav"
@@ -117,6 +120,11 @@ export default {
     '$route'(to) {
       if (to.params.id) {
         this.navCollapsed = true
+      }
+    },
+    'auth.isLoggedIn'(val) {
+      if (val && !this.auth.user?.admin) {
+        this.$router.push({ name: 'home' })
       }
     },
   },

@@ -108,7 +108,7 @@ export default {
         menu_type: this.vendor.menu_type,
         plugin_id: this.vendor.plugin_id || null,
       })
-      if (response?.status === 200) this.$router.push('/admin')
+      if (response?.status === 200) this.$router.push(`/admin/${response.data.data.id}/config`)
     },
   },
 }

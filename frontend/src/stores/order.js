@@ -236,10 +236,7 @@ export const useOrderStore = defineStore("order", {
     async addItem(menuItemId, sizeId, optionChoiceIds = []) {
       const auth = useAuth()
       if (!auth.isLoggedIn) {
-        notify({
-          type: "warn",
-          text: "Jelentkezz be a rendeléshez!",
-        });
+        auth.requestLogin(() => this.addItem(menuItemId, sizeId, optionChoiceIds));
         return;
       }
       if (!this.order?.id) {

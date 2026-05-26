@@ -129,7 +129,7 @@
     <!-- Dialogs -->
     <UserLoginPopup
       v-model="showLogin"
-      @cancel="showLogin = false"
+      @cancel="handleLoginCancel"
     />
 
     <UserProfilePopup
@@ -145,6 +145,7 @@ import UserProfilePopup from "./UserProfilePopup.vue";
 import UserLoginPopup from "./UserLoginPopup.vue";
 import { useAuth } from "@/stores/auth.js";
 import { inject } from "vue";
+import { notify } from "@kyvg/vue3-notification";
 
 export default {
   name: "UserMenu",
@@ -173,7 +174,26 @@ export default {
     };
   },
 
+  watch: {
+    'auth.loginDialogVisible'(val) {
+      if (val) this.showLogin = true;
+    },
+  },
+
   methods: {
+    handleLoginCancel() {
+      const wasRouteTrigger = this.auth.loginDialogVisible && !this.auth.pendingAction;
+      this.showLogin = false;
+      this.auth.loginDialogVisible = false;
+      if (this.auth.pendingAction) {
+        notify({ type: "warn", text: "Jelentkezz be a rendeléshez!" });
+        this.auth.pendingAction = null;
+      } else if (wasRouteTrigger) {
+        notify({ type: "warn", text: "Ehhez be kell jelentkezned!" });
+        this.$router.push({ name: 'home' });
+      }
+    },
+
     getUserInitials(username) {
       if (!username) return '?';
       return username

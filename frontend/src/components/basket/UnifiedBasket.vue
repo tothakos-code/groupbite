@@ -80,7 +80,7 @@
           color="primary"
           variant="elevated"
           prepend-icon="mdi-plus-circle"
-          @click="orderStore.showCreateOrderDialog = true"
+          @click="auth.isLoggedIn ? orderStore.showCreateOrderDialog = true : auth.requestLogin(() => { orderStore.showCreateOrderDialog = true })"
         >
           Rendelés indítása
         </v-btn>

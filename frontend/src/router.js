@@ -23,15 +23,14 @@ import { watch } from "vue";
 const authGuard = async (to, from, next) => {
   if (!useAuth().user) {
     await useAuth().checkSession();
-    if (!useAuth().isLoading && !useAuth().user?.admin) {
-      console.log("Nono, you can't do that");
-      return next({ name: "home" });
-    }
-  } else if (!useAuth().user?.admin) {
-    console.log("Nono, you can't do that");
+  }
+  if (!useAuth().user) {
+    useAuth().requestLogin();
+    return next();
+  }
+  if (!useAuth().user.admin) {
     return next({ name: "home" });
   }
-  console.log("Success: admin");
   next();
 };
 
@@ -122,17 +121,17 @@ const routes = [
     beforeEnter: async (to, from, next) => {
       if (!useAuth().user) {
         await useAuth().checkSession();
-        if (!useAuth().isLoading && !useAuth().isLoggedIn) {
-          console.log("Nono, you can't do that");
-          return next({ name: "home" });
-        }
+      }
+      if (!useAuth().isLoggedIn) {
+        useAuth().requestLogin();
+        return next();
       }
       next();
     },
     component: OrderHistoryView,
     props: () => {
       const auth = useAuth();
-      return { userId: auth.user.id };
+      return { userId: auth.user?.id };
     },
   },
   {

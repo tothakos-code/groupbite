@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 import { notify } from "@kyvg/vue3-notification";
 
 export const useAuth = defineStore("user", {
-  state: () => ({ user: null, isLoggedIn: false, isLoading: true }),
+  state: () => ({ user: null, isLoggedIn: false, isLoading: true, loginDialogVisible: false, pendingAction: null }),
   getters: {
     getUserColor() {
       // TODO: implement user setings, this is not excist yet
@@ -14,6 +14,10 @@ export const useAuth = defineStore("user", {
     },
   },
   actions: {
+    requestLogin(callback = null) {
+      this.pendingAction = callback;
+      this.loginDialogVisible = true;
+    },
     async login(username) {
       try {
         const response = await axios.post(`/api/user/login`, {

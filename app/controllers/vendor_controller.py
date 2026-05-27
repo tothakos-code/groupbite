@@ -16,6 +16,7 @@ from app.utils.decorators import (
     validate_url_params,
 )
 from app.utils.validators import IDSchema
+from app.event_manager import event_manager
 
 socketio = SocketioSingleton.get_instance()
 
@@ -344,6 +345,11 @@ class VendorController:
 
         user_id = session.get("user_id")
 
+        event_manager.trigger_event(
+            "beforeOpen@" + str(vendor_id),
+            {"vendor_id": str(vendor_id), "open_until": str(open_until)},
+        )
+
         try:
             order, created = OrderService.create_order_for_vendor(db, vendor, open_until, close_time, user_id=user_id)
         except ValueError as e:
@@ -361,6 +367,10 @@ class VendorController:
         db.commit()
 
         if created:
+            event_manager.trigger_event(
+                "afterOpen@" + str(vendor_id),
+                {"order_id": order.id, "order": order.serialized},
+            )
             from app.services.order_service import OrderService
             room = f"{vendor_id}@{order.open_from}"
             socketio.emit(

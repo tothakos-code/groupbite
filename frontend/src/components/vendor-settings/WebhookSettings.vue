@@ -373,17 +373,17 @@ export default {
       isLoading: true,
       webhooks: [],
       eventOptions: [
-        { title: 'Rendelés küldés státusz után', value: 'afterClose' },
-        { title: 'Rendelés követelmény nem teljesült', value: 'closeFailed' },
-        { title: 'Rendelés küldés státusz előtt', value: 'beforeClose' },
-        { title: 'Rendeléshez Item hozzáadás után', value: 'afterAdd' },
-        { title: 'Rendeléshez Item hozzáadás előtt', value: 'beforeAdd' },
-        { title: 'Rendeléshez Item törlés után', value: 'afterRemove' },
-        { title: 'Rendeléshez Item törlés előtt', value: 'beforeRemove' },
-        { title: 'Rendelés létrehozás után', value: 'afterCollect' },
-        { title: 'Rendelés létrehozás előtt', value: 'beforeCollect' },
-        { title: 'Rendelés folyamatban státusz után', value: 'afterOrder' },
-        { title: 'Rendelés folyamatban státusz', value: 'beforeOrder' }
+        { title: 'Adhoc rendelési időszak megnyitva', value: 'afterOpen' },
+        { title: 'Adhoc rendelési időszak megnyitás előtt', value: 'beforeOpen' },
+        { title: 'Rendelés elküldve (lezárás után)', value: 'afterClose' },
+        { title: 'Rendelés küldés követelmény nem teljesült', value: 'closeFailed' },
+        { title: 'Rendelés elküldés előtt', value: 'beforeClose' },
+        { title: 'Tétel kosárba helyezve', value: 'afterAdd' },
+        { title: 'Tétel kosárba helyezés előtt', value: 'beforeAdd' },
+        { title: 'Tétel kosárból eltávolítva', value: 'afterRemove' },
+        { title: 'Tétel kosárból eltávolítás előtt', value: 'beforeRemove' },
+        { title: 'Rendelés folyamatban státuszba lépve', value: 'afterOrder' },
+        { title: 'Rendelés folyamatban státusz előtt', value: 'beforeOrder' }
       ],
       dayOptions: [
         { code: 'mon', label: 'Hétfő' },

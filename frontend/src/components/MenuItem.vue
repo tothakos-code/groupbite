@@ -9,7 +9,7 @@
       <div class="item-header mb-3">
         <div class="d-flex align-center justify-space-between">
           <div class="item-info flex-grow-1">
-            <h3 class="text-h6 font-weight-bold text-primary mb-1">
+            <h3 class="text-h6 font-weight-bold text-primary mb-1 item-name">
               {{ item.name }}
             </h3>
             <p
@@ -418,9 +418,19 @@ export default {
   box-shadow: 0 8px 25px rgba(var(--v-theme-shadow), 0.15);
 }
 
+.item-info {
+  min-width: 0;
+}
+
 .item-header {
   border-bottom: 2px solid rgba(var(--v-theme-primary), 0.2);
   padding-bottom: 12px;
+}
+
+.item-name {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .size-grid {
@@ -441,8 +451,15 @@ export default {
 }
 
 :global(.layout-3-col) .size-grid {
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: 1fr;
   gap: 6px;
+}
+
+:global(.layout-3-col) .compact-order-btn {
+  white-space: normal;
+  height: auto;
+  min-height: 32px;
+  padding: 4px 8px;
 }
 
 .size-card {

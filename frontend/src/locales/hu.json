@@ -1,4 +1,9 @@
 {
+  "menu": {
+    "category": {
+      "other": "Egyéb"
+    }
+  },
   "vendor": {
     "settings": {
       "title": "Cím",

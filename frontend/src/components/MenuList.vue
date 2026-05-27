@@ -83,10 +83,72 @@
     </v-card-text>
 
     <!-- Menu Items Section -->
+    <template v-if="selectedCategory === 'minden'">
+      <!-- Single shared layout toggle for all category groups -->
+      <div class="layout-controls d-flex align-center justify-space-between pa-3 mb-2 mx-3 mt-3">
+        <div class="d-flex align-center">
+          <v-icon
+            size="20"
+            class="me-2 text-medium-emphasis"
+          >
+            mdi-view-grid
+          </v-icon>
+          <span class="text-body-2 text-medium-emphasis">Nézet</span>
+        </div>
+        <v-btn-toggle
+          v-model="currentLayout"
+          mandatory
+          density="compact"
+          variant="outlined"
+          divided
+          @update:model-value="handleLayoutChange"
+        >
+          <v-btn
+            value="1"
+            size="small"
+          >
+            <v-icon size="16">mdi-view-list</v-icon>
+          </v-btn>
+          <v-btn
+            value="2"
+            size="small"
+          >
+            <v-icon size="16">mdi-view-grid</v-icon>
+          </v-btn>
+          <v-btn
+            value="3"
+            size="small"
+          >
+            <v-icon size="16">mdi-view-grid-plus</v-icon>
+          </v-btn>
+        </v-btn-toggle>
+      </div>
+
+      <template
+        v-for="group in groupedItems"
+        :key="group.category"
+      >
+        <div class="d-flex align-center my-3 px-4">
+          <v-divider color="primary" />
+          <span class="mx-3 text-primary text-subtitle-2 font-weight-bold text-uppercase text-no-wrap">
+            {{ group.category }}
+          </span>
+          <v-divider color="primary" />
+        </div>
+        <MenuLayoutChanger
+          :filtered-items="group.items"
+          :is-loading="isLoading"
+          :initial-layout="currentLayout"
+          :show-controls="false"
+          @layout-changed="handleLayoutChange"
+        />
+      </template>
+    </template>
     <MenuLayoutChanger
+      v-else
       :filtered-items="filteredItems"
       :is-loading="isLoading"
-      :initial-layout="'2'"
+      :initial-layout="currentLayout"
       @layout-changed="handleLayoutChange"
     />
   </v-card>
@@ -120,7 +182,29 @@ export default {
   data() {
     return {
       selectedCategoryIndex: 0,
-      isLoading: true
+      isLoading: true,
+      currentLayout: localStorage.getItem('menuLayout') || '2'
+    }
+  },
+  watch: {
+    selectedCategoryIndex(newIdx) {
+      const category = this.categoryList[newIdx];
+      const url = new URL(window.location.href);
+      if (category && category !== 'minden') {
+        url.searchParams.set('category', category);
+      } else {
+        url.searchParams.delete('category');
+      }
+      history.replaceState({}, '', url.toString());
+    },
+    categoryList(newList) {
+      if (!newList.length) return;
+      const cat = new URLSearchParams(window.location.search).get('category');
+      if (!cat) return;
+      const idx = newList.indexOf(cat);
+      if (idx !== -1) {
+        this.selectedCategoryIndex = idx;
+      }
     }
   },
   computed: {
@@ -136,22 +220,39 @@ export default {
     },
     filteredItems() {
       const items = this.menuStore.getItems || [];
-
-      // Sort items by category and then by index
       const sortedItems = [...items].sort((a, b) => {
-        // First sort by category
-        if (a.category !== b.category) {
-          return a.category.localeCompare(b.category, 'hu-HU');
-        }
-        // Then sort by index within the same category
+        const catA = a.category || '';
+        const catB = b.category || '';
+        if (catA !== catB) return catA.localeCompare(catB, 'hu-HU');
         return (a.index || 0) - (b.index || 0);
       });
-
-      // Filter by selected category
       if (this.selectedCategory === 'minden') {
         return sortedItems;
       }
       return sortedItems.filter(item => item.category === this.selectedCategory);
+    },
+    groupedItems() {
+      const items = this.menuStore.getItems || [];
+      const sorted = [...items].sort((a, b) => {
+        const catA = a.category || '';
+        const catB = b.category || '';
+        if (catA !== catB) return catA.localeCompare(catB, 'hu-HU');
+        return (a.index || 0) - (b.index || 0);
+      });
+      const map = new Map();
+      for (const item of sorted) {
+        const cat = item.category || null;
+        if (!map.has(cat)) map.set(cat, []);
+        map.get(cat).push(item);
+      }
+      const result = [];
+      for (const [cat, groupItems] of map) {
+        if (cat !== null) result.push({ category: cat, items: groupItems });
+      }
+      if (map.has(null)) {
+        result.push({ category: this.$t('menu.category.other'), items: map.get(null) });
+      }
+      return result;
     }
   },
   mounted() {
@@ -179,7 +280,7 @@ export default {
           this.isLoading = false;
       });
       state.selectedDate = new Date(day);
-      history.pushState({}, "", `/menu/${this.vendorStore.selectedVendor.name}/${state.selectedDate.toISODate()}`)
+      history.pushState({}, '', `/menu/${this.vendorStore.selectedVendor.name}/${state.selectedDate.toISODate()}${window.location.search}`)
     },
 
     getCategoryIcon(category) {
@@ -219,9 +320,8 @@ export default {
       return weekDates;
     },
     handleLayoutChange(layout) {
-      // Optional: Save user preference
+      this.currentLayout = layout;
       localStorage.setItem('menuLayout', layout);
-      console.log(`Layout changed to ${layout} columns`);
     },
   }
 }
@@ -233,6 +333,12 @@ export default {
   border: 1px solid rgb(var(--v-theme-outline));
   width: 100%;
   max-width: 100%;
+}
+
+.layout-controls {
+  background: rgb(var(--v-theme-surface-container-low));
+  border: 1px solid rgb(var(--v-theme-outline));
+  border-radius: 8px;
 }
 
 .header-section {

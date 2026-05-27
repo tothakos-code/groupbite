@@ -1,7 +1,10 @@
 <template>
   <div>
     <!-- Layout Control Header -->
-    <div class="layout-controls d-flex align-center justify-space-between pa-3 mb-2">
+    <div
+      v-if="showControls"
+      class="layout-controls d-flex align-center justify-space-between pa-3 mb-2"
+    >
       <div class="d-flex align-center">
         <v-icon
           size="20"
@@ -73,86 +76,66 @@
     </div>
 
     <!-- Menu Items Section -->
-    <v-card-text class="pa-0">
-      <v-container
+    <div class="layout-body pa-2">
+      <div
         v-if="filteredItems.length > 0 && !isLoading"
-        fluid
-        class="pa-0"
+        :class="gridClass"
       >
-        <v-row class="ma-0">
-          <v-col
-            cols="12"
-            class="pa-2"
-          >
-            <v-fade-transition
-              group
-              tag="div"
-              :class="gridClass"
-            >
-              <div
-                v-for="item in filteredItems"
-                :key="`item-${item.id}`"
-                class="menu-item-wrapper"
-              >
-                <v-hover v-slot="{ isHovering, props }">
-                  <MenuItem
-                    :item="item"
-                    :class="[
-                      'menu-item-card',
-                      isHovering ? 'item-hover' : '',
-                      `layout-${selectedLayout}-col`
-                    ]"
-                    v-bind="props"
-                  />
-                </v-hover>
-              </div>
-            </v-fade-transition>
-          </v-col>
-        </v-row>
-      </v-container>
+        <div
+          v-for="item in filteredItems"
+          :key="`item-${item.id}`"
+          class="menu-item-wrapper"
+        >
+          <v-hover v-slot="{ isHovering, props }">
+            <MenuItem
+              :item="item"
+              :class="[
+                'menu-item-card',
+                isHovering ? 'item-hover' : '',
+                `layout-${selectedLayout}-col`
+              ]"
+              v-bind="props"
+            />
+          </v-hover>
+        </div>
+      </div>
 
       <!-- Empty State -->
-      <v-container
+      <div
         v-else-if="!isLoading"
-        fluid
-        class="pa-0"
+        class="text-center py-8 px-4"
       >
-        <div class="text-center py-8 px-4">
-          <v-icon
-            size="64"
-            color="grey-lighten-1"
-            class="mb-4"
-          >
-            mdi-food-off
-          </v-icon>
-          <h3 class="text-h6 text-medium-emphasis mb-2">
-            Nincs elérhető menü
-          </h3>
-          <p class="text-body-2 text-medium-emphasis">
-            Erre a napra jelenleg nincsen menü betöltve.
-          </p>
-        </div>
-      </v-container>
+        <v-icon
+          size="64"
+          color="grey-lighten-1"
+          class="mb-4"
+        >
+          mdi-food-off
+        </v-icon>
+        <h3 class="text-h6 text-medium-emphasis mb-2">
+          Nincs elérhető menü
+        </h3>
+        <p class="text-body-2 text-medium-emphasis">
+          Erre a napra jelenleg nincsen menü betöltve.
+        </p>
+      </div>
 
       <!-- Loading State -->
-      <v-container
+      <div
         v-if="isLoading"
-        fluid
-        class="pa-0"
+        class="text-center py-8 px-4"
       >
-        <div class="text-center py-8 px-4">
-          <v-progress-circular
-            indeterminate
-            size="64"
-            color="primary"
-            class="mb-4"
-          />
-          <p class="text-body-1 text-medium-emphasis">
-            Menü betöltése...
-          </p>
-        </div>
-      </v-container>
-    </v-card-text>
+        <v-progress-circular
+          indeterminate
+          size="64"
+          color="primary"
+          class="mb-4"
+        />
+        <p class="text-body-1 text-medium-emphasis">
+          Menü betöltése...
+        </p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -177,6 +160,10 @@ export default {
       type: String,
       default: '2',
       validator: (value) => ['1', '2', '3'].includes(value)
+    },
+    showControls: {
+      type: Boolean,
+      default: true
     }
   },
   emits: ['layout-changed'],
@@ -219,6 +206,11 @@ export default {
   backdrop-filter: blur(10px);
 }
 
+.layout-body {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .menu-grid {
   display: grid;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -242,7 +234,9 @@ export default {
 .menu-item-wrapper {
   display: flex;
   flex-direction: column;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+  animation: fadeIn 0.2s ease forwards;
+  opacity: 0;
 }
 
 /* Layout-specific card adjustments */
@@ -345,24 +339,14 @@ export default {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Stagger animation for grid items */
-.menu-item-wrapper {
-  animation: fadeInUp 0.4s ease forwards;
-  opacity: 0;
-  transform: translateY(20px);
-}
-
 .menu-item-wrapper:nth-child(1) { animation-delay: 0ms; }
-.menu-item-wrapper:nth-child(2) { animation-delay: 50ms; }
-.menu-item-wrapper:nth-child(3) { animation-delay: 100ms; }
-.menu-item-wrapper:nth-child(4) { animation-delay: 150ms; }
-.menu-item-wrapper:nth-child(5) { animation-delay: 200ms; }
-.menu-item-wrapper:nth-child(6) { animation-delay: 250ms; }
+.menu-item-wrapper:nth-child(2) { animation-delay: 30ms; }
+.menu-item-wrapper:nth-child(3) { animation-delay: 60ms; }
+.menu-item-wrapper:nth-child(4) { animation-delay: 90ms; }
+.menu-item-wrapper:nth-child(5) { animation-delay: 120ms; }
+.menu-item-wrapper:nth-child(6) { animation-delay: 150ms; }
 
-@keyframes fadeInUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes fadeIn {
+  to { opacity: 1; }
 }
 </style>

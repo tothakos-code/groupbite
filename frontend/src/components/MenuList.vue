@@ -107,19 +107,25 @@
             value="1"
             size="small"
           >
-            <v-icon size="16">mdi-view-list</v-icon>
+            <v-icon size="16">
+              mdi-view-list
+            </v-icon>
           </v-btn>
           <v-btn
             value="2"
             size="small"
           >
-            <v-icon size="16">mdi-view-grid</v-icon>
+            <v-icon size="16">
+              mdi-view-grid
+            </v-icon>
           </v-btn>
           <v-btn
             value="3"
             size="small"
           >
-            <v-icon size="16">mdi-view-grid-plus</v-icon>
+            <v-icon size="16">
+              mdi-view-grid-plus
+            </v-icon>
           </v-btn>
         </v-btn-toggle>
       </div>
@@ -186,27 +192,6 @@ export default {
       currentLayout: localStorage.getItem('menuLayout') || '2'
     }
   },
-  watch: {
-    selectedCategoryIndex(newIdx) {
-      const category = this.categoryList[newIdx];
-      const url = new URL(window.location.href);
-      if (category && category !== 'minden') {
-        url.searchParams.set('category', category);
-      } else {
-        url.searchParams.delete('category');
-      }
-      history.replaceState({}, '', url.toString());
-    },
-    categoryList(newList) {
-      if (!newList.length) return;
-      const cat = new URLSearchParams(window.location.search).get('category');
-      if (!cat) return;
-      const idx = newList.indexOf(cat);
-      if (idx !== -1) {
-        this.selectedCategoryIndex = idx;
-      }
-    }
-  },
   computed: {
     selectedDate() {
       return state.selectedDate;
@@ -253,6 +238,27 @@ export default {
         result.push({ category: this.$t('menu.category.other'), items: map.get(null) });
       }
       return result;
+    }
+  },
+  watch: {
+    selectedCategoryIndex(newIdx) {
+      const category = this.categoryList[newIdx];
+      const url = new URL(window.location.href);
+      if (category && category !== 'minden') {
+        url.searchParams.set('category', category);
+      } else {
+        url.searchParams.delete('category');
+      }
+      history.replaceState({}, '', url.toString());
+    },
+    categoryList(newList) {
+      if (!newList.length) return;
+      const cat = new URLSearchParams(window.location.search).get('category');
+      if (!cat) return;
+      const idx = newList.indexOf(cat);
+      if (idx !== -1) {
+        this.selectedCategoryIndex = idx;
+      }
     }
   },
   mounted() {

@@ -1,17 +1,32 @@
 <template>
-  <v-container fluid class="pa-4">
-    <v-card elevation="2" class="mx-auto">
+  <v-container
+    fluid
+    class="pa-4"
+  >
+    <v-card
+      elevation="2"
+      class="mx-auto"
+    >
       <!-- Header -->
       <v-card-title class="bg-primary text-white pa-4">
-        <v-row align="center" no-gutters>
+        <v-row
+          align="center"
+          no-gutters
+        >
           <v-col>
             <h2 class="text-h5 font-weight-bold">
-              <v-icon class="me-2">mdi-chart-line</v-icon>
+              <v-icon class="me-2">
+                mdi-chart-line
+              </v-icon>
               {{ vendorName }} — Statisztikák
             </h2>
           </v-col>
           <v-col cols="auto">
-            <v-btn-toggle v-model="activeTab" mandatory color="white">
+            <v-btn-toggle
+              v-model="activeTab"
+              mandatory
+              color="white"
+            >
               <v-btn value="inventory">
                 <v-icon>mdi-package-variant</v-icon>
                 <span class="ms-1 d-none d-sm-inline">{{ $t('stats.tab.inventory') }}</span>
@@ -33,27 +48,49 @@
         <!-- ── TAB 1: INVENTORY ── -->
         <div v-show="activeTab === 'inventory'">
           <!-- Summary chips -->
-          <v-row class="mb-4" dense>
+          <v-row
+            class="mb-4"
+            dense
+          >
             <v-col cols="auto">
-              <v-chip color="error" prepend-icon="mdi-close-circle" variant="tonal">
+              <v-chip
+                color="error"
+                prepend-icon="mdi-close-circle"
+                variant="tonal"
+              >
                 {{ stockSummary.out_of_stock ?? '–' }} elfogyott
               </v-chip>
             </v-col>
             <v-col cols="auto">
-              <v-chip color="warning" prepend-icon="mdi-alert" variant="tonal">
+              <v-chip
+                color="warning"
+                prepend-icon="mdi-alert"
+                variant="tonal"
+              >
                 {{ stockSummary.low_stock ?? '–' }} alacsony
               </v-chip>
             </v-col>
             <v-col cols="auto">
-              <v-chip color="secondary" prepend-icon="mdi-package-variant" variant="tonal">
+              <v-chip
+                color="secondary"
+                prepend-icon="mdi-package-variant"
+                variant="tonal"
+              >
                 {{ stockSummary.total_limited ?? '–' }} nyomon követett
               </v-chip>
             </v-col>
           </v-row>
 
           <!-- Category filter -->
-          <v-row v-if="availableCategories.length > 0" class="mb-2" dense>
-            <v-col cols="12" sm="4">
+          <v-row
+            v-if="availableCategories.length > 0"
+            class="mb-2"
+            dense
+          >
+            <v-col
+              cols="12"
+              sm="4"
+            >
               <v-select
                 v-model="selectedCategory"
                 :items="availableCategories"
@@ -70,34 +107,76 @@
 
           <v-row>
             <!-- Stock levels bar chart -->
-            <v-col cols="12" lg="8">
-              <v-card variant="outlined" elevation="1">
+            <v-col
+              cols="12"
+              lg="8"
+            >
+              <v-card
+                variant="outlined"
+                elevation="1"
+              >
                 <v-card-title class="text-subtitle-1 pa-3 bg-grey-lighten-5">
-                  <v-icon color="primary" class="me-1">mdi-package-variant</v-icon>
+                  <v-icon
+                    color="primary"
+                    class="me-1"
+                  >
+                    mdi-package-variant
+                  </v-icon>
                   {{ $t('stats.chart.stockLevels') }}
                 </v-card-title>
                 <v-card-text class="pa-3">
-                  <div v-if="stockLevelsLoading" class="text-center py-8">
-                    <v-progress-circular indeterminate color="primary" size="48" />
+                  <div
+                    v-if="stockLevelsLoading"
+                    class="text-center py-8"
+                  >
+                    <v-progress-circular
+                      indeterminate
+                      color="primary"
+                      size="48"
+                    />
                   </div>
-                  <div v-else-if="stockChartData.labels.length === 0" class="text-center text-grey py-6">
+                  <div
+                    v-else-if="stockChartData.labels.length === 0"
+                    class="text-center text-grey py-6"
+                  >
                     Nincs nyomon követett készlet.
                   </div>
-                  <div v-else class="chart-container">
-                    <Bar :data="stockChartData" :options="stockChartOptions" />
+                  <div
+                    v-else
+                    class="chart-container"
+                  >
+                    <Bar
+                      :data="stockChartData"
+                      :options="stockChartOptions"
+                    />
                   </div>
                 </v-card-text>
               </v-card>
             </v-col>
 
             <!-- Alerts list -->
-            <v-col cols="12" lg="4">
-              <v-card variant="outlined" elevation="1" height="100%">
+            <v-col
+              cols="12"
+              lg="4"
+            >
+              <v-card
+                variant="outlined"
+                elevation="1"
+                height="100%"
+              >
                 <v-card-title class="text-subtitle-1 pa-3 bg-grey-lighten-5">
-                  <v-icon color="warning" class="me-1">mdi-alert</v-icon>
+                  <v-icon
+                    color="warning"
+                    class="me-1"
+                  >
+                    mdi-alert
+                  </v-icon>
                   Figyelmeztetések
                 </v-card-title>
-                <v-card-text class="pa-0" style="max-height: 400px; overflow-y: auto;">
+                <v-card-text
+                  class="pa-0"
+                  style="max-height: 400px; overflow-y: auto;"
+                >
                   <v-list density="compact">
                     <v-list-item
                       v-for="a in filteredStockAlerts"
@@ -107,7 +186,11 @@
                       :subtitle="`${a.size_name} — ${a.quantity} db`"
                     >
                       <template #append>
-                        <v-chip :color="alertColor(a.alert_level)" size="x-small" variant="tonal">
+                        <v-chip
+                          :color="alertColor(a.alert_level)"
+                          size="x-small"
+                          variant="tonal"
+                        >
                           {{ alertLabel(a.alert_level) }}
                         </v-chip>
                       </template>
@@ -126,14 +209,25 @@
           <!-- Depletion section -->
           <v-row class="mt-4">
             <v-col cols="12">
-              <v-card variant="outlined" elevation="1">
+              <v-card
+                variant="outlined"
+                elevation="1"
+              >
                 <v-card-title class="text-subtitle-1 pa-3 bg-grey-lighten-5">
-                  <v-icon color="info" class="me-1">mdi-chart-timeline-variant</v-icon>
+                  <v-icon
+                    color="info"
+                    class="me-1"
+                  >
+                    mdi-chart-timeline-variant
+                  </v-icon>
                   Fogyás részletei
                 </v-card-title>
                 <v-card-text class="pa-2">
                   <!-- History date range filter -->
-                  <v-row dense class="mb-3 px-2">
+                  <v-row
+                    dense
+                    class="mb-3 px-2"
+                  >
                     <v-col cols="auto">
                       <v-text-field
                         v-model="historyFrom"
@@ -156,52 +250,96 @@
                         style="min-width: 170px;"
                       />
                     </v-col>
-                    <v-col cols="auto" class="d-flex align-center">
+                    <v-col
+                      cols="auto"
+                      class="d-flex align-center"
+                    >
                       <span class="text-caption text-grey">A dátumszűrő az előzmény betöltésekor érvényes.</span>
                     </v-col>
                   </v-row>
-                  <div v-if="stockLevelsLoading" class="text-center py-4">
-                    <v-progress-circular indeterminate color="primary" size="32" />
+                  <div
+                    v-if="stockLevelsLoading"
+                    class="text-center py-4"
+                  >
+                    <v-progress-circular
+                      indeterminate
+                      color="primary"
+                      size="32"
+                    />
                   </div>
-                  <div v-else-if="filteredStockItems.length === 0" class="text-center text-grey py-4">
+                  <div
+                    v-else-if="filteredStockItems.length === 0"
+                    class="text-center text-grey py-4"
+                  >
                     Nincs adat.
                   </div>
-                  <v-expansion-panels v-else variant="accordion">
-                    <v-expansion-panel v-for="item in filteredStockItems" :key="item.item_id">
+                  <v-expansion-panels
+                    v-else
+                    variant="accordion"
+                  >
+                    <v-expansion-panel
+                      v-for="item in filteredStockItems"
+                      :key="item.item_id"
+                    >
                       <v-expansion-panel-title @click="onItemPanelClick(item)">
-                        <v-row no-gutters align="center">
+                        <v-row
+                          no-gutters
+                          align="center"
+                        >
                           <v-col>
                             <span class="font-weight-medium">{{ item.item_name }}</span>
                             <span class="text-caption text-grey ms-2">{{ item.category_name }}</span>
                           </v-col>
                           <v-col cols="auto">
-                            <v-chip size="x-small" variant="tonal" color="secondary" class="me-2">
+                            <v-chip
+                              size="x-small"
+                              variant="tonal"
+                              color="secondary"
+                              class="me-2"
+                            >
                               {{ item.sizes.reduce((s, sz) => s + sz.quantity, 0) }} db
                             </v-chip>
                           </v-col>
                         </v-row>
                       </v-expansion-panel-title>
                       <v-expansion-panel-text>
-                        <div v-for="sz in item.sizes" :key="sz.size_id" class="mb-4">
-                          <v-row align="center" class="mb-2">
+                        <div
+                          v-for="sz in item.sizes"
+                          :key="sz.size_id"
+                          class="mb-4"
+                        >
+                          <v-row
+                            align="center"
+                            class="mb-2"
+                          >
                             <v-col>
                               <span class="text-body-2 font-weight-medium">{{ sz.size_name }}</span>
                               <v-chip
                                 :color="sz.quantity === 0 ? 'error' : sz.quantity < 10 ? 'warning' : 'success'"
-                                size="x-small" variant="tonal" class="ms-2"
+                                size="x-small"
+                                variant="tonal"
+                                class="ms-2"
                               >
                                 {{ sz.quantity }} db
                               </v-chip>
                             </v-col>
-                            <v-col cols="auto" class="d-flex align-center" style="gap: 8px;">
+                            <v-col
+                              cols="auto"
+                              class="d-flex align-center"
+                              style="gap: 8px;"
+                            >
                               <v-btn
-                                size="x-small" variant="text" color="primary"
+                                size="x-small"
+                                variant="text"
+                                color="primary"
                                 @click="loadSizeHistory(sz.size_id)"
                               >
                                 Frissítés
                               </v-btn>
                               <v-btn
-                                size="small" variant="tonal" color="success"
+                                size="small"
+                                variant="tonal"
+                                color="success"
                                 prepend-icon="mdi-plus-circle"
                                 @click="openTopup(sz.size_id, sz.size_name, item.item_name)"
                               >
@@ -215,7 +353,11 @@
                               v-if="sizeHistories[sz.size_id].loading"
                               class="text-center py-2"
                             >
-                              <v-progress-circular indeterminate color="primary" size="24" />
+                              <v-progress-circular
+                                indeterminate
+                                color="primary"
+                                size="24"
+                              />
                             </div>
                             <template v-else>
                               <div
@@ -250,7 +392,9 @@
                                     v-for="e in sizeHistories[sz.size_id].entries"
                                     :key="e.id"
                                   >
-                                    <td class="text-caption">{{ formatTimestamp(e.timestamp) }}</td>
+                                    <td class="text-caption">
+                                      {{ formatTimestamp(e.timestamp) }}
+                                    </td>
                                     <td>
                                       <span
                                         :class="e.quantity_change > 0 ? 'text-success' : 'text-error'"
@@ -259,8 +403,12 @@
                                         {{ e.quantity_change > 0 ? '+' : '' }}{{ e.quantity_change }}
                                       </span>
                                     </td>
-                                    <td class="text-caption">{{ reasonLabel(e.reason) }}</td>
-                                    <td class="text-caption">{{ e.note || '–' }}</td>
+                                    <td class="text-caption">
+                                      {{ reasonLabel(e.reason) }}
+                                    </td>
+                                    <td class="text-caption">
+                                      {{ e.note || '–' }}
+                                    </td>
                                   </tr>
                                 </tbody>
                               </v-table>
@@ -285,53 +433,137 @@
         <!-- ── TAB 2: SALES ── -->
         <div v-show="activeTab === 'sales'">
           <!-- Preset filter -->
-          <v-row class="mb-4" justify="center">
+          <v-row
+            class="mb-4"
+            justify="center"
+          >
             <v-col cols="auto">
-              <v-btn-toggle v-model="salesPreset" mandatory color="primary" @update:modelValue="onPresetChange">
-                <v-btn value="last_30_days" size="small">{{ $t('stats.preset.last30') }}</v-btn>
-                <v-btn value="current_month" size="small">{{ $t('stats.preset.currentMonth') }}</v-btn>
-                <v-btn value="last_month" size="small">{{ $t('stats.preset.lastMonth') }}</v-btn>
-                <v-btn value="since_last_topup" size="small">{{ $t('stats.preset.sinceLastTopup') }}</v-btn>
-                <v-btn value="all_time" size="small">{{ $t('stats.preset.allTime') }}</v-btn>
+              <v-btn-toggle
+                v-model="salesPreset"
+                mandatory
+                color="primary"
+                @update:model-value="onPresetChange"
+              >
+                <v-btn
+                  value="last_30_days"
+                  size="small"
+                >
+                  {{ $t('stats.preset.last30') }}
+                </v-btn>
+                <v-btn
+                  value="current_month"
+                  size="small"
+                >
+                  {{ $t('stats.preset.currentMonth') }}
+                </v-btn>
+                <v-btn
+                  value="last_month"
+                  size="small"
+                >
+                  {{ $t('stats.preset.lastMonth') }}
+                </v-btn>
+                <v-btn
+                  value="since_last_topup"
+                  size="small"
+                >
+                  {{ $t('stats.preset.sinceLastTopup') }}
+                </v-btn>
+                <v-btn
+                  value="all_time"
+                  size="small"
+                >
+                  {{ $t('stats.preset.allTime') }}
+                </v-btn>
               </v-btn-toggle>
             </v-col>
           </v-row>
 
           <v-row>
             <!-- Revenue trend line chart -->
-            <v-col cols="12" lg="6">
-              <v-card variant="outlined" elevation="1">
+            <v-col
+              cols="12"
+              lg="6"
+            >
+              <v-card
+                variant="outlined"
+                elevation="1"
+              >
                 <v-card-title class="text-subtitle-1 pa-3 bg-grey-lighten-5">
-                  <v-icon color="primary" class="me-1">mdi-chart-line</v-icon>
+                  <v-icon
+                    color="primary"
+                    class="me-1"
+                  >
+                    mdi-chart-line
+                  </v-icon>
                   {{ $t('stats.chart.salesTrend') }}
                 </v-card-title>
                 <v-card-text class="pa-3">
-                  <div v-if="salesLoading" class="text-center py-8">
-                    <v-progress-circular indeterminate color="primary" size="48" />
+                  <div
+                    v-if="salesLoading"
+                    class="text-center py-8"
+                  >
+                    <v-progress-circular
+                      indeterminate
+                      color="primary"
+                      size="48"
+                    />
                   </div>
-                  <div v-else class="chart-container">
-                    <Line :data="salesTrendChartData" :options="salesTrendChartOptions" />
+                  <div
+                    v-else
+                    class="chart-container"
+                  >
+                    <Line
+                      :data="salesTrendChartData"
+                      :options="salesTrendChartOptions"
+                    />
                   </div>
                 </v-card-text>
               </v-card>
             </v-col>
 
             <!-- Popular items doughnut -->
-            <v-col cols="12" lg="6">
-              <v-card variant="outlined" elevation="1">
+            <v-col
+              cols="12"
+              lg="6"
+            >
+              <v-card
+                variant="outlined"
+                elevation="1"
+              >
                 <v-card-title class="text-subtitle-1 pa-3 bg-grey-lighten-5">
-                  <v-icon color="primary" class="me-1">mdi-fire</v-icon>
+                  <v-icon
+                    color="primary"
+                    class="me-1"
+                  >
+                    mdi-fire
+                  </v-icon>
                   {{ $t('stats.chart.popularItems') }}
                 </v-card-title>
                 <v-card-text class="pa-3">
-                  <div v-if="salesLoading" class="text-center py-8">
-                    <v-progress-circular indeterminate color="primary" size="48" />
+                  <div
+                    v-if="salesLoading"
+                    class="text-center py-8"
+                  >
+                    <v-progress-circular
+                      indeterminate
+                      color="primary"
+                      size="48"
+                    />
                   </div>
-                  <div v-else-if="popularChartData.labels.length === 0" class="text-center text-grey py-6">
+                  <div
+                    v-else-if="popularChartData.labels.length === 0"
+                    class="text-center text-grey py-6"
+                  >
                     Nincs adat.
                   </div>
-                  <div v-else class="chart-container">
-                    <Doughnut :data="popularChartData" :options="popularChartOptions" />
+                  <div
+                    v-else
+                    class="chart-container"
+                  >
+                    <Doughnut
+                      :data="popularChartData"
+                      :options="popularChartOptions"
+                    />
                   </div>
                 </v-card-text>
               </v-card>
@@ -341,9 +573,17 @@
           <!-- Per-user spend table -->
           <v-row class="mt-4">
             <v-col cols="12">
-              <v-card variant="outlined" elevation="1">
+              <v-card
+                variant="outlined"
+                elevation="1"
+              >
                 <v-card-title class="text-subtitle-1 pa-3 bg-grey-lighten-5">
-                  <v-icon color="primary" class="me-1">mdi-account-group</v-icon>
+                  <v-icon
+                    color="primary"
+                    class="me-1"
+                  >
+                    mdi-account-group
+                  </v-icon>
                   Felhasználónkénti költés
                 </v-card-title>
                 <v-data-table
@@ -365,47 +605,127 @@
         <!-- ── TAB 3: PERFORMANCE ── -->
         <div v-show="activeTab === 'performance'">
           <!-- KPI cards -->
-          <v-row class="mb-4" dense>
-            <v-col cols="12" sm="6" md="3">
-              <v-card variant="tonal" color="primary" class="text-center pa-3">
-                <v-icon size="28" class="mb-1">mdi-currency-usd</v-icon>
-                <div class="text-h6 font-weight-bold">{{ formatFt(kpiSummary.total_revenue) }}</div>
-                <div class="text-body-2">{{ $t('stats.kpi.totalRevenue') }}</div>
+          <v-row
+            class="mb-4"
+            dense
+          >
+            <v-col
+              cols="12"
+              sm="6"
+              md="3"
+            >
+              <v-card
+                variant="tonal"
+                color="primary"
+                class="text-center pa-3"
+              >
+                <v-icon
+                  size="28"
+                  class="mb-1"
+                >
+                  mdi-currency-usd
+                </v-icon>
+                <div class="text-h6 font-weight-bold">
+                  {{ formatFt(kpiSummary.total_revenue) }}
+                </div>
+                <div class="text-body-2">
+                  {{ $t('stats.kpi.totalRevenue') }}
+                </div>
               </v-card>
             </v-col>
-            <v-col cols="12" sm="6" md="3">
-              <v-card variant="tonal" color="success" class="text-center pa-3">
-                <v-icon size="28" class="mb-1">mdi-receipt</v-icon>
-                <div class="text-h6 font-weight-bold">{{ formatFt(kpiSummary.avg_order_value) }}</div>
-                <div class="text-body-2">{{ $t('stats.kpi.avgOrderValue') }}</div>
+            <v-col
+              cols="12"
+              sm="6"
+              md="3"
+            >
+              <v-card
+                variant="tonal"
+                color="success"
+                class="text-center pa-3"
+              >
+                <v-icon
+                  size="28"
+                  class="mb-1"
+                >
+                  mdi-receipt
+                </v-icon>
+                <div class="text-h6 font-weight-bold">
+                  {{ formatFt(kpiSummary.avg_order_value) }}
+                </div>
+                <div class="text-body-2">
+                  {{ $t('stats.kpi.avgOrderValue') }}
+                </div>
               </v-card>
             </v-col>
-            <v-col cols="12" sm="6" md="3">
-              <v-card variant="tonal" color="info" class="text-center pa-3">
-                <v-icon size="28" class="mb-1">mdi-calendar-today</v-icon>
-                <div class="text-h6 font-weight-bold">{{ kpiSummary.orders_per_day ?? '–' }}</div>
-                <div class="text-body-2">{{ $t('stats.kpi.ordersPerDay') }}</div>
+            <v-col
+              cols="12"
+              sm="6"
+              md="3"
+            >
+              <v-card
+                variant="tonal"
+                color="info"
+                class="text-center pa-3"
+              >
+                <v-icon
+                  size="28"
+                  class="mb-1"
+                >
+                  mdi-calendar-today
+                </v-icon>
+                <div class="text-h6 font-weight-bold">
+                  {{ kpiSummary.orders_per_day ?? '–' }}
+                </div>
+                <div class="text-body-2">
+                  {{ $t('stats.kpi.ordersPerDay') }}
+                </div>
               </v-card>
             </v-col>
-            <v-col cols="12" sm="6" md="3">
-              <v-card variant="tonal" color="warning" class="text-center pa-3">
-                <v-icon size="28" class="mb-1">mdi-fire</v-icon>
+            <v-col
+              cols="12"
+              sm="6"
+              md="3"
+            >
+              <v-card
+                variant="tonal"
+                color="warning"
+                class="text-center pa-3"
+              >
+                <v-icon
+                  size="28"
+                  class="mb-1"
+                >
+                  mdi-fire
+                </v-icon>
                 <div class="text-subtitle-1 font-weight-bold text-truncate">
                   {{ kpiSummary.most_popular_item ?? '–' }}
                 </div>
-                <div class="text-body-2">{{ $t('stats.kpi.mostPopular') }}</div>
+                <div class="text-body-2">
+                  {{ $t('stats.kpi.mostPopular') }}
+                </div>
               </v-card>
             </v-col>
           </v-row>
 
           <!-- Vendor trend bar chart -->
-          <v-card variant="outlined" elevation="1">
+          <v-card
+            variant="outlined"
+            elevation="1"
+          >
             <v-card-title class="text-subtitle-1 pa-3 bg-grey-lighten-5">
-              <v-icon color="primary" class="me-1">mdi-chart-bar</v-icon>
+              <v-icon
+                color="primary"
+                class="me-1"
+              >
+                mdi-chart-bar
+              </v-icon>
               {{ $t('stats.chart.vendorTrend') }}
             </v-card-title>
             <v-card-text class="pa-3">
-              <v-row dense class="mb-3">
+              <v-row
+                dense
+                class="mb-3"
+              >
                 <v-col cols="auto">
                   <v-text-field
                     v-model="vendorTrendFrom"
@@ -428,17 +748,38 @@
                     style="min-width: 170px;"
                   />
                 </v-col>
-                <v-col cols="auto" class="d-flex align-center">
-                  <v-btn size="small" color="primary" variant="tonal" @click="loadVendorTrend">
+                <v-col
+                  cols="auto"
+                  class="d-flex align-center"
+                >
+                  <v-btn
+                    size="small"
+                    color="primary"
+                    variant="tonal"
+                    @click="loadVendorTrend"
+                  >
                     Frissítés
                   </v-btn>
                 </v-col>
               </v-row>
-              <div v-if="performanceLoading" class="text-center py-8">
-                <v-progress-circular indeterminate color="primary" size="48" />
+              <div
+                v-if="performanceLoading"
+                class="text-center py-8"
+              >
+                <v-progress-circular
+                  indeterminate
+                  color="primary"
+                  size="48"
+                />
               </div>
-              <div v-else class="chart-container">
-                <Bar :data="vendorTrendChartData" :options="vendorTrendChartOptions" />
+              <div
+                v-else
+                class="chart-container"
+              >
+                <Bar
+                  :data="vendorTrendChartData"
+                  :options="vendorTrendChartOptions"
+                />
               </div>
             </v-card-text>
           </v-card>
@@ -447,7 +788,10 @@
     </v-card>
 
     <!-- Top-up dialog -->
-    <v-dialog v-model="topupDialog.open" max-width="400">
+    <v-dialog
+      v-model="topupDialog.open"
+      max-width="400"
+    >
       <v-card>
         <v-card-title>{{ $t('stats.topup.title') }} — {{ topupDialog.itemName }} ({{ topupDialog.sizeName }})</v-card-title>
         <v-card-text>
@@ -465,9 +809,15 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="topupDialog.open = false">Mégse</v-btn>
           <v-btn
-            color="success" variant="tonal"
+            variant="text"
+            @click="topupDialog.open = false"
+          >
+            Mégse
+          </v-btn>
+          <v-btn
+            color="success"
+            variant="tonal"
             :loading="topupLoading"
             :disabled="!topupForm.quantity || topupForm.quantity < 1"
             @click="confirmTopup"
@@ -510,6 +860,7 @@ const DOUGHNUT_COLORS = [
 
 export default {
   name: 'VendorStats',
+  // eslint-disable-next-line vue/no-reserved-component-names
   components: { Bar, Line, Doughnut },
 
   setup() {

@@ -332,7 +332,10 @@
                         >
                           {{ item.extras_summary.bundle.original_price }} Ft
                         </div>
-                        <div class="font-weight-medium" :class="item.extras_summary && item.extras_summary.bundle ? 'text-success' : ''">
+                        <div
+                          class="font-weight-medium"
+                          :class="item.extras_summary && item.extras_summary.bundle ? 'text-success' : ''"
+                        >
                           {{ item.total_price }} Ft
                         </div>
                         <div class="text-caption grey--text">

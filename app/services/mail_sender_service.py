@@ -38,7 +38,7 @@ class EmailService:
             body=email_body,
         )
 
-    def send_order(self, order: Order, basket_sum):
+    def send_order(self, order: Order, basket_sum, extra_cc: list = []):
         from app.services.vendor_service import VendorService
 
         items_by_category = {}
@@ -61,11 +61,12 @@ class EmailService:
         email_subject = self.render_template_string(
             template, order=order, vendor=order.vendor
         )
+        cc = list(VendorService.get_setting_value(order.vendor, "auto_email_order_cc") or []) + extra_cc
         return send_mail(
             to=VendorService.get_setting_value(order.vendor, "auto_email_order_to"),
             subject=email_subject,
             body=email_body,
-            cc=VendorService.get_setting_value(order.vendor, "auto_email_order_cc"),
+            cc=cc,
         )
 
     def send_test_mail(self, to: list[str], settings: dict):
@@ -126,7 +127,8 @@ def send_mail(to: list, subject: str, body, cc: list = [], settings=None):
                 server.starttls()
                 logging.info("TLS mail in use")
 
-        server.login(smtp_user, smtp_password)
+        if smtp_user:
+            server.login(smtp_user, smtp_password)
         server.sendmail(sender_email, to_addresses, msg.as_string())
         logging.info("Sending mail")
         success, error = True, None

@@ -1,7 +1,7 @@
 import logging
 from datetime import date
 
-from flask import Blueprint, request
+from flask import Blueprint, request, session
 from flask_socketio import join_room, leave_room, rooms
 
 from app.db.session import get_session
@@ -277,7 +277,14 @@ class OrderController:
     @validate_url_params(IDSchema())
     @handle_request
     def handle_manual_email_order(self, db, order_id):
-        self.order_service.email_order(db, order_id)
+        from app.repositories.user_repository import UserRepository
+        cc_me = (request.json or {}).get("data", {}).get("cc_me", False)
+        extra_cc = []
+        if cc_me:
+            user = UserRepository(db).get_by_id(session.get("user_id"))
+            if user and user.email:
+                extra_cc = [user.email]
+        self.order_service.email_order(db, order_id, extra_cc=extra_cc)
         return {"msg": "Email sent and order closed manually"}, 200
 
 

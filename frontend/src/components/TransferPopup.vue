@@ -132,6 +132,14 @@
         <p class="text-body-2">
           Ha megerősíted, a rendelés lezárul és a rendszer emailt küld automatikusan.
         </p>
+        <v-checkbox
+          v-if="auth.user?.email"
+          v-model="ccMe"
+          :label="`Küldj másolatot nekem (${auth.user.email})`"
+          density="compact"
+          hide-details
+          class="mt-2"
+        />
       </v-card-text>
 
       <v-card-actions>
@@ -167,31 +175,6 @@
       </v-card-title>
 
       <v-card-text>
-        <v-row>
-          <!-- Email Sending Section -->
-          <v-card
-            variant="outlined"
-            class="mb-4"
-          >
-            <v-card-title class="text-subtitle-1">
-              Email küldés
-            </v-card-title>
-            <v-card-text>
-              <p class="text-body-2 mb-3">
-                Nincs meg a minimum automatikus rendeléshez? Küld el az emailt itt!
-              </p>
-              <v-btn
-                variant="elevated"
-                color="info"
-                :loading="emailSending"
-                prepend-icon="mdi-email-send"
-                @click="sendOrderEmail()"
-              >
-                Email küldés
-              </v-btn>
-            </v-card-text>
-          </v-card>
-        </v-row>
         <v-row>
           <v-alert
             type="info"
@@ -504,6 +487,7 @@ export default {
       optionDialogVisible: false,
       bulkActionInProgress: false,
       confirmSemiAuto: false,
+      ccMe: false,
       orderItems: [],
       psid: "",
       transport_price: unref(useVendorStore().selectedVendor.settings.transport_price)
@@ -639,12 +623,13 @@ export default {
       this.confirmSemiAuto = false;
       this.optionDialogVisible = false;
       this.showSpinner = true;
-      await this.sendOrderEmail().then((result) => {
+      const ccMe = this.ccMe;
+      this.ccMe = false;
+      await this.sendOrderEmail(ccMe).then((result) => {
         this.showSpinner = false;
         if (result) {
           this.showFinish = true;
         }
-
       });
     },
     processItemChanges(newItemMap, oldItemsMap) {
@@ -790,11 +775,11 @@ export default {
       }
       this.showFinish = false;
     },
-    async sendOrderEmail() {
+    async sendOrderEmail(ccMe = false) {
       this.emailSending = true;
       let result = true;
       try {
-        await this.orderStore.sendOrderEmail()
+        await this.orderStore.sendOrderEmail(ccMe)
 
         notify({
           type: "success",

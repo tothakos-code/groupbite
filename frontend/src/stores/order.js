@@ -297,10 +297,11 @@ export const useOrderStore = defineStore("order", {
         this.isLoading = false;
       }
     },
-    async sendOrderEmail() {
+    async sendOrderEmail(ccMe = false) {
       try {
         const response = axios.post(`/api/order/${this.order.id}/send-email`, { "data": {
-          "order_id": this.order.id
+          "order_id": this.order.id,
+          "cc_me": ccMe
         } })
         return response
       } catch (error) {

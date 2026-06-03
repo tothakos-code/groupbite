@@ -435,7 +435,7 @@ class OrderService:
             "week_data": {"data": week_result, "labels": week_labels},
         }
 
-    def email_order(self, db, order_id):
+    def email_order(self, db, order_id, extra_cc: list = []):
         order_repo = OrderRepository(db)
         order = order_repo.get_by_id(order_id)
         logging.info(
@@ -461,7 +461,7 @@ class OrderService:
             logging.info(f"Scheduled task '{task_id}' not found.")
 
         # Execute the email logic manually
-        if self.email_ordering_wrapper(order=order, manual=True):
+        if self.email_ordering_wrapper(order=order, manual=True, extra_cc=extra_cc):
             return {"msg": "Email sent and order closed manually"}, 200
         else:
             raise ValueError("Something went wrong during the action")
@@ -664,7 +664,7 @@ class OrderService:
         return order
 
     @staticmethod
-    def send_in_mail(order):
+    def send_in_mail(order, extra_cc: list = []):
         with get_session() as db:
             baskets = UserBasketRepository(db).find_items_by_order(order.id)
 
@@ -683,7 +683,7 @@ class OrderService:
                 }
 
         email_service = EmailService()
-        success = email_service.send_order(order, basket_sum)
+        success = email_service.send_order(order, basket_sum, extra_cc=extra_cc)
         if not success:
             logging.error("Email could not be sent")
             return False
@@ -691,7 +691,7 @@ class OrderService:
         logging.info(f"Order {order.id} sent in email!")
         return True
 
-    def email_ordering_wrapper(self, order: Order, manual=False):
+    def email_ordering_wrapper(self, order: Order, manual=False, extra_cc: list = []):
         logging.info("Manual email ordering running")
         from app.event_manager import event_manager
         from app.services.vendor_service import VendorService
@@ -712,7 +712,7 @@ class OrderService:
                 and (email_min_user == 0 or email_min_user <= order_user_count)
             ):
                 self._change_state(db, order, OrderState.CLOSED)
-                self.send_in_mail(order)
+                self.send_in_mail(order, extra_cc=extra_cc)
 
                 event_manager.trigger_event(
                     "afterClose@" + str(order.vendor_id),

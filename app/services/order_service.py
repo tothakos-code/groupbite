@@ -667,19 +667,36 @@ class OrderService:
     def send_in_mail(order, extra_cc: list = []):
         with get_session() as db:
             baskets = UserBasketRepository(db).find_items_by_order(order.id)
+            all_selections = BasketOptionSelectionRepository(db).find_by_order_with_details(order.id)
 
         if len(baskets) == 0:
             logging.warning("The order is empty, email not sent")
             return False
 
+        # Deduplicate selections by (menu_item_id, size_id, line_key, option_choice_id)
+        # so each unique option appears once regardless of how many users chose it.
+        seen_choices = set()
+        selections_index = {}
+        for sel in all_selections:
+            variant_key = (sel.menu_item_id, sel.size_id, sel.line_key)
+            dedup_key = (*variant_key, sel.option_choice_id)
+            if dedup_key not in seen_choices:
+                seen_choices.add(dedup_key)
+                selections_index.setdefault(variant_key, []).append({
+                    "group": sel.choice.group.name if sel.choice and sel.choice.group else None,
+                    "choice": sel.choice.name if sel.choice else None,
+                })
+
         basket_sum = {}
         for item in baskets:
-            if item.menu_item_id in basket_sum:
-                basket_sum[item.menu_item_id]["quantity"] += item.count
+            key = (item.menu_item_id, item.size_id, item.line_key)
+            if key in basket_sum:
+                basket_sum[key]["quantity"] += item.count
             else:
-                basket_sum[item.menu_item_id] = {
+                basket_sum[key] = {
                     **item.basket_format,
                     "quantity": item.count,
+                    "options": selections_index.get(key, []),
                 }
 
         email_service = EmailService()

@@ -12,6 +12,17 @@ from app.entities.user import User
 from app.repositories.setting_repository import SettingRepository
 from app.services.encrypted_type import decrypt_value
 
+DEFAULT_ORDER_TEMPLATE = """\
+{% for category, items in categories.items() %}
+{{ category }}:
+{% for item in items %}
+  - {{ item.item_name }}{% if item.size_name %} ({{ item.size_name }}){% endif %} x{{ item.quantity }}
+{% for option in item.options %}    + {{ option.choice }}{% if option.group %} ({{ option.group }}){% endif %}
+{% endfor %}{% endfor %}
+{% endfor %}
+{% if order_note %}Megjegyzés: {{ order_note }}
+{% endif %}"""
+
 
 class EmailService:
     def __init__(self):
@@ -50,18 +61,30 @@ class EmailService:
             items_by_category[category].append(item)
             all_items.append(item)
 
-        template = VendorService.get_setting_value(
-            order.vendor, "auto_email_order_template"
+        template = (
+            VendorService.get_setting_value(order.vendor, "auto_email_order_template")
+            or DEFAULT_ORDER_TEMPLATE
         )
+        order_note = VendorService.get_setting_value(order.vendor, "comment_example")
         email_body = self.render_template_string(
-            template, order=order, basket=all_items, categories=items_by_category
+            template,
+            order=order,
+            basket=all_items,
+            categories=items_by_category,
+            order_note=order_note,
         )
 
         template = VendorService.get_setting_value(order.vendor, "auto_email_subject")
         email_subject = self.render_template_string(
             template, order=order, vendor=order.vendor
         )
-        cc = list(VendorService.get_setting_value(order.vendor, "auto_email_order_cc") or []) + extra_cc
+        cc = (
+            list(
+                VendorService.get_setting_value(order.vendor, "auto_email_order_cc")
+                or []
+            )
+            + extra_cc
+        )
         return send_mail(
             to=VendorService.get_setting_value(order.vendor, "auto_email_order_to"),
             subject=email_subject,
@@ -112,9 +135,8 @@ def send_mail(to: list, subject: str, body, cc: list = [], settings=None):
     msg["Subject"] = subject
     to_addresses = to + cc
 
-    # Attach the email body
     msg.attach(MIMEText(body, "plain"))
-    msg.attach(MIMEText(body, "html"))
+    msg.attach(MIMEText(body.replace("\n", "<br>\n"), "html"))
 
     # Try to log in to server and send email
     try:

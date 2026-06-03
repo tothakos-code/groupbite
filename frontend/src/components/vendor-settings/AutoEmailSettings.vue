@@ -82,14 +82,30 @@
           <v-row>
             <v-col cols="12">
               <v-textarea
-                v-model="localSettings.auto_email_order_template"
+                :model-value="isDefault ? DEFAULT_TEMPLATE : localSettings.auto_email_order_template"
                 :label="$t('vendor.settings.auto_email_order_template')"
+                :hint="isDefault ? $t('vendor.settings.auto_email_template_hint_default') : $t('vendor.settings.auto_email_template_hint_edited')"
+                :persistent-hint="true"
+                :class="['code-textarea', { 'template-default': isDefault }]"
                 prepend-icon="mdi-file-document-edit"
                 variant="outlined"
                 rows="4"
                 auto-grow
-                class="code-textarea"
+                @update:model-value="val => { localSettings.auto_email_order_template = val }"
               />
+            </v-col>
+          </v-row>
+
+          <v-row v-if="!isDefault">
+            <v-col cols="12">
+              <v-btn
+                variant="plain"
+                size="small"
+                prepend-icon="mdi-restore"
+                @click="localSettings.auto_email_order_template = ''"
+              >
+                {{ $t('vendor.settings.auto_email_template_reset') }}
+              </v-btn>
             </v-col>
           </v-row>
         </div>
@@ -99,6 +115,16 @@
 </template>
 
 <script>
+const DEFAULT_TEMPLATE = `{% for category, items in categories.items() %}
+{{ category }}:
+{% for item in items %}
+  - {{ item.item_name }}{% if item.size_name %} ({{ item.size_name }}){% endif %} x{{ item.quantity }}
+{% for option in item.options %}    + {{ option.choice }}{% if option.group %} ({{ option.group }}){% endif %}
+{% endfor %}{% endfor %}
+{% endfor %}
+{% if order_note %}Megjegyzés: {{ order_note }}
+{% endif %}`
+
 export default {
   name: 'AutoEmailSettings',
   props: {
@@ -114,6 +140,7 @@ export default {
       // Spread ({...this.settings}) would only shallow-copy, leaving nested
       // arrays/objects as shared references.
       localSettings: JSON.parse(JSON.stringify(this.settings)),
+      DEFAULT_TEMPLATE,
     }
   },
   watch: {
@@ -130,6 +157,11 @@ export default {
           this.localSettings = JSON.parse(JSON.stringify(v))
         }
       },
+    },
+  },
+  computed: {
+    isDefault() {
+      return !this.localSettings.auto_email_order_template
     },
   },
   methods: {
@@ -156,5 +188,9 @@ export default {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.template-default :deep(textarea) {
+  color: rgba(var(--v-theme-on-surface), 0.38);
 }
 </style>

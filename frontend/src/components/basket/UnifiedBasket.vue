@@ -115,39 +115,63 @@
               </span>
             </div>
 
-            <div
-              v-if="otherUsersBaskets.length > 0"
-              class="d-flex align-center"
-            >
-              <v-btn
-                variant="text"
-                size="small"
+            <div class="d-flex align-center gap-1">
+              <v-btn-toggle
+                v-if="hasAnyItems"
+                v-model="summaryMode"
+                density="compact"
+                rounded="lg"
                 color="primary"
-                @click="expandAll"
+                mandatory
+                class="me-2"
               >
-                <v-icon
-                  class="me-1"
+                <v-btn
+                  :value="false"
                   size="small"
+                  variant="outlined"
                 >
-                  mdi-arrow-expand-all
-                </v-icon>
-                Mind kinyit
-              </v-btn>
-              <v-btn
-                variant="text"
-                size="small"
-                color="primary"
-                class="ms-1"
-                @click="collapseAll"
-              >
-                <v-icon
-                  class="me-1"
+                  {{ $t('basket.view.grouped') }}
+                </v-btn>
+                <v-btn
+                  :value="true"
                   size="small"
+                  variant="outlined"
                 >
-                  mdi-arrow-collapse-all
-                </v-icon>
-                Mind bezár
-              </v-btn>
+                  {{ $t('basket.view.summary') }}
+                </v-btn>
+              </v-btn-toggle>
+
+              <template v-if="!summaryMode && otherUsersBaskets.length > 0">
+                <v-btn
+                  variant="text"
+                  size="small"
+                  color="primary"
+                  @click="expandAll"
+                >
+                  <v-icon
+                    class="me-1"
+                    size="small"
+                  >
+                    mdi-arrow-expand-all
+                  </v-icon>
+                  Mind kinyit
+                </v-btn>
+                <v-btn
+                  variant="text"
+                  size="small"
+                  color="primary"
+                  class="ms-1"
+                  @click="collapseAll"
+                >
+                  <v-icon
+                    class="me-1"
+                    size="small"
+                  >
+                    mdi-arrow-collapse-all
+                  </v-icon>
+                  Mind bezár
+                </v-btn>
+              </template>
             </div>
           </div>
 
@@ -166,17 +190,23 @@
             </p>
           </div>
 
-          <UserBasket
-            v-for="userEntry in otherUsersBaskets"
-            :key="userEntry.user_id"
-            ref="compactBaskets"
-            :username="userEntry.username"
-            :user-id="userEntry.user_id"
-            :user-basket="userEntry.items"
-            :transport-fee="orderStore.transportFeePerPerson"
-            :copyable="true"
-            :initially-expanded="true"
-            @copy-basket="orderStore.copy"
+          <template v-if="!summaryMode">
+            <UserBasket
+              v-for="userEntry in otherUsersBaskets"
+              :key="userEntry.user_id"
+              ref="compactBaskets"
+              :username="userEntry.username"
+              :user-id="userEntry.user_id"
+              :user-basket="userEntry.items"
+              :transport-fee="orderStore.transportFeePerPerson"
+              :copyable="true"
+              :initially-expanded="true"
+              @copy-basket="orderStore.copy"
+            />
+          </template>
+          <SummaryBasket
+            v-else
+            :items="aggregatedItems"
           />
         </div>
       </template>
@@ -281,6 +311,7 @@ import { useVendorStore } from "@/stores/vendor"
 import { state as socketState } from '@/socket'
 import CurrentUserBasket from './CurrentUserBasket.vue'
 import UserBasket from './UserBasket.vue'
+import SummaryBasket from './SummaryBasket.vue'
 
 // Stores
 const auth = useAuth()
@@ -410,6 +441,39 @@ const otherUsersBaskets = computed(() => {
   }
 
   return []
+})
+
+const summaryMode = ref(false)
+
+const hasAnyItems = computed(() => {
+  const all = Array.isArray(orderStore.basket)
+    ? orderStore.basket
+    : Object.values(orderStore.basket || {})
+  return all.some(u => u.items?.length > 0)
+})
+
+watch(hasAnyItems, v => {
+  if (!v) summaryMode.value = false
+})
+
+const aggregatedItems = computed(() => {
+  const all = Array.isArray(orderStore.basket)
+    ? orderStore.basket
+    : Object.values(orderStore.basket || {})
+
+  const map = new Map()
+  for (const user of all) {
+    for (const item of (user.items || [])) {
+      const sortedChoiceIds = [...(item.option_choice_ids || [])].sort().join(',')
+      const key = `${item.item_id}|${item.size_id ?? ''}|${sortedChoiceIds}`
+      if (map.has(key)) {
+        map.get(key).count += Number(item.quantity)
+      } else {
+        map.set(key, { ...item, count: Number(item.quantity) })
+      }
+    }
+  }
+  return Array.from(map.values())
 })
 </script>
 

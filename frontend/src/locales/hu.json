@@ -120,6 +120,12 @@
     "fee_column": "Csomag. díj",
     "fee_basket_line": "+ Csomagolási díj"
   },
+  "basket": {
+    "view": {
+      "grouped": "Csoportos",
+      "summary": "Összesítő"
+    }
+  },
   "bulk": {
     "selection": {
       "toggle": "Kiválasztás",

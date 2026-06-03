@@ -8,6 +8,7 @@ const AdminSettingsView = () => import("./views/admin/AdminSettings.vue");
 const VendorSettings = () => import("./views/admin/vendor/VendorSettings.vue");
 const AdminVendorsView = () => import("./views/admin/AdminVendors.vue");
 const AdminOrdersView = () => import("./views/admin/AdminOrders.vue");
+const AdminOrderDetailsView = () => import("./views/admin/AdminOrderDetails.vue");
 const AdminUsersView = () => import("./views/admin/AdminUsers.vue");
 const AdminPluginsView = () => import("./views/admin/AdminPlugins.vue");
 const VendorItemManager = () =>
@@ -66,6 +67,11 @@ const routes = [
         name: "orders",
         path: "orders",
         component: AdminOrdersView,
+      },
+      {
+        name: "order-details",
+        path: "orders/:orderId",
+        component: AdminOrderDetailsView,
       },
       {
         name: "users",

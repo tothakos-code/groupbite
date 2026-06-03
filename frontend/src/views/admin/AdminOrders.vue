@@ -503,10 +503,12 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from "@/stores/auth"
 import { useOrderStore } from "@/stores/order"
 
 // Composables
+const router = useRouter()
 const auth = useAuth()
 const orderStore = useOrderStore()
 
@@ -679,9 +681,7 @@ const updateOrder = async (order) => {
 }
 
 const viewOrder = (order) => {
-  // TODO: Implement order details view
-  console.log('View order details:', order.id)
-  showSnackbar(`#${order.id} rendelés részleteinek megtekintése - még nem implementált`, 'info')
+  router.push(`/admin/orders/${order.id}`)
 }
 
 const canDeleteOrder = (order) => {

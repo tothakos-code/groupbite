@@ -97,6 +97,7 @@ class OrderController:
 
         return {"data": result}, 200
 
+    @require_auth
     @validate_url_params(IDSchema())
     @handle_request
     def handle_get_basket(self, db, order_id):

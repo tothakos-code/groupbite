@@ -133,6 +133,23 @@ class OrderRepository:
         self.db.delete(order)
         self.db.flush()
 
+    def delete_old_empty_collect_orders(self, days: int = 7) -> int:
+        from datetime import date, timedelta
+        from sqlalchemy import text
+        cutoff = date.today() - timedelta(days=days)
+        result = self.db.execute(
+            text("""
+                DELETE FROM "order"
+                WHERE state_id = 'COLLECT'
+                  AND open_from < :cutoff
+                  AND NOT EXISTS (
+                    SELECT 1 FROM user_basket ub WHERE ub.order_id = "order".id
+                  )
+            """),
+            {"cutoff": cutoff},
+        )
+        return result.rowcount
+
     def get_daily_sums(self, start_date: date, end_date: date, vendors_ids: list):
         daily_sums_query = (
             select(

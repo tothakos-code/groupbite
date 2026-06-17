@@ -24,6 +24,7 @@ DB_PASSWORD = getenv("POSTGRES_PASSWORD")
 DB_HOST = getenv("POSTGRES_HOST")
 DB_PORT = getenv("POSTGRES_PORT")
 DB_NAME = getenv("POSTGRES_DB_NAME")
+APP_ENV = getenv("APP_ENV", "production")
 
 DB_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
@@ -114,7 +115,10 @@ def create_app(config: Config = Config(), debug=False) -> Flask:
         )
         return response
 
-    application.config["SECRET_KEY"] = getenv("SECRET_KEY", "secret!")
+    secret_key = getenv("SECRET_KEY")
+    if not secret_key:
+        raise RuntimeError("SECRET_KEY environment variable is not set")
+    application.config["SECRET_KEY"] = secret_key
     application.config["SQLALCHEMY_DATABASE_URI"] = DB_URL
     application.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -123,7 +127,7 @@ def create_app(config: Config = Config(), debug=False) -> Flask:
     application.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=336)
 
     application.config["SESSION_COOKIE_HTTPONLY"] = True
-    # application.config['SESSION_COOKIE_SECURE'] = True
+    application.config["SESSION_COOKIE_SECURE"] = APP_ENV != "development"
     application.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
     from app.create_tables import migrate_database

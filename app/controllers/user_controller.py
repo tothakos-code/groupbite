@@ -13,6 +13,7 @@ from app.utils.decorators import (
     handle_request,
     require_admin,
     require_auth,
+    require_owner_or_admin,
     validate_url_params,
 )
 from app.utils.validators import IDSchema
@@ -124,6 +125,7 @@ class UserController:
 
     @validate_url_params(IDSchema())
     @require_auth
+    @require_owner_or_admin()
     @handle_request
     def handle_user_update(self, db, user_id):
         user_data = request.json["data"]
@@ -132,12 +134,15 @@ class UserController:
 
     @validate_url_params(IDSchema())
     @require_auth
+    @require_admin
     @handle_request
     def handle_user_promote(self, db, user_id):
         self.user_service.promote_user(db, user_id)
         return {"msg": "OK"}, 200
 
     @validate_url_params(IDSchema())
+    @require_auth
+    @require_owner_or_admin()
     @handle_request
     def handle_user_order_history(self, db, user_id):
         orders = self.user_service.get_user_history(db, user_id, request.args)
@@ -158,18 +163,21 @@ class UserController:
         return {"data": users}
 
     @require_auth
+    @require_owner_or_admin()
     @handle_request
     def user_statistics(self, db, user_id):
         stats = self.user_service.get_user_statistics(db, user_id)
         return {"statistics": stats}
 
     @require_auth
+    @require_owner_or_admin()
     @handle_request
     def user_spending_trends(self, db, user_id):
         trends = self.user_service.get_user_spending_trends(db, user_id)
         return {"trends": trends}
 
     @require_auth
+    @require_owner_or_admin()
     @handle_request
     def user_vendor_breakdown(self, db, user_id):
         breakdown = self.user_service.get_user_vendor_breakdown(db, user_id)

@@ -1,10 +1,41 @@
+import ipaddress
 import logging
 import re
+import socket
 from datetime import datetime
 from typing import Set
+from urllib.parse import urlparse
 from uuid import UUID
 
 import requests
+
+_PRIVATE_NETWORKS = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+]
+_BLOCKED_HOSTS = {"localhost", "metadata.google.internal"}
+
+
+def _is_safe_webhook_url(url: str) -> bool:
+    try:
+        host = urlparse(url).hostname or ""
+        if host.lower() in _BLOCKED_HOSTS:
+            return False
+        try:
+            addr = ipaddress.ip_address(host)
+        except ValueError:
+            try:
+                addr = ipaddress.ip_address(socket.gethostbyname(host))
+            except socket.gaierror:
+                return True
+        return not any(addr in net for net in _PRIVATE_NETWORKS)
+    except Exception:
+        return False
 
 from app.entities.webhook import Webhook, WebhookType
 from app.repositories.webhook_repository import WebhookRepository
@@ -236,6 +267,9 @@ class WebhookService:
             url_pattern = re.compile(r"^https?://.+")
             if not url_pattern.match(url):
                 raise Exception("Érvényes URL-t adjon meg (http:// vagy https://)")
+
+            if not _is_safe_webhook_url(url):
+                raise Exception("Az URL nem mutathat belső hálózati címre")
 
         trigger_type = data.get("trigger_type")
         if trigger_type == WebhookType.TIME:

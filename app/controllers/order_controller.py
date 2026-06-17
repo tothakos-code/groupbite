@@ -16,6 +16,7 @@ from app.utils.decorators import (
     handle_request,
     require_admin,
     require_auth,
+    require_owner_or_admin,
     validate_data,
     validate_url_params,
 )
@@ -150,6 +151,7 @@ class OrderController:
         return {"msg": "OK"}, 200
 
     @require_auth
+    @require_owner_or_admin()
     @validate_url_params(IDSchema())
     @handle_request
     def handle_copy_basket(self, db, order_id, user_id, src_user_id):
@@ -171,6 +173,7 @@ class OrderController:
         return {"msg": "OK"}, 201
 
     @require_auth
+    @require_owner_or_admin()
     @validate_url_params(IDSchema())
     @handle_request
     def handle_add_to_basket(self, db, order_id, user_id, item_id, size_id):
@@ -203,6 +206,7 @@ class OrderController:
             return {"error": "Item out of stock"}, 400
 
     @require_auth
+    @require_owner_or_admin()
     @validate_url_params(IDSchema())
     @handle_request
     def handle_remove_from_basket(self, db, order_id, user_id, item_id, size_id):
@@ -227,6 +231,7 @@ class OrderController:
         return {"msg": "OK"}, 204
 
     @require_auth
+    @require_owner_or_admin()
     @validate_url_params(IDSchema())
     @handle_request
     def handle_clear_user_basket(self, db, order_id, user_id):

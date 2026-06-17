@@ -63,6 +63,25 @@ def require_admin(f):
     return decorated_function
 
 
+def require_owner_or_admin(url_id_param="user_id"):
+    """Allow access if the session user matches the URL user_id, or is an admin."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            url_user_id = str(kwargs.get(url_id_param, ""))
+            session_user_id = str(session.get("user_id", ""))
+            if url_user_id != session_user_id:
+                with get_session() as db:
+                    if not UserRepository(db).is_admin(session_user_id):
+                        logging.warning(
+                            f"User {session_user_id} tried to access resource owned by {url_user_id}"
+                        )
+                        return {"error": "Forbidden"}, 403
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
 def handle_request(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):

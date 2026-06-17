@@ -1,11 +1,20 @@
+from os import getenv
+
 from flask_socketio import SocketIO
+
+_ALLOWED_ORIGINS = getenv("ALLOWED_ORIGINS", "*")
+
 
 class SocketioSingleton(object):
     __instance__ = None
 
     def __init__(self):
         if SocketioSingleton.__instance__ is None:
-            SocketioSingleton.__instance__ = SocketIO(logger=False, engineio_logger=False, cors_allowed_origins="*")
+            SocketioSingleton.__instance__ = SocketIO(
+                logger=False,
+                engineio_logger=False,
+                cors_allowed_origins=_ALLOWED_ORIGINS,
+            )
         else:
             raise Exception("You cannot create another SocketioSingleton class")
 

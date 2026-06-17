@@ -17,10 +17,13 @@ class SettingController:
     def _create_blueprint(self) -> Blueprint:
         return Blueprint("setting_controller", __name__, url_prefix="/api/setting")
 
+    _PUBLIC_KEYS = frozenset({"app_title"})
+
     def _register_routes(self):
         bp = self.blueprint
         bp.add_url_rule("/get-all", view_func=self.get_all_settings, methods=["GET"])
         bp.add_url_rule("/get/<key>", view_func=self.get_setting, methods=["GET"])
+        bp.add_url_rule("/public/<key>", view_func=self.get_public_setting, methods=["GET"])
         bp.add_url_rule("/set", view_func=self.update_setting, methods=["PUT"])
         bp.add_url_rule(
             "/mail/send-test", view_func=self.send_test_mail, methods=["POST"]
@@ -32,6 +35,14 @@ class SettingController:
     def get_all_settings(self, db):
         return SettingRepository(db).get_all_settings_as_kv()
 
+    @handle_request
+    def get_public_setting(self, db, key):
+        if key not in self._PUBLIC_KEYS:
+            return {"error": "Not found"}, 404
+        setting = self.setting_service.get_setting(db, key)
+        return {setting.key: setting.value}
+
+    @require_auth
     @handle_request
     def get_setting(self, db, key):
         setting = self.setting_service.get_setting(db, key)

@@ -211,7 +211,7 @@ export default {
     }
   },
   mounted() {
-    axios.get(`http://${window.location.host}/api/setting/get/app_title`)
+    axios.get(`http://${window.location.host}/api/setting/public/app_title`)
       .then(response => {
         this.app_title = response.data.app_title;
       })

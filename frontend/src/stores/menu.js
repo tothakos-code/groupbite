@@ -29,11 +29,11 @@ export const useMenuStore = defineStore("menu", {
     }
   },
   actions: {
-    async fetch(menuId, querryParams) {
+    async fetch(menuId, queryParams) {
       this.isLoading = true;
       try {
         const response = await axios.get(`/api/menu/${menuId}`,
-          { "params": querryParams }
+          { "params": queryParams }
         );
         return response
       } catch (error) {

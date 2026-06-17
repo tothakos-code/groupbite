@@ -40,7 +40,7 @@ class MainController:
         )
 
     def catch_all(self, path=""):
-        if path.startswith(("service-worker.js")):
+        if path.startswith("service-worker.js"):
             return send_from_directory(self.blueprint.static_folder, path)
 
         if APP_ENV == "development":

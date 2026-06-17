@@ -100,10 +100,10 @@ export const useOrderStore = defineStore("order", {
         this.isLoading = false;
       }
     },
-    async fetchAll(querryParams) {
+    async fetchAll(queryParams) {
       this.isLoading = true;
       try {
-        const response = await axios.get(`/api/order/`, { "params": querryParams });
+        const response = await axios.get(`/api/order/`, { "params": queryParams });
         return response
       } catch (error) {
         console.error("Failed to get orders:", error.response.data.error);

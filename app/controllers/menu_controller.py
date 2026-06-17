@@ -1,6 +1,6 @@
-from flask import request, Blueprint
-import json
 import logging
+
+from flask import request, Blueprint
 
 from app.entities.menu import BaseMenuSchema, UpdateMenuSchema
 from app.services.menu_service import MenuService
@@ -20,7 +20,6 @@ class MenuController:
 
     def _register_routes(self):
         bp = self.blueprint
-        # TODO: change to GET and use query params
         bp.add_url_rule("/<menu_id>", view_func=self.handle_menu_get_items, methods=["GET"])
         bp.add_url_rule("/<menu_id>", view_func=self.handle_menu_update, methods=["PUT"])
         bp.add_url_rule("/<int:menu_id>", view_func=self.handle_menu_delete, methods=["DELETE"])
@@ -47,7 +46,7 @@ class MenuController:
         to_date = data["to_date"] if "to_date" in data else None
         menu = self.menu_service.update_menu(db, menu_id, data["name"], from_date, to_date)
 
-        return { "data": json.dumps(menu.serialized) }, 200
+        return {"data": menu.serialized}, 200
 
 
     @require_auth

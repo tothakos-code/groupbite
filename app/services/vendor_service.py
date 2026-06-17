@@ -43,16 +43,16 @@ class VendorService:
         service.scan(db, menu_date=menu_date)
 
     @staticmethod
-    def get_menu_items(db, vendor_id, date, filter=None):
-        if filter is None:
-            filter = []
+    def get_menu_items(db, vendor_id, date, item_filter=None):
+        if item_filter is None:
+            item_filter = []
 
         menus = MenuRepository(db).find_active_by_vendor_id(vendor_id, date)
         result = []
 
         for menu in menus:
             items = MenuItemRepository(db).find_all_by_menu_list(
-                [menu.id], filter, limit=100
+                [menu.id], item_filter, limit=100
             )
 
             categorized_items = {}
@@ -84,10 +84,7 @@ class VendorService:
         try:
             limit = int(args.get("limit"))
             page = int(args.get("page"))
-        except ValueError:
-            limit = 10
-            page = 1
-        except TypeError:
+        except (ValueError, TypeError):
             limit = 10
             page = 1
         search = args.get("search")
@@ -165,11 +162,7 @@ class VendorService:
         self._handle_scheduler_changes(vendor, normalised)
         errors = save_vendor_settings(vendor, normalised)
         if errors:
-            import logging
-
-            logging.getLogger(__name__).warning(
-                "Settings validation errors: %s", errors
-            )
+            logging.warning("Settings validation errors: %s", errors)
         return errors
 
     def _handle_duration_decrease(self, vendor, new_settings: dict, db):

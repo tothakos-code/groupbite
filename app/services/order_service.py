@@ -55,7 +55,7 @@ class OrderService:
         try:
             limit = int(args.get("limit"))
             page = int(args.get("page"))
-        except ValueError or TypeError:
+        except (ValueError, TypeError):
             limit = 10
             page = 1
         offset = 0 if page is None else limit * (page - 1)
@@ -259,14 +259,14 @@ class OrderService:
         order = order_repo.get_by_id(order_id)
         if not order:
             logging.info(f"Order {order_id} not found")
-            raise Exception("order not found")
+            raise ValueError("order not found")
         logging.info(
             f"Manual order triggered by userID: {session.get('user_id')} for order {order.id}"
         )
+        if order.state_id == OrderState.CLOSED:
+            raise ValueError("Order is already closed")
         trigger_data = {"order_id": order_id, "order": order.serialized}
         event_manager.trigger_event("beforeClose@" + str(order.vendor_id), trigger_data)
-        if order.state_id == OrderState.CLOSED:
-            return {"msg": "Order is already closed"}, 400
 
         # beforeClose may have modified baskets in a separate session; expire so items reload
         db.expire(order)
@@ -295,7 +295,7 @@ class OrderService:
         new_state = OrderState(data["state_id"])
 
         if not self._change_state(db, order, new_state):
-            raise ValueError()
+            raise ValueError("State transition failed")
 
         order.order_fee = data["order_fee"]
         return order
@@ -409,16 +409,15 @@ class OrderService:
             result[open_from][order.id] = order.serialized
             result[open_from][order.id]["vendor"] = order.vendor.name
 
-            sum = 0
-            # TODO: integrate OrderItem, it already has total_price
+            order_total = 0
             if order.state_id == OrderState.CLOSED:
                 for item in order.order_items:
-                    sum += item.total_price
+                    order_total += item.total_price
             else:
                 for item in order.items:
-                    sum += item.size.price * item.count
-            sum += order.order_fee
-            result[open_from][order.id]["sum"] = sum
+                    order_total += item.size.price * item.count
+            order_total += order.order_fee
+            result[open_from][order.id]["sum"] = order_total
 
             result[open_from][order.id]["user_count"] = len(order_participants)
             result[open_from][order.id]["ordered"] = any(
@@ -435,7 +434,8 @@ class OrderService:
             "week_data": {"data": week_result, "labels": week_labels},
         }
 
-    def email_order(self, db, order_id, extra_cc: list = []):
+    def email_order(self, db, order_id, extra_cc: Optional[list] = None):
+        extra_cc = extra_cc or []
         order_repo = OrderRepository(db)
         order = order_repo.get_by_id(order_id)
         logging.info(
@@ -452,7 +452,6 @@ class OrderService:
         order.ordered_by = UserRepository(db).get_by_id(session.get("user_id"))
         task_id = f"{str(vendor.id)}-closed"
         try:
-            # Cancel the scheduled task for this vendor (if exists)
             reschedule_task(task_id)
             logging.info(
                 f"Scheduled task '{task_id}' rescheduled to next day due to manual trigger."
@@ -460,10 +459,7 @@ class OrderService:
         except KeyError:
             logging.info(f"Scheduled task '{task_id}' not found.")
 
-        # Execute the email logic manually
-        if self.email_ordering_wrapper(order=order, manual=True, extra_cc=extra_cc):
-            return {"msg": "Email sent and order closed manually"}, 200
-        else:
+        if not self.email_ordering_wrapper(order=order, manual=True, extra_cc=extra_cc):
             raise ValueError("Something went wrong during the action")
 
     @staticmethod
@@ -664,7 +660,8 @@ class OrderService:
         return order
 
     @staticmethod
-    def send_in_mail(order, extra_cc: list = []):
+    def send_in_mail(order, extra_cc: Optional[list] = None):
+        extra_cc = extra_cc or []
         with get_session() as db:
             baskets = UserBasketRepository(db).find_items_by_order(order.id)
             all_selections = BasketOptionSelectionRepository(db).find_by_order_with_details(order.id)
@@ -708,7 +705,8 @@ class OrderService:
         logging.info(f"Order {order.id} sent in email!")
         return True
 
-    def email_ordering_wrapper(self, order: Order, manual=False, extra_cc: list = []):
+    def email_ordering_wrapper(self, order: Order, manual=False, extra_cc: Optional[list] = None):
+        extra_cc = extra_cc or []
         logging.info("Manual email ordering running")
         from app.event_manager import event_manager
         from app.services.vendor_service import VendorService

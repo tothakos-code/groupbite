@@ -50,45 +50,31 @@ class WebhookService:
 
     @staticmethod
     def find_all(db):
-        """Find all webhooks"""
-        webhook_repo = WebhookRepository(db)
-        return webhook_repo.find_all()
+        return WebhookRepository(db).find_all()
 
     @staticmethod
     def find_by_vendor_id(db, vendor_id: UUID):
-        """Find all webhooks for a specific vendor"""
-        webhook_repo = WebhookRepository(db)
-        return webhook_repo.find_by_vendor_id(vendor_id)
+        return WebhookRepository(db).find_by_vendor_id(vendor_id)
 
     @staticmethod
     def find_active_by_vendor_id(db, vendor_id: UUID):
-        """Find all active webhooks for a specific vendor"""
-        webhook_repo = WebhookRepository(db)
-        return webhook_repo.find_active_by_vendor_id(vendor_id)
+        return WebhookRepository(db).find_active_by_vendor_id(vendor_id)
 
     @staticmethod
     def find_all_active(db):
-        """Find all active webhooks"""
-        webhook_repo = WebhookRepository(db)
-        return webhook_repo.find_all_active()
+        return WebhookRepository(db).find_all_active()
 
     @staticmethod
     def find_by_event_type(db, trigger_type: WebhookType):
-        """Find all active webhooks that listen to a specific event type"""
-        webhook_repo = WebhookRepository(db)
-        return webhook_repo.find_by_event_type(trigger_type)
+        return WebhookRepository(db).find_by_event_type(trigger_type)
 
     @staticmethod
     def find_by_vendor_and_event(db, vendor_id: UUID, trigger_type: WebhookType):
-        """Find active webhooks for a vendor that listen to a specific event"""
-        webhook_repo = WebhookRepository(db)
-        return webhook_repo.find_by_vendor_and_event(vendor_id, trigger_type)
+        return WebhookRepository(db).find_by_vendor_and_event(vendor_id, trigger_type)
 
     @staticmethod
     def find_by_id(db, webhook_id: UUID):
-        """Find webhook by primary key"""
-        webhook_repo = WebhookRepository(db)
-        return webhook_repo.find_by_id(webhook_id)
+        return WebhookRepository(db).find_by_id(webhook_id)
 
     def register_all_webhooks_at_boot(self, db):
         """Register all active webhooks at application startup"""
@@ -102,18 +88,13 @@ class WebhookService:
         logging.info(f"Registered {len(webhooks)} webhooks at boot")
 
     def _register_single_webhook(self, db, webhook):
-        """Register a single webhook based on its type"""
         webhook_id = str(webhook.id)
 
         if webhook.trigger_type == WebhookType.EVENT:
-            # Register for event-based triggers
             if webhook.event_types:
                 self.event_manager.register_webhook(
                     webhook_id,
-                    [
-                        event + "@" + webhook.vendor.name
-                        for event in webhook.event_types
-                    ],
+                    [event + "@" + webhook.vendor.name for event in webhook.event_types],
                     webhook.url,
                     webhook.message_template,
                 )
@@ -123,7 +104,6 @@ class WebhookService:
                 )
 
         elif webhook.trigger_type == WebhookType.TIME:
-            # Register for scheduled triggers
             if webhook.scheduled_time:
                 self._schedule_webhook(db, webhook)
                 WebhookService._active_webhooks.add(webhook_id)
@@ -132,7 +112,6 @@ class WebhookService:
                 )
 
     def _schedule_webhook(self, db, webhook):
-        """Schedule a webhook for time-based execution"""
         try:
             hour, minute = map(int, webhook.scheduled_time.split(":"))
             webhook_id = str(webhook.id)
@@ -159,24 +138,16 @@ class WebhookService:
                     webhook.last_executed = datetime.utcnow()
                     db.commit()
 
-                    logging.info(
-                        f"Scheduled webhook {webhook_id} executed successfully"
-                    )
+                    logging.info(f"Scheduled webhook {webhook_id} executed successfully")
                 except Exception as e:
                     logging.error(f"Scheduled webhook {webhook_id} failed: {e}")
 
-            # Schedule the task
-            schedule_task(
-                webhook_id, hour, minute, webhook_task, webhook.scheduled_days
-            )
+            schedule_task(webhook_id, hour, minute, webhook_task, webhook.scheduled_days)
 
         except ValueError as e:
-            logging.error(
-                f"Invalid scheduled_time format for webhook {webhook.id}: {e}"
-            )
+            logging.error(f"Invalid scheduled_time format for webhook {webhook.id}: {e}")
 
     def activate_webhook(self, db, webhook_id):
-        """Activate a webhook"""
         webhook_repo = WebhookRepository(db)
         webhook = webhook_repo.find_by_id(webhook_id)
         if webhook:
@@ -188,7 +159,6 @@ class WebhookService:
             logging.info(f"Webhook {webhook_id} activated")
 
     def deactivate_webhook(self, db, webhook_id):
-        """Deactivate a webhook"""
         webhook_repo = WebhookRepository(db)
         webhook = webhook_repo.find_by_id(webhook_id)
         if webhook:
@@ -200,7 +170,6 @@ class WebhookService:
             logging.info(f"Webhook {webhook_id} deactivated")
 
     def unregister_webhook(self, webhook_id):
-        """Unregister a webhook from both events and scheduled tasks"""
         webhook_id_str = str(webhook_id)
 
         self.event_manager.unregister_webhook(webhook_id_str)
@@ -212,7 +181,6 @@ class WebhookService:
         logging.info(f"Webhook {webhook_id} fully unregistered")
 
     def get_active_webhooks(self):
-        """Get list of currently active webhook IDs"""
         return list(WebhookService._active_webhooks)
 
     def add_webhook(self, db, data):
@@ -230,7 +198,6 @@ class WebhookService:
         return webhook
 
     def update_webhook(self, db, webhook, data):
-        """Update webhook fields"""
         webhook_repo = WebhookRepository(db)
         self.validate_update_data(data)
         webhook_repo.update(
@@ -243,7 +210,6 @@ class WebhookService:
             event_types=data["event_types"],
             is_active=data["is_active"],
         )
-        webhook_repo = WebhookRepository(db)
         if str(webhook.id) in WebhookService._active_webhooks:
             self.unregister_webhook(webhook.id)
 
@@ -251,14 +217,12 @@ class WebhookService:
             self._register_single_webhook(db, webhook)
 
     def delete_webhook(self, db, webhook):
-        """Delete webhook"""
         webhook_repo = WebhookRepository(db)
         self.unregister_webhook(webhook.id)
         webhook_repo.delete(webhook)
 
     @staticmethod
     def validate_update_data(data):
-        """Validate webhook update data"""
         if "url" in data:
             url = data["url"]
             if not url or not url.strip():

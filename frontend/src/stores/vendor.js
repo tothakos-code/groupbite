@@ -12,9 +12,6 @@ export const useVendorStore = defineStore("vendor", {
     isLoading: false,
     routesLoaded: false
   }),
-  getters: {
-
-  },
   actions: {
     async fetch() {
       this.isLoading = true;
@@ -28,11 +25,11 @@ export const useVendorStore = defineStore("vendor", {
         this.isLoading = false;
       }
     },
-    async fetchMenus(vendorId, querryParams) {
+    async fetchMenus(vendorId, queryParams) {
       this.isLoading = true;
       try {
         const response = await axios.get(`/api/vendor/${vendorId}/menus`,
-          { "params": querryParams }
+          { "params": queryParams }
         );
         return response
       } catch (error) {

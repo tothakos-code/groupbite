@@ -61,10 +61,10 @@ class UserService:
         is_email_valid, email_error = self.is_email_valid(db, email)
 
         if not is_username_valid:
-            return {"error": username_error}
+            raise ValueError(username_error)
 
         if not is_email_valid:
-            return {"error": email_error}
+            raise ValueError(email_error)
         user = User(username=username, email=email, settings={}, password="")
         user_repo.save(user)
         db.flush()
@@ -83,7 +83,7 @@ class UserService:
             user = user_repo.get_by_id(user_id)
             current_app.session_interface.regenerate(session)
             session.modified = True
-            logging.info(f"{user.username} already  got a session!")
+            logging.info(f"{user.username} already got a session!")
             return user
         else:
             raise ValueError("Nincs bejelentkezett felhasználó.")
@@ -131,7 +131,7 @@ class UserService:
             is_username_valid, error = self.is_username_valid(db, args["username"])
             if is_username_valid:
                 user_to_update.username = args["username"]
-                logging.info("Updated User: " + str(args["id"]))
+                logging.info("Updated User: " + str(user_id))
             else:
                 logging.info("Invalid user update: " + error)
                 raise ValueError(error)
@@ -362,6 +362,7 @@ class UserService:
             orders_this_month = set()
 
             processed_order_fees = set()
+            processed_monthly_fees = set()
 
             for item in all_user_items:
                 order_id = item.order.id
@@ -394,7 +395,7 @@ class UserService:
                     this_month_spent += item.total_price
                     orders_this_month.add(order_id)
 
-                    if order_id not in processed_order_fees:
+                    if order_id not in processed_monthly_fees:
                         order_participants = user_basket_repo.user_count(order_id)
                         user_fee_share = (
                             item.order.order_fee / order_participants
@@ -402,6 +403,7 @@ class UserService:
                             else 0
                         )
                         this_month_spent += user_fee_share
+                        processed_monthly_fees.add(order_id)
 
                 if order_datetime >= start_of_week:
                     this_week_spent += item.total_price
@@ -446,7 +448,7 @@ class UserService:
             }
 
         except Exception as e:
-            print(f"Error calculating user statistics: {str(e)}")
+            logging.exception("Error calculating user statistics")
             raise ValueError("Failed to calculate statistics")
 
     @staticmethod
@@ -506,7 +508,7 @@ class UserService:
 
             return trends
         except Exception as e:
-            print(f"Error calculating spending trends: {str(e)}")
+            logging.exception("Error calculating spending trends")
             raise ValueError("Failed to calculate trends")
 
     @staticmethod
@@ -526,8 +528,7 @@ class UserService:
                     vendor_spending[vendor_name] = 0
                     processed_order_fees[vendor_name] = set()
 
-                item_cost = item.size.price * item.count
-                vendor_spending[vendor_name] += item_cost
+                vendor_spending[vendor_name] += item.total_price
 
                 order_id = item.order.id
                 if order_id not in processed_order_fees[vendor_name]:
@@ -558,5 +559,5 @@ class UserService:
             return breakdown
 
         except Exception as e:
-            print(f"Error calculating vendor breakdown: {str(e)}")
+            logging.exception("Error calculating vendor breakdown")
             raise ValueError("Failed to calculate breakdown")

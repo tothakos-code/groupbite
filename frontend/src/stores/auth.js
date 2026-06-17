@@ -6,10 +6,6 @@ export const useAuth = defineStore("user", {
   state: () => ({ user: null, isLoggedIn: false, isLoading: true, loginDialogVisible: false, pendingAction: null }),
   getters: {
     getUserColor() {
-      // TODO: implement user setings, this is not excist yet
-      // if (state.isLoggedIn) {
-      //   return this.auth.user.ui_color;
-      // }
       return "primary";
     },
   },
@@ -128,11 +124,11 @@ export const useAuth = defineStore("user", {
         this.isLoading = false;
       }
     },
-    async orders(userId, querryParams) {
+    async orders(userId, queryParams) {
       this.isLoading = true;
       try {
         const response = await axios.get(`/api/user/${userId}/orders`, {
-          params: querryParams,
+          params: queryParams,
         });
         return response;
       } catch (error) {
@@ -142,11 +138,11 @@ export const useAuth = defineStore("user", {
         this.isLoading = false;
       }
     },
-    async fetchAll(querryParams) {
+    async fetchAll(queryParams) {
       this.isLoading = true;
       try {
         const response = await axios.get(`/api/user/`, {
-          params: querryParams,
+          params: queryParams,
         });
         return response;
       } catch (error) {

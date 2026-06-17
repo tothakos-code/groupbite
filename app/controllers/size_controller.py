@@ -1,5 +1,3 @@
-import json
-
 from flask import Blueprint, session
 
 from app.entities.size import BaseSizeSchema, BulkSizePriceByItemsSchema, BulkUpdateSizeSchema, Size, UpdateSizeSchema
@@ -53,7 +51,7 @@ class SizeController:
             db,
             Size(
                 menu_item_id=data["menu_item_id"],
-                link=data["link"] if "link" in data else "",
+                link=data.get("link", ""),
                 name=data["name"],
                 price=data["price"],
                 quantity=data["quantity"],
@@ -70,7 +68,7 @@ class SizeController:
     def handle_menu_item_size_update(self, db, data, size_id):
         size = SizeRepository(db).get_by_id(size_id)
         size = self.size_service.update_size(db, size, data, admin_user_id=session.get("user_id"))
-        return {"data": json.dumps(size.serialized)}, 200
+        return {"data": size.serialized}, 200
 
     @validate_url_params(IDSchema())
     @require_auth

@@ -7,6 +7,7 @@ from flask_socketio import join_room, leave_room, rooms
 from app.db.session import get_session
 from app.entities.order import BaseOrderSchema, Order
 from app.repositories.order_repository import OrderRepository
+from app.repositories.user_repository import UserRepository
 from app.repositories.vendor_repository import VendorRepository
 from app.services.order_service import OrderService
 from app.services.user_basket_service import UserBasketService
@@ -37,9 +38,24 @@ class OrderController:
     def _create_blueprint(self) -> Blueprint:
         return Blueprint("order_controller", __name__, url_prefix="/api/order")
 
+    def _emit_basket_and_menu(self, db, order):
+        db.expire(order, ["items"])
+        socketio.emit(
+            "be_order_update",
+            {"basket": self.order_service.get_order_items(order, db=db)},
+            to=f"{order.vendor_id}@{order.open_from}",
+        )
+        menus = VendorService(self.order_service).get_menu_items(
+            db, order.vendor_id, str(order.open_from)
+        )
+        socketio.emit(
+            "be_menu_update",
+            {"menus": menus},
+            to=f"{order.vendor_id}@{order.open_from}",
+        )
+
     def _register_routes(self):
         bp = self.blueprint
-        # TODO: change to GET and use query params
         bp.add_url_rule("/", view_func=self.handle_get_orders, methods=["GET"])
         bp.add_url_rule(
             "/history", view_func=self.handle_order_history, methods=["POST"]
@@ -157,19 +173,7 @@ class OrderController:
     def handle_copy_basket(self, db, order_id, user_id, src_user_id):
         order = self.order_service.copy_basket(db, order_id, user_id, src_user_id)
         db.commit()
-        menus = VendorService(self.order_service).get_menu_items(
-            db, order.vendor_id, str(order.open_from)
-        )
-        socketio.emit(
-            "be_order_update",
-            {"basket": self.order_service.get_order_items(order, db=db)},
-            to=f"{order.vendor_id}@{order.open_from}",
-        )
-        socketio.emit(
-            "be_menu_update",
-            {"menus": menus},
-            to=f"{order.vendor_id}@{order.open_from}",
-        )
+        self._emit_basket_and_menu(db, order)
         return {"msg": "OK"}, 201
 
     @require_auth
@@ -184,23 +188,7 @@ class OrderController:
         )
         db.commit()
         if basket_item:
-            order = basket_item.order
-            db.expire(order, ["items"])
-            logging.info(basket_item)
-            logging.info(basket_item.order)
-            socketio.emit(
-                "be_order_update",
-                {"basket": self.order_service.get_order_items(order, db=db)},
-                to=f"{order.vendor_id}@{order.open_from}",
-            )
-            menus = VendorService(self.order_service).get_menu_items(
-                db, order.vendor_id, str(order.open_from)
-            )
-            socketio.emit(
-                "be_menu_update",
-                {"menus": menus},
-                to=f"{order.vendor_id}@{order.open_from}",
-            )
+            self._emit_basket_and_menu(db, basket_item.order)
             return {"msg": "OK"}, 201
         else:
             return {"error": "Item out of stock"}, 400
@@ -214,20 +202,7 @@ class OrderController:
         self.order_service.remove_from_basket(db, order_id, user_id, item_id, size_id, option_choice_ids=option_choice_ids)
         db.commit()
         order = self.order_service.get_order_by_id(db, order_id)
-        db.expire(order, ["items"])
-        socketio.emit(
-            "be_order_update",
-            {"basket": self.order_service.get_order_items(order, db=db)},
-            to=f"{order.vendor_id}@{order.open_from}",
-        )
-        menus = VendorService(self.order_service).get_menu_items(
-            db, order.vendor_id, str(order.open_from)
-        )
-        socketio.emit(
-            "be_menu_update",
-            {"menus": menus},
-            to=f"{order.vendor_id}@{order.open_from}",
-        )
+        self._emit_basket_and_menu(db, order)
         return {"msg": "OK"}, 204
 
     @require_auth
@@ -238,20 +213,7 @@ class OrderController:
         self.user_basket_service.clear_items(db, user_id, order_id)
         db.commit()
         order = self.order_service.get_order_by_id(db, order_id)
-        db.expire(order, ["items"])
-        socketio.emit(
-            "be_order_update",
-            {"basket": self.order_service.get_order_items(order, db=db)},
-            to=f"{order.vendor_id}@{order.open_from}",
-        )
-        menus = VendorService(self.order_service).get_menu_items(
-            db, order.vendor_id, str(order.open_from)
-        )
-        socketio.emit(
-            "be_menu_update",
-            {"menus": menus},
-            to=f"{order.vendor_id}@{order.open_from}",
-        )
+        self._emit_basket_and_menu(db, order)
         return {"msg": "OK"}, 204
 
     @require_auth
@@ -283,7 +245,6 @@ class OrderController:
     @validate_url_params(IDSchema())
     @handle_request
     def handle_manual_email_order(self, db, order_id):
-        from app.repositories.user_repository import UserRepository
         cc_me = (request.json or {}).get("data", {}).get("cc_me", False)
         extra_cc = []
         if cc_me:

@@ -42,7 +42,6 @@ class VendorController:
             view_func=self.handle_deactivation,
             methods=["PUT"],
         )
-        # ToDo: értesítése bekapcsolása / eszköz, vagy utána nézni hogy működik máshol
         bp.add_url_rule(
             "/<vendor_id>/notifications/<notification_type>/subscribe",
             view_func=self.handle_notification_subscribe,
@@ -86,7 +85,6 @@ class VendorController:
         bp.add_url_rule(
             "/<vendor_id>/menus", view_func=self.handle_menu_get, methods=["GET"]
         )
-        # ToDo: update import, make export
         bp.add_url_rule(
             "/<vendor_id>/menus/import", view_func=self.import_menu, methods=["POST"]
         )

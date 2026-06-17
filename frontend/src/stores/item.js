@@ -6,9 +6,6 @@ export const useItemStore = defineStore("item", {
   state: () => ({
     isLoading: false
   }),
-  getters: {
-
-  },
   actions: {
     async update(itemId, data) {
       this.isLoading = true;

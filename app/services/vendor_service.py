@@ -542,6 +542,71 @@ class VendorService:
             )
 
     @staticmethod
+    def restore_vendor_schedulers():
+        """Called on startup to re-register recurring schedulers for all active vendors."""
+        from app.repositories.vendor_repository import VendorRepository
+        from app.scheduler import schedule_task
+        from app.services.user_basket_service import UserBasketService
+
+        service = VendorService(OrderService(UserBasketService()))
+
+        specs = [
+            _SchedulerSpec(
+                "closure",
+                "closure_scheduler_active",
+                "closure_scheduler",
+                "closure_scheduler_days",
+                service.closure_wrapper,
+            ),
+            _SchedulerSpec(
+                "closed",
+                "closed_scheduler_active",
+                "closed_scheduler",
+                "closed_scheduler_days",
+                service.closed_wrapper,
+            ),
+            _SchedulerSpec(
+                "scan",
+                "menu_scan_active",
+                "menu_scan_time",
+                "menu_scan_days",
+                service.scan_wrapper,
+            ),
+            _SchedulerSpec(
+                "favourite-notification",
+                "favourite_notification_active",
+                "favourite_notification_time",
+                "favourite_notification_days",
+                service.favourite_notification_wrapper,
+            ),
+        ]
+
+        with get_session() as db:
+            vendors = VendorRepository(db).find_all_active()
+            for vendor in vendors:
+                for spec in specs:
+                    active = get_setting_value(vendor, spec.active_key)
+                    time_val = get_setting_value(vendor, spec.time_key)
+                    days = get_setting_value(vendor, spec.days_key)
+
+                    if active and isinstance(time_val, str) and ":" in time_val:
+                        try:
+                            hh, mm = time_val.split(":")
+                            task_id = f"{vendor.id}-{spec.task_id_suffix}"
+                            schedule_task(
+                                task_id, int(hh), int(mm), spec.callback, days, vendor=vendor
+                            )
+                            logging.info(
+                                "Restored scheduler '%s' for vendor %s at %s",
+                                spec.task_id_suffix, vendor.id, time_val,
+                            )
+                        except ValueError:
+                            logging.warning(
+                                "Invalid time format for %s on vendor %s: %r",
+                                spec.time_key, vendor.id, time_val,
+                            )
+
+    @staticmethod
     def get_plugin_settings(db, vendor_id):
         from app.plugin_registry import PluginRegistry
         from app.utils.vendor_settings import plugin_settings as load_plugin_settings

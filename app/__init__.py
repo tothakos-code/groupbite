@@ -154,8 +154,10 @@ def create_app(config: Config = Config(), debug=False) -> Flask:
         WebhookService(event_manager).register_all_webhooks_at_boot(db)
 
     from app.services.order_service import OrderService
+    from app.services.vendor_service import VendorService
 
     OrderService.restore_adhoc_close_timers()
+    VendorService.restore_vendor_schedulers()
 
     from app.scheduler import schedule_task
     from app.services.cleanup_service import run_daily_cleanup

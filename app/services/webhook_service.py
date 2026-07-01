@@ -94,7 +94,7 @@ class WebhookService:
             if webhook.event_types:
                 self.event_manager.register_webhook(
                     webhook_id,
-                    [event + "@" + webhook.vendor.name for event in webhook.event_types],
+                    [event + "@" + str(webhook.vendor_id) for event in webhook.event_types],
                     webhook.url,
                     webhook.message_template,
                 )

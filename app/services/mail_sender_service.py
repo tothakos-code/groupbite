@@ -23,6 +23,8 @@ DEFAULT_ORDER_TEMPLATE = """\
 {% if order_note %}Megjegyzés: {{ order_note }}
 {% endif %}"""
 
+DEFAULT_EMAIL_SUBJECT_TEMPLATE = "{{ vendor.name }} rendelés - {{ order.open_from }}"
+
 
 class EmailService:
     def __init__(self):
@@ -74,9 +76,12 @@ class EmailService:
             order_note=order_note,
         )
 
-        template = VendorService.get_setting_value(order.vendor, "auto_email_subject")
+        subject_template = (
+            VendorService.get_setting_value(order.vendor, "auto_email_subject")
+            or DEFAULT_EMAIL_SUBJECT_TEMPLATE
+        )
         email_subject = self.render_template_string(
-            template, order=order, vendor=order.vendor
+            subject_template, order=order, vendor=order.vendor
         )
         cc = (
             list(

@@ -72,6 +72,9 @@
               <v-text-field
                 v-model="localSettings.auto_email_subject"
                 :label="$t('vendor.settings.auto_email_subject')"
+                :hint="$t('vendor.settings.auto_email_subject_hint')"
+                :persistent-hint="true"
+                class="code-textarea"
                 prepend-icon="mdi-format-title"
                 variant="outlined"
                 density="comfortable"

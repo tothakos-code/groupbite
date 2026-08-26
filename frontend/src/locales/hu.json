@@ -24,6 +24,7 @@
       "auto_email_order_to": "Automatikus rendelés címzett",
       "auto_email_order_cc": "Automatikus rendelés másolatot kap",
       "auto_email_subject": "Automatikus rendelés email tárgy",
+      "auto_email_subject_hint": "Sablon szintaxis támogatott, pl.: {{ vendor.name }}, {{ order.open_from }}",
       "auto_email_order_template": "Automatikus rendelés üzenet sablon",
       "auto_email_template_hint_default": "Alapértelmezett sablon – szerkesztéssel testreszabható",
       "auto_email_template_hint_edited": "Szerkesztett sablon",

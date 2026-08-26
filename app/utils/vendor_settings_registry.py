@@ -272,7 +272,7 @@ class VendorSettingsRegistry:
         labelKey="vendor.settings.auto_email_subject",
         section="auto-order",
         visibility=Visibility.PRIVATE,
-        default_value="${vendor_name} rendelés - ${date}",
+        default_value="{{ vendor.name }} rendelés - {{ order.open_from }}",
     )
     AUTO_EMAIL_ORDER_TEMPLATE = TextAreaSetting(
         key="auto_email_order_template",

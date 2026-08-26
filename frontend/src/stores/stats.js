@@ -9,6 +9,7 @@ export const useStatsStore = defineStore('stats', {
     popularItems: [],
     perUserSpend: [],
     vendorTrend: [],
+    depletionRates: [],
   }),
 
   actions: {
@@ -34,13 +35,13 @@ export const useStatsStore = defineStore('stats', {
       }
     },
 
-    async fetchSalesTrend(vendorId, days = 30) {
+    async fetchSalesTrend(vendorId, params = {}) {
       try {
         const res = await axios.get('/api/statistics/sales-trend', {
-          params: { vendor_id: vendorId, days },
+          params: { vendor_id: vendorId, ...params },
         });
         this.salesTrend = res.data.data.sales;
-        return res.data.data.sales;
+        return res.data.data;
       } catch (error) {
         console.error('Failed to fetch sales trend:', error.response?.data?.error);
         throw error;
@@ -82,6 +83,19 @@ export const useStatsStore = defineStore('stats', {
         return res.data.data.trend;
       } catch (error) {
         console.error('Failed to fetch vendor trend:', error.response?.data?.error);
+        throw error;
+      }
+    },
+
+    async fetchDepletionRates(vendorId, params = {}) {
+      try {
+        const res = await axios.get('/api/statistics/depletion-rates', {
+          params: { vendor_id: vendorId, ...params },
+        });
+        this.depletionRates = res.data.data.rates;
+        return res.data.data.rates;
+      } catch (error) {
+        console.error('Failed to fetch depletion rates:', error.response?.data?.error);
         throw error;
       }
     },

@@ -8,6 +8,7 @@ from app.entities.menu_item import MenuItem
 from app.entities.order import Order, OrderState
 from app.entities.order_item import OrderItem
 from app.entities.size import Size
+from app.entities.stock_history import StockChangeReason, StockHistory
 from app.entities.user import User
 from app.repositories.stock_history_repository import StockHistoryRepository
 
@@ -34,45 +35,63 @@ class StatisticsService:
         }
 
     @staticmethod
-    def get_sales_trend(db, vendor_id, days=30) -> list[dict]:
-        end_date = date.today()
-        start_date = end_date - timedelta(days=days)
+    def get_sales_trend(db, vendor_id, from_date=None, to_date=None) -> dict:
+        if to_date is None:
+            to_date = date.today()
+        if from_date is None:
+            from_date = to_date - timedelta(days=30)
+
+        # Unbounded/very wide ranges would otherwise produce one row per calendar day.
+        use_month = from_date is None or (to_date - from_date).days > 90
+
+        if use_month:
+            period_expr = func.to_char(Order.open_from, "YYYY-MM").label("period")
+        else:
+            period_expr = Order.open_from.label("period")
 
         stmt = (
             select(
-                Order.open_from,
+                period_expr,
                 func.count(Order.id).label("order_count"),
                 func.coalesce(func.sum(Order.total_price), 0).label("revenue"),
             )
             .where(
                 Order.vendor_id == vendor_id,
                 Order.state_id == OrderState.CLOSED,
-                Order.open_from >= start_date,
-                Order.open_from <= end_date,
+                Order.open_from <= to_date,
             )
-            .group_by(Order.open_from)
-            .order_by(Order.open_from)
+            .group_by("period")
+            .order_by("period")
         )
-        rows = {row.open_from: row for row in db.execute(stmt).all()}
+        if from_date is not None:
+            stmt = stmt.where(Order.open_from >= from_date)
 
-        result = []
-        current = start_date
-        while current <= end_date:
-            if current in rows:
-                row = rows[current]
+        rows = db.execute(stmt).all()
+
+        if use_month:
+            result = [
+                {"date": row.period, "revenue": row.revenue, "order_count": row.order_count}
+                for row in rows
+            ]
+        else:
+            rows_by_date = {row.period: row for row in rows}
+            result = []
+            current = from_date
+            while current <= to_date:
+                row = rows_by_date.get(current)
                 result.append({
                     "date": current.strftime("%Y-%m-%d"),
-                    "revenue": row.revenue,
-                    "order_count": row.order_count,
+                    "revenue": row.revenue if row else 0,
+                    "order_count": row.order_count if row else 0,
                 })
-            else:
-                result.append({
-                    "date": current.strftime("%Y-%m-%d"),
-                    "revenue": 0,
-                    "order_count": 0,
-                })
-            current += timedelta(days=1)
-        return result
+                current += timedelta(days=1)
+
+        return {
+            "from_date": from_date.strftime("%Y-%m-%d") if from_date else None,
+            "to_date": to_date.strftime("%Y-%m-%d"),
+            "granularity": "month" if use_month else "day",
+            "sales": result,
+        }
 
     @staticmethod
     def get_popular_items(db, vendor_id, from_date=None, to_date=None) -> list[dict]:
@@ -249,6 +268,50 @@ class StatisticsService:
                 "size_id": row.size_id,
                 "quantity": row.quantity,
                 "alert_level": row.alert_level,
+            }
+            for row in db.execute(stmt).all()
+        ]
+
+    @staticmethod
+    def get_depletion_rates(db, vendor_id, from_date=None, to_date=None) -> list[dict]:
+        if to_date is None:
+            to_date = date.today()
+        if from_date is None:
+            from_date = to_date - timedelta(days=30)
+
+        days_span = max((to_date - from_date).days, 1)
+        depleted_expr = func.sum(-StockHistory.quantity_change)
+
+        stmt = (
+            select(
+                MenuItem.id.label("item_id"),
+                MenuItem.name.label("item_name"),
+                Size.id.label("size_id"),
+                Size.name.label("size_name"),
+                depleted_expr.label("total_depleted"),
+            )
+            .join(Size, StockHistory.size_id == Size.id)
+            .join(MenuItem, Size.menu_item_id == MenuItem.id)
+            .join(Menu, MenuItem.menu_id == Menu.id)
+            .where(
+                Menu.vendor_id == vendor_id,
+                StockHistory.reason == StockChangeReason.ORDER,
+                StockHistory.timestamp >= from_date,
+                StockHistory.timestamp < to_date + timedelta(days=1),
+            )
+            .group_by(MenuItem.id, MenuItem.name, Size.id, Size.name)
+            .having(depleted_expr > 0)
+            .order_by(depleted_expr.desc())
+        )
+
+        return [
+            {
+                "item_id": row.item_id,
+                "item_name": row.item_name,
+                "size_id": row.size_id,
+                "size_name": row.size_name,
+                "total_depleted": int(row.total_depleted),
+                "per_day": round(row.total_depleted / days_span, 2),
             }
             for row in db.execute(stmt).all()
         ]

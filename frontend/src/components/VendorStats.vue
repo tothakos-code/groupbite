@@ -293,7 +293,7 @@
                           <v-col cols="auto">
                             <v-chip
                               size="x-small"
-                              variant="tonal"
+                              variant="flat"
                               color="secondary"
                               class="me-2"
                             >
@@ -428,6 +428,87 @@
               </v-card>
             </v-col>
           </v-row>
+
+          <!-- Bulk depletion rate section -->
+          <v-row class="mt-4">
+            <v-col cols="12">
+              <v-card
+                variant="outlined"
+                elevation="1"
+              >
+                <v-card-title class="text-subtitle-1 pa-3 bg-grey-lighten-5">
+                  <v-icon
+                    color="info"
+                    class="me-1"
+                  >
+                    mdi-speedometer
+                  </v-icon>
+                  Fogyási sebesség
+                </v-card-title>
+                <v-card-text class="pa-2">
+                  <v-row
+                    dense
+                    class="mb-3 px-2"
+                  >
+                    <v-col cols="auto">
+                      <v-text-field
+                        v-model="depletionRateFrom"
+                        type="date"
+                        label="Dátumtól"
+                        density="compact"
+                        hide-details
+                        clearable
+                        style="min-width: 170px;"
+                      />
+                    </v-col>
+                    <v-col cols="auto">
+                      <v-text-field
+                        v-model="depletionRateTo"
+                        type="date"
+                        label="Dátumig"
+                        density="compact"
+                        hide-details
+                        clearable
+                        style="min-width: 170px;"
+                      />
+                    </v-col>
+                    <v-col
+                      cols="auto"
+                      class="d-flex align-center"
+                    >
+                      <v-btn
+                        size="small"
+                        color="primary"
+                        variant="tonal"
+                        @click="loadDepletionRates"
+                      >
+                        Frissítés
+                      </v-btn>
+                    </v-col>
+                  </v-row>
+                  <div
+                    v-if="depletionRatesLoading"
+                    class="text-center py-4"
+                  >
+                    <v-progress-circular
+                      indeterminate
+                      color="primary"
+                      size="32"
+                    />
+                  </div>
+                  <v-data-table
+                    v-else
+                    :headers="depletionHeaders"
+                    :items="depletionRates"
+                    :sort-by="[{ key: 'per_day', order: 'desc' }]"
+                    density="compact"
+                    class="elevation-0"
+                    no-data-text="Nincs adat a kiválasztott időszakban."
+                  />
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
         </div>
 
         <!-- ── TAB 2: SALES ── -->
@@ -498,6 +579,12 @@
                   {{ $t('stats.chart.salesTrend') }}
                 </v-card-title>
                 <v-card-text class="pa-3">
+                  <div
+                    v-if="salesTrendRangeLabel"
+                    class="text-caption text-grey mb-2"
+                  >
+                    {{ salesTrendRangeLabel }}
+                  </div>
                   <div
                     v-if="salesLoading"
                     class="text-center py-8"
@@ -884,11 +971,18 @@ export default {
       selectedCategory: null,
       vendorTrendFrom: '',
       vendorTrendTo: '',
+      depletionRates: [],
+      depletionRatesLoading: false,
+      depletionRateFrom: '',
+      depletionRateTo: '',
+      depletionHeaders: [],
 
       // Sales tab
       salesPreset: 'last_30_days',
       salesLoading: false,
       salesTrendRaw: [],
+      salesTrendFrom: null,
+      salesTrendTo: null,
       popularItemsRaw: [],
       perUserSpend: [],
 
@@ -1022,6 +1116,13 @@ export default {
       };
     },
 
+    salesTrendRangeLabel() {
+      if (!this.salesTrendTo) return '';
+      const fmt = d => new Date(d).toLocaleDateString('hu-HU');
+      const from = this.salesTrendFrom ? fmt(this.salesTrendFrom) : '–';
+      return `Időszak: ${from} – ${fmt(this.salesTrendTo)}`;
+    },
+
     availableCategories() {
       const seen = new Map();
       for (const item of this.stockItems) {
@@ -1052,6 +1153,12 @@ export default {
       { title: this.$t('stats.table.user'), key: 'username', sortable: true },
       { title: this.$t('stats.table.totalSpend'), key: 'total_spend', sortable: true },
       { title: this.$t('stats.table.orderCount'), key: 'order_count', sortable: true },
+    ];
+    this.depletionHeaders = [
+      { title: 'Termék', key: 'item_name', sortable: true },
+      { title: 'Méret', key: 'size_name', sortable: true },
+      { title: 'Fogyott (db)', key: 'total_depleted', sortable: true },
+      { title: 'db / nap', key: 'per_day', sortable: true },
     ];
     await this.loadVendorInfo();
     await Promise.all([
@@ -1091,6 +1198,21 @@ export default {
       } finally {
         this.stockLevelsLoading = false;
       }
+      await this.loadDepletionRates();
+    },
+
+    async loadDepletionRates() {
+      this.depletionRatesLoading = true;
+      try {
+        const params = {};
+        if (this.depletionRateFrom) params.from = this.depletionRateFrom;
+        if (this.depletionRateTo) params.to = this.depletionRateTo;
+        this.depletionRates = await this.statsStore.fetchDepletionRates(this.vendorId, params);
+      } catch (e) {
+        console.error('Depletion rates load error:', e);
+      } finally {
+        this.depletionRatesLoading = false;
+      }
     },
 
     async loadSalesTab() {
@@ -1098,11 +1220,13 @@ export default {
       try {
         const preset = this.salesPreset;
         const [trend, popular, spend] = await Promise.all([
-          this.statsStore.fetchSalesTrend(this.vendorId),
+          this.statsStore.fetchSalesTrend(this.vendorId, { preset }),
           this.statsStore.fetchPopularItems(this.vendorId, { preset }),
           this.statsStore.fetchPerUserSpend(this.vendorId, { preset }),
         ]);
-        this.salesTrendRaw = trend;
+        this.salesTrendRaw = trend.sales;
+        this.salesTrendFrom = trend.from_date;
+        this.salesTrendTo = trend.to_date;
         this.popularItemsRaw = popular;
         this.perUserSpend = spend;
       } catch (e) {

@@ -5,7 +5,8 @@ from flask import Blueprint, request
 
 from app.services.statistics_service import StatisticsService
 from app.services.stock_service import StockService
-from app.utils.decorators import handle_request, require_admin, require_auth
+from app.utils.decorators import handle_request, require_auth, require_vendor_manager
+from app.utils.vendor_resolvers import vendor_from_query
 
 
 class StatisticsController:
@@ -25,9 +26,10 @@ class StatisticsController:
         bp.add_url_rule("/popular-items", view_func=self.handle_popular_items, methods=["GET"])
         bp.add_url_rule("/user-spend", view_func=self.handle_user_spend, methods=["GET"])
         bp.add_url_rule("/vendor-trend", view_func=self.handle_vendor_trend, methods=["GET"])
+        bp.add_url_rule("/depletion-rates", view_func=self.handle_depletion_rates, methods=["GET"])
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_query())
     @handle_request
     def handle_summary(self, db):
         vendor_id = _require_vendor_id()
@@ -36,7 +38,7 @@ class StatisticsController:
         return {"data": {**kpi, **stock}}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_query())
     @handle_request
     def handle_stock(self, db):
         vendor_id = _require_vendor_id()
@@ -45,7 +47,7 @@ class StatisticsController:
         return {"data": {"items": items}}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_query())
     @handle_request
     def handle_stock_alerts(self, db):
         vendor_id = _require_vendor_id()
@@ -53,16 +55,16 @@ class StatisticsController:
         return {"data": {"alerts": alerts}}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_query())
     @handle_request
     def handle_sales_trend(self, db):
         vendor_id = _require_vendor_id()
-        days = request.args.get("days", default=30, type=int)
-        trend = StatisticsService.get_sales_trend(db, vendor_id, days)
-        return {"data": {"sales": trend}}, 200
+        from_date, to_date = _resolve_dates(db, vendor_id)
+        trend = StatisticsService.get_sales_trend(db, vendor_id, from_date, to_date)
+        return {"data": trend}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_query())
     @handle_request
     def handle_popular_items(self, db):
         vendor_id = _require_vendor_id()
@@ -71,7 +73,7 @@ class StatisticsController:
         return {"data": {"items": items}}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_query())
     @handle_request
     def handle_user_spend(self, db):
         vendor_id = _require_vendor_id()
@@ -80,7 +82,7 @@ class StatisticsController:
         return {"data": {"users": rows}}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_query())
     @handle_request
     def handle_vendor_trend(self, db):
         vendor_id = _require_vendor_id()
@@ -88,6 +90,15 @@ class StatisticsController:
         to_date = _parse_date(request.args.get("to"))
         trend = StatisticsService.get_vendor_trend(db, vendor_id, from_date, to_date)
         return {"data": {"trend": trend}}, 200
+
+    @require_auth
+    @require_vendor_manager(vendor_from_query())
+    @handle_request
+    def handle_depletion_rates(self, db):
+        vendor_id = _require_vendor_id()
+        from_date, to_date = _resolve_dates(db, vendor_id)
+        rates = StatisticsService.get_depletion_rates(db, vendor_id, from_date, to_date)
+        return {"data": {"rates": rates}}, 200
 
 
 def _require_vendor_id() -> UUID:

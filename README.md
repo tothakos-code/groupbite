@@ -88,6 +88,55 @@ You can make changes to the frontend files and it will reload the frontend on sa
 
 In a production environment, it is not recommended to use Database within Docker its meant for development environment only. Instead, consider using versions directly installed on the server. Adjust your production deployment accordingly.
 
+## Production Deployment (Docker)
+
+`docker-compose.yml` includes a `prod` profile: a single `app` container (multi-stage build —
+the Vue frontend is built and served directly by Flask) plus the `database` container.
+
+1. Clone the repo and create your `.env`:
+
+    ```bash
+    git clone https://github.com/your-username/groupbite.git
+    cd groupbite
+    cp .env.example .env
+    ```
+
+2. Generate the app secrets. `python groupbite.py init` writes `VAPID_PUBLIC_KEY`,
+   `VAPID_PRIVATE_KEY`, `FERNET_KEY`, and `SECRET_KEY` into `.env`. It currently imports the
+   full `app` package, so it needs the full backend environment set up first (including
+   `libpq`, see the Notice above):
+
+    ```bash
+    python -m venv env
+    source env/bin/activate
+    pip install -r app/requirements.txt
+    python groupbite.py init
+    ```
+
+   Then edit `.env` and set the remaining production values: a strong `POSTGRES_PASSWORD`,
+   `POSTGRES_HOST=database`, `APP_ENV=production`, and `VAPID_SUBJECT_EMAIL` (a real
+   `mailto:you@example.com`).
+
+3. Build and start the stack:
+
+    ```bash
+    docker compose --profile prod up -d --build
+    ```
+
+   Database migrations run automatically on startup (`app/create_tables.py`) — no manual
+   migration step is needed, even on a brand-new database.
+
+4. Check it's up:
+
+    ```bash
+    docker compose --profile prod ps
+    docker compose --profile prod logs -f app
+    ```
+
+5. Put a reverse proxy (e.g. nginx) in front of it for TLS termination and to proxy
+   WebSocket upgrades (`Upgrade`/`Connection` headers) — the `app` container listens on port
+   5000 and should not be exposed to the internet directly.
+
 ## Contributing
 
 If you would like to contribute to the project, please follow these guidelines:

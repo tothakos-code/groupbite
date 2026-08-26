@@ -17,12 +17,19 @@ from app.entities.basket_option_selection import BasketOptionSelection
 from app.entities.bundle_discount import BundleDiscount
 from app.entities.bundle_slot import BundleSlot
 from app.entities.stock_history import StockHistory, StockChangeReason
+from app.entities.access_group import AccessGroup, access_group_member, access_group_vendor
 from sqlalchemy import event
 from flask_migrate import upgrade, migrate, stamp
 import logging
 import os
 from alembic.config import Config
 from alembic import command
+
+
+def _set_db_url(alembic_cfg, db_url):
+    """Set sqlalchemy.url on an Alembic Config, escaping '%' so ConfigParser's
+    interpolation doesn't choke on it (e.g. a DB password containing '%')."""
+    alembic_cfg.set_main_option("sqlalchemy.url", db_url.replace("%", "%%"))
 
 
 def create_database_migration(app):
@@ -32,7 +39,7 @@ def create_database_migration(app):
         alembic_cfg = Config()
         alembic_cfg.set_main_option("script_location", "db/migrations")
         alembic_cfg.set_main_option("config_file_name", "alembic.ini")
-        alembic_cfg.set_main_option("sqlalchemy.url", app.config["SQLALCHEMY_DATABASE_URI"])
+        _set_db_url(alembic_cfg, app.config["SQLALCHEMY_DATABASE_URI"])
         command.revision(alembic_cfg, message="auto_migration", autogenerate=True)
 
 def downgrade_database_migration(app, revision: str = "-1", plugin: str = None):
@@ -47,13 +54,13 @@ def downgrade_database_migration(app, revision: str = "-1", plugin: str = None):
             logging.info(f"Downgrading plugin '{plugin}' to revision: {revision}...")
             alembic_cfg = Config()
             alembic_cfg.set_main_option("script_location", migrations_dir)
-            alembic_cfg.set_main_option("sqlalchemy.url", db_url)
+            _set_db_url(alembic_cfg, db_url)
             alembic_cfg.set_main_option("version_table", "alembic_version_plugins")
         else:
             logging.info(f"Downgrading main app to revision: {revision}...")
             alembic_cfg = Config()
             alembic_cfg.set_main_option("script_location", "db/migrations")
-            alembic_cfg.set_main_option("sqlalchemy.url", db_url)
+            _set_db_url(alembic_cfg, db_url)
         command.downgrade(alembic_cfg, revision)
         logging.info("Downgrade complete.")
 
@@ -68,7 +75,7 @@ def migrate_database(app):
         logging.info("Applying main app migrations...")
         main_cfg = Config()
         main_cfg.set_main_option("script_location", "db/migrations")
-        main_cfg.set_main_option("sqlalchemy.url", db_url)
+        _set_db_url(main_cfg, db_url)
         command.upgrade(main_cfg, "head")
         logging.info("Main app migrations applied.")
 
@@ -82,7 +89,7 @@ def migrate_database(app):
                 logging.info("Applying migrations for plugin: %s", plugin.name)
                 plugin_cfg = Config()
                 plugin_cfg.set_main_option("script_location", migrations_dir)
-                plugin_cfg.set_main_option("sqlalchemy.url", db_url)
+                _set_db_url(plugin_cfg, db_url)
                 plugin_cfg.set_main_option("version_table", "alembic_version_plugins")
                 command.upgrade(plugin_cfg, "head")
                 logging.info("Plugin migrations applied: %s", plugin.name)

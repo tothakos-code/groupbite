@@ -15,12 +15,18 @@ from app.services.vendor_service import VendorService
 from app.socketio_singleton import SocketioSingleton
 from app.utils.decorators import (
     handle_request,
-    require_admin,
     require_auth,
+    require_vendor_manager,
     validate_data,
     validate_url_params,
 )
 from app.utils.validators import IDSchema
+from app.utils.vendor_resolvers import (
+    vendor_from_body,
+    vendor_from_body_item_list,
+    vendor_from_body_items_or_menu,
+    vendor_from_menu_item,
+)
 
 socketio = SocketioSingleton.get_instance()
 
@@ -51,7 +57,7 @@ class MenuItemController:
 
     @validate_data(BaseItemSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_body())
     @handle_request
     def handle_menu_item_add(self, db, data):
         category = CategoryService.get_or_create(db, data["vendor_id"], data.get("category") or "")
@@ -71,7 +77,7 @@ class MenuItemController:
     @validate_url_params(IDSchema())
     @validate_data(UpdateItemSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_body())
     @handle_request
     def handle_menu_item_update(self, db, data, item_id):
         menu_item = MenuItemRepository(db).get_by_id(item_id)
@@ -81,7 +87,7 @@ class MenuItemController:
 
     @validate_url_params(IDSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_menu_item())
     @handle_request
     def handle_menu_item_delete(self, db, item_id):
         menu_item = MenuItemRepository(db).get_by_id(item_id)
@@ -90,7 +96,7 @@ class MenuItemController:
 
     @validate_data(BulkUpdateItemSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_body_item_list(field="items"))
     @handle_request
     def handle_bulk_update_indices(self, db, data):
         items_to_update = self.menu_item_service.bulk_update_indices(db, data)
@@ -101,7 +107,7 @@ class MenuItemController:
 
     @validate_data(BulkEditItemsSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_body_items_or_menu())
     @handle_request
     def handle_bulk_edit(self, db, data):
         items = self.menu_item_service.bulk_edit(db, data)
@@ -110,7 +116,7 @@ class MenuItemController:
 
     @validate_data(BulkDeleteItemsSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_body_items_or_menu())
     @handle_request
     def handle_bulk_delete(self, db, data):
         deleted_count = self.menu_item_service.bulk_delete(db, data)

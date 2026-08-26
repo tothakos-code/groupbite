@@ -7,8 +7,9 @@ from app.repositories.size_repository import SizeRepository
 from app.services.stock_service import StockService
 from app.services.vendor_service import VendorService
 from app.socketio_singleton import SocketioSingleton
-from app.utils.decorators import handle_request, require_admin, require_auth, validate_url_params
+from app.utils.decorators import handle_request, require_auth, require_vendor_manager, validate_url_params
 from app.utils.validators import IDSchema
+from app.utils.vendor_resolvers import vendor_from_kwarg, vendor_from_size
 
 socketio = SocketioSingleton.get_instance()
 
@@ -41,7 +42,7 @@ class StockController:
 
     @validate_url_params(IDSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_size())
     @handle_request
     def handle_topup(self, db, size_id):
         body = request.get_json(silent=True, force=True) or {}
@@ -60,7 +61,7 @@ class StockController:
 
     @validate_url_params(IDSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @handle_request
     def handle_get_stock_levels(self, db, vendor_id):
         category_id = request.args.get("category_id", type=int)
@@ -69,7 +70,7 @@ class StockController:
 
     @validate_url_params(IDSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_size())
     @handle_request
     def handle_get_stock_history(self, db, size_id):
         from_date = _parse_date(request.args.get("from"))

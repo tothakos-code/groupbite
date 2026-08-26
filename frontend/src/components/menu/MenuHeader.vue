@@ -92,7 +92,7 @@
         />
 
         <v-btn
-          v-if="auth.user?.admin && menuType === 'own_inventory'"
+          v-if="(auth.user?.admin || auth.user?.managed_vendor_ids?.includes(vendorId)) && menuType === 'own_inventory'"
           color="primary"
           variant="elevated"
           size="small"

@@ -18,10 +18,12 @@ from app.utils.decorators import (
     require_admin,
     require_auth,
     require_owner_or_admin,
+    require_vendor_manager,
     validate_data,
     validate_url_params,
 )
 from app.utils.validators import IDSchema
+from app.utils.vendor_resolvers import vendor_from_order
 
 socketio = SocketioSingleton.get_instance()
 
@@ -124,7 +126,7 @@ class OrderController:
         return {"data": return_obj}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_order())
     @validate_url_params(IDSchema())
     @validate_data(BaseOrderSchema())
     @handle_request
@@ -234,7 +236,7 @@ class OrderController:
         return {"msg": "OK"}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_order())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_delete_order(self, db, order_id):

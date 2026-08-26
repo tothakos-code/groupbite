@@ -4,11 +4,12 @@ from marshmallow import Schema, fields
 from app.services.option_group_service import OptionGroupService
 from app.utils.decorators import (
     handle_request,
-    require_admin,
     require_auth,
+    require_vendor_manager,
     validate_url_params,
 )
 from app.utils.validators import IDSchema
+from app.utils.vendor_resolvers import vendor_from_kwarg, vendor_from_menu_item
 
 
 class OptionGroupSchema(Schema):
@@ -89,7 +90,7 @@ class OptionGroupController:
         return {"data": [g.serialized for g in groups]}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_create(self, db, vendor_id):
@@ -105,7 +106,7 @@ class OptionGroupController:
         return {"data": group.serialized}, 201
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_update(self, db, vendor_id, group_id):
@@ -114,7 +115,7 @@ class OptionGroupController:
         return {"data": group.serialized}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_delete(self, db, vendor_id, group_id):
@@ -122,7 +123,7 @@ class OptionGroupController:
         return {"msg": "OK"}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_add_choice(self, db, vendor_id, group_id):
@@ -136,7 +137,7 @@ class OptionGroupController:
         return {"data": choice.serialized}, 201
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_update_choice(self, db, vendor_id, group_id, choice_id):
@@ -145,7 +146,7 @@ class OptionGroupController:
         return {"data": choice.serialized}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_delete_choice(self, db, vendor_id, group_id, choice_id):
@@ -153,7 +154,7 @@ class OptionGroupController:
         return {"msg": "OK"}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_menu_item())
     @handle_request
     def handle_assign(self, db, item_id, group_id):
         index = (request.json or {}).get("index", 0)
@@ -161,7 +162,7 @@ class OptionGroupController:
         return {"msg": "OK"}, 201
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_menu_item())
     @handle_request
     def handle_unassign(self, db, item_id, group_id):
         OptionGroupService.unassign_from_item(db, group_id, item_id)

@@ -86,9 +86,16 @@ class UserController:
 
     @handle_request
     def handle_user_check_session(self, db):
+        from app.services.access_group_service import AccessGroupService
+
         user_id = session.get("user_id")
         user = self.user_service.check_session(db, user_id)
-        return {"data": user.serialized}, 200
+        data = user.serialized
+        data["managed_vendor_ids"] = (
+            None if user.admin
+            else [str(v) for v in AccessGroupService.list_managed_vendor_ids(db, user_id)]
+        )
+        return {"data": data}, 200
 
     @handle_request
     def handle_reminder(self, db):

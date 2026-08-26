@@ -11,6 +11,7 @@ const AdminOrdersView = () => import("./views/admin/AdminOrders.vue");
 const AdminOrderDetailsView = () => import("./views/admin/AdminOrderDetails.vue");
 const AdminUsersView = () => import("./views/admin/AdminUsers.vue");
 const AdminPluginsView = () => import("./views/admin/AdminPlugins.vue");
+const AdminAccessGroupsView = () => import("./views/admin/AdminAccessGroups.vue");
 const VendorItemManager = () =>
   import("./views/admin/vendor/VendorItemManager.vue");
 const VendorAdd = () => import("./components/VendorAdd.vue");
@@ -29,7 +30,9 @@ const authGuard = async (to, from, next) => {
     useAuth().requestLogin();
     return next();
   }
-  if (!useAuth().user.admin) {
+  const user = useAuth().user;
+  const isManager = user.admin || (user.managed_vendor_ids && user.managed_vendor_ids.length > 0);
+  if (!isManager) {
     return next({ name: "home" });
   }
   next();
@@ -94,16 +97,23 @@ const routes = [
       {
         path: ":id/config/:section?",
         component: VendorSettings,
+        meta: { requiresAdmin: true },
       },
       {
         name: "vendorItems",
         path: ":id/menu/:menuId",
         component: VendorItemManager,
+        meta: { requiresAdmin: true },
       },
       {
         name: "plugins",
         path: "plugins",
         component: AdminPluginsView,
+      },
+      {
+        name: "groups",
+        path: "groups",
+        component: AdminAccessGroupsView,
       },
       {
         path: "add",
@@ -165,8 +175,14 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  if (to.meta.requiresAdmin && !useAuth().user?.admin) {
-    return next({ name: "home" });
+  if (to.meta.requiresAdmin) {
+    const user = useAuth().user;
+    const vendorId = to.params.vendorId || to.params.id;
+    const allowed =
+      user?.admin || (vendorId && user?.managed_vendor_ids?.includes(vendorId));
+    if (!allowed) {
+      return next({ name: "home" });
+    }
   }
 
   const vendorStore = useVendorStore();

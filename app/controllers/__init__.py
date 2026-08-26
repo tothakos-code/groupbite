@@ -1,3 +1,4 @@
+from app.controllers.access_group_controller import AccessGroupController
 from app.controllers.bundle_discount_controller import BundleDiscountController
 from app.controllers.statistics_controller import StatisticsController
 from app.controllers.stock_controller import StockController
@@ -56,6 +57,7 @@ def register_blueprints(app):
     bundle_discount_ctrl = BundleDiscountController()
     stock_ctrl = StockController()
     statistics_ctrl = StatisticsController()
+    access_group_ctrl = AccessGroupController()
 
     app.register_blueprint(menu_item_ctrl.blueprint)
     app.register_blueprint(menu_ctrl.blueprint)
@@ -73,3 +75,4 @@ def register_blueprints(app):
     app.register_blueprint(bundle_discount_ctrl.blueprint)
     app.register_blueprint(stock_ctrl.blueprint)
     app.register_blueprint(statistics_ctrl.blueprint)
+    app.register_blueprint(access_group_ctrl.blueprint)

@@ -12,10 +12,12 @@ from app.utils.decorators import (
     handle_request,
     require_admin,
     require_auth,
+    require_vendor_manager,
     validate_data,
     validate_url_params,
 )
 from app.utils.validators import IDSchema
+from app.utils.vendor_resolvers import vendor_from_kwarg
 from app.event_manager import event_manager
 
 socketio = SocketioSingleton.get_instance()
@@ -105,14 +107,20 @@ class VendorController:
         )
 
     @require_auth
-    @require_admin
     @handle_request
     def handle_get_all_vendors(self, db):
-        result = self.vendor_service.get_vendors(db)
+        from app.repositories.user_repository import UserRepository
+        from app.services.access_group_service import AccessGroupService
+
+        user_id = session.get("user_id")
+        managed_vendor_ids = None
+        if not UserRepository(db).is_admin(user_id):
+            managed_vendor_ids = AccessGroupService.list_managed_vendor_ids(db, user_id)
+        result = self.vendor_service.get_vendors(db, managed_vendor_ids=managed_vendor_ids)
         return {"data": [v.serialized for v in result]}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_deactivation(self, db, vendor_id):
@@ -124,7 +132,7 @@ class VendorController:
         return {"msg": "OK"}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_activation(self, db, vendor_id):
@@ -209,7 +217,7 @@ class VendorController:
         return {"data": vendor.serialized}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_run_scan(self, db, vendor_id):
@@ -227,7 +235,7 @@ class VendorController:
         return {"msg": f"Vendor scan ran for {vendor_id} id"}, 201
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_get_webhooks(self, db, vendor_id):
@@ -242,7 +250,7 @@ class VendorController:
         return {"data": vendor.public_serialized}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_get_full_settings(self, db, vendor_id):
@@ -250,7 +258,7 @@ class VendorController:
         return {"data": vendor.serialized}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_save_settings(self, db, vendor_id):
@@ -269,7 +277,7 @@ class VendorController:
         return {"data": load_vendor_settings(vendor)}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_menu_get(self, db, vendor_id):
@@ -277,7 +285,7 @@ class VendorController:
         return {"data": result}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def import_menu(self, db, vendor_id):
@@ -285,7 +293,7 @@ class VendorController:
         return {"msg": "OK"}, 201
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_get_plugin_settings(self, db, vendor_id):
@@ -295,7 +303,7 @@ class VendorController:
         return {"data": result}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_save_plugin_settings(self, db, vendor_id):

@@ -9,10 +9,12 @@ from app.utils.decorators import (
     handle_request,
     require_admin,
     require_auth,
+    require_vendor_manager,
     validate_data,
     validate_url_params,
 )
 from app.utils.validators import IDSchema
+from app.utils.vendor_resolvers import vendor_from_body, vendor_from_webhook
 
 
 class WebhookController:
@@ -44,7 +46,7 @@ class WebhookController:
         return {"msg": "OK", "data": data}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_body())
     @validate_data(BaseWebhookSchema())
     @handle_request
     def handle_webhook_add(self, db, data):
@@ -52,7 +54,7 @@ class WebhookController:
         return {"msg": "OK", "data": webhook.serialized}, 201
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_webhook())
     @validate_url_params(IDSchema())
     @validate_data(UpdateWebhookSchema())
     @handle_request
@@ -62,7 +64,7 @@ class WebhookController:
         return {"msg": "OK"}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_webhook())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_webhook_delete(self, db, webhook_id):

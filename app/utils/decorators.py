@@ -63,6 +63,36 @@ def require_admin(f):
     return decorated_function
 
 
+def require_vendor_manager(resolver):
+    """Allow access if the session user is a global admin, or manages the vendor
+    resolved by `resolver(db, **kwargs)` (see app.utils.vendor_resolvers) via an
+    AccessGroup. Must sit where @require_admin would — after @validate_url_params so
+    kwargs are populated, and it opens its own session like @require_admin does."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            from app.services.access_group_service import AccessGroupService
+
+            user_id = session.get("user_id")
+            with get_session() as db:
+                if UserRepository(db).is_admin(user_id):
+                    return f(*args, **kwargs)
+
+                vendor_id = resolver(db, **kwargs)
+                if vendor_id is None:
+                    logging.warning("require_vendor_manager: could not resolve vendor_id")
+                    return {"error": "Unauthorized"}, 401
+
+                if not AccessGroupService.is_manager_of(db, user_id, vendor_id):
+                    logging.warning(
+                        f"User {user_id} is not a manager of vendor {vendor_id}"
+                    )
+                    return {"error": "Unauthorized"}, 401
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
 def require_owner_or_admin(url_id_param="user_id"):
     """Allow access if the session user matches the URL user_id, or is an admin."""
     def decorator(f):

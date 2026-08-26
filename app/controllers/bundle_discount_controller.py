@@ -4,11 +4,12 @@ from marshmallow import Schema, fields
 from app.services.bundle_discount_service import BundleDiscountService
 from app.utils.decorators import (
     handle_request,
-    require_admin,
     require_auth,
+    require_vendor_manager,
     validate_url_params,
 )
 from app.utils.validators import IDSchema
+from app.utils.vendor_resolvers import vendor_from_kwarg
 
 
 class BundleDiscountSchema(Schema):
@@ -79,7 +80,7 @@ class BundleDiscountController:
         return {"data": [b.serialized for b in bundles]}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_create(self, db, vendor_id):
@@ -90,7 +91,7 @@ class BundleDiscountController:
         return {"data": bundle.serialized}, 201
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_update(self, db, vendor_id, bundle_id):
@@ -99,7 +100,7 @@ class BundleDiscountController:
         return {"data": bundle.serialized}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_delete(self, db, vendor_id, bundle_id):
@@ -107,7 +108,7 @@ class BundleDiscountController:
         return {"msg": "OK"}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_add_slot(self, db, vendor_id, bundle_id):
@@ -124,7 +125,7 @@ class BundleDiscountController:
         return {"data": slot.serialized}, 201
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_update_slot(self, db, vendor_id, bundle_id, slot_id):
@@ -133,7 +134,7 @@ class BundleDiscountController:
         return {"data": slot.serialized}, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_delete_slot(self, db, vendor_id, bundle_id, slot_id):

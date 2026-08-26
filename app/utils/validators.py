@@ -2,6 +2,7 @@ from marshmallow import Schema, ValidationError, fields, validate
 
 from app.db.session import get_session
 from app.entities.notification import NotificationType
+from app.repositories.access_group_repository import AccessGroupRepository
 from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.order_repository import OrderRepository
@@ -60,6 +61,13 @@ def validate_menu_id(menu_id):
         raise ValidationError(f"Menu with ID {menu_id} does not exist.")
 
 
+def validate_access_group_id(access_group_id):
+    with get_session() as db:
+        exists = AccessGroupRepository(db).get_by_id(access_group_id) is not None
+    if not exists:
+        raise ValidationError(f"Access group with ID {access_group_id} does not exist.")
+
+
 class IDSchema(Schema):
     order_id = fields.Integer(validate=validate_order_id)
     user_id = fields.UUID(validate=validate_user_id)
@@ -69,6 +77,7 @@ class IDSchema(Schema):
     item_id = fields.Integer(validate=validate_item_id)
     size_id = fields.Integer(validate=validate_size_id)
     menu_id = fields.Integer(validate=validate_menu_id)
+    access_group_id = fields.UUID(validate=validate_access_group_id)
     category_id = fields.Integer()
     bundle_id = fields.Integer()
     slot_id = fields.Integer()

@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="auth.isLoggedIn && auth.user?.admin"
+    v-if="auth.isLoggedIn && isManager"
     class="admin-layout"
   >
     <!-- Left Sidebar -->
@@ -107,14 +107,28 @@ export default {
   data() {
     return {
       navCollapsed: !!this.$route?.params?.id,
-      menuItems: [
-        { label: 'Üzlet kezelő',  path: '/admin/vendors',  icon: 'mdi-store',          color: 'primary' },
-        { label: 'Felhasználók',  path: '/admin/users',    icon: 'mdi-account-group',  color: 'primary' },
-        { label: 'Rendelések',    path: '/admin/orders',   icon: 'mdi-clipboard-list', color: 'primary' },
-        { label: 'Pluginok',      path: '/admin/plugins',  icon: 'mdi-puzzle',         color: 'primary' },
-        { label: 'Beállítások',   path: '/admin/settings', icon: 'mdi-cog',            color: 'primary' },
-      ],
     }
+  },
+  computed: {
+    isManager() {
+      return !!this.auth.user?.admin || (this.auth.user?.managed_vendor_ids?.length > 0)
+    },
+    menuItems() {
+      if (this.auth.user?.admin) {
+        return [
+          { label: 'Üzlet kezelő',  path: '/admin/vendors',  icon: 'mdi-store',               color: 'primary' },
+          { label: 'Felhasználók',  path: '/admin/users',    icon: 'mdi-account-group',       color: 'primary' },
+          { label: 'Rendelések',    path: '/admin/orders',   icon: 'mdi-clipboard-list',      color: 'primary' },
+          { label: 'Csoportok',     path: '/admin/groups',   icon: 'mdi-account-multiple',    color: 'primary' },
+          { label: 'Pluginok',      path: '/admin/plugins',  icon: 'mdi-puzzle',              color: 'primary' },
+          { label: 'Beállítások',   path: '/admin/settings', icon: 'mdi-cog',                 color: 'primary' },
+        ]
+      }
+      // Managers only manage their own vendor(s) — the other screens are superadmin-only.
+      return [
+        { label: 'Üzlet kezelő', path: '/admin/vendors', icon: 'mdi-store', color: 'primary' },
+      ]
+    },
   },
   watch: {
     '$route'(to) {
@@ -123,7 +137,7 @@ export default {
       }
     },
     'auth.isLoggedIn'(val) {
-      if (val && !this.auth.user?.admin) {
+      if (val && !this.isManager) {
         this.$router.push({ name: 'home' })
       }
     },

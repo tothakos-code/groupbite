@@ -116,9 +116,13 @@ class VendorService:
         return vendor_repo.get_by_id(vendor_id)
 
     @staticmethod
-    def get_vendors(db):
+    def get_vendors(db, managed_vendor_ids=None):
         vendor_repo = VendorRepository(db)
-        return vendor_repo.find_all()
+        vendors = vendor_repo.find_all()
+        if managed_vendor_ids is not None:
+            allowed = {str(v) for v in managed_vendor_ids}
+            vendors = [v for v in vendors if str(v.id) in allowed]
+        return vendors
 
     @staticmethod
     def activate_vendor(db, vendor_id):

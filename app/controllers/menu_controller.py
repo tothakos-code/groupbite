@@ -4,8 +4,9 @@ from flask import request, Blueprint
 
 from app.entities.menu import BaseMenuSchema, UpdateMenuSchema
 from app.services.menu_service import MenuService
-from app.utils.decorators import validate_data, validate_url_params, require_auth, require_admin, handle_request
+from app.utils.decorators import validate_data, validate_url_params, require_auth, require_vendor_manager, handle_request
 from app.utils.validators import IDSchema
+from app.utils.vendor_resolvers import vendor_from_body, vendor_from_menu
 
 
 class MenuController:
@@ -29,7 +30,7 @@ class MenuController:
         bp.add_url_rule("/<menu_id>/deactivate", view_func=self.handle_deactivation, methods=["GET"])
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_menu())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_menu_get_items(self, db, menu_id):
@@ -37,7 +38,7 @@ class MenuController:
         return { "data": items }, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_menu())
     @validate_url_params(IDSchema())
     @validate_data(UpdateMenuSchema())
     @handle_request
@@ -50,7 +51,7 @@ class MenuController:
 
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_menu())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_menu_delete(self, db, menu_id):
@@ -59,7 +60,7 @@ class MenuController:
 
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_menu())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_menu_duplicate(self, db, menu_id):
@@ -67,7 +68,7 @@ class MenuController:
         return { "msg": "OK" }, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_body())
     @validate_data(BaseMenuSchema())
     @handle_request
     def handle_menu_add(self, db, data):
@@ -75,7 +76,7 @@ class MenuController:
         return { "msg": "OK" }, 201
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_menu())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_activation(self, db, menu_id):
@@ -84,7 +85,7 @@ class MenuController:
         return { "msg": "OK" }, 200
 
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_menu())
     @validate_url_params(IDSchema())
     @handle_request
     def handle_deactivation(self, db, menu_id):

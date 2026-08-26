@@ -4,12 +4,13 @@ from marshmallow import Schema, fields
 from app.services.category_service import CategoryService
 from app.utils.decorators import (
     handle_request,
-    require_admin,
     require_auth,
+    require_vendor_manager,
     validate_data,
     validate_url_params,
 )
 from app.utils.validators import IDSchema
+from app.utils.vendor_resolvers import vendor_from_kwarg
 
 
 class CategorySchema(Schema):
@@ -59,7 +60,7 @@ class CategoryController:
     @validate_url_params(IDSchema())
     @validate_data(CategorySchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @handle_request
     def handle_create(self, db, data, vendor_id):
         category = self.category_service.get_or_create(db, vendor_id, data["name"])
@@ -68,7 +69,7 @@ class CategoryController:
     @validate_url_params(IDSchema())
     @validate_data(CategorySchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @handle_request
     def handle_update(self, db, data, vendor_id, category_id):
         category = self.category_service.update(db, category_id, data["name"], data.get("default_packaging_fee"))
@@ -76,7 +77,7 @@ class CategoryController:
 
     @validate_url_params(IDSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_kwarg())
     @handle_request
     def handle_delete(self, db, vendor_id, category_id):
         self.category_service.delete(db, category_id)

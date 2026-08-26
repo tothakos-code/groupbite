@@ -7,12 +7,18 @@ from app.services.vendor_service import VendorService
 from app.socketio_singleton import SocketioSingleton
 from app.utils.decorators import (
     handle_request,
-    require_admin,
     require_auth,
+    require_vendor_manager,
     validate_data,
     validate_url_params,
 )
 from app.utils.validators import IDSchema
+from app.utils.vendor_resolvers import (
+    vendor_from_body_items_or_menu,
+    vendor_from_body_menu_item,
+    vendor_from_body_size_list,
+    vendor_from_size,
+)
 
 socketio = SocketioSingleton.get_instance()
 
@@ -44,7 +50,7 @@ class SizeController:
 
     @validate_data(BaseSizeSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_body_menu_item())
     @handle_request
     def handle_menu_item_size_add(self, db, data):
         self.size_service.add_size(
@@ -63,7 +69,7 @@ class SizeController:
     @validate_url_params(IDSchema())
     @validate_data(UpdateSizeSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_size())
     @handle_request
     def handle_menu_item_size_update(self, db, data, size_id):
         size = SizeRepository(db).get_by_id(size_id)
@@ -72,7 +78,7 @@ class SizeController:
 
     @validate_url_params(IDSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_size())
     @handle_request
     def handle_menu_item_size_delete(self, db, size_id):
         size = SizeRepository(db).get_by_id(size_id)
@@ -81,7 +87,7 @@ class SizeController:
 
     @validate_data(BulkUpdateSizeSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_body_size_list(field="sizes"))
     @handle_request
     def handle_bulk_update_sizes(self, db, data):
         updated = self.size_service.bulk_update_sizes(db, data, admin_user_id=session.get("user_id"))
@@ -89,7 +95,7 @@ class SizeController:
 
     @validate_data(BulkSizePriceByItemsSchema())
     @require_auth
-    @require_admin
+    @require_vendor_manager(vendor_from_body_items_or_menu())
     @handle_request
     def handle_bulk_price_by_items(self, db, data):
         sizes = self.size_service.bulk_edit_prices_by_items(db, data)

@@ -94,7 +94,7 @@
             />
 
             <v-list-item
-              v-if="auth.user.admin"
+              v-if="auth.user.admin || auth.user.managed_vendor_ids?.length > 0"
               prepend-icon="mdi-cog"
               title="Adminisztráció"
               @click="handleAdminClick"

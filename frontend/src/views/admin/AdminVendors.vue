@@ -33,7 +33,10 @@
           </template>
         </v-tooltip>
 
-        <v-tooltip text="Új üzlet hozzáadása">
+        <v-tooltip
+          v-if="isAdmin"
+          text="Új üzlet hozzáadása"
+        >
           <template #activator="{ props }">
             <v-btn
               v-bind="props"
@@ -65,6 +68,7 @@
           Frissítés
         </v-btn>
         <v-btn
+          v-if="isAdmin"
           color="primary"
           variant="elevated"
           prepend-icon="mdi-store-plus"
@@ -390,13 +394,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVendorStore } from "@/stores/vendor"
+import { useAuth } from "@/stores/auth"
 
 // Composables
 const router = useRouter()
 const vendorStore = useVendorStore()
+const auth = useAuth()
+const isAdmin = computed(() => !!auth.user?.admin)
 
 // Reactive data
 const allVendorList = ref([])

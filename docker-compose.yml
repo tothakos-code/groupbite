@@ -5,7 +5,7 @@ services:
     build: ./db/
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "${PUBLISH_HOST:-127.0.0.1}:5432:5432"
     env_file:
       - .env
     volumes:
@@ -55,7 +55,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "${PUBLISH_HOST:-127.0.0.1}:5000:5000"
     env_file:
       - .env
     environment:

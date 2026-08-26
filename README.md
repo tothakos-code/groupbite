@@ -115,7 +115,9 @@ the Vue frontend is built and served directly by Flask) plus the `database` cont
 
    Then edit `.env` and set the remaining production values: a strong `POSTGRES_PASSWORD`,
    `POSTGRES_HOST=database`, `APP_ENV=production`, and `VAPID_SUBJECT_EMAIL` (a real
-   `mailto:you@example.com`).
+   `mailto:you@example.com`). Ports are published to `127.0.0.1` only by default, so no
+   `PUBLISH_HOST` change is needed here — Postgres and the app port are not reachable from
+   outside the host unless `PUBLISH_HOST=0.0.0.0` is set explicitly.
 
 3. Build and start the stack:
 
